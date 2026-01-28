@@ -6,21 +6,18 @@ import { CONFIG } from './config.js';
 import { estimateOneRepMax, getWeekStart, parseDate, formatDate } from './utils.js';
 
 export const Charts = {
-    progressChart: null,
     volumeChart: null,
     currentView: CONFIG.charts.defaultView,
-    currentExerciseId: null,
 
     /**
      * Initialize charts UI
      */
     init() {
         this.bindEvents();
-        this.populateExerciseDropdown();
-
+        this.renderExerciseTabs();
         // Listen for exercise updates
         window.addEventListener('exercisesUpdated', () => {
-            this.populateExerciseDropdown();
+            this.renderExerciseTabs();
         });
     },
 
@@ -28,48 +25,77 @@ export const Charts = {
      * Bind event listeners
      */
     bindEvents() {
-        const exerciseSelect = document.getElementById('statsExercise');
         const viewBtns = document.querySelectorAll('.view-btn');
-
-        exerciseSelect.addEventListener('change', () => {
-            this.currentExerciseId = exerciseSelect.value;
-            if (this.currentExerciseId) {
-                this.loadAndRenderCharts();
-            }
-        });
-
         viewBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 // Update active state
                 viewBtns.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
-
                 // Update current view
                 this.currentView = btn.dataset.view;
-
-                // Re-render charts if exercise is selected
-                if (this.currentExerciseId) {
-                    this.loadAndRenderCharts();
-                }
+                // Re-render all exercise tabs
+                this.renderExerciseTabs();
             });
         });
     },
 
-    /**
-     * Populate exercise dropdown
-     */
-    populateExerciseDropdown() {
-        const select = document.getElementById('statsExercise');
+    // No longer needed: populateExerciseDropdown
+    // Instead, render sub-tabs for each exercise
+    renderExerciseTabs() {
+        const statsContent = document.getElementById('statsContent');
+        if (!statsContent) return;
+        // Remove all children
+        statsContent.innerHTML = '';
         const exercises = Storage.getExercises();
+        if (!exercises.length) return;
 
-        select.innerHTML = '<option value="">-- Select Exercise --</option>';
-
-        exercises.forEach(exercise => {
-            const option = document.createElement('option');
-            option.value = exercise.id;
-            option.textContent = exercise.name;
-            select.appendChild(option);
+        // Create tab navigation
+        const tabNav = document.createElement('div');
+        tabNav.className = 'exercise-tabs-nav';
+        exercises.forEach((exercise, idx) => {
+            const tabBtn = document.createElement('button');
+            tabBtn.className = 'exercise-tab-btn' + (idx === 0 ? ' active' : '');
+            tabBtn.textContent = exercise.name;
+            tabBtn.dataset.exerciseId = exercise.id;
+            tabBtn.addEventListener('click', (e) => {
+                // Switch active tab
+                Array.from(tabNav.children).forEach(b => b.classList.remove('active'));
+                tabBtn.classList.add('active');
+                // Show only the selected tab content
+                Array.from(statsContent.querySelectorAll('.exercise-tab-content')).forEach((el, i) => {
+                    el.style.display = (i === idx) ? 'block' : 'none';
+                });
+            });
+            tabNav.appendChild(tabBtn);
         });
+        statsContent.appendChild(tabNav);
+
+        // Create tab content for each exercise
+        exercises.forEach((exercise, idx) => {
+            const tabPane = document.createElement('div');
+            tabPane.className = 'exercise-tab-content';
+            tabPane.style.display = idx === 0 ? 'block' : 'none';
+            tabPane.innerHTML = `<div class="chart-container"><canvas id="volumeChart-${exercise.id}"></canvas></div><div class="stats-summary" id="statsSummary-${exercise.id}"></div>`;
+            statsContent.appendChild(tabPane);
+            // Render volume chart for this exercise
+            this.loadAndRenderVolumeChartForExercise(exercise.id, `volumeChart-${exercise.id}`, `statsSummary-${exercise.id}`);
+        });
+    },
+
+    async loadAndRenderVolumeChartForExercise(exerciseId, chartCanvasId, statsSummaryId) {
+        const { startDate, endDate } = this.getDateRange();
+        try {
+            const workouts = await Storage.getWorkoutsForExercise(exerciseId, startDate, endDate);
+            // Only show if there is data
+            if (!workouts.length) {
+                document.getElementById(statsSummaryId).innerHTML = '<p>No data for this exercise in selected range.</p>';
+                return;
+            }
+            this.renderVolumeChart(workouts, chartCanvasId);
+            this.updateStatsSummary(workouts, statsSummaryId, exerciseId);
+        } catch (error) {
+            document.getElementById(statsSummaryId).innerHTML = '<p>Error loading data.</p>';
+        }
     },
 
     /**
@@ -110,7 +136,7 @@ export const Charts = {
             document.getElementById('statsContent').style.display = 'block';
 
             // Render charts
-            this.renderProgressChart(displayWorkouts);
+            // this.renderProgressChart(displayWorkouts); // removed
             this.renderVolumeChart(displayWorkouts);
             this.updateStatsSummary(displayWorkouts);
 
@@ -155,67 +181,7 @@ export const Charts = {
      * Render weight progression chart
      * @param {array} workouts - Array of workout objects
      */
-    renderProgressChart(workouts) {
-        const ctx = document.getElementById('progressChart').getContext('2d');
-        const exercise = Storage.getExerciseById(this.currentExerciseId);
-
-        // Destroy existing chart
-        if (this.progressChart) {
-            this.progressChart.destroy();
-        }
-
-        // Prepare data
-        const labels = workouts.map(w => w.date);
-        const weights = workouts.map(w => w.weight || 0);
-
-        // Chart configuration
-        this.progressChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    label: exercise.requiresWeight ? 'Weight (kg)' : 'Reps',
-                    data: exercise.requiresWeight ? weights : workouts.map(w => w.reps),
-                    borderColor: CONFIG.charts.colors.primary,
-                    backgroundColor: CONFIG.charts.colors.primaryLight,
-                    tension: 0.1,
-                    fill: true
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: true
-                    },
-                    tooltip: {
-                        callbacks: {
-                            afterLabel: (context) => {
-                                const workout = workouts[context.dataIndex];
-                                return `Reps: ${workout.reps}`;
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: exercise.requiresWeight ? 'Weight (kg)' : 'Reps'
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    }
-                }
-            }
-        });
-    },
+    // renderProgressChart removed (weight progression chart is deprecated)
 
     /**
      * Render volume chart (weekly totals)

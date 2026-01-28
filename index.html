@@ -164,12 +164,7 @@
                 </div>
 
                 <div class="stats-controls">
-                    <div class="form-group">
-                        <label for="statsExercise">Select Exercise:</label>
-                        <select id="statsExercise">
-                            <option value="">-- Select Exercise --</option>
-                        </select>
-                    </div>
+
 
                     <div class="view-toggle" role="group" aria-label="Time range selection">
                         <button class="view-btn active" data-view="10sessions" aria-label="View last 10 sessions" aria-pressed="true">Last 10 Sessions</button>
@@ -181,36 +176,15 @@
 
                 <div id="statsContent" style="display: none;">
                     <!-- Progress Chart -->
-                    <div class="chart-container">
-                        <h3>Weight Progression</h3>
-                        <canvas id="progressChart"></canvas>
-                    </div>
+
 
                     <!-- Volume Chart -->
-                    <div class="chart-container">
-                        <h3>Weekly Volume</h3>
-                        <canvas id="volumeChart"></canvas>
-                    </div>
+
+                    <!-- Exercise Sub-Tabs for All Exercises -->
+                    <div id="statsContent"></div>
 
                     <!-- Stats Summary -->
-                    <div class="stats-summary">
-                        <div class="stat-card">
-                            <h4>Current 1RM Estimate</h4>
-                            <p class="stat-value" id="oneRepMax">-</p>
-                        </div>
-                        <div class="stat-card">
-                            <h4>Total Sessions</h4>
-                            <p class="stat-value" id="totalSessions">-</p>
-                        </div>
-                        <div class="stat-card">
-                            <h4>Total Volume</h4>
-                            <p class="stat-value" id="totalVolume">-</p>
-                        </div>
-                        <div class="stat-card">
-                            <h4>Best Set</h4>
-                            <p class="stat-value" id="bestSet">-</p>
-                        </div>
-                    </div>
+
                 </div>
 
                 <div id="noStatsMessage" class="empty-state">

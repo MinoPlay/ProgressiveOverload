@@ -71,8 +71,12 @@ export const Charts = {
     async loadAndRenderTabs() {
         const { startDate, endDate } = this.getDateRange();
         const exercises = Storage.getExercises();
+        const loadingIndicator = document.getElementById('loadingIndicator');
         
         try {
+            // Show loading indicator
+            if (loadingIndicator) loadingIndicator.style.display = 'flex';
+
             // Collect data for all exercises (in parallel for speed)
             const exerciseData = await Promise.all(
                 exercises.map(async (exercise) => {
@@ -83,6 +87,9 @@ export const Charts = {
                     };
                 })
             );
+
+            // Hide loading indicator
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
 
             // Filter out exercises with no data
             const dataWithWorkouts = exerciseData.filter(d => d.workouts.length > 0);
@@ -135,6 +142,9 @@ export const Charts = {
 
         } catch (error) {
             console.error('Error loading chart data:', error);
+            // Hide loading indicator on error
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) loadingIndicator.style.display = 'none';
             document.getElementById('statsContent').innerHTML = '<p class="empty-state">Error loading statistics. Please try again.</p>';
         }
     },

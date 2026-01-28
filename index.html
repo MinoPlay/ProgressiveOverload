@@ -10,61 +10,12 @@
     <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-    <!-- Authentication Modal -->
-    <div id="authModal" class="modal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2>🔐 Setup Required</h2>
-            </div>
-            <div class="modal-body">
-                <div class="security-warning">
-                    <h3>⚠️ SECURITY NOTICE</h3>
-                    <p><strong>Your Personal Access Token will be stored in your browser's localStorage.</strong></p>
-                    <ul>
-                        <li>✗ localStorage is NOT encrypted</li>
-                        <li>✗ Anyone with access to this browser can see your token</li>
-                        <li>✗ Your token grants full repository access</li>
-                        <li>✓ Only use on trusted personal devices</li>
-                        <li>✓ Create tokens with short expiration (30-90 days)</li>
-                        <li>✓ Use repository-specific tokens when possible</li>
-                    </ul>
-                    <p><em>By continuing, you acknowledge these risks.</em></p>
-                </div>
-
-                <div class="setup-instructions">
-                    <h3>How to Create a Personal Access Token:</h3>
-                    <ol>
-                        <li>Go to <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings → Tokens</a></li>
-                        <li>Click "Generate new token (classic)"</li>
-                        <li>Give it a name: "Progressive Overload Tracker"</li>
-                        <li>Set expiration: <strong>90 days</strong></li>
-                        <li>Select scope: <strong>repo</strong> (Full control of private repositories)</li>
-                        <li>Click "Generate token" and copy it</li>
-                    </ol>
-                </div>
-
-                <div class="auth-form">
-                    <label for="tokenInput">Personal Access Token:</label>
-                    <input 
-                        type="password" 
-                        id="tokenInput" 
-                        placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                        autocomplete="off"
-                    >
-                    <div id="authError" class="error-message" style="display: none;"></div>
-                    <button id="authSubmit" class="btn btn-primary">Save & Continue</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
     <!-- Main Application -->
     <div id="app" style="display: none;">
         <!-- Header -->
         <header class="app-header">
             <div class="header-content">
                 <h1>💪 Progressive Overload Tracker</h1>
-                <button id="logoutBtn" class="btn btn-secondary">Logout</button>
             </div>
         </header>
 

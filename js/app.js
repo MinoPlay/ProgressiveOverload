@@ -17,20 +17,20 @@ const App = {
     async init() {
         console.log('Progressive Overload Tracker - Initializing...');
 
-        // Initialize authentication
-        const isAuthenticated = Auth.initAuthModal();
-
-        if (isAuthenticated) {
-            await this.initApp();
-        } else {
-            // Wait for authentication event
-            window.addEventListener('authenticated', async () => {
-                await this.initApp();
-            }, { once: true });
+        // Check for token
+        if (!Auth.isAuthenticated()) {
+            const token = Auth.promptForToken();
+            if (!token) {
+                alert('GitHub token is required to use this app.');
+                return;
+            }
         }
 
-        // Initialize logout button
-        Auth.initLogoutButton();
+        // Show app
+        document.getElementById('app').style.display = 'block';
+        
+        // Initialize
+        await this.initApp();
     },
 
     /**

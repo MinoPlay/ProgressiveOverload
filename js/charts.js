@@ -136,7 +136,7 @@ export const Charts = {
                 statsContent.appendChild(tabPane);
 
                 // Render chart and stats for this exercise
-                this.renderVolumeChart(workouts, `volumeChart-${exercise.id}`);
+                this.renderProgressChart(exercise, workouts, `volumeChart-${exercise.id}`);
                 this.renderExerciseStats(exercise, workouts, `stats-${exercise.id}`);
             });
 
@@ -177,16 +177,22 @@ export const Charts = {
     },
 
     /**
-     * Render volume chart for a single exercise
+     * Render progress chart for a single exercise
+     * @param {object} exercise - Exercise object
      * @param {array} workouts - Array of workout objects
      * @param {string} canvasId - Canvas element ID
      */
-    renderVolumeChart(workouts, canvasId) {
+    renderProgressChart(exercise, workouts, canvasId) {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
 
         // Group workouts by week
-        const weeklyData = this.groupByWeek(workouts);
+        const weeklyData = this.groupByWeek(workouts, exercise.requiresWeight);
+
+        // Determine label and y-axis based on exercise type
+        const isWeighted = exercise.requiresWeight;
+        const dataLabel = isWeighted ? 'Weekly Volume (kg)' : 'Total Reps';
+        const yAxisLabel = isWeighted ? 'Volume (kg)' : 'Reps';
 
         // Create chart
         new Chart(ctx.getContext('2d'), {
@@ -194,8 +200,8 @@ export const Charts = {
             data: {
                 labels: weeklyData.labels,
                 datasets: [{
-                    label: 'Weekly Volume (kg)',
-                    data: weeklyData.volumes,
+                    label: dataLabel,
+                    data: weeklyData.values,
                     borderColor: CONFIG.charts.colors.primary,
                     backgroundColor: CONFIG.charts.colors.primary,
                     borderWidth: 2,
@@ -218,7 +224,7 @@ export const Charts = {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Volume (kg)'
+                            text: yAxisLabel
                         }
                     },
                     x: {
@@ -313,11 +319,12 @@ export const Charts = {
     },
 
     /**
-     * Group workouts by week and calculate volume
+     * Group workouts by week and calculate volume or total reps
      * @param {array} workouts - Array of workout objects
-     * @returns {{labels: array, volumes: array}}
+     * @param {boolean} isWeighted - Whether exercise requires weight
+     * @returns {{labels: array, values: array}}
      */
-    groupByWeek(workouts) {
+    groupByWeek(workouts, isWeighted = true) {
         const weeks = new Map();
 
         workouts.forEach(workout => {
@@ -329,14 +336,16 @@ export const Charts = {
                 weeks.set(weekLabel, 0);
             }
 
-            // Calculate volume (reps × weight)
-            const volume = workout.weight ? workout.reps * workout.weight : 0;
-            weeks.set(weekLabel, weeks.get(weekLabel) + volume);
+            // Calculate volume (reps × weight) for weighted exercises, or total reps for bodyweight
+            const value = isWeighted && workout.weight 
+                ? workout.reps * workout.weight 
+                : workout.reps;
+            weeks.set(weekLabel, weeks.get(weekLabel) + value);
         });
 
         return {
             labels: Array.from(weeks.keys()),
-            volumes: Array.from(weeks.values())
+            values: Array.from(weeks.values())
         };
     }
 };

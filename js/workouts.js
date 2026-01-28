@@ -182,22 +182,11 @@ export const Workouts = {
         // Clear and rebuild with safe DOM methods
         container.innerHTML = '';
         
-        // Show last 5 workouts with repeat functionality at the top
-        const quickViewWorkouts = workouts.slice(0, 5);
-        
-        quickViewWorkouts.forEach(workout => {
+        // Show all workouts with repeat functionality
+        workouts.forEach(workout => {
             const item = this.createWorkoutItemWithRepeat(workout);
             container.appendChild(item);
         });
-
-        // If there are more workouts, show remaining ones without repeat button
-        if (workouts.length > 5) {
-            const remainingWorkouts = workouts.slice(5);
-            remainingWorkouts.forEach(workout => {
-                const item = this.createWorkoutItem(workout);
-                container.appendChild(item);
-            });
-        }
     },
 
     /**

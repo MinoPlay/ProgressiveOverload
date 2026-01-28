@@ -1,0 +1,60 @@
+{
+  "exercises": [
+    {
+      "id": "1769598356908_flvdqzdhf",
+      "name": "Bench Press",
+      "equipmentType": "barbell",
+      "requiresWeight": true,
+      "createdAt": "2026-01-28T11:05:56.908Z"
+    },
+    {
+      "id": "1769598356908_63m870ao9",
+      "name": "Squat",
+      "equipmentType": "barbell",
+      "requiresWeight": true,
+      "createdAt": "2026-01-28T11:05:56.908Z"
+    },
+    {
+      "id": "1769598356908_a2079ga75",
+      "name": "Deadlift",
+      "equipmentType": "barbell",
+      "requiresWeight": true,
+      "createdAt": "2026-01-28T11:05:56.908Z"
+    },
+    {
+      "id": "1769598356908_audtljs1j",
+      "name": "Pull-ups",
+      "equipmentType": "bodyweight",
+      "requiresWeight": false,
+      "createdAt": "2026-01-28T11:05:56.908Z"
+    },
+    {
+      "id": "1769598356908_zy0w3s09g",
+      "name": "Overhead Press",
+      "equipmentType": "barbell",
+      "requiresWeight": true,
+      "createdAt": "2026-01-28T11:05:56.908Z"
+    },
+    {
+      "id": "1769598356908_6t3ss20am",
+      "name": "Barbell Rows",
+      "equipmentType": "barbell",
+      "requiresWeight": true,
+      "createdAt": "2026-01-28T11:05:56.908Z"
+    },
+    {
+      "id": "1769598356908_xjkjvzp40",
+      "name": "Dips",
+      "equipmentType": "bodyweight",
+      "requiresWeight": false,
+      "createdAt": "2026-01-28T11:05:56.908Z"
+    },
+    {
+      "id": "1769598356908_vaei2f8dr",
+      "name": "Bicep Curls",
+      "equipmentType": "dumbbell",
+      "requiresWeight": true,
+      "createdAt": "2026-01-28T11:05:56.908Z"
+    }
+  ]
+}

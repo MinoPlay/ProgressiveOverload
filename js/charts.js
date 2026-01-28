@@ -61,20 +61,14 @@ export const Charts = {
         
         if (noStatsMessage) noStatsMessage.style.display = 'none';
 
-        // Create overview table container first
-        const tableContainer = document.createElement('div');
-        tableContainer.className = 'overview-table-container';
-        tableContainer.innerHTML = '<h3>Exercise Overview</h3><div id="overviewTable"></div>';
-        statsContent.appendChild(tableContainer);
-
-        // Load and render data
-        await this.loadAndRenderSeparateCharts();
+        // Load and render tabs
+        await this.loadAndRenderTabs();
     },
 
     /**
-     * Load and render separate charts for each exercise
+     * Load and render tabs for each exercise
      */
-    async loadAndRenderSeparateCharts() {
+    async loadAndRenderTabs() {
         const { startDate, endDate } = this.getDateRange();
         const exercises = Storage.getExercises();
         
@@ -98,25 +92,45 @@ export const Charts = {
                 return;
             }
 
-            // Render overview table first
-            this.renderOverviewTable(dataWithWorkouts);
-
-            // Render individual charts for each exercise
+            // Create tab navigation
             const statsContent = document.getElementById('statsContent');
-            dataWithWorkouts.forEach(({ exercise, workouts }) => {
-                // Create container for this exercise
-                const exerciseSection = document.createElement('div');
-                exerciseSection.className = 'exercise-chart-section';
-                exerciseSection.innerHTML = `
-                    <h3 class="exercise-chart-title">${exercise.name}</h3>
+            const tabNav = document.createElement('div');
+            tabNav.className = 'exercise-tabs-nav';
+            
+            dataWithWorkouts.forEach((data, idx) => {
+                const tabBtn = document.createElement('button');
+                tabBtn.className = 'exercise-tab-btn' + (idx === 0 ? ' active' : '');
+                tabBtn.textContent = data.exercise.name;
+                tabBtn.dataset.tabIndex = idx;
+                tabBtn.addEventListener('click', () => {
+                    // Switch active tab
+                    Array.from(tabNav.children).forEach(b => b.classList.remove('active'));
+                    tabBtn.classList.add('active');
+                    // Show only the selected tab content
+                    Array.from(statsContent.querySelectorAll('.exercise-tab-pane')).forEach((el, i) => {
+                        el.style.display = (i === idx) ? 'block' : 'none';
+                    });
+                });
+                tabNav.appendChild(tabBtn);
+            });
+            statsContent.appendChild(tabNav);
+
+            // Create tab content for each exercise
+            dataWithWorkouts.forEach(({ exercise, workouts }, idx) => {
+                const tabPane = document.createElement('div');
+                tabPane.className = 'exercise-tab-pane';
+                tabPane.style.display = idx === 0 ? 'block' : 'none';
+                tabPane.innerHTML = `
                     <div class="chart-container">
                         <canvas id="volumeChart-${exercise.id}"></canvas>
                     </div>
+                    <div id="stats-${exercise.id}"></div>
                 `;
-                statsContent.appendChild(exerciseSection);
+                statsContent.appendChild(tabPane);
 
-                // Render chart for this exercise
+                // Render chart and stats for this exercise
                 this.renderVolumeChart(workouts, `volumeChart-${exercise.id}`);
+                this.renderExerciseStats(exercise, workouts, `stats-${exercise.id}`);
             });
 
         } catch (error) {
@@ -209,99 +223,83 @@ export const Charts = {
     },
 
     /**
-     * Render overview table with statistics for all exercises
-     * @param {array} exerciseData - Array of {exercise, workouts} objects
+     * Render statistics for a single exercise
+     * @param {object} exercise - Exercise object
+     * @param {array} workouts - Array of workout objects
+     * @param {string} containerId - Container element ID
      */
-    renderOverviewTable(exerciseData) {
-        const tableContainer = document.getElementById('overviewTable');
-        if (!tableContainer) return;
+    renderExerciseStats(exercise, workouts, containerId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
 
-        // Calculate statistics for each exercise
-        const stats = exerciseData.map(({ exercise, workouts }) => {
-            const totalSessions = workouts.length;
+        const totalSessions = workouts.length;
+        let totalVolume = 0;
+        let oneRepMax = '-';
+        let bestSet = '-';
+
+        if (exercise.requiresWeight) {
+            // Calculate total volume
+            workouts.forEach(w => {
+                if (w.weight) {
+                    totalVolume += w.reps * w.weight;
+                }
+            });
+
+            // Calculate 1RM estimate
+            const bestWorkout = workouts.reduce((best, current) => {
+                const currentEstimate = estimateOneRepMax(current.weight, current.reps);
+                const bestEstimate = best ? estimateOneRepMax(best.weight, best.reps) : 0;
+                return currentEstimate > bestEstimate ? current : best;
+            }, null);
             
-            let totalVolume = 0;
-            let oneRepMax = '-';
-            let bestSet = '-';
-
-            if (exercise.requiresWeight) {
-                // Calculate total volume
-                workouts.forEach(w => {
-                    if (w.weight) {
-                        totalVolume += w.reps * w.weight;
-                    }
-                });
-
-                // Calculate 1RM estimate
-                const bestWorkout = workouts.reduce((best, current) => {
-                    const currentEstimate = estimateOneRepMax(current.weight, current.reps);
-                    const bestEstimate = best ? estimateOneRepMax(best.weight, best.reps) : 0;
-                    return currentEstimate > bestEstimate ? current : best;
-                }, null);
-                
-                if (bestWorkout) {
-                    oneRepMax = estimateOneRepMax(bestWorkout.weight, bestWorkout.reps).toFixed(1);
-                }
-
-                // Find best set
-                const best = workouts.reduce((best, current) => {
-                    return (!best || current.weight > best.weight) ? current : best;
-                }, null);
-                
-                if (best) {
-                    bestSet = `${best.weight} kg × ${best.reps}`;
-                }
-            } else {
-                // For bodyweight exercises
-                const best = workouts.reduce((best, current) => {
-                    return (!best || current.reps > best.reps) ? current : best;
-                }, null);
-                
-                if (best) {
-                    bestSet = `${best.reps} reps`;
-                }
+            if (bestWorkout) {
+                oneRepMax = estimateOneRepMax(bestWorkout.weight, bestWorkout.reps).toFixed(1);
             }
 
-            return {
-                name: exercise.name,
-                totalSessions,
-                totalVolume,
-                oneRepMax,
-                bestSet,
-                requiresWeight: exercise.requiresWeight
-            };
-        });
+            // Find best set
+            const best = workouts.reduce((best, current) => {
+                return (!best || current.weight > best.weight) ? current : best;
+            }, null);
+            
+            if (best) {
+                bestSet = `${best.weight} kg × ${best.reps}`;
+            }
+        } else {
+            // For bodyweight exercises
+            const best = workouts.reduce((best, current) => {
+                return (!best || current.reps > best.reps) ? current : best;
+            }, null);
+            
+            if (best) {
+                bestSet = `${best.reps} reps`;
+            }
+        }
 
-        // Sort by total sessions (descending)
-        stats.sort((a, b) => b.totalSessions - a.totalSessions);
-
-        // Generate table HTML
-        const tableHTML = `
-            <table class="overview-table">
-                <thead>
-                    <tr>
-                        <th>Exercise</th>
-                        <th>Sessions</th>
-                        <th>Total Volume</th>
-                        <th>Est. 1RM</th>
-                        <th>Best Set</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${stats.map(stat => `
-                        <tr>
-                            <td class="exercise-name">${stat.name}</td>
-                            <td>${stat.totalSessions}</td>
-                            <td>${stat.requiresWeight && stat.totalVolume > 0 ? `${stat.totalVolume.toLocaleString()} kg` : '-'}</td>
-                            <td>${stat.requiresWeight ? `${stat.oneRepMax} kg` : '-'}</td>
-                            <td>${stat.bestSet}</td>
-                        </tr>
-                    `).join('')}
-                </tbody>
-            </table>
+        // Generate stats HTML
+        const statsHTML = `
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-label">Total Sessions</div>
+                    <div class="stat-value">${totalSessions}</div>
+                </div>
+                ${exercise.requiresWeight ? `
+                <div class="stat-card">
+                    <div class="stat-label">Est. 1RM</div>
+                    <div class="stat-value">${oneRepMax} kg</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Volume</div>
+                    <div class="stat-value">${totalVolume > 0 ? `${totalVolume.toLocaleString()} kg` : '-'}</div>
+                </div>
+                ` : ''}
+                <div class="stat-card">
+                    <div class="stat-label">Best Set</div>
+                    <div class="stat-value">${bestSet}</div>
+                </div>
+            </div>
         `;
 
-        tableContainer.innerHTML = tableHTML;
+        container.innerHTML = statsHTML;
     },
 
     /**

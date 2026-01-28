@@ -46,8 +46,7 @@ export const Storage = {
             id: generateId(),
             name: ex.name,
             equipmentType: ex.equipmentType,
-            requiresWeight: CONFIG.equipmentTypes[ex.equipmentType].requiresWeight,
-            createdAt: new Date().toISOString()
+            requiresWeight: CONFIG.equipmentTypes[ex.equipmentType].requiresWeight
         }));
 
         this.exercises = defaultExercises;
@@ -116,8 +115,7 @@ const trimmedName = exercise.name.trim();
             id: generateId(),
             name: trimmedName,
             equipmentType: exercise.equipmentType,
-            requiresWeight,
-            createdAt: new Date().toISOString()
+            requiresWeight
         };
 
         this.exercises.push(newExercise);
@@ -211,9 +209,7 @@ const trimmedName = exercise.name.trim();
                 exerciseId: workout.exerciseId,
                 date: workout.date,
                 reps: parseInt(workout.reps, 10),
-                weight: workout.weight ? parseFloat(workout.weight) : null,
-                notes: workout.notes || '',
-                timestamp: new Date().toISOString()
+                weight: workout.weight ? parseFloat(workout.weight) : null
             };
 
             this.currentMonthWorkouts.push(newWorkout);
@@ -231,9 +227,7 @@ const trimmedName = exercise.name.trim();
                 exerciseId: workout.exerciseId,
                 date: workout.date,
                 reps: parseInt(workout.reps, 10),
-                weight: workout.weight ? parseFloat(workout.weight) : null,
-                notes: workout.notes || '',
-                timestamp: new Date().toISOString()
+                weight: workout.weight ? parseFloat(workout.weight) : null
             };
 
             monthData.workouts.push(newWorkout);
@@ -275,6 +269,35 @@ const trimmedName = exercise.name.trim();
             .slice()
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
             .slice(0, CONFIG.limits.recentWorkoutsCount);
+    },
+
+    /**
+     * Get workouts for a specific month
+     * @param {number} year - Year (e.g., 2025)
+     * @param {number} month - Month (1-12)
+     * @returns {Promise<array>} Array of workout objects
+     */
+    async getWorkoutsByMonth(year, month) {
+        const date = new Date(year, month - 1, 1);
+        const data = await GitHubAPI.getWorkouts(date);
+        return data.workouts;
+    },
+
+    /**
+     * Get workouts across multiple months by date range
+     * @param {string} startDateStr - Start date in YYYY-MM-DD format
+     * @param {string} endDateStr - End date in YYYY-MM-DD format
+     * @returns {Promise<array>} Array of workout objects
+     */
+    async getWorkoutsByDateRange(startDateStr, endDateStr) {
+        const startDate = parseDate(startDateStr);
+        const endDate = parseDate(endDateStr);
+        
+        if (!startDate || !endDate) {
+            throw new Error('Invalid date range');
+        }
+
+        return await this.getWorkoutsInRange(startDate, endDate);
     }
 };
 // Note: generateId, parseDate, and formatDate are now imported from utils.js

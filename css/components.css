@@ -12,6 +12,7 @@
     display: inline-flex;
     align-items: center;
     gap: var(--spacing-sm);
+    min-height: 44px;
 }
 
 .btn:disabled {
@@ -135,6 +136,16 @@
     border-left: 3px solid var(--primary-color);
 }
 
+.workout-item-quick {
+    border-left: 4px solid var(--primary-color);
+    box-shadow: var(--shadow-md);
+}
+
+.workout-repeat-btn {
+    width: 100%;
+    justify-content: center;
+}
+
 .workout-item-header {
     display: flex;
     justify-content: space-between;
@@ -223,11 +234,12 @@
 .form-group select,
 .form-group textarea {
     width: 100%;
-    padding: 0.75rem;
+    padding: 0.875rem;
     border: 2px solid var(--secondary-color);
     border-radius: var(--radius-md);
     font-size: 1rem;
     transition: border-color var(--transition-base);
+    min-height: 48px;
 }
 
 .form-group input:focus,
@@ -458,6 +470,44 @@
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
+    /* Increase all button sizes for thumb-friendly touch */
+    .btn {
+        padding: 1rem 1.5rem;
+        font-size: 1.0625rem;
+        min-height: 48px;
+    }
+
+    .btn-small {
+        padding: 0.75rem 1rem;
+        font-size: 1rem;
+        min-height: 44px;
+    }
+
+    /* Larger form inputs */
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+        padding: 1rem;
+        font-size: 1.0625rem;
+        min-height: 50px;
+    }
+
+    .form-group label {
+        font-size: 1rem;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .form-group {
+        margin-bottom: var(--spacing-xl);
+    }
+
+    /* Larger view toggle buttons */
+    .view-btn {
+        padding: 0.875rem var(--spacing-lg);
+        font-size: 1rem;
+        min-height: 48px;
+    }
+
     .modal-content {
         max-width: 100%;
         margin: 0;
@@ -494,4 +544,27 @@
     .exercise-card-actions .btn {
         width: 100%;
     }
+
+    /* Increase workout item padding and font sizes */
+    .workout-item {
+        padding: var(--spacing-lg);
+    }
+
+    .workout-item h4 {
+        font-size: 1.15rem;
+    }
+
+    .workout-detail-value {
+        font-size: 1.25rem;
+    }
+
+    /* Stat cards with better readability */
+    .stat-card {
+        padding: var(--spacing-xl);
+    }
+
+    .stat-value {
+        font-size: 2.25rem;
+    }
+}
 }

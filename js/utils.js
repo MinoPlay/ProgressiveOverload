@@ -22,8 +22,8 @@ export function generateId() {
 }
 
 /**
- * Parse date string (MM-DD-YYYY) to Date object
- * @param {string} dateStr - Date string in MM-DD-YYYY format
+ * Parse date string (YYYY-MM-DD) to Date object
+ * @param {string} dateStr - Date string in YYYY-MM-DD format
  * @returns {Date|null} Date object or null if invalid
  */
 export function parseDate(dateStr) {
@@ -32,7 +32,7 @@ export function parseDate(dateStr) {
     const parts = dateStr.split('-');
     if (parts.length !== 3) return null;
     
-    const [month, day, year] = parts.map(n => parseInt(n, 10));
+    const [year, month, day] = parts.map(n => parseInt(n, 10));
     
     if (isNaN(month) || isNaN(day) || isNaN(year)) return null;
     if (month < 1 || month > 12) return null;
@@ -52,7 +52,7 @@ export function parseDate(dateStr) {
 }
 
 /**
- * Format Date object to MM-DD-YYYY string
+ * Format Date object to YYYY-MM-DD string
  * @param {Date} date - Date object
  * @returns {string} Formatted date string
  */
@@ -65,11 +65,11 @@ export function formatDate(date) {
     const day = String(date.getDate()).padStart(2, '0');
     const year = date.getFullYear();
     
-    return `${month}-${day}-${year}`;
+    return `${year}-${month}-${day}`;
 }
 
 /**
- * Validate date string format (MM-DD-YYYY)
+ * Validate date string format (YYYY-MM-DD)
  * @param {string} dateStr - Date string
  * @returns {boolean} True if valid
  */

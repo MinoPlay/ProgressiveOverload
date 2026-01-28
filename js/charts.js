@@ -174,7 +174,7 @@ export const Charts = {
             data: {
                 labels,
                 datasets: [{
-                    label: exercise.requiresWeight ? 'Weight (lbs)' : 'Reps',
+                    label: exercise.requiresWeight ? 'Weight (kg)' : 'Reps',
                     data: exercise.requiresWeight ? weights : workouts.map(w => w.reps),
                     borderColor: CONFIG.charts.colors.primary,
                     backgroundColor: CONFIG.charts.colors.primaryLight,
@@ -203,7 +203,7 @@ export const Charts = {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: exercise.requiresWeight ? 'Weight (lbs)' : 'Reps'
+                            text: exercise.requiresWeight ? 'Weight (kg)' : 'Reps'
                         }
                     },
                     x: {
@@ -238,7 +238,7 @@ export const Charts = {
             data: {
                 labels: weeklyData.labels,
                 datasets: [{
-                    label: 'Total Volume (lbs)',
+                    label: 'Total Volume (kg)',
                     data: weeklyData.volumes,
                     backgroundColor: CONFIG.charts.colors.secondary,
                     borderColor: CONFIG.charts.colors.primary,
@@ -258,7 +258,7 @@ export const Charts = {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Volume (lbs)'
+                            text: 'Volume (kg)'
                         }
                     },
                     x: {
@@ -317,7 +317,7 @@ export const Charts = {
             }, null);
 
             if (bestWorkout) {
-                oneRepMax = `${estimateOneRepMax(bestWorkout.weight, bestWorkout.reps).toFixed(1)} lbs`;
+                oneRepMax = `${estimateOneRepMax(bestWorkout.weight, bestWorkout.reps).toFixed(1)} kg`;
             }
         }
 
@@ -339,7 +339,7 @@ export const Charts = {
                 return (!best || current.weight > best.weight) ? current : best;
             }, null);
             if (best) {
-                bestSet = `${best.weight} lbs × ${best.reps}`;
+                bestSet = `${best.weight} kg × ${best.reps}`;
             }
         } else {
             const best = workouts.reduce((best, current) => {
@@ -354,7 +354,7 @@ export const Charts = {
         document.getElementById('oneRepMax').textContent = oneRepMax;
         document.getElementById('totalSessions').textContent = totalSessions;
         document.getElementById('totalVolume').textContent = totalVolume > 0 
-            ? `${totalVolume.toLocaleString()} lbs` 
+            ? `${totalVolume.toLocaleString()} kg` 
             : '-';
         document.getElementById('bestSet').textContent = bestSet;
     }

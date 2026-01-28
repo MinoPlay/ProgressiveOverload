@@ -21,9 +21,9 @@
 
         <!-- Navigation -->
         <nav class="app-nav" role="navigation" aria-label="Main navigation">
-            <button class="nav-btn active" data-section="exercises" aria-label="Navigate to Manage Exercises section" aria-current="page">Manage Exercises</button>
-            <button class="nav-btn" data-section="workout" aria-label="Navigate to Log Workout section">Log Workout</button>
+            <button class="nav-btn active" data-section="workout" aria-label="Navigate to Log Workout section" aria-current="page">Log Workout</button>
             <button class="nav-btn" data-section="statistics" aria-label="Navigate to Statistics section">Statistics</button>
+            <button class="nav-btn" data-section="exercises" aria-label="Navigate to Manage Exercises section">Manage Exercises</button>
         </nav>
 
         <!-- Loading Indicator -->
@@ -35,7 +35,7 @@
         <!-- Main Content -->
         <main class="app-content">
             <!-- Exercises Section -->
-            <section id="exercisesSection" class="content-section active" role="region" aria-labelledby="exercises-heading">
+            <section id="exercisesSection" class="content-section" role="region" aria-labelledby="exercises-heading">
                 <div class="section-header">
                     <h2 id="exercises-heading">Manage Exercises</h2>
                     <button id="addExerciseBtn" class="btn btn-primary" aria-label="Add new exercise">+ Add New Exercise</button>
@@ -88,7 +88,7 @@
             </section>
 
             <!-- Workout Section -->
-            <section id="workoutSection" class="content-section" role="region" aria-labelledby="workout-heading">
+            <section id="workoutSection" class="content-section active" role="region" aria-labelledby="workout-heading">
                 <div class="section-header">
                     <h2 id="workout-heading">Log Workout</h2>
                 </div>
@@ -123,13 +123,13 @@
                             </div>
 
                             <div class="form-group" id="weightGroup">
-                                <label for="workoutWeight">Weight (lbs):</label>
+                                <label for="workoutWeight">Weight (kg):</label>
                                 <input 
                                     type="number" 
                                     id="workoutWeight" 
                                     min="0" 
-                                    step="0.5" 
-                                    placeholder="e.g., 185"
+                                    step="2.5" 
+                                    placeholder="e.g., 60"
                                 >
                             </div>
 
@@ -138,27 +138,12 @@
                                     Date <span class="required" aria-label="required">*</span>
                                 </label>
                                 <input 
-                                    type="text" 
+                                    type="date" 
                                     id="workoutDate" 
-                                    placeholder="MM-DD-YYYY"
                                     required
                                     aria-required="true"
-                                    aria-describedby="date-hint"
                                 >
-                                <span id="date-hint" class="form-hint">Format: MM-DD-YYYY</span>
                             </div>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="workoutNotes">Notes (optional):</label>
-                            <textarea 
-                                id="workoutNotes" 
-                                rows="3" 
-                                placeholder="How did it feel? Any observations?"
-                                maxlength="500"
-                                aria-describedby="notes-hint"
-                            ></textarea>
-                            <span id="notes-hint" class="form-hint">Maximum 500 characters</span>
                         </div>
 
                         <button type="submit" class="btn btn-primary">Log Workout</button>

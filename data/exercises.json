@@ -4,57 +4,139 @@
       "id": "1769598356908_flvdqzdhf",
       "name": "Bench Press",
       "equipmentType": "barbell",
-      "requiresWeight": true,
-      "createdAt": "2026-01-28T11:05:56.908Z"
+      "requiresWeight": true
     },
     {
       "id": "1769598356908_63m870ao9",
-      "name": "Squat",
+      "name": "Back Squats",
       "equipmentType": "barbell",
-      "requiresWeight": true,
-      "createdAt": "2026-01-28T11:05:56.908Z"
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356909_frontsquat",
+      "name": "Front Squats",
+      "equipmentType": "barbell",
+      "requiresWeight": true
     },
     {
       "id": "1769598356908_a2079ga75",
       "name": "Deadlift",
       "equipmentType": "barbell",
-      "requiresWeight": true,
-      "createdAt": "2026-01-28T11:05:56.908Z"
+      "requiresWeight": true
     },
     {
       "id": "1769598356908_audtljs1j",
       "name": "Pull-ups",
       "equipmentType": "bodyweight",
-      "requiresWeight": false,
-      "createdAt": "2026-01-28T11:05:56.908Z"
+      "requiresWeight": false
+    },
+    {
+      "id": "1769598356910_assistpullup",
+      "name": "Assisted Pull-ups",
+      "equipmentType": "machines",
+      "requiresWeight": true
     },
     {
       "id": "1769598356908_zy0w3s09g",
       "name": "Overhead Press",
       "equipmentType": "barbell",
-      "requiresWeight": true,
-      "createdAt": "2026-01-28T11:05:56.908Z"
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356911_barbshldpress",
+      "name": "Barbell Shoulder Press",
+      "equipmentType": "barbell",
+      "requiresWeight": true
     },
     {
       "id": "1769598356908_6t3ss20am",
       "name": "Barbell Rows",
       "equipmentType": "barbell",
-      "requiresWeight": true,
-      "createdAt": "2026-01-28T11:05:56.908Z"
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356912_bentoverrows",
+      "name": "Bent Over Rows",
+      "equipmentType": "barbell",
+      "requiresWeight": true
     },
     {
       "id": "1769598356908_xjkjvzp40",
       "name": "Dips",
       "equipmentType": "bodyweight",
-      "requiresWeight": false,
-      "createdAt": "2026-01-28T11:05:56.908Z"
+      "requiresWeight": false
     },
     {
       "id": "1769598356908_vaei2f8dr",
       "name": "Bicep Curls",
       "equipmentType": "dumbbell",
-      "requiresWeight": true,
-      "createdAt": "2026-01-28T11:05:56.908Z"
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356913_dumbbellpress",
+      "name": "Dumbbell Press",
+      "equipmentType": "dumbbell",
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356914_inclinedumbpress",
+      "name": "Inclined Dumbbell Press",
+      "equipmentType": "dumbbell",
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356915_declinedumbpress",
+      "name": "Declined Dumbbell Press",
+      "equipmentType": "dumbbell",
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356916_dumbbellflies",
+      "name": "Dumbbell Flies",
+      "equipmentType": "dumbbell",
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356917_inclinedumbflies",
+      "name": "Inclined Dumbbell Flies",
+      "equipmentType": "dumbbell",
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356918_seatedumbpress",
+      "name": "Seated Dumbbell Press",
+      "equipmentType": "dumbbell",
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356919_lateralraise",
+      "name": "Lateral Raise",
+      "equipmentType": "dumbbell",
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356920_hipthrust",
+      "name": "Hip Thrust",
+      "equipmentType": "barbell",
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356921_facepulls",
+      "name": "Face Pulls",
+      "equipmentType": "machines",
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356922_pulldowns",
+      "name": "Pulldowns",
+      "equipmentType": "machines",
+      "requiresWeight": true
+    },
+    {
+      "id": "1769598356923_neckturns",
+      "name": "Neck Turns",
+      "equipmentType": "bodyweight",
+      "requiresWeight": false
     }
   ]
 }

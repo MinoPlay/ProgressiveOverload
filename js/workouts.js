@@ -99,7 +99,6 @@ export const Workouts = {
         const reps = document.getElementById('workoutReps').value;
         const weight = document.getElementById('workoutWeight').value;
         const date = document.getElementById('workoutDate').value;
-        const notes = document.getElementById('workoutNotes').value;
 
         // Validate required fields
         if (!exerciseId || !reps || !date) {
@@ -109,7 +108,7 @@ export const Workouts = {
 
         // Validate date format
         if (!isValidDate(date)) {
-            showToast('Invalid date format. Use MM-DD-YYYY', 'error');
+            showToast('Invalid date format. Use YYYY-MM-DD', 'error');
             return;
         }
 
@@ -139,19 +138,12 @@ export const Workouts = {
             }
         }
 
-        // Validate notes length
-        if (notes && notes.length > CONFIG.limits.maxNotesLength) {
-            showToast(`Notes must be ${CONFIG.limits.maxNotesLength} characters or less`, 'error');
-            return;
-        }
-
         try {
             const workout = {
                 exerciseId,
                 reps: repsValidation.value,
                 weight: weight ? parseFloat(weight) : null,
-                date,
-                notes: notes.trim()
+                date
             };
 
             await Storage.addWorkout(workout);
@@ -190,10 +182,111 @@ export const Workouts = {
         // Clear and rebuild with safe DOM methods
         container.innerHTML = '';
         
-        workouts.forEach(workout => {
-            const item = this.createWorkoutItem(workout);
+        // Show last 5 workouts with repeat functionality at the top
+        const quickViewWorkouts = workouts.slice(0, 5);
+        
+        quickViewWorkouts.forEach(workout => {
+            const item = this.createWorkoutItemWithRepeat(workout);
             container.appendChild(item);
         });
+
+        // If there are more workouts, show remaining ones without repeat button
+        if (workouts.length > 5) {
+            const remainingWorkouts = workouts.slice(5);
+            remainingWorkouts.forEach(workout => {
+                const item = this.createWorkoutItem(workout);
+                container.appendChild(item);
+            });
+        }
+    },
+
+    /**
+     * Create workout item element with Repeat button (XSS-safe)
+     * @param {object} workout - Workout object
+     * @returns {HTMLElement} Workout item element
+     */
+    createWorkoutItemWithRepeat(workout) {
+        const exercise = Storage.getExerciseById(workout.exerciseId);
+        
+        const item = document.createElement('div');
+        item.className = 'workout-item fade-in workout-item-quick';
+
+        const header = document.createElement('div');
+        header.className = 'workout-item-header';
+
+        const titleContainer = document.createElement('div');
+        
+        const title = document.createElement('h4');
+        title.textContent = exercise ? exercise.name : 'Unknown Exercise';
+
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'workout-date';
+        dateSpan.textContent = workout.date;
+
+        titleContainer.appendChild(title);
+        header.appendChild(titleContainer);
+        header.appendChild(dateSpan);
+        item.appendChild(header);
+
+        const details = document.createElement('div');
+        details.className = 'workout-details';
+
+        // Add reps
+        const repsDetail = this.createWorkoutDetail('Reps', workout.reps);
+        details.appendChild(repsDetail);
+
+        // Add weight if present
+        if (workout.weight) {
+            const weightDetail = this.createWorkoutDetail('Weight', `${workout.weight} kg`);
+            details.appendChild(weightDetail);
+
+            const volumeDetail = this.createWorkoutDetail('Volume', `${(workout.weight * workout.reps).toFixed(0)} kg`);
+            details.appendChild(volumeDetail);
+        }
+
+        item.appendChild(details);
+
+        // Add Repeat button
+        const repeatBtn = document.createElement('button');
+        repeatBtn.className = 'btn btn-secondary btn-small workout-repeat-btn';
+        repeatBtn.textContent = '🔁 Repeat';
+        repeatBtn.setAttribute('aria-label', `Repeat workout: ${exercise ? exercise.name : 'Unknown'}`);
+        repeatBtn.addEventListener('click', () => this.repeatWorkout(workout));
+        
+        const btnContainer = document.createElement('div');
+        btnContainer.style.marginTop = 'var(--spacing-md)';
+        btnContainer.appendChild(repeatBtn);
+        item.appendChild(btnContainer);
+
+        return item;
+    },
+
+    /**
+     * Repeat a workout by pre-filling the form
+     * @param {object} workout - Workout object to repeat
+     */
+    repeatWorkout(workout) {
+        // Scroll to form
+        document.getElementById('workoutFormElement').scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+        // Pre-fill form
+        document.getElementById('workoutExercise').value = workout.exerciseId;
+        document.getElementById('workoutReps').value = workout.reps;
+        
+        // Update weight field visibility and value
+        this.updateWeightField();
+        if (workout.weight) {
+            document.getElementById('workoutWeight').value = workout.weight;
+        }
+        
+        // Set today's date by default
+        this.setDefaultDate();
+
+        // Focus on reps field for quick adjustment
+        document.getElementById('workoutReps').focus();
+
+        const exercise = Storage.getExerciseById(workout.exerciseId);
+        showToast(`Ready to log: ${exercise ? exercise.name : 'workout'}`, 'info');
     },
 
     /**
@@ -230,22 +323,14 @@ export const Workouts = {
 
         // Add weight if present
         if (workout.weight) {
-            const weightDetail = this.createWorkoutDetail('Weight', `${workout.weight} lbs`);
+            const weightDetail = this.createWorkoutDetail('Weight', `${workout.weight} kg`);
             details.appendChild(weightDetail);
 
-            const volumeDetail = this.createWorkoutDetail('Volume', `${(workout.weight * workout.reps).toFixed(0)} lbs`);
+            const volumeDetail = this.createWorkoutDetail('Volume', `${(workout.weight * workout.reps).toFixed(0)} kg`);
             details.appendChild(volumeDetail);
         }
 
         item.appendChild(details);
-
-        // Add notes if present
-        if (workout.notes) {
-            const notes = document.createElement('div');
-            notes.className = 'workout-notes';
-            notes.textContent = workout.notes; // Safe from XSS
-            item.appendChild(notes);
-        }
 
         return item;
     },

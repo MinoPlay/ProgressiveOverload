@@ -4,14 +4,14 @@
 .btn {
     padding: 0.75rem 1.5rem;
     border: none;
-    border-radius: 6px;
+    border-radius: var(--radius-md);
     font-size: 1rem;
     font-weight: 500;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-base);
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
 }
 
 .btn:disabled {
@@ -20,8 +20,8 @@
 }
 
 .btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
 }
 
 .btn-primary:hover:not(:disabled) {
@@ -30,17 +30,17 @@
 }
 
 .btn-secondary {
-    background: #e0e0e0;
-    color: #333;
+    background: var(--secondary-color);
+    color: var(--text-primary);
 }
 
 .btn-secondary:hover:not(:disabled) {
-    background: #d0d0d0;
+    background: var(--secondary-dark);
 }
 
 .btn-danger {
-    background: #f44336;
-    color: white;
+    background: var(--error-color);
+    color: var(--text-inverse);
 }
 
 .btn-danger:hover:not(:disabled) {
@@ -48,71 +48,71 @@
 }
 
 .btn-small {
-    padding: 0.5rem 1rem;
+    padding: var(--spacing-sm) var(--spacing-md);
     font-size: 0.875rem;
 }
 
 /* View Toggle Buttons */
 .view-btn {
-    padding: 0.5rem 1rem;
-    background: #f5f5f5;
-    border: 2px solid #e0e0e0;
-    border-radius: 6px;
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: var(--bg-secondary);
+    border: 2px solid var(--secondary-color);
+    border-radius: var(--radius-md);
     font-size: 0.9rem;
     font-weight: 500;
-    color: #666;
+    color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all var(--transition-base);
 }
 
 .view-btn:hover {
-    border-color: #667eea;
-    color: #667eea;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .view-btn.active {
-    background: #667eea;
-    border-color: #667eea;
-    color: white;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: var(--text-inverse);
 }
 
 /* Cards */
 .exercise-card {
-    background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    transition: all 0.3s ease;
-    border-left: 4px solid #667eea;
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
+    transition: all var(--transition-base);
+    border-left: 4px solid var(--primary-color);
 }
 
 .exercise-card:hover {
     transform: translateY(-2px);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    box-shadow: var(--shadow-lg);
 }
 
 .exercise-card-header {
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: 1rem;
+    margin-bottom: var(--spacing-md);
 }
 
 .exercise-card h3 {
     font-size: 1.25rem;
-    color: #333;
-    margin-bottom: 0.5rem;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-sm);
 }
 
 .exercise-card-actions {
     display: flex;
-    gap: 0.5rem;
+    gap: var(--spacing-sm);
 }
 
 .equipment-badge {
     display: inline-block;
     padding: 0.25rem 0.75rem;
-    border-radius: 12px;
+    border-radius: var(--radius-xl);
     font-size: 0.85rem;
     font-weight: 500;
     background: #e3f2fd;
@@ -128,34 +128,34 @@
 
 /* Workout Items */
 .workout-item {
-    background: white;
-    border-radius: 8px;
-    padding: 1rem;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    border-left: 3px solid #667eea;
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    border-left: 3px solid var(--primary-color);
 }
 
 .workout-item-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--spacing-sm);
 }
 
 .workout-item h4 {
     font-size: 1.1rem;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .workout-date {
     font-size: 0.85rem;
-    color: #999;
+    color: var(--text-light);
 }
 
 .workout-details {
     display: flex;
-    gap: 1rem;
-    margin-top: 0.5rem;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-sm);
 }
 
 .workout-detail {
@@ -165,58 +165,58 @@
 
 .workout-detail-label {
     font-size: 0.75rem;
-    color: #999;
+    color: var(--text-light);
     text-transform: uppercase;
 }
 
 .workout-detail-value {
     font-size: 1.1rem;
     font-weight: 600;
-    color: #667eea;
+    color: var(--primary-color);
 }
 
 .workout-notes {
-    margin-top: 0.5rem;
-    padding-top: 0.5rem;
-    border-top: 1px solid #f0f0f0;
+    margin-top: var(--spacing-sm);
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-light);
     font-size: 0.9rem;
-    color: #666;
+    color: var(--text-secondary);
     font-style: italic;
 }
 
 /* Stat Cards */
 .stat-card {
-    background: white;
-    border-radius: 8px;
-    padding: 1.5rem;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    box-shadow: var(--shadow-md);
     text-align: center;
 }
 
 .stat-card h4 {
     font-size: 0.9rem;
-    color: #999;
+    color: var(--text-light);
     text-transform: uppercase;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--spacing-sm);
 }
 
 .stat-value {
     font-size: 2rem;
     font-weight: 700;
-    color: #667eea;
+    color: var(--primary-color);
     margin: 0;
 }
 
 /* Form Elements */
 .form-group {
-    margin-bottom: 1.5rem;
+    margin-bottom: var(--spacing-lg);
 }
 
 .form-group label {
     display: block;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--spacing-sm);
     font-weight: 500;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .form-group input,
@@ -224,17 +224,17 @@
 .form-group textarea {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 6px;
+    border: 2px solid var(--secondary-color);
+    border-radius: var(--radius-md);
     font-size: 1rem;
-    transition: border-color 0.3s ease;
+    transition: border-color var(--transition-base);
 }
 
 .form-group input:focus,
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--primary-color);
 }
 
 .form-group textarea {
@@ -244,101 +244,101 @@
 
 .form-actions {
     display: flex;
-    gap: 1rem;
-    margin-top: 1.5rem;
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-lg);
 }
 
 /* Modal */
 .modal {
     display: flex;
     position: fixed;
-    z-index: 1000;
+    z-index: var(--z-modal);
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--bg-overlay);
     align-items: center;
     justify-content: center;
-    padding: 1rem;
+    padding: var(--spacing-md);
 }
 
 .modal-content {
-    background: white;
-    border-radius: 12px;
+    background: var(--bg-primary);
+    border-radius: var(--radius-xl);
     max-width: 600px;
     width: 100%;
     max-height: 90vh;
     overflow-y: auto;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    box-shadow: var(--shadow-xl);
 }
 
 .modal-header {
-    padding: 1.5rem 2rem;
-    border-bottom: 2px solid #e0e0e0;
+    padding: var(--spacing-lg) var(--spacing-xl);
+    border-bottom: 2px solid var(--secondary-color);
 }
 
 .modal-header h2 {
     margin: 0;
-    color: #333;
+    color: var(--text-primary);
 }
 
 .modal-body {
-    padding: 2rem;
+    padding: var(--spacing-xl);
 }
 
 /* Security Warning */
 .security-warning {
     background: #fff3cd;
     border: 2px solid #ffc107;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
 }
 
 .security-warning h3 {
     color: #856404;
-    margin-bottom: 1rem;
+    margin-bottom: var(--spacing-md);
 }
 
 .security-warning p {
     color: #856404;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--spacing-sm);
 }
 
 .security-warning ul {
-    margin: 1rem 0;
-    padding-left: 1.5rem;
+    margin: var(--spacing-md) 0;
+    padding-left: var(--spacing-lg);
 }
 
 .security-warning li {
     color: #856404;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--spacing-sm);
 }
 
 /* Setup Instructions */
 .setup-instructions {
     background: #e3f2fd;
     border: 2px solid #2196f3;
-    border-radius: 8px;
-    padding: 1.5rem;
-    margin-bottom: 2rem;
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-lg);
+    margin-bottom: var(--spacing-xl);
 }
 
 .setup-instructions h3 {
     color: #1565c0;
-    margin-bottom: 1rem;
+    margin-bottom: var(--spacing-md);
 }
 
 .setup-instructions ol {
-    margin: 1rem 0;
-    padding-left: 1.5rem;
+    margin: var(--spacing-md) 0;
+    padding-left: var(--spacing-lg);
 }
 
 .setup-instructions li {
     color: #1565c0;
-    margin-bottom: 0.5rem;
+    margin-bottom: var(--spacing-sm);
 }
 
 .setup-instructions a {
@@ -348,22 +348,22 @@
 
 /* Auth Form */
 .auth-form {
-    margin-top: 1rem;
+    margin-top: var(--spacing-md);
 }
 
 .auth-form input {
     width: 100%;
     padding: 0.75rem;
-    border: 2px solid #e0e0e0;
-    border-radius: 6px;
+    border: 2px solid var(--secondary-color);
+    border-radius: var(--radius-md);
     font-size: 1rem;
     font-family: monospace;
-    margin-bottom: 1rem;
+    margin-bottom: var(--spacing-md);
 }
 
 .auth-form input:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: var(--primary-color);
 }
 
 /* Loading Indicator */
@@ -372,13 +372,13 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 3rem;
+    padding: var(--spacing-xxl);
 }
 
 .spinner {
-    border: 4px solid #f3f3f3;
-    border-top: 4px solid #667eea;
-    border-radius: 50%;
+    border: 4px solid var(--border-light);
+    border-top: 4px solid var(--primary-color);
+    border-radius: var(--radius-full);
     width: 50px;
     height: 50px;
     animation: spin 1s linear infinite;
@@ -391,19 +391,19 @@
 
 /* Error Message */
 .error-message {
-    background: #ffebee;
-    border: 1px solid #f44336;
+    background: var(--error-light);
+    border: 1px solid var(--error-color);
     color: #c62828;
     padding: 0.75rem;
-    border-radius: 6px;
-    margin-bottom: 1rem;
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-md);
 }
 
 /* Empty State */
 .empty-state {
     text-align: center;
-    padding: 3rem;
-    color: #999;
+    padding: var(--spacing-xxl);
+    color: var(--text-light);
 }
 
 .empty-state p {
@@ -413,24 +413,24 @@
 /* Toast Notifications */
 .toast-container {
     position: fixed;
-    bottom: 2rem;
-    right: 2rem;
-    z-index: 2000;
+    bottom: var(--spacing-xl);
+    right: var(--spacing-xl);
+    z-index: var(--z-toast);
     display: flex;
     flex-direction: column;
-    gap: 1rem;
+    gap: var(--spacing-md);
 }
 
 .toast {
-    background: white;
-    border-radius: 8px;
-    padding: 1rem 1.5rem;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md) var(--spacing-lg);
+    box-shadow: var(--shadow-lg);
     display: flex;
     align-items: center;
-    gap: 1rem;
+    gap: var(--spacing-md);
     min-width: 300px;
-    animation: slideIn 0.3s ease;
+    animation: slideIn var(--transition-base);
 }
 
 @keyframes slideIn {
@@ -445,15 +445,15 @@
 }
 
 .toast.success {
-    border-left: 4px solid #4caf50;
+    border-left: 4px solid var(--success-color);
 }
 
 .toast.error {
-    border-left: 4px solid #f44336;
+    border-left: 4px solid var(--error-color);
 }
 
 .toast.info {
-    border-left: 4px solid #2196f3;
+    border-left: 4px solid var(--info-color);
 }
 
 /* Responsive Adjustments */
@@ -466,7 +466,7 @@
 
     .modal-body,
     .modal-header {
-        padding: 1.5rem;
+        padding: var(--spacing-lg);
     }
 
     .form-actions {
@@ -478,9 +478,9 @@
     }
 
     .toast-container {
-        left: 1rem;
-        right: 1rem;
-        bottom: 1rem;
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        bottom: var(--spacing-md);
     }
 
     .toast {

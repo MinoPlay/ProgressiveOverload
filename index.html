@@ -20,25 +20,25 @@
         </header>
 
         <!-- Navigation -->
-        <nav class="app-nav">
-            <button class="nav-btn active" data-section="exercises">Manage Exercises</button>
-            <button class="nav-btn" data-section="workout">Log Workout</button>
-            <button class="nav-btn" data-section="statistics">Statistics</button>
+        <nav class="app-nav" role="navigation" aria-label="Main navigation">
+            <button class="nav-btn active" data-section="exercises" aria-label="Navigate to Manage Exercises section" aria-current="page">Manage Exercises</button>
+            <button class="nav-btn" data-section="workout" aria-label="Navigate to Log Workout section">Log Workout</button>
+            <button class="nav-btn" data-section="statistics" aria-label="Navigate to Statistics section">Statistics</button>
         </nav>
 
         <!-- Loading Indicator -->
-        <div id="loadingIndicator" class="loading" style="display: none;">
-            <div class="spinner"></div>
+        <div id="loadingIndicator" class="loading" style="display: none;" role="status" aria-live="polite" aria-label="Loading content">
+            <div class="spinner" aria-hidden="true"></div>
             <p>Loading...</p>
         </div>
 
         <!-- Main Content -->
         <main class="app-content">
             <!-- Exercises Section -->
-            <section id="exercisesSection" class="content-section active">
+            <section id="exercisesSection" class="content-section active" role="region" aria-labelledby="exercises-heading">
                 <div class="section-header">
-                    <h2>Manage Exercises</h2>
-                    <button id="addExerciseBtn" class="btn btn-primary">+ Add New Exercise</button>
+                    <h2 id="exercises-heading">Manage Exercises</h2>
+                    <button id="addExerciseBtn" class="btn btn-primary" aria-label="Add new exercise">+ Add New Exercise</button>
                 </div>
 
                 <!-- Add/Edit Exercise Form -->
@@ -48,18 +48,24 @@
                         <input type="hidden" id="exerciseId">
                         
                         <div class="form-group">
-                            <label for="exerciseName">Exercise Name:</label>
+                            <label for="exerciseName">
+                                Exercise Name <span class="required" aria-label="required">*</span>
+                            </label>
                             <input 
                                 type="text" 
                                 id="exerciseName" 
                                 placeholder="e.g., Bench Press"
                                 required
+                                aria-required="true"
+                                maxlength="100"
                             >
                         </div>
 
                         <div class="form-group">
-                            <label for="equipmentType">Equipment Type:</label>
-                            <select id="equipmentType" required>
+                            <label for="equipmentType">
+                                Equipment Type <span class="required" aria-label="required">*</span>
+                            </label>
+                            <select id="equipmentType" required aria-required="true">
                                 <option value="">-- Select Equipment --</option>
                                 <option value="barbell">Barbell</option>
                                 <option value="dumbbell">Dumbbell</option>
@@ -82,23 +88,27 @@
             </section>
 
             <!-- Workout Section -->
-            <section id="workoutSection" class="content-section">
+            <section id="workoutSection" class="content-section" role="region" aria-labelledby="workout-heading">
                 <div class="section-header">
-                    <h2>Log Workout</h2>
+                    <h2 id="workout-heading">Log Workout</h2>
                 </div>
 
                 <div class="form-container">
                     <form id="workoutFormElement">
                         <div class="form-group">
-                            <label for="workoutExercise">Exercise:</label>
-                            <select id="workoutExercise" required>
+                            <label for="workoutExercise">
+                                Exercise <span class="required" aria-label="required">*</span>
+                            </label>
+                            <select id="workoutExercise" required aria-required="true">
                                 <option value="">-- Select Exercise --</option>
                             </select>
                         </div>
 
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="workoutReps">Reps:</label>
+                                <label for="workoutReps">
+                                    Reps <span class="required" aria-label="required">*</span>
+                                </label>
                                 <input 
                                     type="number" 
                                     id="workoutReps" 
@@ -106,7 +116,10 @@
                                     max="999" 
                                     placeholder="e.g., 8"
                                     required
+                                    aria-required="true"
+                                    aria-describedby="reps-hint"
                                 >
+                                <span id="reps-hint" class="form-hint">Enter between 1 and 999</span>
                             </div>
 
                             <div class="form-group" id="weightGroup">
@@ -121,13 +134,18 @@
                             </div>
 
                             <div class="form-group">
-                                <label for="workoutDate">Date:</label>
+                                <label for="workoutDate">
+                                    Date <span class="required" aria-label="required">*</span>
+                                </label>
                                 <input 
                                     type="text" 
                                     id="workoutDate" 
                                     placeholder="MM-DD-YYYY"
                                     required
+                                    aria-required="true"
+                                    aria-describedby="date-hint"
                                 >
+                                <span id="date-hint" class="form-hint">Format: MM-DD-YYYY</span>
                             </div>
                         </div>
 
@@ -137,7 +155,10 @@
                                 id="workoutNotes" 
                                 rows="3" 
                                 placeholder="How did it feel? Any observations?"
+                                maxlength="500"
+                                aria-describedby="notes-hint"
                             ></textarea>
+                            <span id="notes-hint" class="form-hint">Maximum 500 characters</span>
                         </div>
 
                         <button type="submit" class="btn btn-primary">Log Workout</button>
@@ -152,9 +173,9 @@
             </section>
 
             <!-- Statistics Section -->
-            <section id="statisticsSection" class="content-section">
+            <section id="statisticsSection" class="content-section" role="region" aria-labelledby="statistics-heading">
                 <div class="section-header">
-                    <h2>Statistics & Progress</h2>
+                    <h2 id="statistics-heading">Statistics & Progress</h2>
                 </div>
 
                 <div class="stats-controls">
@@ -165,11 +186,11 @@
                         </select>
                     </div>
 
-                    <div class="view-toggle">
-                        <button class="view-btn active" data-view="10sessions">Last 10 Sessions</button>
-                        <button class="view-btn" data-view="30days">30 Days</button>
-                        <button class="view-btn" data-view="90days">90 Days</button>
-                        <button class="view-btn" data-view="alltime">All Time</button>
+                    <div class="view-toggle" role="group" aria-label="Time range selection">
+                        <button class="view-btn active" data-view="10sessions" aria-label="View last 10 sessions" aria-pressed="true">Last 10 Sessions</button>
+                        <button class="view-btn" data-view="30days" aria-label="View last 30 days" aria-pressed="false">30 Days</button>
+                        <button class="view-btn" data-view="90days" aria-label="View last 90 days" aria-pressed="false">90 Days</button>
+                        <button class="view-btn" data-view="alltime" aria-label="View all time data" aria-pressed="false">All Time</button>
                     </div>
                 </div>
 
@@ -214,7 +235,7 @@
         </main>
 
         <!-- Toast Notifications -->
-        <div id="toastContainer" class="toast-container"></div>
+        <div id="toastContainer" class="toast-container" role="region" aria-live="polite" aria-label="Notifications"></div>
     </div>
 
     <!-- Chart.js CDN -->

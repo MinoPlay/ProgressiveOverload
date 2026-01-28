@@ -2,6 +2,8 @@
 // Central data management layer for exercises and workouts
 
 import { GitHubAPI } from './github-api.js';
+import { CONFIG } from './config.js';
+import { generateId, parseDate, formatDate } from './utils.js';
 
 export const Storage = {
     // In-memory cache
@@ -40,16 +42,13 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async initializeDefaultExercises() {
-        const defaultExercises = [
-            { id: this.generateId(), name: 'Bench Press', equipmentType: 'barbell', requiresWeight: true, createdAt: new Date().toISOString() },
-            { id: this.generateId(), name: 'Squat', equipmentType: 'barbell', requiresWeight: true, createdAt: new Date().toISOString() },
-            { id: this.generateId(), name: 'Deadlift', equipmentType: 'barbell', requiresWeight: true, createdAt: new Date().toISOString() },
-            { id: this.generateId(), name: 'Pull-ups', equipmentType: 'bodyweight', requiresWeight: false, createdAt: new Date().toISOString() },
-            { id: this.generateId(), name: 'Overhead Press', equipmentType: 'barbell', requiresWeight: true, createdAt: new Date().toISOString() },
-            { id: this.generateId(), name: 'Barbell Rows', equipmentType: 'barbell', requiresWeight: true, createdAt: new Date().toISOString() },
-            { id: this.generateId(), name: 'Dips', equipmentType: 'bodyweight', requiresWeight: false, createdAt: new Date().toISOString() },
-            { id: this.generateId(), name: 'Bicep Curls', equipmentType: 'dumbbell', requiresWeight: true, createdAt: new Date().toISOString() }
-        ];
+        const defaultExercises = CONFIG.defaultExercises.map(ex => ({
+            id: generateId(),
+            name: ex.name,
+            equipmentType: ex.equipmentType,
+            requiresWeight: CONFIG.equipmentTypes[ex.equipmentType].requiresWeight,
+            createdAt: new Date().toISOString()
+        }));
 
         this.exercises = defaultExercises;
         const result = await GitHubAPI.saveExercises(this.exercises, this.exercisesSha);
@@ -106,12 +105,18 @@ export const Storage = {
         if (this.exercises.some(ex => ex.name.toLowerCase() === exercise.name.toLowerCase())) {
             throw new Error('An exercise with this name already exists');
         }
+const trimmedName = exercise.name.trim();
+        if (this.exercises.some(ex => ex.name.toLowerCase() === trimmedName.toLowerCase())) {
+            throw new Error('An exercise with this name already exists');
+        }
+
+        const requiresWeight = CONFIG.equipmentTypes[exercise.equipmentType]?.requiresWeight ?? true;
 
         const newExercise = {
-            id: this.generateId(),
-            name: exercise.name,
+            id: generateId(),
+            name: trimmedName,
             equipmentType: exercise.equipmentType,
-            requiresWeight: exercise.equipmentType !== 'bodyweight',
+            requiresWeight,
             createdAt: new Date().toISOString()
         };
 
@@ -137,17 +142,25 @@ export const Storage = {
         }
 
         // Check name uniqueness if name is being updated
-        if (updates.name && updates.name !== this.exercises[index].name) {
-            if (this.exercises.some(ex => ex.id !== id && ex.name.toLowerCase() === updates.name.toLowerCase())) {
-                throw new Error('An exercise with this name already exists');
+        if (updates.name) {
+            const trimmedName = updates.name.trim();
+            if (trimmedName !== this.exercises[index].name) {
+                if (this.exercises.some(ex => ex.id !== id && ex.name.toLowerCase() === trimmedName.toLowerCase())) {
+                    throw new Error('An exercise with this name already exists');
+                }
             }
+            updates.name = trimmedName;
+        }
+
+        // Determine requiresWeight based on equipment type
+        if (updates.equipmentType) {
+            updates.requiresWeight = CONFIG.equipmentTypes[updates.equipmentType]?.requiresWeight ?? true;
         }
 
         // Update exercise
         this.exercises[index] = {
             ...this.exercises[index],
             ...updates,
-            requiresWeight: updates.equipmentType ? updates.equipmentType !== 'bodyweight' : this.exercises[index].requiresWeight,
             updatedAt: new Date().toISOString()
         };
 
@@ -177,12 +190,16 @@ export const Storage = {
     },
 
     /**
-     * Add workout entry
+     * Add workout
      * @param {object} workout - Workout object
      * @returns {Promise<object>} Added workout
      */
     async addWorkout(workout) {
-        const workoutDate = this.parseDate(workout.date);
+        const workoutDate = parseDate(workout.date);
+        if (!workoutDate) {
+            throw new Error('Invalid workout date');
+        }
+        
         const now = new Date();
         const isSameMonth = workoutDate.getMonth() === now.getMonth() && 
                            workoutDate.getFullYear() === now.getFullYear();
@@ -190,10 +207,10 @@ export const Storage = {
         // If workout is for current month, use cached data
         if (isSameMonth) {
             const newWorkout = {
-                id: this.generateId(),
+                id: generateId(),
                 exerciseId: workout.exerciseId,
                 date: workout.date,
-                reps: parseInt(workout.reps),
+                reps: parseInt(workout.reps, 10),
                 weight: workout.weight ? parseFloat(workout.weight) : null,
                 notes: workout.notes || '',
                 timestamp: new Date().toISOString()
@@ -210,10 +227,10 @@ export const Storage = {
             // Load different month, add workout, save
             const monthData = await GitHubAPI.getWorkouts(workoutDate);
             const newWorkout = {
-                id: this.generateId(),
+                id: generateId(),
                 exerciseId: workout.exerciseId,
                 date: workout.date,
-                reps: parseInt(workout.reps),
+                reps: parseInt(workout.reps, 10),
                 weight: workout.weight ? parseFloat(workout.weight) : null,
                 notes: workout.notes || '',
                 timestamp: new Date().toISOString()
@@ -250,43 +267,14 @@ export const Storage = {
     },
 
     /**
-     * Get recent workouts (last 20)
+     * Get recent workouts (last N)
      * @returns {array} Array of recent workouts
      */
     getRecentWorkouts() {
         return this.currentMonthWorkouts
             .slice()
             .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-            .slice(0, 20);
-    },
-
-    /**
-     * Generate unique ID
-     * @returns {string} Unique ID
-     */
-    generateId() {
-        return `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-    },
-
-    /**
-     * Parse date string (MM-DD-YYYY) to Date object
-     * @param {string} dateStr - Date string
-     * @returns {Date} Date object
-     */
-    parseDate(dateStr) {
-        const [month, day, year] = dateStr.split('-').map(n => parseInt(n));
-        return new Date(year, month - 1, day);
-    },
-
-    /**
-     * Format date to MM-DD-YYYY
-     * @param {Date} date - Date object
-     * @returns {string} Formatted date string
-     */
-    formatDate(date) {
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        const year = date.getFullYear();
-        return `${month}-${day}-${year}`;
+            .slice(0, CONFIG.limits.recentWorkoutsCount);
     }
 };
+// Note: generateId, parseDate, and formatDate are now imported from utils.js

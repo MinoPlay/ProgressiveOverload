@@ -2,11 +2,13 @@
 // Handles statistics visualization with Chart.js
 
 import { Storage } from './storage.js';
+import { CONFIG } from './config.js';
+import { estimateOneRepMax, getWeekStart, parseDate, formatDate } from './utils.js';
 
 export const Charts = {
     progressChart: null,
     volumeChart: null,
-    currentView: '10sessions',
+    currentView: CONFIG.charts.defaultView,
     currentExerciseId: null,
 
     /**
@@ -101,8 +103,8 @@ export const Charts = {
             }
 
             // Apply session limit if view is 10sessions
-            const displayWorkouts = this.currentView === '10sessions' 
-                ? workouts.slice(-10) 
+            const displayWorkouts = this.currentView === CONFIG.charts.defaultView 
+                ? workouts.slice(-CONFIG.charts.maxSessionsView) 
                 : workouts;
 
             document.getElementById('statsContent').style.display = 'block';
@@ -174,8 +176,8 @@ export const Charts = {
                 datasets: [{
                     label: exercise.requiresWeight ? 'Weight (lbs)' : 'Reps',
                     data: exercise.requiresWeight ? weights : workouts.map(w => w.reps),
-                    borderColor: 'rgb(102, 126, 234)',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    borderColor: CONFIG.charts.colors.primary,
+                    backgroundColor: CONFIG.charts.colors.primaryLight,
                     tension: 0.1,
                     fill: true
                 }]
@@ -238,8 +240,8 @@ export const Charts = {
                 datasets: [{
                     label: 'Total Volume (lbs)',
                     data: weeklyData.volumes,
-                    backgroundColor: 'rgba(102, 126, 234, 0.6)',
-                    borderColor: 'rgb(102, 126, 234)',
+                    backgroundColor: CONFIG.charts.colors.secondary,
+                    borderColor: CONFIG.charts.colors.primary,
                     borderWidth: 1
                 }]
             },
@@ -279,9 +281,9 @@ export const Charts = {
         const weeks = new Map();
 
         workouts.forEach(workout => {
-            const date = Storage.parseDate(workout.date);
-            const weekStart = this.getWeekStart(date);
-            const weekLabel = Storage.formatDate(weekStart);
+            const date = parseDate(workout.date);
+            const weekStart = getWeekStart(date);
+            const weekLabel = formatDate(weekStart);
 
             if (!weeks.has(weekLabel)) {
                 weeks.set(weekLabel, 0);
@@ -299,18 +301,6 @@ export const Charts = {
     },
 
     /**
-     * Get start of week (Monday) for a given date
-     * @param {Date} date - Date object
-     * @returns {Date} Start of week
-     */
-    getWeekStart(date) {
-        const d = new Date(date);
-        const day = d.getDay();
-        const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust to Monday
-        return new Date(d.setDate(diff));
-    },
-
-    /**
      * Update stats summary cards
      * @param {array} workouts - Array of workout objects
      */
@@ -321,13 +311,13 @@ export const Charts = {
         let oneRepMax = '-';
         if (exercise.requiresWeight) {
             const bestWorkout = workouts.reduce((best, current) => {
-                const currentEstimate = this.estimateOneRepMax(current.weight, current.reps);
-                const bestEstimate = best ? this.estimateOneRepMax(best.weight, best.reps) : 0;
+                const currentEstimate = estimateOneRepMax(current.weight, current.reps);
+                const bestEstimate = best ? estimateOneRepMax(best.weight, best.reps) : 0;
                 return currentEstimate > bestEstimate ? current : best;
             }, null);
 
             if (bestWorkout) {
-                oneRepMax = `${this.estimateOneRepMax(bestWorkout.weight, bestWorkout.reps).toFixed(1)} lbs`;
+                oneRepMax = `${estimateOneRepMax(bestWorkout.weight, bestWorkout.reps).toFixed(1)} lbs`;
             }
         }
 
@@ -367,17 +357,9 @@ export const Charts = {
             ? `${totalVolume.toLocaleString()} lbs` 
             : '-';
         document.getElementById('bestSet').textContent = bestSet;
-    },
-
-    /**
-     * Estimate one-rep max using Brzycki formula
-     * @param {number} weight - Weight lifted
-     * @param {number} reps - Repetitions performed
-     * @returns {number} Estimated 1RM
-     */
-    estimateOneRepMax(weight, reps) {
-        if (reps === 1) return weight;
-        if (reps > 36) return weight; // Formula breaks down above 36 reps
-        return weight * (36 / (37 - reps));
     }
 };
+
+// Remove deprecated methods - now imported from utils.js
+// getWeekStart is imported
+// estimateOneRepMax is imported

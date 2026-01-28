@@ -6,6 +6,7 @@ import { Storage } from './storage.js';
 import { Exercises } from './exercises.js';
 import { Workouts } from './workouts.js';
 import { Charts } from './charts.js';
+import { CONFIG } from './config.js';
 
 /**
  * Main App object
@@ -114,25 +115,32 @@ export function showToast(message, type = 'info') {
 
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
-    toast.innerHTML = `
-        <span>${escapeHtml(message)}</span>
-    `;
+    toast.setAttribute('role', 'alert');
+    toast.setAttribute('aria-live', 'polite');
+    
+    const span = document.createElement('span');
+    span.textContent = message; // Automatically escaped, safe from XSS
+    toast.appendChild(span);
 
     container.appendChild(toast);
 
-    // Auto remove after 4 seconds
+    // Auto remove after configured duration
     setTimeout(() => {
         toast.style.opacity = '0';
         setTimeout(() => {
-            container.removeChild(toast);
-        }, 300);
-    }, 4000);
+            if (container.contains(toast)) {
+                container.removeChild(toast);
+            }
+        }, CONFIG.toast.fadeOutDuration);
+    }, CONFIG.toast.duration);
 }
 
 /**
+ * Deprecated: Use textContent instead
  * Escape HTML to prevent XSS
  * @param {string} str - String to escape
  * @returns {string} Escaped string
+ * @deprecated
  */
 function escapeHtml(str) {
     const div = document.createElement('div');

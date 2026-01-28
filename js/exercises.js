@@ -3,6 +3,8 @@
 
 import { Storage } from './storage.js';
 import { showToast } from './app.js';
+import { CONFIG } from './config.js';
+import { validateExerciseName, validateEquipmentType, formatEquipmentType } from './utils.js';
 
 export const Exercises = {
     /**
@@ -75,8 +77,17 @@ export const Exercises = {
         const name = document.getElementById('exerciseName').value.trim();
         const equipmentType = document.getElementById('equipmentType').value;
 
-        if (!name || !equipmentType) {
-            showToast('Please fill in all fields', 'error');
+        // Validate inputs
+        const nameValidation = validateExerciseName(name, CONFIG.limits.maxExerciseNameLength);
+        if (!nameValidation.valid) {
+            showToast(nameValidation.error, 'error');
+            return;
+        }
+
+        const validTypes = Object.keys(CONFIG.equipmentTypes);
+        const typeValidation = validateEquipmentType(equipmentType, validTypes);
+        if (!typeValidation.valid) {
+            showToast(typeValidation.error, 'error');
             return;
         }
 
@@ -131,74 +142,62 @@ export const Exercises = {
         const container = document.getElementById('exerciseList');
         const exercises = Storage.getExercises();
 
-        if (exercises.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <p>No exercises yet. Click "Add New Exercise" to get started!</p>
-                </div>
-            `;
-            return;
-        }
-
-        container.innerHTML = exercises.map(exercise => `
-            <div class="exercise-card fade-in">
-                <div class="exercise-card-header">
-                    <div>
-                        <h3>${this.escapeHtml(exercise.name)}</h3>
-                        <span class="equipment-badge ${exercise.equipmentType}">
-                            ${this.formatEquipmentType(exercise.equipmentType)}
-                        </span>
-                    </div>
-                    <div class="exercise-card-actions">
-                        <button class="btn btn-small btn-secondary" onclick="Exercises.showForm(${this.escapeForAttribute(exercise)})">
-                            Edit
-                        </button>
-                        <button class="btn btn-small btn-danger" onclick="Exercises.handleDelete('${exercise.id}')">
-                            Delete
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `).join('');
+        // Clear container and rebuild with safe DOM methods
+        container.innerHTML = '';
+        
+        exercises.forEach(exercise => {
+            const card = this.createExerciseCard(exercise);
+            container.appendChild(card);
+        });
     },
 
     /**
-     * Format equipment type for display
-     * @param {string} type - Equipment type
-     * @returns {string} Formatted type
+     * Create exercise card element (XSS-safe)
+     * @param {object} exercise - Exercise object
+     * @returns {HTMLElement} Card element
      */
-    formatEquipmentType(type) {
-        const labels = {
-            'barbell': 'Barbell',
-            'dumbbell': 'Dumbbell',
-            'kettlebell': 'Kettlebell',
-            'machines': 'Machines',
-            'bodyweight': 'Bodyweight',
-            'bodyweight+': 'Bodyweight+'
-        };
-        return labels[type] || type;
-    },
+    createExerciseCard(exercise) {
+        const card = document.createElement('div');
+        card.className = 'exercise-card fade-in';
 
-    /**
-     * Escape HTML to prevent XSS
-     * @param {string} str - String to escape
-     * @returns {string} Escaped string
-     */
-    escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
-    },
+        const header = document.createElement('div');
+        header.className = 'exercise-card-header';
 
-    /**
-     * Escape object for HTML attribute
-     * @param {object} obj - Object to escape
-     * @returns {string} Escaped JSON string
-     */
-    escapeForAttribute(obj) {
-        return JSON.stringify(obj).replace(/"/g, '&quot;');
+        const info = document.createElement('div');
+
+        const title = document.createElement('h3');
+        title.textContent = exercise.name; // Safe from XSS
+
+        const badge = document.createElement('span');
+        badge.className = `equipment-badge ${exercise.equipmentType}`;
+        badge.textContent = formatEquipmentType(exercise.equipmentType);
+
+        info.appendChild(title);
+        info.appendChild(badge);
+
+        const actions = document.createElement('div');
+        actions.className = 'exercise-card-actions';
+
+        const editBtn = document.createElement('button');
+        editBtn.className = 'btn btn-small btn-secondary';
+        editBtn.textContent = 'Edit';
+        editBtn.onclick = () => this.showForm(exercise);
+
+        const deleteBtn = document.createElement('button');
+        deleteBtn.className = 'btn btn-small btn-danger';
+        deleteBtn.textContent = 'Delete';
+        deleteBtn.onclick = () => this.handleDelete(exercise.id);
+
+        actions.appendChild(editBtn);
+        actions.appendChild(deleteBtn);
+
+        header.appendChild(info);
+        header.appendChild(actions);
+        card.appendChild(header);
+
+        return card;
     }
 };
 
-// Make available globally for onclick handlers
+// Make method available globally for inline handlers (legacy support)
 window.Exercises = Exercises;

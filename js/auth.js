@@ -1,7 +1,7 @@
 // Authentication Module
 // Handles GitHub Personal Access Token storage
 
-const AUTH_KEY = 'github_pat';
+import { CONFIG } from './config.js';
 
 export const Auth = {
     /**
@@ -9,7 +9,7 @@ export const Auth = {
      * @returns {string|null} The stored token or null
      */
     getToken() {
-        return localStorage.getItem(AUTH_KEY);
+        return localStorage.getItem(CONFIG.storage.authKey);
     },
 
     /**
@@ -17,7 +17,21 @@ export const Auth = {
      * @param {string} token - The GitHub Personal Access Token
      */
     setToken(token) {
-        localStorage.setItem(AUTH_KEY, token.trim());
+        if (!token || typeof token !== 'string') {
+            throw new Error('Invalid token');
+        }
+        const trimmed = token.trim();
+        if (trimmed.length < 10) {
+            throw new Error('Token appears to be invalid (too short)');
+        }
+        localStorage.setItem(CONFIG.storage.authKey, trimmed);
+    },
+
+    /**
+     * Remove token from localStorage
+     */
+    clearToken() {
+        localStorage.removeItem(CONFIG.storage.authKey);
     },
 
     /**
@@ -41,8 +55,13 @@ export const Auth = {
         );
         
         if (token && token.trim()) {
-            this.setToken(token.trim());
-            return token.trim();
+            try {
+                this.setToken(token.trim());
+                return token.trim();
+            } catch (error) {
+                alert('Invalid token: ' + error.message);
+                return null;
+            }
         }
         return null;
     }

@@ -3,6 +3,8 @@
 
 import { Storage } from './storage.js';
 import { showToast } from './app.js';
+import { CONFIG } from './config.js';
+import { isValidDate, validateNumber, formatDate } from './utils.js';
 
 export const Workouts = {
     /**
@@ -83,7 +85,7 @@ export const Workouts = {
     setDefaultDate() {
         const dateInput = document.getElementById('workoutDate');
         const today = new Date();
-        dateInput.value = Storage.formatDate(today);
+        dateInput.value = formatDate(today);
     },
 
     /**
@@ -99,24 +101,57 @@ export const Workouts = {
         const date = document.getElementById('workoutDate').value;
         const notes = document.getElementById('workoutNotes').value;
 
+        // Validate required fields
         if (!exerciseId || !reps || !date) {
             showToast('Please fill in all required fields', 'error');
             return;
         }
 
         // Validate date format
-        if (!this.isValidDate(date)) {
+        if (!isValidDate(date)) {
             showToast('Invalid date format. Use MM-DD-YYYY', 'error');
+            return;
+        }
+
+        // Validate reps
+        const repsValidation = validateNumber(
+            reps, 
+            CONFIG.limits.minReps, 
+            CONFIG.limits.maxReps, 
+            'Reps'
+        );
+        if (!repsValidation.valid) {
+            showToast(repsValidation.error, 'error');
+            return;
+        }
+
+        // Validate weight if provided
+        if (weight) {
+            const weightValidation = validateNumber(
+                weight, 
+                CONFIG.limits.minWeight, 
+                CONFIG.limits.maxWeight, 
+                'Weight'
+            );
+            if (!weightValidation.valid) {
+                showToast(weightValidation.error, 'error');
+                return;
+            }
+        }
+
+        // Validate notes length
+        if (notes && notes.length > CONFIG.limits.maxNotesLength) {
+            showToast(`Notes must be ${CONFIG.limits.maxNotesLength} characters or less`, 'error');
             return;
         }
 
         try {
             const workout = {
                 exerciseId,
-                reps,
-                weight: weight || null,
+                reps: repsValidation.value,
+                weight: weight ? parseFloat(weight) : null,
                 date,
-                notes
+                notes: notes.trim()
             };
 
             await Storage.addWorkout(workout);
@@ -137,25 +172,6 @@ export const Workouts = {
     },
 
     /**
-     * Validate date format (MM-DD-YYYY)
-     * @param {string} dateStr - Date string
-     * @returns {boolean} True if valid
-     */
-    isValidDate(dateStr) {
-        const regex = /^(0[1-9]|1[0-2])-(0[1-9]|[12][0-9]|3[01])-\d{4}$/;
-        if (!regex.test(dateStr)) {
-            return false;
-        }
-
-        const [month, day, year] = dateStr.split('-').map(n => parseInt(n));
-        const date = new Date(year, month - 1, day);
-        
-        return date.getFullYear() === year &&
-               date.getMonth() === month - 1 &&
-               date.getDate() === day;
-    },
-
-    /**
      * Render recent workouts list
      */
     renderRecentWorkouts() {
@@ -171,51 +187,94 @@ export const Workouts = {
             return;
         }
 
-        container.innerHTML = workouts.map(workout => {
-            const exercise = Storage.getExerciseById(workout.exerciseId);
-            
-            return `
-                <div class="workout-item fade-in">
-                    <div class="workout-item-header">
-                        <h4>${this.escapeHtml(exercise ? exercise.name : 'Unknown Exercise')}</h4>
-                        <span class="workout-date">${workout.date}</span>
-                    </div>
-                    <div class="workout-details">
-                        <div class="workout-detail">
-                            <span class="workout-detail-label">Reps</span>
-                            <span class="workout-detail-value">${workout.reps}</span>
-                        </div>
-                        ${workout.weight ? `
-                            <div class="workout-detail">
-                                <span class="workout-detail-label">Weight</span>
-                                <span class="workout-detail-value">${workout.weight} lbs</span>
-                            </div>
-                        ` : ''}
-                        ${workout.weight && workout.reps ? `
-                            <div class="workout-detail">
-                                <span class="workout-detail-label">Volume</span>
-                                <span class="workout-detail-value">${(workout.weight * workout.reps).toFixed(0)} lbs</span>
-                            </div>
-                        ` : ''}
-                    </div>
-                    ${workout.notes ? `
-                        <div class="workout-notes">
-                            ${this.escapeHtml(workout.notes)}
-                        </div>
-                    ` : ''}
-                </div>
-            `;
-        }).join('');
+        // Clear and rebuild with safe DOM methods
+        container.innerHTML = '';
+        
+        workouts.forEach(workout => {
+            const item = this.createWorkoutItem(workout);
+            container.appendChild(item);
+        });
     },
 
     /**
-     * Escape HTML to prevent XSS
-     * @param {string} str - String to escape
-     * @returns {string} Escaped string
+     * Create workout item element (XSS-safe)
+     * @param {object} workout - Workout object
+     * @returns {HTMLElement} Workout item element
      */
-    escapeHtml(str) {
-        const div = document.createElement('div');
-        div.textContent = str;
-        return div.innerHTML;
+    createWorkoutItem(workout) {
+        const exercise = Storage.getExerciseById(workout.exerciseId);
+        
+        const item = document.createElement('div');
+        item.className = 'workout-item fade-in';
+
+        const header = document.createElement('div');
+        header.className = 'workout-item-header';
+
+        const title = document.createElement('h4');
+        title.textContent = exercise ? exercise.name : 'Unknown Exercise';
+
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'workout-date';
+        dateSpan.textContent = workout.date;
+
+        header.appendChild(title);
+        header.appendChild(dateSpan);
+        item.appendChild(header);
+
+        const details = document.createElement('div');
+        details.className = 'workout-details';
+
+        // Add reps
+        const repsDetail = this.createWorkoutDetail('Reps', workout.reps);
+        details.appendChild(repsDetail);
+
+        // Add weight if present
+        if (workout.weight) {
+            const weightDetail = this.createWorkoutDetail('Weight', `${workout.weight} lbs`);
+            details.appendChild(weightDetail);
+
+            const volumeDetail = this.createWorkoutDetail('Volume', `${(workout.weight * workout.reps).toFixed(0)} lbs`);
+            details.appendChild(volumeDetail);
+        }
+
+        item.appendChild(details);
+
+        // Add notes if present
+        if (workout.notes) {
+            const notes = document.createElement('div');
+            notes.className = 'workout-notes';
+            notes.textContent = workout.notes; // Safe from XSS
+            item.appendChild(notes);
+        }
+
+        return item;
+    },
+
+    /**
+     * Create workout detail element
+     * @param {string} label - Detail label
+     * @param {string|number} value - Detail value
+     * @returns {HTMLElement} Detail element
+     */
+    createWorkoutDetail(label, value) {
+        const detail = document.createElement('div');
+        detail.className = 'workout-detail';
+
+        const labelSpan = document.createElement('span');
+        labelSpan.className = 'workout-detail-label';
+        labelSpan.textContent = label;
+
+        const valueSpan = document.createElement('span');
+        valueSpan.className = 'workout-detail-value';
+        valueSpan.textContent = value;
+
+        detail.appendChild(labelSpan);
+        detail.appendChild(valueSpan);
+
+        return detail;
     }
 };
+
+// Remove deprecated methods
+// isValidDate is now imported from utils.js
+// escapeHtml is now imported from utils.js

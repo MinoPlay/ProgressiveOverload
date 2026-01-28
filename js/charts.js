@@ -61,31 +61,25 @@ export const Charts = {
         
         if (noStatsMessage) noStatsMessage.style.display = 'none';
 
-        // Create chart container
-        const chartContainer = document.createElement('div');
-        chartContainer.className = 'chart-container';
-        chartContainer.innerHTML = '<canvas id="combinedVolumeChart"></canvas>';
-        statsContent.appendChild(chartContainer);
-
-        // Create overview table container
+        // Create overview table container first
         const tableContainer = document.createElement('div');
         tableContainer.className = 'overview-table-container';
         tableContainer.innerHTML = '<h3>Exercise Overview</h3><div id="overviewTable"></div>';
         statsContent.appendChild(tableContainer);
 
-        // Load and render combined data
-        await this.loadAndRenderCombinedData();
+        // Load and render data
+        await this.loadAndRenderSeparateCharts();
     },
 
     /**
-     * Load and render combined chart and table
+     * Load and render separate charts for each exercise
      */
-    async loadAndRenderCombinedData() {
+    async loadAndRenderSeparateCharts() {
         const { startDate, endDate } = this.getDateRange();
         const exercises = Storage.getExercises();
         
         try {
-            // Collect data for all exercises
+            // Collect data for all exercises (in parallel for speed)
             const exerciseData = await Promise.all(
                 exercises.map(async (exercise) => {
                     const workouts = await Storage.getWorkoutsForExercise(exercise.id, startDate, endDate);
@@ -104,14 +98,29 @@ export const Charts = {
                 return;
             }
 
-            // Render combined chart
-            this.renderCombinedVolumeChart(dataWithWorkouts);
-
-            // Render overview table
+            // Render overview table first
             this.renderOverviewTable(dataWithWorkouts);
 
+            // Render individual charts for each exercise
+            const statsContent = document.getElementById('statsContent');
+            dataWithWorkouts.forEach(({ exercise, workouts }) => {
+                // Create container for this exercise
+                const exerciseSection = document.createElement('div');
+                exerciseSection.className = 'exercise-chart-section';
+                exerciseSection.innerHTML = `
+                    <h3 class="exercise-chart-title">${exercise.name}</h3>
+                    <div class="chart-container">
+                        <canvas id="volumeChart-${exercise.id}"></canvas>
+                    </div>
+                `;
+                statsContent.appendChild(exerciseSection);
+
+                // Render chart for this exercise
+                this.renderVolumeChart(workouts, `volumeChart-${exercise.id}`);
+            });
+
         } catch (error) {
-            console.error('Error loading combined chart data:', error);
+            console.error('Error loading chart data:', error);
             document.getElementById('statsContent').innerHTML = '<p class="empty-state">Error loading statistics. Please try again.</p>';
         }
     },
@@ -144,89 +153,40 @@ export const Charts = {
     },
 
     /**
-     * Render combined volume chart with all exercises
-     * @param {array} exerciseData - Array of {exercise, workouts} objects
+     * Render volume chart for a single exercise
+     * @param {array} workouts - Array of workout objects
+     * @param {string} canvasId - Canvas element ID
      */
-    renderCombinedVolumeChart(exerciseData) {
-        const ctx = document.getElementById('combinedVolumeChart');
+    renderVolumeChart(workouts, canvasId) {
+        const ctx = document.getElementById(canvasId);
         if (!ctx) return;
 
-        // Destroy existing chart if present
-        if (this.volumeChart) {
-            this.volumeChart.destroy();
-        }
-
-        // Collect all unique weeks across all exercises
-        const allWeeks = new Set();
-        exerciseData.forEach(({ workouts }) => {
-            workouts.forEach(workout => {
-                const date = parseDate(workout.date);
-                const weekStart = getWeekStart(date);
-                const weekLabel = formatDate(weekStart);
-                allWeeks.add(weekLabel);
-            });
-        });
-
-        // Sort weeks chronologically
-        const sortedWeeks = Array.from(allWeeks).sort((a, b) => 
-            parseDate(a).getTime() - parseDate(b).getTime()
-        );
-
-        // Generate color palette for exercises
-        const colors = [
-            { border: 'rgb(102, 126, 234)', bg: 'rgba(102, 126, 234, 0.1)' },
-            { border: 'rgb(237, 100, 166)', bg: 'rgba(237, 100, 166, 0.1)' },
-            { border: 'rgb(255, 159, 64)', bg: 'rgba(255, 159, 64, 0.1)' },
-            { border: 'rgb(75, 192, 192)', bg: 'rgba(75, 192, 192, 0.1)' },
-            { border: 'rgb(153, 102, 255)', bg: 'rgba(153, 102, 255, 0.1)' },
-            { border: 'rgb(255, 99, 132)', bg: 'rgba(255, 99, 132, 0.1)' },
-            { border: 'rgb(54, 162, 235)', bg: 'rgba(54, 162, 235, 0.1)' },
-            { border: 'rgb(255, 205, 86)', bg: 'rgba(255, 205, 86, 0.1)' }
-        ];
-
-        // Create datasets for each exercise
-        const datasets = exerciseData.map(({ exercise, workouts }, idx) => {
-            const weeklyData = this.groupByWeek(workouts);
-            const color = colors[idx % colors.length];
-
-            // Map weekly data to sorted weeks (fill missing weeks with null)
-            const data = sortedWeeks.map(week => {
-                const weekIndex = weeklyData.labels.indexOf(week);
-                return weekIndex >= 0 ? weeklyData.volumes[weekIndex] : null;
-            });
-
-            return {
-                label: exercise.name,
-                data: data,
-                borderColor: color.border,
-                backgroundColor: color.bg,
-                borderWidth: 2,
-                pointRadius: 4,
-                pointBackgroundColor: color.border,
-                fill: true,
-                tension: 0.2,
-                spanGaps: true // Connect lines even with null values
-            };
-        });
+        // Group workouts by week
+        const weeklyData = this.groupByWeek(workouts);
 
         // Create chart
-        this.volumeChart = new Chart(ctx.getContext('2d'), {
+        new Chart(ctx.getContext('2d'), {
             type: 'line',
             data: {
-                labels: sortedWeeks,
-                datasets: datasets
+                labels: weeklyData.labels,
+                datasets: [{
+                    label: 'Weekly Volume (kg)',
+                    data: weeklyData.volumes,
+                    borderColor: CONFIG.charts.colors.primary,
+                    backgroundColor: CONFIG.charts.colors.primary,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: CONFIG.charts.colors.primary,
+                    fill: false,
+                    tension: 0.3
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
                 plugins: {
                     legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false
+                        display: false
                     }
                 },
                 scales: {
@@ -234,7 +194,7 @@ export const Charts = {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Weekly Volume (kg)'
+                            text: 'Volume (kg)'
                         }
                     },
                     x: {

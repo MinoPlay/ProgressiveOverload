@@ -599,4 +599,71 @@
         font-size: 2.25rem;
     }
 }
+
+/* Overview Table */
+.overview-table-container {
+    margin-top: var(--spacing-xl);
+}
+
+.overview-table-container h3 {
+    font-size: 1.5rem;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-md);
+}
+
+.overview-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-md);
+}
+
+.overview-table thead {
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
+}
+
+.overview-table th {
+    padding: var(--spacing-md) var(--spacing-lg);
+    text-align: left;
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    letter-spacing: 0.5px;
+}
+
+.overview-table td {
+    padding: var(--spacing-md) var(--spacing-lg);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.overview-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.overview-table tbody tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+.overview-table .exercise-name {
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+@media (max-width: 768px) {
+    .overview-table {
+        font-size: 0.9rem;
+    }
+    
+    .overview-table th,
+    .overview-table td {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+    
+    .overview-table th {
+        font-size: 0.75rem;
+    }
+}
 }

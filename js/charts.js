@@ -14,10 +14,10 @@ export const Charts = {
      */
     init() {
         this.bindEvents();
-        this.renderExerciseTabs();
+        this.renderCombinedChart();
         // Listen for exercise updates
         window.addEventListener('exercisesUpdated', () => {
-            this.renderExerciseTabs();
+            this.renderCombinedChart();
         });
     },
 
@@ -33,21 +33,24 @@ export const Charts = {
                 btn.classList.add('active');
                 // Update current view
                 this.currentView = btn.dataset.view;
-                // Re-render all exercise tabs
-                this.renderExerciseTabs();
+                // Re-render combined chart
+                this.renderCombinedChart();
             });
         });
     },
 
-    // No longer needed: populateExerciseDropdown
-    // Instead, render sub-tabs for each exercise
-    renderExerciseTabs() {
+    /**
+     * Render combined chart with all exercises and overview table
+     */
+    async renderCombinedChart() {
         const statsContent = document.getElementById('statsContent');
         const noStatsMessage = document.getElementById('noStatsMessage');
         if (!statsContent) return;
+
         // Remove all children
         statsContent.innerHTML = '';
         const exercises = Storage.getExercises();
+        
         if (!exercises.length) {
             if (noStatsMessage) {
                 noStatsMessage.style.display = 'block';
@@ -55,54 +58,61 @@ export const Charts = {
             }
             return;
         }
+        
         if (noStatsMessage) noStatsMessage.style.display = 'none';
 
-        // Create tab navigation
-        const tabNav = document.createElement('div');
-        tabNav.className = 'exercise-tabs-nav';
-        exercises.forEach((exercise, idx) => {
-            const tabBtn = document.createElement('button');
-            tabBtn.className = 'exercise-tab-btn' + (idx === 0 ? ' active' : '');
-            tabBtn.textContent = exercise.name;
-            tabBtn.dataset.exerciseId = exercise.id;
-            tabBtn.addEventListener('click', (e) => {
-                // Switch active tab
-                Array.from(tabNav.children).forEach(b => b.classList.remove('active'));
-                tabBtn.classList.add('active');
-                // Show only the selected tab content
-                Array.from(statsContent.querySelectorAll('.exercise-tab-content')).forEach((el, i) => {
-                    el.style.display = (i === idx) ? 'block' : 'none';
-                });
-            });
-            tabNav.appendChild(tabBtn);
-        });
-        statsContent.appendChild(tabNav);
+        // Create chart container
+        const chartContainer = document.createElement('div');
+        chartContainer.className = 'chart-container';
+        chartContainer.innerHTML = '<canvas id="combinedVolumeChart"></canvas>';
+        statsContent.appendChild(chartContainer);
 
-        // Create tab content for each exercise
-        exercises.forEach((exercise, idx) => {
-            const tabPane = document.createElement('div');
-            tabPane.className = 'exercise-tab-content';
-            tabPane.style.display = idx === 0 ? 'block' : 'none';
-            tabPane.innerHTML = `<div class="chart-container"><canvas id="volumeChart-${exercise.id}"></canvas></div><div class="stats-summary" id="statsSummary-${exercise.id}"></div>`;
-            statsContent.appendChild(tabPane);
-            // Render volume chart for this exercise
-            this.loadAndRenderVolumeChartForExercise(exercise.id, `volumeChart-${exercise.id}`, `statsSummary-${exercise.id}`);
-        });
+        // Create overview table container
+        const tableContainer = document.createElement('div');
+        tableContainer.className = 'overview-table-container';
+        tableContainer.innerHTML = '<h3>Exercise Overview</h3><div id="overviewTable"></div>';
+        statsContent.appendChild(tableContainer);
+
+        // Load and render combined data
+        await this.loadAndRenderCombinedData();
     },
 
-    async loadAndRenderVolumeChartForExercise(exerciseId, chartCanvasId, statsSummaryId) {
+    /**
+     * Load and render combined chart and table
+     */
+    async loadAndRenderCombinedData() {
         const { startDate, endDate } = this.getDateRange();
+        const exercises = Storage.getExercises();
+        
         try {
-            const workouts = await Storage.getWorkoutsForExercise(exerciseId, startDate, endDate);
-            // Only show if there is data
-            if (!workouts.length) {
-                document.getElementById(statsSummaryId).innerHTML = '<p>No data for this exercise in selected range.</p>';
+            // Collect data for all exercises
+            const exerciseData = await Promise.all(
+                exercises.map(async (exercise) => {
+                    const workouts = await Storage.getWorkoutsForExercise(exercise.id, startDate, endDate);
+                    return {
+                        exercise,
+                        workouts
+                    };
+                })
+            );
+
+            // Filter out exercises with no data
+            const dataWithWorkouts = exerciseData.filter(d => d.workouts.length > 0);
+
+            if (dataWithWorkouts.length === 0) {
+                document.getElementById('statsContent').innerHTML = '<p class="empty-state">No workout data found in the selected time range.</p>';
                 return;
             }
-            this.renderVolumeChart(workouts, chartCanvasId);
-            this.updateStatsSummary(workouts, statsSummaryId, exerciseId);
+
+            // Render combined chart
+            this.renderCombinedVolumeChart(dataWithWorkouts);
+
+            // Render overview table
+            this.renderOverviewTable(dataWithWorkouts);
+
         } catch (error) {
-            document.getElementById(statsSummaryId).innerHTML = '<p>Error loading data.</p>';
+            console.error('Error loading combined chart data:', error);
+            document.getElementById('statsContent').innerHTML = '<p class="empty-state">Error loading statistics. Please try again.</p>';
         }
     },
 
@@ -134,42 +144,89 @@ export const Charts = {
     },
 
     /**
-     * Render weight progression chart
-     * @param {array} workouts - Array of workout objects
+     * Render combined volume chart with all exercises
+     * @param {array} exerciseData - Array of {exercise, workouts} objects
      */
-    // renderProgressChart removed (weight progression chart is deprecated)
+    renderCombinedVolumeChart(exerciseData) {
+        const ctx = document.getElementById('combinedVolumeChart');
+        if (!ctx) return;
 
-    /**
-     * Render volume chart (weekly totals)
-     * @param {array} workouts - Array of workout objects
-     */
-    renderVolumeChart(workouts, chartCanvasId) {
-        const ctx = document.getElementById(chartCanvasId).getContext('2d');
-        // Group workouts by week
-        const weeklyData = this.groupByWeek(workouts);
-        // Chart configuration
-        new Chart(ctx, {
+        // Destroy existing chart if present
+        if (this.volumeChart) {
+            this.volumeChart.destroy();
+        }
+
+        // Collect all unique weeks across all exercises
+        const allWeeks = new Set();
+        exerciseData.forEach(({ workouts }) => {
+            workouts.forEach(workout => {
+                const date = parseDate(workout.date);
+                const weekStart = getWeekStart(date);
+                const weekLabel = formatDate(weekStart);
+                allWeeks.add(weekLabel);
+            });
+        });
+
+        // Sort weeks chronologically
+        const sortedWeeks = Array.from(allWeeks).sort((a, b) => 
+            parseDate(a).getTime() - parseDate(b).getTime()
+        );
+
+        // Generate color palette for exercises
+        const colors = [
+            { border: 'rgb(102, 126, 234)', bg: 'rgba(102, 126, 234, 0.1)' },
+            { border: 'rgb(237, 100, 166)', bg: 'rgba(237, 100, 166, 0.1)' },
+            { border: 'rgb(255, 159, 64)', bg: 'rgba(255, 159, 64, 0.1)' },
+            { border: 'rgb(75, 192, 192)', bg: 'rgba(75, 192, 192, 0.1)' },
+            { border: 'rgb(153, 102, 255)', bg: 'rgba(153, 102, 255, 0.1)' },
+            { border: 'rgb(255, 99, 132)', bg: 'rgba(255, 99, 132, 0.1)' },
+            { border: 'rgb(54, 162, 235)', bg: 'rgba(54, 162, 235, 0.1)' },
+            { border: 'rgb(255, 205, 86)', bg: 'rgba(255, 205, 86, 0.1)' }
+        ];
+
+        // Create datasets for each exercise
+        const datasets = exerciseData.map(({ exercise, workouts }, idx) => {
+            const weeklyData = this.groupByWeek(workouts);
+            const color = colors[idx % colors.length];
+
+            // Map weekly data to sorted weeks (fill missing weeks with null)
+            const data = sortedWeeks.map(week => {
+                const weekIndex = weeklyData.labels.indexOf(week);
+                return weekIndex >= 0 ? weeklyData.volumes[weekIndex] : null;
+            });
+
+            return {
+                label: exercise.name,
+                data: data,
+                borderColor: color.border,
+                backgroundColor: color.bg,
+                borderWidth: 2,
+                pointRadius: 4,
+                pointBackgroundColor: color.border,
+                fill: true,
+                tension: 0.2,
+                spanGaps: true // Connect lines even with null values
+            };
+        });
+
+        // Create chart
+        this.volumeChart = new Chart(ctx.getContext('2d'), {
             type: 'line',
             data: {
-                labels: weeklyData.labels,
-                datasets: [{
-                    label: 'Total Volume (kg)',
-                    data: weeklyData.volumes,
-                    borderColor: CONFIG.charts.colors.primary,
-                    backgroundColor: CONFIG.charts.colors.primaryLight,
-                    borderWidth: 2,
-                    pointRadius: 4,
-                    pointBackgroundColor: CONFIG.charts.colors.primary,
-                    fill: true,
-                    tension: 0.2
-                }]
+                labels: sortedWeeks,
+                datasets: datasets
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
                 plugins: {
                     legend: {
-                        display: true
+                        display: true,
+                        position: 'top'
+                    },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false
                     }
                 },
                 scales: {
@@ -177,7 +234,7 @@ export const Charts = {
                         beginAtZero: true,
                         title: {
                             display: true,
-                            text: 'Volume (kg)'
+                            text: 'Weekly Volume (kg)'
                         }
                     },
                     x: {
@@ -189,6 +246,102 @@ export const Charts = {
                 }
             }
         });
+    },
+
+    /**
+     * Render overview table with statistics for all exercises
+     * @param {array} exerciseData - Array of {exercise, workouts} objects
+     */
+    renderOverviewTable(exerciseData) {
+        const tableContainer = document.getElementById('overviewTable');
+        if (!tableContainer) return;
+
+        // Calculate statistics for each exercise
+        const stats = exerciseData.map(({ exercise, workouts }) => {
+            const totalSessions = workouts.length;
+            
+            let totalVolume = 0;
+            let oneRepMax = '-';
+            let bestSet = '-';
+
+            if (exercise.requiresWeight) {
+                // Calculate total volume
+                workouts.forEach(w => {
+                    if (w.weight) {
+                        totalVolume += w.reps * w.weight;
+                    }
+                });
+
+                // Calculate 1RM estimate
+                const bestWorkout = workouts.reduce((best, current) => {
+                    const currentEstimate = estimateOneRepMax(current.weight, current.reps);
+                    const bestEstimate = best ? estimateOneRepMax(best.weight, best.reps) : 0;
+                    return currentEstimate > bestEstimate ? current : best;
+                }, null);
+                
+                if (bestWorkout) {
+                    oneRepMax = estimateOneRepMax(bestWorkout.weight, bestWorkout.reps).toFixed(1);
+                }
+
+                // Find best set
+                const best = workouts.reduce((best, current) => {
+                    return (!best || current.weight > best.weight) ? current : best;
+                }, null);
+                
+                if (best) {
+                    bestSet = `${best.weight} kg × ${best.reps}`;
+                }
+            } else {
+                // For bodyweight exercises
+                const best = workouts.reduce((best, current) => {
+                    return (!best || current.reps > best.reps) ? current : best;
+                }, null);
+                
+                if (best) {
+                    bestSet = `${best.reps} reps`;
+                }
+            }
+
+            return {
+                name: exercise.name,
+                totalSessions,
+                totalVolume,
+                oneRepMax,
+                bestSet,
+                requiresWeight: exercise.requiresWeight
+            };
+        });
+
+        // Sort by total sessions (descending)
+        stats.sort((a, b) => b.totalSessions - a.totalSessions);
+
+        // Generate table HTML
+        const tableHTML = `
+            <table class="overview-table">
+                <thead>
+                    <tr>
+                        <th>Exercise</th>
+                        <th>Sessions</th>
+                        <th>Total Volume</th>
+                        <th>Est. 1RM</th>
+                        <th>Best Set</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${stats.map(stat => `
+                        <tr>
+                            <td class="exercise-name">${stat.name}</td>
+                            <td>${stat.totalSessions}</td>
+                            <td>${stat.requiresWeight && stat.totalVolume > 0 ? `${stat.totalVolume.toLocaleString()} kg` : '-'}</td>
+                            <td>${stat.requiresWeight ? `${stat.oneRepMax} kg` : '-'}</td>
+                            <td>${stat.bestSet}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+
+        tableContainer.innerHTML = tableHTML;
     },
 
     /**
@@ -217,84 +370,6 @@ export const Charts = {
             labels: Array.from(weeks.keys()),
             volumes: Array.from(weeks.values())
         };
-    },
-
-    /**
-     * Update stats summary cards
-     * @param {array} workouts - Array of workout objects
-     * @param {string} statsSummaryId - ID of the stats summary container
-     * @param {string} exerciseId - ID of the exercise
-     */
-    updateStatsSummary(workouts, statsSummaryId, exerciseId) {
-        const exercise = Storage.getExerciseById(exerciseId);
-
-        // Calculate 1RM estimate from best recent set
-        let oneRepMax = '-';
-        if (exercise.requiresWeight) {
-            const bestWorkout = workouts.reduce((best, current) => {
-                const currentEstimate = estimateOneRepMax(current.weight, current.reps);
-                const bestEstimate = best ? estimateOneRepMax(best.weight, best.reps) : 0;
-                return currentEstimate > bestEstimate ? current : best;
-            }, null);
-
-            if (bestWorkout) {
-                oneRepMax = `${estimateOneRepMax(bestWorkout.weight, bestWorkout.reps).toFixed(1)} kg`;
-            }
-        }
-
-        // Total sessions
-        const totalSessions = workouts.length;
-
-        // Total volume
-        let totalVolume = 0;
-        workouts.forEach(w => {
-            if (w.weight) {
-                totalVolume += w.reps * w.weight;
-            }
-        });
-
-        // Best set
-        let bestSet = '-';
-        if (exercise.requiresWeight) {
-            const best = workouts.reduce((best, current) => {
-                return (!best || current.weight > best.weight) ? current : best;
-            }, null);
-            if (best) {
-                bestSet = `${best.weight} kg × ${best.reps}`;
-            }
-        } else {
-            const best = workouts.reduce((best, current) => {
-                return (!best || current.reps > best.reps) ? current : best;
-            }, null);
-            if (best) {
-                bestSet = `${best.reps} reps`;
-            }
-        }
-
-        // Update DOM - create stats summary HTML
-        const summaryHTML = `
-            <div class="stats-cards">
-                <div class="stat-card">
-                    <div class="stat-label">Total Sessions</div>
-                    <div class="stat-value">${totalSessions}</div>
-                </div>
-                ${exercise.requiresWeight ? `
-                <div class="stat-card">
-                    <div class="stat-label">Est. 1RM</div>
-                    <div class="stat-value">${oneRepMax}</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Total Volume</div>
-                    <div class="stat-value">${totalVolume > 0 ? `${totalVolume.toLocaleString()} kg` : '-'}</div>
-                </div>
-                ` : ''}
-                <div class="stat-card">
-                    <div class="stat-label">Best Set</div>
-                    <div class="stat-value">${bestSet}</div>
-                </div>
-            </div>
-        `;
-        document.getElementById(statsSummaryId).innerHTML = summaryHTML;
     }
 };
 

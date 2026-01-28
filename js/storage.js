@@ -66,6 +66,17 @@ export const Storage = {
         this.currentMonthWorkouts = data.workouts;
         this.currentMonthSha = data.sha;
         this.currentMonthPath = data.path;
+
+        // Initialize empty file if it doesn't exist
+        if (!data.sha && this.currentMonthWorkouts.length === 0) {
+            try {
+                const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, null);
+                this.currentMonthSha = result.content.sha;
+            } catch (error) {
+                console.warn('Could not initialize workout file:', error);
+                // Continue anyway - file will be created when first workout is added
+            }
+        }
     },
 
     /**

@@ -41,9 +41,11 @@ const App = {
             // Show loading
             showLoading(true);
 
+            console.log('Initializing storage...');
             // Initialize storage (load data from GitHub)
             await Storage.initialize();
 
+            console.log('Initializing UI modules...');
             // Initialize all modules
             this.initNavigation();
             Exercises.init();
@@ -54,10 +56,14 @@ const App = {
             showLoading(false);
 
             console.log('Application initialized successfully');
+            showToast('Welcome to Progressive Overload Tracker!', 'success');
         } catch (error) {
             console.error('Error initializing application:', error);
-            showToast('Failed to initialize app. Please refresh the page.', 'error');
+            showToast(`Failed to initialize app: ${error.message}`, 'error');
             showLoading(false);
+            
+            // Show app anyway so user isn't stuck
+            document.getElementById('app').style.display = 'block';
         }
     },
 

@@ -187,28 +187,25 @@ export const Charts = {
      * Render volume chart (weekly totals)
      * @param {array} workouts - Array of workout objects
      */
-    renderVolumeChart(workouts) {
-        const ctx = document.getElementById('volumeChart').getContext('2d');
-
-        // Destroy existing chart
-        if (this.volumeChart) {
-            this.volumeChart.destroy();
-        }
-
+    renderVolumeChart(workouts, chartCanvasId) {
+        const ctx = document.getElementById(chartCanvasId).getContext('2d');
         // Group workouts by week
         const weeklyData = this.groupByWeek(workouts);
-
         // Chart configuration
-        this.volumeChart = new Chart(ctx, {
-            type: 'bar',
+        new Chart(ctx, {
+            type: 'line',
             data: {
                 labels: weeklyData.labels,
                 datasets: [{
                     label: 'Total Volume (kg)',
                     data: weeklyData.volumes,
-                    backgroundColor: CONFIG.charts.colors.secondary,
                     borderColor: CONFIG.charts.colors.primary,
-                    borderWidth: 1
+                    backgroundColor: CONFIG.charts.colors.primaryLight,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointBackgroundColor: CONFIG.charts.colors.primary,
+                    fill: true,
+                    tension: 0.2
                 }]
             },
             options: {

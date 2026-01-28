@@ -43,11 +43,19 @@ export const Charts = {
     // Instead, render sub-tabs for each exercise
     renderExerciseTabs() {
         const statsContent = document.getElementById('statsContent');
+        const noStatsMessage = document.getElementById('noStatsMessage');
         if (!statsContent) return;
         // Remove all children
         statsContent.innerHTML = '';
         const exercises = Storage.getExercises();
-        if (!exercises.length) return;
+        if (!exercises.length) {
+            if (noStatsMessage) {
+                noStatsMessage.style.display = 'block';
+                noStatsMessage.innerHTML = '<p>No exercises found. Add exercises to view statistics.</p>';
+            }
+            return;
+        }
+        if (noStatsMessage) noStatsMessage.style.display = 'none';
 
         // Create tab navigation
         const tabNav = document.createElement('div');

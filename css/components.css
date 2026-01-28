@@ -236,6 +236,13 @@
     margin-bottom: var(--spacing-sm);
 }
 
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    margin-bottom: var(--spacing-sm);
+}
+
 .stat-value {
     font-size: 2rem;
     font-weight: 700;

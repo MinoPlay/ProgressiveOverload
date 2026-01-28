@@ -128,6 +128,13 @@ body {
     margin-top: var(--spacing-md);
 }
 
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-lg);
+}
+
 /* Form Layouts */
 .form-container {
     background: var(--bg-primary);

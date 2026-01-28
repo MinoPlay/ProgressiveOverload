@@ -107,58 +107,6 @@ export const Charts = {
     },
 
     /**
-     * Load data and render all charts
-     */
-    async loadAndRenderCharts() {
-        const { startDate, endDate } = this.getDateRange();
-        
-        try {
-            // Show loading
-            document.getElementById('statsContent').style.display = 'none';
-            document.getElementById('noStatsMessage').style.display = 'none';
-            document.getElementById('loadingIndicator').style.display = 'flex';
-
-            // Fetch workouts for selected exercise
-            const workouts = await Storage.getWorkoutsForExercise(
-                this.currentExerciseId,
-                startDate,
-                endDate
-            );
-
-            // Hide loading
-            document.getElementById('loadingIndicator').style.display = 'none';
-
-            if (workouts.length === 0) {
-                document.getElementById('noStatsMessage').innerHTML = `
-                    <p>No workout data found for this exercise in the selected time range.</p>
-                `;
-                document.getElementById('noStatsMessage').style.display = 'block';
-                return;
-            }
-
-            // Apply session limit if view is 10sessions
-            const displayWorkouts = this.currentView === CONFIG.charts.defaultView 
-                ? workouts.slice(-CONFIG.charts.maxSessionsView) 
-                : workouts;
-
-            document.getElementById('statsContent').style.display = 'block';
-
-            // Render charts
-            // this.renderProgressChart(displayWorkouts); // removed
-            this.renderVolumeChart(displayWorkouts);
-            this.updateStatsSummary(displayWorkouts);
-
-        } catch (error) {
-            console.error('Error loading chart data:', error);
-            document.getElementById('loadingIndicator').style.display = 'none';
-            document.getElementById('noStatsMessage').innerHTML = `
-                <p>Error loading statistics. Please try again.</p>
-            `;
-            document.getElementById('noStatsMessage').style.display = 'block';
-        }
-    },
-
-    /**
      * Get date range based on current view
      * @returns {{startDate: Date, endDate: Date}}
      */
@@ -274,9 +222,11 @@ export const Charts = {
     /**
      * Update stats summary cards
      * @param {array} workouts - Array of workout objects
+     * @param {string} statsSummaryId - ID of the stats summary container
+     * @param {string} exerciseId - ID of the exercise
      */
-    updateStatsSummary(workouts) {
-        const exercise = Storage.getExerciseById(this.currentExerciseId);
+    updateStatsSummary(workouts, statsSummaryId, exerciseId) {
+        const exercise = Storage.getExerciseById(exerciseId);
 
         // Calculate 1RM estimate from best recent set
         let oneRepMax = '-';
@@ -321,13 +271,30 @@ export const Charts = {
             }
         }
 
-        // Update DOM
-        document.getElementById('oneRepMax').textContent = oneRepMax;
-        document.getElementById('totalSessions').textContent = totalSessions;
-        document.getElementById('totalVolume').textContent = totalVolume > 0 
-            ? `${totalVolume.toLocaleString()} kg` 
-            : '-';
-        document.getElementById('bestSet').textContent = bestSet;
+        // Update DOM - create stats summary HTML
+        const summaryHTML = `
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <div class="stat-label">Total Sessions</div>
+                    <div class="stat-value">${totalSessions}</div>
+                </div>
+                ${exercise.requiresWeight ? `
+                <div class="stat-card">
+                    <div class="stat-label">Est. 1RM</div>
+                    <div class="stat-value">${oneRepMax}</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Volume</div>
+                    <div class="stat-value">${totalVolume > 0 ? `${totalVolume.toLocaleString()} kg` : '-'}</div>
+                </div>
+                ` : ''}
+                <div class="stat-card">
+                    <div class="stat-label">Best Set</div>
+                    <div class="stat-value">${bestSet}</div>
+                </div>
+            </div>
+        `;
+        document.getElementById(statsSummaryId).innerHTML = summaryHTML;
     }
 };
 

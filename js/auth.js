@@ -76,6 +76,7 @@ export const Auth = {
         // Show/hide modal based on auth state
         if (this.isAuthenticated()) {
             modal.style.display = 'none';
+            document.getElementById('app').style.display = 'block';
             return true;
         } else {
             modal.style.display = 'flex';

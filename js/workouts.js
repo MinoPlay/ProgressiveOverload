@@ -240,8 +240,7 @@ export const Workouts = {
             const weightDetail = this.createWorkoutDetail('Weight', `${workout.weight} kg`);
             details.appendChild(weightDetail);
 
-            const volumeDetail = this.createWorkoutDetail('Volume', `${(workout.weight * workout.reps).toFixed(0)} kg`);
-            details.appendChild(volumeDetail);
+            // Removed Volume detail as per user request
         }
 
         item.appendChild(details);
@@ -326,8 +325,7 @@ export const Workouts = {
             const weightDetail = this.createWorkoutDetail('Weight', `${workout.weight} kg`);
             details.appendChild(weightDetail);
 
-            const volumeDetail = this.createWorkoutDetail('Volume', `${(workout.weight * workout.reps).toFixed(0)} kg`);
-            details.appendChild(volumeDetail);
+            // Removed Volume detail as per user request
         }
 
         item.appendChild(details);

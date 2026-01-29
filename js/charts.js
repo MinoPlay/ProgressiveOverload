@@ -8,16 +8,32 @@ import { estimateOneRepMax, getWeekStart, parseDate, formatDate } from './utils.
 export const Charts = {
     volumeChart: null,
     currentView: CONFIG.charts.defaultView,
+    chartType: localStorage.getItem('chartType') || 'line',
 
     /**
      * Initialize charts UI
      */
     init() {
         this.bindEvents();
+        this.setInitialChartTypeButton();
         this.renderCombinedChart();
         // Listen for exercise updates
         window.addEventListener('exercisesUpdated', () => {
             this.renderCombinedChart();
+        });
+    },
+
+    /**
+     * Set initial chart type button state
+     */
+    setInitialChartTypeButton() {
+        const chartTypeBtns = document.querySelectorAll('.chart-type-btn');
+        chartTypeBtns.forEach(btn => {
+            if (btn.dataset.chartType === this.chartType) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
         });
     },
 
@@ -37,6 +53,21 @@ export const Charts = {
                 this.renderCombinedChart();
             });
         });
+
+        const chartTypeBtns = document.querySelectorAll('.chart-type-btn');
+        chartTypeBtns.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Update active state
+                chartTypeBtns.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                // Update chart type
+                this.chartType = btn.dataset.chartType;
+                // Save to localStorage
+                localStorage.setItem('chartType', this.chartType);
+                // Re-render combined chart
+                this.renderCombinedChart();
+            });
+        });
     },
 
     /**
@@ -46,6 +77,10 @@ export const Charts = {
         const statsContent = document.getElementById('statsContent');
         const noStatsMessage = document.getElementById('noStatsMessage');
         if (!statsContent) return;
+
+        // Hide content during loading
+        statsContent.style.display = 'none';
+        if (noStatsMessage) noStatsMessage.style.display = 'none';
 
         // Remove all children
         statsContent.innerHTML = '';
@@ -58,11 +93,12 @@ export const Charts = {
             }
             return;
         }
-        
-        if (noStatsMessage) noStatsMessage.style.display = 'none';
 
         // Load and render tabs
         await this.loadAndRenderTabs();
+        
+        // Show content after loading
+        statsContent.style.display = 'block';
     },
 
     /**
@@ -196,7 +232,7 @@ export const Charts = {
 
         // Create chart
         new Chart(ctx.getContext('2d'), {
-            type: 'line',
+            type: this.chartType,
             data: {
                 labels: weeklyData.labels,
                 datasets: [{

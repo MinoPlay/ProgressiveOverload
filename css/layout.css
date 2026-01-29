@@ -157,13 +157,44 @@ body {
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     margin-bottom: var(--spacing-xl);
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
 }
 
 .view-toggle {
     display: flex;
     gap: var(--spacing-sm);
-    margin-top: var(--spacing-md);
     flex-wrap: wrap;
+}
+
+.view-btn,
+.chart-type-btn {
+    padding: var(--spacing-sm) var(--spacing-lg);
+    background: var(--bg-secondary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-md);
+    font-size: 0.95rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    white-space: nowrap;
+}
+
+.view-btn:hover,
+.chart-type-btn:hover {
+    background: var(--primary-color);
+    color: var(--text-inverse);
+}
+
+.view-btn.active,
+.chart-type-btn.active {
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
+    border-color: var(--primary-color);
 }
 
 .stats-summary {

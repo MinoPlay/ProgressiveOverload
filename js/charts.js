@@ -222,22 +222,22 @@ export const Charts = {
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
 
-        // Group workouts by week
-        const weeklyData = this.groupByWeek(workouts, exercise.requiresWeight);
+        // Group workouts by date
+        const dailyData = this.groupByDate(workouts, exercise.requiresWeight);
 
         // Determine label and y-axis based on exercise type
         const isWeighted = exercise.requiresWeight;
-        const dataLabel = isWeighted ? 'Weekly Volume (kg)' : 'Total Reps';
+        const dataLabel = isWeighted ? 'Daily Volume (kg)' : 'Total Reps';
         const yAxisLabel = isWeighted ? 'Volume (kg)' : 'Reps';
 
         // Create chart
         new Chart(ctx.getContext('2d'), {
             type: this.chartType,
             data: {
-                labels: weeklyData.labels,
+                labels: dailyData.labels,
                 datasets: [{
                     label: dataLabel,
-                    data: weeklyData.values,
+                    data: dailyData.values,
                     borderColor: CONFIG.charts.colors.primary,
                     backgroundColor: CONFIG.charts.colors.primary,
                     borderWidth: 2,
@@ -266,7 +266,7 @@ export const Charts = {
                     x: {
                         title: {
                             display: true,
-                            text: 'Week'
+                            text: 'Date'
                         }
                     }
                 }
@@ -355,35 +355,37 @@ export const Charts = {
     },
 
     /**
-     * Group workouts by week and calculate volume or total reps
+     * Group workouts by date and calculate volume or total reps
      * @param {array} workouts - Array of workout objects
      * @param {boolean} isWeighted - Whether exercise requires weight
      * @returns {{labels: array, values: array}}
      */
-    groupByWeek(workouts, isWeighted = true) {
-        const weeks = new Map();
+    groupByDate(workouts, isWeighted = true) {
+        const dates = new Map();
 
         workouts.forEach(workout => {
-            const date = parseDate(workout.date);
-            const weekStart = getWeekStart(date);
-            const weekLabel = formatDate(weekStart);
+            const dateLabel = workout.date;
 
-            if (!weeks.has(weekLabel)) {
-                weeks.set(weekLabel, 0);
+            if (!dates.has(dateLabel)) {
+                dates.set(dateLabel, 0);
             }
 
             // Calculate volume (reps × weight) for weighted exercises, or total reps for bodyweight
             const value = isWeighted && workout.weight 
                 ? workout.reps * workout.weight 
                 : workout.reps;
-            weeks.set(weekLabel, weeks.get(weekLabel) + value);
+            dates.set(dateLabel, dates.get(dateLabel) + value);
         });
 
+        // Sort by date
+        const sortedDates = Array.from(dates.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+
         return {
-            labels: Array.from(weeks.keys()),
-            values: Array.from(weeks.values())
+            labels: sortedDates.map(entry => entry[0]),
+            values: sortedDates.map(entry => entry[1])
         };
     }
+
 };
 
 // Remove deprecated methods - now imported from utils.js

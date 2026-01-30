@@ -119,11 +119,20 @@ export const History = {
         list.className = 'history-workouts-list';
         list.dataset.date = date;
 
-        // Create grouped items
-        for (const [exerciseId, exerciseWorkouts] of exerciseGroups) {
-            const item = this.createGroupedExerciseItem(date, exerciseId, exerciseWorkouts);
+        // Sort exercise groups by minimum sequence to maintain order
+        const sortedExerciseGroups = Array.from(exerciseGroups.entries())
+            .map(([exerciseId, exerciseWorkouts]) => ({
+                exerciseId,
+                workouts: exerciseWorkouts,
+                minSequence: Math.min(...exerciseWorkouts.map(w => w.sequence || 0))
+            }))
+            .sort((a, b) => a.minSequence - b.minSequence);
+
+        // Create grouped items with display order
+        sortedExerciseGroups.forEach((group, index) => {
+            const item = this.createGroupedExerciseItem(date, group.exerciseId, group.workouts, index + 1);
             list.appendChild(item);
-        }
+        });
 
         group.appendChild(list);
 
@@ -135,9 +144,10 @@ export const History = {
      * @param {string} date - Date string (YYYY-MM-DD)
      * @param {string} exerciseId - Exercise ID
      * @param {array} workouts - Array of workout objects for this exercise
+     * @param {number} displayOrder - Display order number (1, 2, 3, etc.)
      * @returns {HTMLElement} Grouped exercise item element
      */
-    createGroupedExerciseItem(date, exerciseId, workouts) {
+    createGroupedExerciseItem(date, exerciseId, workouts, displayOrder) {
         const exercise = Storage.getExerciseById(exerciseId);
         
         const item = document.createElement('div');
@@ -145,9 +155,6 @@ export const History = {
         item.dataset.date = date;
         item.dataset.exerciseId = exerciseId;
         item.draggable = true;
-
-        // Get the minimum sequence from workouts for this exercise
-        const minSequence = Math.min(...workouts.map(w => w.sequence || 0));
 
         // Add drag event listeners
         item.addEventListener('dragstart', (e) => this.handleExerciseGroupDragStart(e, exerciseId, date));
@@ -163,11 +170,11 @@ export const History = {
         title.textContent = exercise ? exercise.name : 'Unknown Exercise';
         header.appendChild(title);
 
-        // Sequence badge
-        if (minSequence > 0) {
+        // Sequence badge showing display order
+        if (displayOrder) {
             const badge = document.createElement('span');
             badge.className = 'sequence-badge';
-            badge.textContent = `#${minSequence}`;
+            badge.textContent = `#${displayOrder}`;
             item.appendChild(badge);
         }
 

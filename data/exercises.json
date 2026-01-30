@@ -149,6 +149,12 @@
       "name": "Seated Cable Rows",
       "equipmentType": "machines",
       "requiresWeight": true
+    },
+    {
+      "id": "1769759085099_6xqb1io2v",
+      "name": "Neck Harness",
+      "equipmentType": "bodyweight+",
+      "requiresWeight": true
     }
   ]
 }

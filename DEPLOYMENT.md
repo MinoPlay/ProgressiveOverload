@@ -6,7 +6,7 @@
 
 ```powershell
 git add .
-git commit -m "Initial commit: Progressive Overload Tracker app"
+git commit -m "Initial commit: Progressive Pumping!!! app"
 git push origin main
 ```
 
@@ -28,7 +28,7 @@ Your app will be available at:
 1. Create a Personal Access Token:
    - Go to https://github.com/settings/tokens
    - Click "Generate new token (classic)"
-   - Name: "Progressive Overload Tracker"
+   - Name: "Progressive Pumping!!!"
    - Expiration: 90 days
    - Scope: ✓ repo
    - Generate and copy the token

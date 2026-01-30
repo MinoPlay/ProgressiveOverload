@@ -17,7 +17,7 @@ const App = {
      * Initialize application
      */
     async init() {
-        console.log('Progressive Overload Tracker - Initializing...');
+        console.log('Progressive Pumping!!! - Initializing...');
 
         // In dev mode, skip authentication
         if (CONFIG.devMode) {
@@ -72,7 +72,7 @@ const App = {
             showLoading(false);
 
             console.log('Application initialized successfully');
-            showToast('Welcome to Progressive Overload Tracker!', 'success');
+            showToast('Welcome to Progressive Pumping!!!', 'success');
         } catch (error) {
             console.error('Error initializing application:', error);
             showToast(`Failed to initialize app: ${error.message}`, 'error');

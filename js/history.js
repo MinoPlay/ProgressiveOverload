@@ -144,6 +144,16 @@ export const History = {
         item.className = 'history-exercise-group';
         item.dataset.date = date;
         item.dataset.exerciseId = exerciseId;
+        item.draggable = true;
+
+        // Get the minimum sequence from workouts for this exercise
+        const minSequence = Math.min(...workouts.map(w => w.sequence || 0));
+
+        // Add drag event listeners
+        item.addEventListener('dragstart', (e) => this.handleExerciseGroupDragStart(e, exerciseId, date));
+        item.addEventListener('dragover', (e) => this.handleExerciseGroupDragOver(e));
+        item.addEventListener('drop', (e) => this.handleExerciseGroupDrop(e, exerciseId, date));
+        item.addEventListener('dragend', () => this.handleExerciseGroupDragEnd());
 
         // Exercise header
         const header = document.createElement('div');
@@ -152,6 +162,14 @@ export const History = {
         const title = document.createElement('h4');
         title.textContent = exercise ? exercise.name : 'Unknown Exercise';
         header.appendChild(title);
+
+        // Sequence badge
+        if (minSequence > 0) {
+            const badge = document.createElement('span');
+            badge.className = 'sequence-badge';
+            badge.textContent = `#${minSequence}`;
+            item.appendChild(badge);
+        }
 
         const setCount = document.createElement('span');
         setCount.className = 'set-count';
@@ -365,6 +383,129 @@ export const History = {
         });
         
         this.draggedWorkout = null;
+        this.draggedDate = null;
+    },
+
+    /**
+     * Handle drag start for exercise group
+     * @param {DragEvent} e - Drag event
+     * @param {string} exerciseId - Exercise ID
+     * @param {string} date - Date string
+     */
+    handleExerciseGroupDragStart(e, exerciseId, date) {
+        this.draggedExerciseId = exerciseId;
+        this.draggedDate = date;
+        e.currentTarget.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    },
+
+    /**
+     * Handle drag over for exercise group
+     * @param {DragEvent} e - Drag event
+     */
+    handleExerciseGroupDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        
+        const item = e.currentTarget;
+        if (item.dataset.date === this.draggedDate && item.dataset.exerciseId !== this.draggedExerciseId) {
+            item.classList.add('drag-over');
+        }
+    },
+
+    /**
+     * Handle drop for exercise group
+     * @param {DragEvent} e - Drag event
+     * @param {string} targetExerciseId - Target exercise ID
+     * @param {string} date - Date string
+     */
+    async handleExerciseGroupDrop(e, targetExerciseId, date) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const item = e.currentTarget;
+        item.classList.remove('drag-over');
+
+        // Only allow reordering within same date
+        if (!this.draggedExerciseId || date !== this.draggedDate) {
+            showToast('Can only reorder exercises within the same day', 'error');
+            return;
+        }
+
+        if (this.draggedExerciseId === targetExerciseId) {
+            return;
+        }
+
+        try {
+            showLoading(true);
+
+            // Get all workouts for this date
+            const allWorkouts = await Storage.getWorkoutsForDate(date);
+            
+            // Group by exercise
+            const exerciseGroups = new Map();
+            for (const workout of allWorkouts) {
+                if (!exerciseGroups.has(workout.exerciseId)) {
+                    exerciseGroups.set(workout.exerciseId, []);
+                }
+                exerciseGroups.get(workout.exerciseId).push(workout);
+            }
+
+            // Get current order of exercises based on DOM
+            const list = item.parentElement;
+            const exerciseItems = Array.from(list.querySelectorAll('.history-exercise-group'));
+            const currentOrder = exerciseItems.map(el => el.dataset.exerciseId);
+
+            // Remove dragged exercise from its current position
+            const draggedIndex = currentOrder.indexOf(this.draggedExerciseId);
+            currentOrder.splice(draggedIndex, 1);
+            
+            // Insert at new position
+            const targetIndex = currentOrder.indexOf(targetExerciseId);
+            currentOrder.splice(targetIndex, 0, this.draggedExerciseId);
+
+            // Build new workout order with updated sequences
+            const newWorkoutOrder = [];
+            let sequenceCounter = 1;
+            
+            for (const exerciseId of currentOrder) {
+                const workouts = exerciseGroups.get(exerciseId);
+                // Sort workouts within exercise by their current sequence
+                workouts.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+                
+                for (const workout of workouts) {
+                    newWorkoutOrder.push({
+                        id: workout.id,
+                        sequence: sequenceCounter++
+                    });
+                }
+            }
+
+            // Update sequences in storage
+            await Storage.updateWorkoutSequences(date, newWorkoutOrder.map(w => w.id));
+
+            // Re-render the history
+            await this.renderDailyHistory();
+
+            showToast('Exercise order updated', 'success');
+            showLoading(false);
+        } catch (error) {
+            console.error('Error reordering exercises:', error);
+            showToast(`Failed to reorder: ${error.message}`, 'error');
+            showLoading(false);
+        }
+    },
+
+    /**
+     * Handle drag end for exercise group
+     */
+    handleExerciseGroupDragEnd() {
+        // Remove dragging classes
+        document.querySelectorAll('.history-exercise-group').forEach(item => {
+            item.classList.remove('dragging', 'drag-over');
+        });
+        
+        this.draggedExerciseId = null;
         this.draggedDate = null;
     }
 };

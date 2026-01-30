@@ -715,7 +715,7 @@
 .history-date-group {
     background: var(--bg-primary);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-md);
     box-shadow: var(--shadow-sm);
 }
 
@@ -723,13 +723,13 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-md);
-    padding-bottom: var(--spacing-md);
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: var(--spacing-sm);
     border-bottom: 2px solid var(--border-light);
 }
 
 .history-date-header h3 {
-    font-size: 1.3rem;
+    font-size: 1.1rem;
     color: var(--text-primary);
     margin: 0;
 }
@@ -817,11 +817,15 @@
 
 /* Grouped Exercise Items in History */
 .history-exercise-group {
+    position: relative;
     background: var(--bg-secondary);
     border-radius: var(--radius-md);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm) var(--spacing-md);
     transition: all var(--transition-base);
-    border-left: 4px solid var(--primary-color);
+    border-left: 3px solid var(--primary-color);
+    cursor: move;
+    border: 2px solid transparent;
+    border-left: 3px solid var(--primary-color);
 }
 
 .history-exercise-group:hover {
@@ -829,27 +833,38 @@
     box-shadow: var(--shadow-sm);
 }
 
+.history-exercise-group.dragging {
+    opacity: 0.5;
+    transform: rotate(2deg);
+}
+
+.history-exercise-group.drag-over {
+    border-color: var(--primary-color);
+    background: var(--bg-primary);
+    transform: translateY(-2px);
+}
+
 .exercise-group-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: var(--spacing-md);
-    padding-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+    padding-bottom: 0.3rem;
     border-bottom: 1px solid var(--border-light);
 }
 
 .exercise-group-header h4 {
-    font-size: 1.15rem;
+    font-size: 1rem;
     color: var(--text-primary);
     margin: 0;
     font-weight: 600;
 }
 
 .set-count {
-    font-size: 0.85rem;
+    font-size: 0.75rem;
     color: var(--text-secondary);
     background: var(--bg-primary);
-    padding: 0.25rem 0.75rem;
+    padding: 0.2rem 0.6rem;
     border-radius: var(--radius-xl);
     font-weight: 500;
 }
@@ -857,25 +872,25 @@
 .sets-list {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xs);
+    gap: 0.2rem;
 }
 
 .set-item {
     display: flex;
     align-items: center;
-    gap: var(--spacing-md);
-    padding: var(--spacing-xs) 0;
+    gap: var(--spacing-sm);
+    padding: 0.2rem 0;
 }
 
 .set-number {
-    font-size: 0.9rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
     font-weight: 500;
-    min-width: 50px;
+    min-width: 45px;
 }
 
 .set-details {
-    font-size: 0.95rem;
+    font-size: 0.85rem;
     color: var(--text-primary);
     font-weight: 500;
 }

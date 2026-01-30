@@ -199,6 +199,14 @@
       "reps": 30,
       "weight": 25,
       "sequence": 15
+    },
+    {
+      "id": "1769759026943_jigowastu",
+      "exerciseId": "1769598356921_facepulls",
+      "date": "2026-01-30",
+      "reps": 20,
+      "weight": 25,
+      "sequence": 16
     }
   ]
 }

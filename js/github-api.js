@@ -21,11 +21,35 @@ export const GitHubAPI = {
     },
 
     /**
+     * List files in a directory
+     * @param {string} path - Directory path (e.g., 'data')
+     * @returns {Promise<array>} Array of file objects with name and path
+     */
+    async listFiles(path) {
+        try {
+            const response = await fetch(
+                `${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`,
+                { headers: this.getHeaders() }
+            );
+
+            if (!response.ok) {
+                throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error('Error listing files:', error);
+            return [];
+        }
+    },
+
+    /**
      * Get file from repository
      * @param {string} path - File path in repository (e.g., 'data/exercises.json')
+     * @param {boolean} silent - If true, don't log 404 warnings
      * @returns {Promise<{content: object, sha: string}|null>} File content and SHA
      */
-    async getFile(path) {
+    async getFile(path, silent = false) {
         try {
             const response = await fetch(
                 `${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`,
@@ -33,7 +57,10 @@ export const GitHubAPI = {
             );
 
             if (response.status === 404) {
-                // File doesn't exist yet
+                // File doesn't exist yet - this is normal for months without workouts
+                if (!silent && !path.includes('workouts-')) {
+                    console.log(`File not found: ${path}`);
+                }
                 return null;
             }
 
@@ -160,7 +187,7 @@ export const GitHubAPI = {
      */
     async getWorkouts(date) {
         const path = this.getWorkoutFilePath(date);
-        const result = await this.getFile(path);
+        const result = await this.getFile(path, true); // Silent mode for workouts
         
         if (!result) {
             // Return empty structure if file doesn't exist
@@ -199,26 +226,49 @@ export const GitHubAPI = {
     },
 
     /**
-     * Get workouts across multiple months
+     * Get workouts across multiple months (only fetches existing files)
      * @param {Date} startDate - Start date
      * @param {Date} endDate - End date
      * @returns {Promise<array>} Combined array of workouts
      */
     async getWorkoutsInRange(startDate, endDate) {
-        const workouts = [];
-        const current = new Date(startDate);
+        // First, list all files in the data folder
+        const files = await this.listFiles('data');
         
-        // Iterate through each month in the range
-        while (current <= endDate) {
+        // Filter to only workout files (workouts-YYYY-MM.json)
+        const workoutFiles = files
+            .filter(file => file.name.startsWith('workouts-') && file.name.endsWith('.json'))
+            .map(file => file.name);
+        
+        // Parse the dates from filenames and filter by range
+        const relevantFiles = workoutFiles.filter(filename => {
+            const match = filename.match(/workouts-(\d{4})-(\d{2})\.json/);
+            if (!match) return false;
+            
+            const year = parseInt(match[1]);
+            const month = parseInt(match[2]);
+            const fileDate = new Date(year, month - 1, 1);
+            
+            const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+            const rangeEnd = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
+            
+            return fileDate >= rangeStart && fileDate <= rangeEnd;
+        });
+        
+        // Fetch only the files that exist
+        const workouts = [];
+        for (const filename of relevantFiles) {
             try {
-                const monthData = await this.getWorkouts(current);
+                const match = filename.match(/workouts-(\d{4})-(\d{2})\.json/);
+                const year = parseInt(match[1]);
+                const month = parseInt(match[2]);
+                const date = new Date(year, month - 1, 1);
+                
+                const monthData = await this.getWorkouts(date);
                 workouts.push(...monthData.workouts);
             } catch (error) {
-                console.warn(`Could not fetch workouts for ${current.toISOString().slice(0, 7)}:`, error);
+                console.warn(`Could not fetch ${filename}:`, error);
             }
-            
-            // Move to next month
-            current.setMonth(current.getMonth() + 1);
         }
 
         return workouts;

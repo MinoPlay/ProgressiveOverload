@@ -106,30 +106,6 @@
     font-size: 0.875rem;
 }
 
-/* View Toggle Buttons */
-.view-btn {
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--bg-secondary);
-    border: 2px solid var(--secondary-color);
-    border-radius: var(--radius-md);
-    font-size: 0.9rem;
-    font-weight: 500;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: all var(--transition-base);
-}
-
-.view-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-}
-
-.view-btn.active {
-    background: var(--primary-color);
-    border-color: var(--primary-color);
-    color: var(--text-inverse);
-}
-
 /* Cards */
 .exercise-card {
     background: var(--bg-primary);
@@ -559,13 +535,6 @@
 
     .form-group {
         margin-bottom: var(--spacing-xl);
-    }
-
-    /* Larger view toggle buttons */
-    .view-btn {
-        padding: 0.875rem var(--spacing-lg);
-        font-size: 1rem;
-        min-height: 48px;
     }
 
     .modal-content {

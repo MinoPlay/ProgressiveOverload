@@ -3,70 +3,24 @@
 
 import { Storage } from './storage.js';
 import { CONFIG } from './config.js';
-import { estimateOneRepMax, getWeekStart, parseDate, formatDate } from './utils.js';
+import { calculateLinearRegression } from './chart-helpers.js';
+
+// Register Chart.js plugins globally when available
+// Plugins are loaded via CDN and auto-register with Chart.js 4.x
+// The zoom and annotation plugins will be available as Chart.Zoom and Chart.Annotation
 
 export const Charts = {
-    volumeChart: null,
-    currentView: CONFIG.charts.defaultView,
-    chartType: localStorage.getItem('chartType') || 'line',
+    selectedExerciseIds: JSON.parse(localStorage.getItem('selectedExerciseIds') || '[]'),
+    allExercisesData: [], // Store all exercise data
 
     /**
      * Initialize charts UI
      */
     init() {
-        this.bindEvents();
-        this.setInitialChartTypeButton();
         this.renderCombinedChart();
         // Listen for exercise updates
         window.addEventListener('exercisesUpdated', () => {
             this.renderCombinedChart();
-        });
-    },
-
-    /**
-     * Set initial chart type button state
-     */
-    setInitialChartTypeButton() {
-        const chartTypeBtns = document.querySelectorAll('.chart-type-btn');
-        chartTypeBtns.forEach(btn => {
-            if (btn.dataset.chartType === this.chartType) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-    },
-
-    /**
-     * Bind event listeners
-     */
-    bindEvents() {
-        const viewBtns = document.querySelectorAll('.view-btn');
-        viewBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Update active state
-                viewBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                // Update current view
-                this.currentView = btn.dataset.view;
-                // Re-render combined chart
-                this.renderCombinedChart();
-            });
-        });
-
-        const chartTypeBtns = document.querySelectorAll('.chart-type-btn');
-        chartTypeBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                // Update active state
-                chartTypeBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                // Update chart type
-                this.chartType = btn.dataset.chartType;
-                // Save to localStorage
-                localStorage.setItem('chartType', this.chartType);
-                // Re-render combined chart
-                this.renderCombinedChart();
-            });
         });
     },
 
@@ -129,52 +83,20 @@ export const Charts = {
 
             // Filter out exercises with no data
             const dataWithWorkouts = exerciseData.filter(d => d.workouts.length > 0);
+            
+            // Store all exercise data
+            this.allExercisesData = dataWithWorkouts;
 
             if (dataWithWorkouts.length === 0) {
                 document.getElementById('statsContent').innerHTML = '<p class="empty-state">No workout data found in the selected time range.</p>';
                 return;
             }
-
-            // Create tab navigation
-            const statsContent = document.getElementById('statsContent');
-            const tabNav = document.createElement('div');
-            tabNav.className = 'exercise-tabs-nav';
             
-            dataWithWorkouts.forEach((data, idx) => {
-                const tabBtn = document.createElement('button');
-                tabBtn.className = 'exercise-tab-btn' + (idx === 0 ? ' active' : '');
-                tabBtn.textContent = data.exercise.name;
-                tabBtn.dataset.tabIndex = idx;
-                tabBtn.addEventListener('click', () => {
-                    // Switch active tab
-                    Array.from(tabNav.children).forEach(b => b.classList.remove('active'));
-                    tabBtn.classList.add('active');
-                    // Show only the selected tab content
-                    Array.from(statsContent.querySelectorAll('.exercise-tab-pane')).forEach((el, i) => {
-                        el.style.display = (i === idx) ? 'block' : 'none';
-                    });
-                });
-                tabNav.appendChild(tabBtn);
-            });
-            statsContent.appendChild(tabNav);
+            // Populate exercise checkboxes
+            this.populateExerciseCheckboxes(dataWithWorkouts);
 
-            // Create tab content for each exercise
-            dataWithWorkouts.forEach(({ exercise, workouts }, idx) => {
-                const tabPane = document.createElement('div');
-                tabPane.className = 'exercise-tab-pane';
-                tabPane.style.display = idx === 0 ? 'block' : 'none';
-                tabPane.innerHTML = `
-                    <div class="chart-container">
-                        <canvas id="volumeChart-${exercise.id}"></canvas>
-                    </div>
-                    <div id="stats-${exercise.id}"></div>
-                `;
-                statsContent.appendChild(tabPane);
-
-                // Render chart and stats for this exercise
-                this.renderProgressChart(exercise, workouts, `volumeChart-${exercise.id}`);
-                this.renderExerciseStats(exercise, workouts, `stats-${exercise.id}`);
-            });
+            // Render unified chart
+            this.renderUnifiedChart();
 
         } catch (error) {
             console.error('Error loading chart data:', error);
@@ -186,172 +108,218 @@ export const Charts = {
     },
 
     /**
-     * Get date range based on current view
+     * Populate exercise selection checkboxes
+     * @param {Array} exercisesData - Array of {exercise, workouts} objects
+     */
+    populateExerciseCheckboxes(exercisesData) {
+        const container = document.getElementById('exerciseCheckboxes');
+        if (!container) return;
+
+        container.innerHTML = '';
+        
+        exercisesData.forEach(({ exercise }) => {
+            const label = document.createElement('label');
+            label.className = 'comparison-checkbox-label';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = exercise.id;
+            checkbox.checked = this.selectedExerciseIds.includes(exercise.id);
+            checkbox.addEventListener('change', (e) => {
+                if (e.target.checked) {
+                    this.selectedExerciseIds.push(exercise.id);
+                } else {
+                    this.selectedExerciseIds = this.selectedExerciseIds.filter(id => id !== exercise.id);
+                }
+                localStorage.setItem('selectedExerciseIds', JSON.stringify(this.selectedExerciseIds));
+                this.renderUnifiedChart();
+            });
+            
+            label.appendChild(checkbox);
+            label.appendChild(document.createTextNode(' ' + exercise.name));
+            container.appendChild(label);
+        });
+    },
+
+
+
+    /**
+     * Get date range for loading all workout data
      * @returns {{startDate: Date, endDate: Date}}
      */
     getDateRange() {
         const endDate = new Date();
         const startDate = new Date();
-
-        switch (this.currentView) {
-            case '10sessions':
-                // Load last 12 months to ensure we get enough sessions
-                startDate.setFullYear(startDate.getFullYear() - 1);
-                break;
-            case '30days':
-                startDate.setDate(startDate.getDate() - 30);
-                break;
-            case '90days':
-                startDate.setDate(startDate.getDate() - 90);
-                break;
-            case 'alltime':
-                startDate.setFullYear(startDate.getFullYear() - 10); // 10 years back
-                break;
-        }
-
+        startDate.setFullYear(startDate.getFullYear() - 10); // 10 years back for all data
         return { startDate, endDate };
     },
 
     /**
-     * Render progress chart for a single exercise
-     * @param {object} exercise - Exercise object
-     * @param {array} workouts - Array of workout objects
-     * @param {string} canvasId - Canvas element ID
+     * Render unified chart: Bars for actual data + Dotted lines for trends
      */
-    renderProgressChart(exercise, workouts, canvasId) {
-        const ctx = document.getElementById(canvasId);
-        if (!ctx) return;
+    renderUnifiedChart() {
+        const statsContent = document.getElementById('statsContent');
+        if (!statsContent) return;
 
-        // Group workouts by date
-        const dailyData = this.groupByDate(workouts, exercise.requiresWeight);
-
-        // Determine label and y-axis based on exercise type
-        const isWeighted = exercise.requiresWeight;
-        const dataLabel = isWeighted ? 'Daily Volume (kg)' : 'Total Reps';
-        const yAxisLabel = isWeighted ? 'Volume (kg)' : 'Reps';
-
-        // Create chart
-        new Chart(ctx.getContext('2d'), {
-            type: this.chartType,
-            data: {
-                labels: dailyData.labels,
-                datasets: [{
-                    label: dataLabel,
-                    data: dailyData.values,
-                    borderColor: CONFIG.charts.colors.primary,
-                    backgroundColor: CONFIG.charts.colors.primary,
-                    borderWidth: 2,
-                    pointRadius: 4,
-                    pointBackgroundColor: CONFIG.charts.colors.primary,
-                    fill: false,
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        title: {
-                            display: true,
-                            text: yAxisLabel
-                        }
-                    },
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
-                    }
-                }
-            }
-        });
-    },
-
-    /**
-     * Render statistics for a single exercise
-     * @param {object} exercise - Exercise object
-     * @param {array} workouts - Array of workout objects
-     * @param {string} containerId - Container element ID
-     */
-    renderExerciseStats(exercise, workouts, containerId) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        const totalSessions = workouts.length;
-        let totalVolume = 0;
-        let oneRepMax = '-';
-        let bestSet = '-';
-
-        if (exercise.requiresWeight) {
-            // Calculate total volume
-            workouts.forEach(w => {
-                if (w.weight) {
-                    totalVolume += w.reps * w.weight;
-                }
-            });
-
-            // Calculate 1RM estimate
-            const bestWorkout = workouts.reduce((best, current) => {
-                const currentEstimate = estimateOneRepMax(current.weight, current.reps);
-                const bestEstimate = best ? estimateOneRepMax(best.weight, best.reps) : 0;
-                return currentEstimate > bestEstimate ? current : best;
-            }, null);
-            
-            if (bestWorkout) {
-                oneRepMax = estimateOneRepMax(bestWorkout.weight, bestWorkout.reps).toFixed(1);
-            }
-
-            // Find best set
-            const best = workouts.reduce((best, current) => {
-                return (!best || current.weight > best.weight) ? current : best;
-            }, null);
-            
-            if (best) {
-                bestSet = `${best.weight} kg × ${best.reps}`;
-            }
-        } else {
-            // For bodyweight exercises
-            const best = workouts.reduce((best, current) => {
-                return (!best || current.reps > best.reps) ? current : best;
-            }, null);
-            
-            if (best) {
-                bestSet = `${best.reps} reps`;
-            }
+        // Clear existing content
+        Array.from(statsContent.querySelectorAll('.exercise-tab-pane')).forEach(el => el.remove());
+        
+        if (this.selectedExerciseIds.length === 0) {
+            statsContent.innerHTML = '<p class="empty-state">Select exercises from the checkboxes above to view.</p>';
+            return;
         }
 
-        // Generate stats HTML
-        const statsHTML = `
-            <div class="stats-cards">
-                <div class="stat-card">
-                    <div class="stat-label">Total Sessions</div>
-                    <div class="stat-value">${totalSessions}</div>
-                </div>
-                ${exercise.requiresWeight ? `
-                <div class="stat-card">
-                    <div class="stat-label">Est. 1RM</div>
-                    <div class="stat-value">${oneRepMax} kg</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-label">Total Volume</div>
-                    <div class="stat-value">${totalVolume > 0 ? `${totalVolume.toLocaleString()} kg` : '-'}</div>
-                </div>
-                ` : ''}
-                <div class="stat-card">
-                    <div class="stat-label">Best Set</div>
-                    <div class="stat-value">${bestSet}</div>
-                </div>
+        // Filter to selected exercises
+        const selectedData = this.allExercisesData.filter(d => 
+            this.selectedExerciseIds.includes(d.exercise.id)
+        );
+
+        if (selectedData.length === 0) {
+            statsContent.innerHTML = '<p class="empty-state">No data available for selected exercises.</p>';
+            return;
+        }
+
+        // Create chart container
+        const container = document.createElement('div');
+        container.className = 'exercise-tab-pane';
+        container.style.display = 'block';
+        container.innerHTML = `
+            <div class="chart-container">
+                <canvas id="unifiedChart"></canvas>
             </div>
         `;
+        statsContent.appendChild(container);
 
-        container.innerHTML = statsHTML;
+        // Color palettes
+        const barColors = ['#667eea', '#4caf50', '#ff9800', '#e91e63', '#00bcd4'];
+        const trendColors = ['#2196f3', '#ff5722', '#9c27b0', '#00bcd4', '#4caf50'];
+        const datasets = [];
+        
+        // Get all unique dates across all exercises
+        const allDates = new Set();
+        selectedData.forEach(data => {
+            const dailyData = this.groupByDate(data.workouts, data.exercise.requiresWeight);
+            dailyData.labels.forEach(label => allDates.add(label));
+        });
+        const sortedDates = Array.from(allDates).sort();
+
+        selectedData.forEach((data, idx) => {
+            const dailyData = this.groupByDate(data.workouts, data.exercise.requiresWeight);
+            const alignedData = sortedDates.map(date => {
+                const dataIdx = dailyData.labels.indexOf(date);
+                return dataIdx !== -1 ? dailyData.values[dataIdx] : null;
+            });
+            
+            const barColor = barColors[idx % barColors.length];
+            const trendColor = trendColors[idx % trendColors.length];
+            
+            // Add bar chart for actual data
+            datasets.push({
+                label: data.exercise.name,
+                data: alignedData,
+                type: 'bar',
+                backgroundColor: barColor.replace(')', ', 0.6)').replace('rgb', 'rgba'),
+                borderColor: barColor,
+                borderWidth: 1,
+                order: 2 // Bars render behind lines
+            });
+            
+            // Add trend line (dotted)
+            const validPoints = alignedData
+                .map((val, idx) => ({ x: idx, y: val }))
+                .filter(p => p.y !== null);
+            
+            if (validPoints.length >= 2) {
+                const regression = calculateLinearRegression(validPoints);
+                const trendLine = sortedDates.map((_, idx) => regression.predict(idx));
+                
+                datasets.push({
+                    label: `${data.exercise.name} Trend`,
+                    data: trendLine,
+                    type: 'line',
+                    borderColor: trendColor,
+                    borderWidth: 2,
+                    borderDash: [8, 4], // Dotted line
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0,
+                    order: 1 // Lines render in front
+                });
+            }
+        });
+
+        // Create mixed chart (bars + lines)
+        const ctx = document.getElementById('unifiedChart');
+        if (ctx) {
+            new Chart(ctx.getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: sortedDates,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false
+                    },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        },
+                        zoom: {
+                            pan: {
+                                enabled: true,
+                                mode: 'x'
+                            },
+                            zoom: {
+                                wheel: {
+                                    enabled: true
+                                },
+                                pinch: {
+                                    enabled: true
+                                },
+                                mode: 'x'
+                            }
+                        },
+                        title: {
+                            display: true,
+                            text: 'Workout Progress (Bars: Actual Data | Dotted Lines: Trends)'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                title: (tooltipItems) => {
+                                    return tooltipItems[0].label;
+                                },
+                                label: (context) => {
+                                    const label = context.dataset.label || '';
+                                    const value = context.parsed.y;
+                                    if (value === null) return '';
+                                    return `${label}: ${value.toFixed(1)}`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Value'
+                            }
+                        },
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Date'
+                            }
+                        }
+                    }
+                }
+            });
+        }
     },
 
     /**
@@ -385,9 +353,4 @@ export const Charts = {
             values: sortedDates.map(entry => entry[1])
         };
     }
-
 };
-
-// Remove deprecated methods - now imported from utils.js
-// getWeekStart is imported
-// estimateOneRepMax is imported

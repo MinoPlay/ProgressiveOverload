@@ -215,6 +215,14 @@
       "reps": 20,
       "weight": 25,
       "sequence": 17
+    },
+    {
+      "id": "1769759040087_c5ifh98xg",
+      "exerciseId": "1769598356923_neckturns",
+      "date": "2026-01-30",
+      "reps": 30,
+      "weight": null,
+      "sequence": 18
     }
   ]
 }

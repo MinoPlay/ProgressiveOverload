@@ -1,0 +1,222 @@
+{
+  "exercises": [
+    {
+      "id": "bench-press",
+      "name": "Bench Press",
+      "category": "Chest",
+      "equipment": "Barbell"
+    },
+    {
+      "id": "squat",
+      "name": "Squat",
+      "category": "Legs",
+      "equipment": "Barbell"
+    },
+    {
+      "id": "deadlift",
+      "name": "Deadlift",
+      "category": "Back",
+      "equipment": "Barbell"
+    },
+    {
+      "id": "overhead-press",
+      "name": "Overhead Press",
+      "category": "Shoulders",
+      "equipment": "Barbell"
+    },
+    {
+      "id": "pull-up",
+      "name": "Pull-up",
+      "category": "Back",
+      "equipment": "Bodyweight"
+    },
+    {
+      "id": "dip",
+      "name": "Dip",
+      "category": "Chest",
+      "equipment": "Bodyweight"
+    },
+    {
+      "id": "row",
+      "name": "Barbell Row",
+      "category": "Back",
+      "equipment": "Barbell"
+    },
+    {
+      "id": "leg-press",
+      "name": "Leg Press",
+      "category": "Legs",
+      "equipment": "Machine"
+    }
+  ],
+  "workouts": [
+    {
+      "id": "workout-2026-01-15-001",
+      "date": "2026-01-15",
+      "sequence": 1,
+      "exerciseId": "bench-press",
+      "sets": [
+        { "reps": 10, "weight": 60 },
+        { "reps": 8, "weight": 70 },
+        { "reps": 6, "weight": 80 }
+      ],
+      "notes": "Felt strong today"
+    },
+    {
+      "id": "workout-2026-01-15-002",
+      "date": "2026-01-15",
+      "sequence": 2,
+      "exerciseId": "squat",
+      "sets": [
+        { "reps": 12, "weight": 80 },
+        { "reps": 10, "weight": 90 },
+        { "reps": 8, "weight": 100 }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "workout-2026-01-18-001",
+      "date": "2026-01-18",
+      "sequence": 1,
+      "exerciseId": "deadlift",
+      "sets": [
+        { "reps": 5, "weight": 120 },
+        { "reps": 5, "weight": 130 },
+        { "reps": 3, "weight": 140 }
+      ],
+      "notes": "PR on last set!"
+    },
+    {
+      "id": "workout-2026-01-18-002",
+      "date": "2026-01-18",
+      "sequence": 2,
+      "exerciseId": "pull-up",
+      "sets": [
+        { "reps": 8, "weight": 0 },
+        { "reps": 7, "weight": 0 },
+        { "reps": 6, "weight": 0 }
+      ],
+      "notes": "Bodyweight only"
+    },
+    {
+      "id": "workout-2026-01-20-001",
+      "date": "2026-01-20",
+      "sequence": 1,
+      "exerciseId": "overhead-press",
+      "sets": [
+        { "reps": 10, "weight": 40 },
+        { "reps": 8, "weight": 45 },
+        { "reps": 6, "weight": 50 }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "workout-2026-01-20-002",
+      "date": "2026-01-20",
+      "sequence": 2,
+      "exerciseId": "row",
+      "sets": [
+        { "reps": 10, "weight": 60 },
+        { "reps": 10, "weight": 65 },
+        { "reps": 8, "weight": 70 }
+      ],
+      "notes": "Good form"
+    },
+    {
+      "id": "workout-2026-01-22-001",
+      "date": "2026-01-22",
+      "sequence": 1,
+      "exerciseId": "bench-press",
+      "sets": [
+        { "reps": 10, "weight": 62.5 },
+        { "reps": 8, "weight": 72.5 },
+        { "reps": 6, "weight": 82.5 }
+      ],
+      "notes": "Progressive overload working!"
+    },
+    {
+      "id": "workout-2026-01-22-002",
+      "date": "2026-01-22",
+      "sequence": 2,
+      "exerciseId": "leg-press",
+      "sets": [
+        { "reps": 15, "weight": 150 },
+        { "reps": 12, "weight": 170 },
+        { "reps": 10, "weight": 190 }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "workout-2026-01-25-001",
+      "date": "2026-01-25",
+      "sequence": 1,
+      "exerciseId": "squat",
+      "sets": [
+        { "reps": 12, "weight": 85 },
+        { "reps": 10, "weight": 95 },
+        { "reps": 8, "weight": 105 }
+      ],
+      "notes": "Feeling stronger"
+    },
+    {
+      "id": "workout-2026-01-25-002",
+      "date": "2026-01-25",
+      "sequence": 2,
+      "exerciseId": "dip",
+      "sets": [
+        { "reps": 12, "weight": 0 },
+        { "reps": 10, "weight": 0 },
+        { "reps": 8, "weight": 0 }
+      ],
+      "notes": ""
+    },
+    {
+      "id": "workout-2026-01-27-001",
+      "date": "2026-01-27",
+      "sequence": 1,
+      "exerciseId": "deadlift",
+      "sets": [
+        { "reps": 5, "weight": 125 },
+        { "reps": 5, "weight": 135 },
+        { "reps": 5, "weight": 145 }
+      ],
+      "notes": "All reps completed!"
+    },
+    {
+      "id": "workout-2026-01-27-002",
+      "date": "2026-01-27",
+      "sequence": 2,
+      "exerciseId": "pull-up",
+      "sets": [
+        { "reps": 9, "weight": 0 },
+        { "reps": 8, "weight": 0 },
+        { "reps": 7, "weight": 0 }
+      ],
+      "notes": "Extra rep on first set"
+    },
+    {
+      "id": "workout-2026-01-29-001",
+      "date": "2026-01-29",
+      "sequence": 1,
+      "exerciseId": "bench-press",
+      "sets": [
+        { "reps": 10, "weight": 65 },
+        { "reps": 8, "weight": 75 },
+        { "reps": 7, "weight": 85 }
+      ],
+      "notes": "Almost at 85kg for 8 reps"
+    },
+    {
+      "id": "workout-2026-01-29-002",
+      "date": "2026-01-29",
+      "sequence": 2,
+      "exerciseId": "overhead-press",
+      "sets": [
+        { "reps": 10, "weight": 42.5 },
+        { "reps": 8, "weight": 47.5 },
+        { "reps": 7, "weight": 52.5 }
+      ],
+      "notes": "Progressing nicely"
+    }
+  ]
+}

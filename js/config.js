@@ -2,6 +2,16 @@
 // Central location for application configuration
 
 export const CONFIG = {
+    // ═══════════════════════════════════════════════════════════════
+    // DEVELOPMENT MODE
+    // ═══════════════════════════════════════════════════════════════
+    // Set to 'true' for local testing with dummy data (no GitHub required)
+    // Set to 'false' for production (uses GitHub API)
+    // 
+    // ⚠️  IMPORTANT: Must be 'false' when deploying to production!
+    // ═══════════════════════════════════════════════════════════════
+    devMode: false,
+
     // GitHub Configuration
     github: {
         apiUrl: 'https://api.github.com',

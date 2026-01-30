@@ -62,7 +62,7 @@ export const History = {
             // Clear container
             container.innerHTML = '';
 
-            // Render each date group
+            // Create date groups
             for (const date of sortedDates) {
                 const workouts = workoutsByDate.get(date);
                 // Sort workouts by sequence
@@ -446,9 +446,8 @@ export const History = {
         try {
             showLoading(true);
 
-            // Get all workouts for this date
-            const dateObj = new Date(date + 'T00:00:00');
-            const allWorkouts = await Storage.getWorkoutsInRange(dateObj, dateObj);
+            // Get all workouts for this date - pass date string directly to avoid timezone issues
+            const allWorkouts = await Storage.getWorkoutsInRange(date, date);
             const workoutsForDate = allWorkouts.filter(w => w.date === date);
             
             // Group by exercise
@@ -496,7 +495,8 @@ export const History = {
             }
 
             // Update sequences in storage
-            await Storage.updateWorkoutSequences(date, newWorkoutOrder.map(w => w.id));
+            const workoutIds = newWorkoutOrder.map(w => w.id);
+            await Storage.updateWorkoutSequences(date, workoutIds);
 
             // Re-render the history
             await this.renderDailyHistory();

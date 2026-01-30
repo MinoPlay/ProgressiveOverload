@@ -19,12 +19,18 @@ const App = {
     async init() {
         console.log('Progressive Overload Tracker - Initializing...');
 
-        // Check for token
-        if (!Auth.isAuthenticated()) {
-            const token = Auth.promptForToken();
-            if (!token) {
-                alert('GitHub token is required to use this app.');
-                return;
+        // In dev mode, skip authentication
+        if (CONFIG.devMode) {
+            console.log('🧪 Running in DEVELOPMENT MODE');
+            console.log('📝 Using local dummy data - changes will not be saved');
+        } else {
+            // Check for token in production mode
+            if (!Auth.isAuthenticated()) {
+                const token = Auth.promptForToken();
+                if (!token) {
+                    alert('GitHub token is required to use this app.');
+                    return;
+                }
             }
         }
 
@@ -44,7 +50,14 @@ const App = {
             showLoading(true);
 
             console.log('Initializing storage...');
-            // Initialize storage (load data from GitHub)
+            
+            // In dev mode, replace Storage methods with DevStorage
+            if (CONFIG.devMode) {
+                const { DevStorage } = await import('./dev-storage.js');
+                Object.assign(Storage, DevStorage);
+            }
+            
+            // Initialize storage
             await Storage.initialize();
 
             console.log('Initializing UI modules...');

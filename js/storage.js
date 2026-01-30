@@ -20,6 +20,45 @@ export const Storage = {
     async initialize() {
         await this.loadExercises();
         await this.loadCurrentMonthWorkouts();
+        await this.migrateSequenceNumbers();
+    },
+
+    /**
+     * Migrate existing workouts to add sequence numbers based on ID timestamps
+     * @returns {Promise<void>}
+     */
+    async migrateSequenceNumbers() {
+        let needsSave = false;
+        
+        // Group workouts by date
+        const workoutsByDate = new Map();
+        for (const workout of this.currentMonthWorkouts) {
+            if (!workoutsByDate.has(workout.date)) {
+                workoutsByDate.set(workout.date, []);
+            }
+            workoutsByDate.get(workout.date).push(workout);
+        }
+
+        // Assign sequence numbers to workouts without them
+        for (const [date, workouts] of workoutsByDate) {
+            // Sort by ID (which includes timestamp) to determine original order
+            workouts.sort((a, b) => a.id.localeCompare(b.id));
+            
+            workouts.forEach((workout, index) => {
+                if (workout.sequence === undefined || workout.sequence === null) {
+                    workout.sequence = index + 1;
+                    needsSave = true;
+                }
+            });
+        }
+
+        // Save if any migrations were performed
+        if (needsSave && this.currentMonthWorkouts.length > 0) {
+            const now = new Date();
+            const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha);
+            this.currentMonthSha = result.content.sha;
+            console.log('Migrated sequence numbers for current month workouts');
+        }
     },
 
     /**
@@ -204,12 +243,17 @@ const trimmedName = exercise.name.trim();
 
         // If workout is for current month, use cached data
         if (isSameMonth) {
+            // Calculate sequence number for this date
+            const sameDateWorkouts = this.currentMonthWorkouts.filter(w => w.date === workout.date);
+            const sequence = sameDateWorkouts.length + 1;
+
             const newWorkout = {
                 id: generateId(),
                 exerciseId: workout.exerciseId,
                 date: workout.date,
                 reps: parseInt(workout.reps, 10),
-                weight: workout.weight ? parseFloat(workout.weight) : null
+                weight: workout.weight ? parseFloat(workout.weight) : null,
+                sequence: sequence
             };
 
             this.currentMonthWorkouts.push(newWorkout);
@@ -222,12 +266,18 @@ const trimmedName = exercise.name.trim();
         } else {
             // Load different month, add workout, save
             const monthData = await GitHubAPI.getWorkouts(workoutDate);
+            
+            // Calculate sequence number for this date
+            const sameDateWorkouts = monthData.workouts.filter(w => w.date === workout.date);
+            const sequence = sameDateWorkouts.length + 1;
+
             const newWorkout = {
                 id: generateId(),
                 exerciseId: workout.exerciseId,
                 date: workout.date,
                 reps: parseInt(workout.reps, 10),
-                weight: workout.weight ? parseFloat(workout.weight) : null
+                weight: workout.weight ? parseFloat(workout.weight) : null,
+                sequence: sequence
             };
 
             monthData.workouts.push(newWorkout);
@@ -261,14 +311,32 @@ const trimmedName = exercise.name.trim();
     },
 
     /**
-     * Get recent workouts (last N)
-     * @returns {array} Array of recent workouts
+     * Get recent workouts (last N, deduplicated by exercise)
+     * @returns {array} Array of recent workouts (one per unique exercise)
      */
     getRecentWorkouts() {
-        return this.currentMonthWorkouts
+        // Create a map to store the most recent workout per exercise
+        const exerciseMap = new Map();
+        
+        // Sort all workouts by date descending (newest first)
+        const sortedWorkouts = this.currentMonthWorkouts
             .slice()
-            .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp))
-            .slice(0, CONFIG.limits.recentWorkoutsCount);
+            .sort((a, b) => {
+                const dateComparison = new Date(b.date) - new Date(a.date);
+                if (dateComparison !== 0) return dateComparison;
+                // If same date, sort by ID (which includes timestamp)
+                return b.id.localeCompare(a.id);
+            });
+
+        // Keep only the most recent workout per exercise
+        for (const workout of sortedWorkouts) {
+            if (!exerciseMap.has(workout.exerciseId)) {
+                exerciseMap.set(workout.exerciseId, workout);
+            }
+        }
+
+        // Convert map to array and return top N
+        return Array.from(exerciseMap.values()).slice(0, CONFIG.limits.recentWorkoutsCount);
     },
 
     /**
@@ -298,6 +366,49 @@ const trimmedName = exercise.name.trim();
         }
 
         return await this.getWorkoutsInRange(startDate, endDate);
+    },
+
+    /**
+     * Update workout sequences after drag-and-drop reordering
+     * @param {string} date - Date of workouts to update
+     * @param {array} workoutIds - Array of workout IDs in new order
+     * @returns {Promise<void>}
+     */
+    async updateWorkoutSequences(date, workoutIds) {
+        const workoutDate = parseDate(date);
+        if (!workoutDate) {
+            throw new Error('Invalid workout date');
+        }
+
+        const now = new Date();
+        const isSameMonth = workoutDate.getMonth() === now.getMonth() && 
+                           workoutDate.getFullYear() === now.getFullYear();
+
+        if (isSameMonth) {
+            // Update sequences in current month workouts
+            workoutIds.forEach((id, index) => {
+                const workout = this.currentMonthWorkouts.find(w => w.id === id);
+                if (workout && workout.date === date) {
+                    workout.sequence = index + 1;
+                }
+            });
+
+            // Save to GitHub
+            const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha);
+            this.currentMonthSha = result.content.sha;
+        } else {
+            // Load different month, update sequences, save
+            const monthData = await GitHubAPI.getWorkouts(workoutDate);
+            
+            workoutIds.forEach((id, index) => {
+                const workout = monthData.workouts.find(w => w.id === id);
+                if (workout && workout.date === date) {
+                    workout.sequence = index + 1;
+                }
+            });
+
+            await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
+        }
     }
 };
 // Note: generateId, parseDate, and formatDate are now imported from utils.js

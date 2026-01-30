@@ -22,6 +22,7 @@
         <!-- Navigation -->
         <nav class="app-nav" role="navigation" aria-label="Main navigation">
             <button class="nav-btn active" data-section="workout" aria-label="Navigate to Log Workout section" aria-current="page">Log Workout</button>
+            <button class="nav-btn" data-section="history" aria-label="Navigate to History section">History</button>
             <button class="nav-btn" data-section="statistics" aria-label="Navigate to Statistics section">Statistics</button>
             <button class="nav-btn" data-section="exercises" aria-label="Navigate to Manage Exercises section">Manage Exercises</button>
         </nav>
@@ -94,67 +95,73 @@
                 </div>
 
                 <div class="form-container">
-                    <form id="workoutFormElement">
-                        <div class="form-group">
-                            <label for="workoutExercise">
-                                Exercise <span class="required" aria-label="required">*</span>
-                            </label>
-                            <select id="workoutExercise" required aria-required="true">
-                                <option value="">-- Select Exercise --</option>
-                            </select>
-                        </div>
-
+                    <form id="workoutFormElement" class="compact-workout-form">
                         <div class="form-row">
                             <div class="form-group">
-                                <label for="workoutReps">
-                                    Reps <span class="required" aria-label="required">*</span>
-                                </label>
+                                <select id="workoutExercise" required aria-required="true" aria-label="Select exercise">
+                                    <option value="">Select Exercise...</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
                                 <input 
                                     type="number" 
                                     id="workoutReps" 
                                     min="1" 
                                     max="999" 
-                                    placeholder="e.g., 8"
+                                    placeholder="Reps"
                                     required
                                     aria-required="true"
-                                    aria-describedby="reps-hint"
+                                    aria-label="Number of repetitions"
                                 >
-                                <span id="reps-hint" class="form-hint">Enter between 1 and 999</span>
                             </div>
 
                             <div class="form-group" id="weightGroup">
-                                <label for="workoutWeight">Weight (kg):</label>
                                 <input 
                                     type="number" 
                                     id="workoutWeight" 
                                     min="0" 
-                                    step="2.5" 
-                                    placeholder="e.g., 60"
+                                    step="any" 
+                                    placeholder="Weight (kg)"
+                                    aria-label="Weight in kilograms"
                                 >
                             </div>
 
                             <div class="form-group">
-                                <label for="workoutDate">
-                                    Date <span class="required" aria-label="required">*</span>
-                                </label>
                                 <input 
                                     type="date" 
                                     id="workoutDate" 
                                     required
                                     aria-required="true"
+                                    aria-label="Workout date"
                                 >
                             </div>
-                        </div>
 
-                        <button type="submit" class="btn btn-primary">Log Workout</button>
+                            <div class="form-actions-inline">
+                                <button type="submit" class="btn-icon btn-primary" title="Log Workout" aria-label="Log workout">
+                                    <span aria-hidden="true">✓</span>
+                                </button>
+                                <button type="button" id="clearWorkoutBtn" class="btn-icon btn-secondary" title="Clear Form" aria-label="Clear form">
+                                    <span aria-hidden="true">✕</span>
+                                </button>
+                            </div>
+                        </div>
                     </form>
                 </div>
 
                 <!-- Recent Workouts -->
                 <div class="section-header">
-                    <h3>Recent Workouts</h3>
+                    <h3>Latest Exercises</h3>
                 </div>
                 <div id="recentWorkoutsList" class="workout-list"></div>
+            </section>
+
+            <!-- History Section -->
+            <section id="historySection" class="content-section" role="region" aria-labelledby="history-heading">
+                <div class="section-header">
+                    <h2 id="history-heading">Workout History</h2>
+                </div>
+                <div id="historyContent" class="history-container"></div>
             </section>
 
             <!-- Statistics Section -->

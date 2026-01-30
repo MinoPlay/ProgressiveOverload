@@ -1,0 +1,298 @@
+// History Module
+// Displays daily workout history with sequence ordering and drag-and-drop reordering
+
+import { Storage } from './storage.js';
+import { showToast, showLoading } from './app.js';
+import { formatDate } from './utils.js';
+
+export const History = {
+    draggedWorkout: null,
+    draggedDate: null,
+
+    /**
+     * Initialize history module
+     */
+    init() {
+        this.renderDailyHistory();
+
+        // Listen for workout updates
+        window.addEventListener('workoutsUpdated', () => {
+            this.renderDailyHistory();
+        });
+    },
+
+    /**
+     * Render daily workout history grouped by date
+     */
+    async renderDailyHistory() {
+        const container = document.getElementById('historyContent');
+        
+        try {
+            showLoading(true);
+
+            // Load all workouts from the last 90 days
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 90);
+
+            const allWorkouts = await Storage.getWorkoutsInRange(startDate, endDate);
+
+            if (allWorkouts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <p>No workout history yet. Start logging workouts!</p>
+                    </div>
+                `;
+                showLoading(false);
+                return;
+            }
+
+            // Group workouts by date
+            const workoutsByDate = new Map();
+            for (const workout of allWorkouts) {
+                if (!workoutsByDate.has(workout.date)) {
+                    workoutsByDate.set(workout.date, []);
+                }
+                workoutsByDate.get(workout.date).push(workout);
+            }
+
+            // Sort dates descending (newest first)
+            const sortedDates = Array.from(workoutsByDate.keys()).sort((a, b) => b.localeCompare(a));
+
+            // Clear container
+            container.innerHTML = '';
+
+            // Render each date group
+            for (const date of sortedDates) {
+                const workouts = workoutsByDate.get(date);
+                // Sort workouts by sequence
+                workouts.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+
+                const dateGroup = this.createDateGroup(date, workouts);
+                container.appendChild(dateGroup);
+            }
+
+            showLoading(false);
+        } catch (error) {
+            console.error('Error rendering history:', error);
+            showToast(`Failed to load history: ${error.message}`, 'error');
+            showLoading(false);
+        }
+    },
+
+    /**
+     * Create date group element with workouts
+     * @param {string} date - Date string (YYYY-MM-DD)
+     * @param {array} workouts - Array of workout objects
+     * @returns {HTMLElement} Date group element
+     */
+    createDateGroup(date, workouts) {
+        const group = document.createElement('div');
+        group.className = 'history-date-group';
+
+        // Date header
+        const header = document.createElement('div');
+        header.className = 'history-date-header';
+        
+        const dateTitle = document.createElement('h3');
+        dateTitle.textContent = this.formatDateHeader(date);
+        
+        const workoutCount = document.createElement('span');
+        workoutCount.className = 'workout-count';
+        workoutCount.textContent = `${workouts.length} workout${workouts.length !== 1 ? 's' : ''}`;
+        
+        header.appendChild(dateTitle);
+        header.appendChild(workoutCount);
+        group.appendChild(header);
+
+        // Workouts list
+        const list = document.createElement('div');
+        list.className = 'history-workouts-list';
+        list.dataset.date = date;
+
+        workouts.forEach(workout => {
+            const item = this.createHistoryWorkoutItem(workout);
+            list.appendChild(item);
+        });
+
+        group.appendChild(list);
+
+        return group;
+    },
+
+    /**
+     * Create history workout item with drag-and-drop and sequence badge
+     * @param {object} workout - Workout object
+     * @returns {HTMLElement} Workout item element
+     */
+    createHistoryWorkoutItem(workout) {
+        const exercise = Storage.getExerciseById(workout.exerciseId);
+        
+        const item = document.createElement('div');
+        item.className = 'history-workout-item';
+        item.draggable = true;
+        item.dataset.workoutId = workout.id;
+        item.dataset.date = workout.date;
+
+        // Add drag event listeners
+        item.addEventListener('dragstart', (e) => this.handleDragStart(e, workout));
+        item.addEventListener('dragover', (e) => this.handleDragOver(e));
+        item.addEventListener('drop', (e) => this.handleDrop(e, workout));
+        item.addEventListener('dragend', () => this.handleDragEnd());
+
+        // Sequence badge
+        if (workout.sequence) {
+            const badge = document.createElement('span');
+            badge.className = 'sequence-badge';
+            badge.textContent = `#${workout.sequence}`;
+            item.appendChild(badge);
+        }
+
+        // Workout content
+        const content = document.createElement('div');
+        content.className = 'workout-content';
+
+        const title = document.createElement('h4');
+        title.textContent = exercise ? exercise.name : 'Unknown Exercise';
+        content.appendChild(title);
+
+        const details = document.createElement('div');
+        details.className = 'workout-details';
+
+        // Reps
+        const repsSpan = document.createElement('span');
+        repsSpan.className = 'workout-stat';
+        repsSpan.textContent = `${workout.reps} reps`;
+        details.appendChild(repsSpan);
+
+        // Weight (if present)
+        if (workout.weight) {
+            const weightSpan = document.createElement('span');
+            weightSpan.className = 'workout-stat';
+            weightSpan.textContent = `${workout.weight} kg`;
+            details.appendChild(weightSpan);
+        }
+
+        content.appendChild(details);
+        item.appendChild(content);
+
+        return item;
+    },
+
+    /**
+     * Format date header with relative information
+     * @param {string} dateStr - Date string (YYYY-MM-DD)
+     * @returns {string} Formatted date string
+     */
+    formatDateHeader(dateStr) {
+        const date = new Date(dateStr + 'T00:00:00');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const yesterday = new Date(today);
+        yesterday.setDate(yesterday.getDate() - 1);
+
+        if (date.getTime() === today.getTime()) {
+            return 'Today';
+        } else if (date.getTime() === yesterday.getTime()) {
+            return 'Yesterday';
+        } else {
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+    },
+
+    /**
+     * Handle drag start event
+     * @param {DragEvent} e - Drag event
+     * @param {object} workout - Workout being dragged
+     */
+    handleDragStart(e, workout) {
+        this.draggedWorkout = workout;
+        this.draggedDate = workout.date;
+        e.currentTarget.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+    },
+
+    /**
+     * Handle drag over event
+     * @param {DragEvent} e - Drag event
+     */
+    handleDragOver(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        
+        const item = e.currentTarget;
+        if (item.dataset.date === this.draggedDate) {
+            item.classList.add('drag-over');
+        }
+    },
+
+    /**
+     * Handle drop event
+     * @param {DragEvent} e - Drag event
+     * @param {object} targetWorkout - Workout being dropped on
+     */
+    async handleDrop(e, targetWorkout) {
+        e.preventDefault();
+        e.stopPropagation();
+
+        const item = e.currentTarget;
+        item.classList.remove('drag-over');
+
+        // Only allow reordering within same date
+        if (!this.draggedWorkout || targetWorkout.date !== this.draggedDate) {
+            showToast('Can only reorder workouts within the same day', 'error');
+            return;
+        }
+
+        if (this.draggedWorkout.id === targetWorkout.id) {
+            return;
+        }
+
+        try {
+            showLoading(true);
+
+            // Get all workouts for this date
+            const list = item.parentElement;
+            const workoutItems = Array.from(list.querySelectorAll('.history-workout-item'));
+            
+            // Get current order of workout IDs
+            const currentOrder = workoutItems.map(el => el.dataset.workoutId);
+            
+            // Remove dragged workout from its current position
+            const draggedIndex = currentOrder.indexOf(this.draggedWorkout.id);
+            currentOrder.splice(draggedIndex, 1);
+            
+            // Insert at new position
+            const targetIndex = currentOrder.indexOf(targetWorkout.id);
+            currentOrder.splice(targetIndex, 0, this.draggedWorkout.id);
+
+            // Update sequences in storage
+            await Storage.updateWorkoutSequences(targetWorkout.date, currentOrder);
+
+            // Re-render the history
+            await this.renderDailyHistory();
+
+            showToast('Workout order updated', 'success');
+            showLoading(false);
+        } catch (error) {
+            console.error('Error reordering workouts:', error);
+            showToast(`Failed to reorder: ${error.message}`, 'error');
+            showLoading(false);
+        }
+    },
+
+    /**
+     * Handle drag end event
+     */
+    handleDragEnd() {
+        // Remove dragging classes
+        document.querySelectorAll('.history-workout-item').forEach(item => {
+            item.classList.remove('dragging', 'drag-over');
+        });
+        
+        this.draggedWorkout = null;
+        this.draggedDate = null;
+    }
+};

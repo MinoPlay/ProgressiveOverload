@@ -6,6 +6,7 @@ import { Storage } from './storage.js';
 import { Exercises } from './exercises.js';
 import { Workouts } from './workouts.js';
 import { Charts } from './charts.js';
+import { History } from './history.js';
 import { CONFIG } from './config.js';
 
 /**
@@ -51,6 +52,7 @@ const App = {
             this.initNavigation();
             Exercises.init();
             Workouts.init();
+            History.init();
             Charts.init();
 
             // Hide loading

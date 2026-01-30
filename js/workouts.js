@@ -28,6 +28,7 @@ export const Workouts = {
     bindEvents() {
         const form = document.getElementById('workoutFormElement');
         const exerciseSelect = document.getElementById('workoutExercise');
+        const clearBtn = document.getElementById('clearWorkoutBtn');
 
         form.addEventListener('submit', (e) => this.handleSubmit(e));
         
@@ -35,6 +36,11 @@ export const Workouts = {
         exerciseSelect.addEventListener('change', () => {
             this.updateWeightField();
         });
+
+        // Clear form button
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => this.clearForm());
+        }
     },
 
     /**
@@ -45,7 +51,7 @@ export const Workouts = {
         const exercises = Storage.getExercises();
 
         // Keep first option (placeholder)
-        select.innerHTML = '<option value="">-- Select Exercise --</option>';
+        select.innerHTML = '<option value="">Select Exercise...</option>';
 
         exercises.forEach(exercise => {
             const option = document.createElement('option');
@@ -151,9 +157,7 @@ export const Workouts = {
             const exercise = Storage.getExerciseById(exerciseId);
             showToast(`Workout logged: ${exercise.name}`, 'success');
 
-            // Reset form
-            document.getElementById('workoutFormElement').reset();
-            this.setDefaultDate();
+            // Don't reset form - keep fields for quick re-logging
             this.renderRecentWorkouts();
 
             // Update weight field visibility
@@ -161,6 +165,18 @@ export const Workouts = {
         } catch (error) {
             showToast(error.message, 'error');
         }
+    },
+
+    /**
+     * Clear form fields except date
+     */
+    clearForm() {
+        document.getElementById('workoutExercise').value = '';
+        document.getElementById('workoutReps').value = '';
+        document.getElementById('workoutWeight').value = '';
+        // Keep date field as-is
+        this.updateWeightField();
+        showToast('Form cleared', 'info');
     },
 
     /**

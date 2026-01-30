@@ -632,7 +632,7 @@
 .compact-workout-form .form-row {
     display: flex;
     gap: var(--spacing-sm);
-    align-items: center;
+    align-items: flex-start;
     flex-wrap: wrap;
 }
 
@@ -651,7 +651,6 @@
     background: var(--bg-primary);
     color: var(--text-primary);
     height: 48px;
-    line-height: 48px;
 }
 
 .compact-workout-form input:focus,
@@ -669,8 +668,6 @@
 .form-actions-inline {
     display: flex;
     gap: var(--spacing-sm);
-    align-self: center;
-    height: 48px;
 }
 
 /* Icon Buttons */

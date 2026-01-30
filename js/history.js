@@ -472,6 +472,11 @@ export const History = {
             
             for (const exerciseId of currentOrder) {
                 const workouts = exerciseGroups.get(exerciseId);
+                if (!workouts) {
+                    console.warn(`No workouts found for exercise ${exerciseId} on ${date}`);
+                    continue;
+                }
+                
                 // Sort workouts within exercise by their current sequence
                 workouts.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
                 

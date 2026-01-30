@@ -5,91 +5,104 @@
       "exerciseId": "1769598356908_flvdqzdhf",
       "date": "2026-01-26",
       "reps": 10,
-      "weight": 40
+      "weight": 40,
+      "sequence": 1
     },
     {
       "id": "1737878400000_2",
       "exerciseId": "1769598356908_flvdqzdhf",
       "date": "2026-01-26",
       "reps": 13,
-      "weight": 60
+      "weight": 60,
+      "sequence": 3
     },
     {
       "id": "1737878400000_3",
       "exerciseId": "1769598356908_flvdqzdhf",
       "date": "2026-01-26",
       "reps": 11,
-      "weight": 60
+      "weight": 60,
+      "sequence": 4
     },
     {
       "id": "1737878400000_4",
       "exerciseId": "1769598356908_flvdqzdhf",
       "date": "2026-01-26",
       "reps": 8,
-      "weight": 60
+      "weight": 60,
+      "sequence": 5
     },
     {
       "id": "1737878400000_5",
       "exerciseId": "1769598356912_bentoverrows",
       "date": "2026-01-26",
       "reps": 20,
-      "weight": 60
+      "weight": 60,
+      "sequence": 6
     },
     {
       "id": "1737878400000_6",
       "exerciseId": "1769598356912_bentoverrows",
       "date": "2026-01-26",
       "reps": 20,
-      "weight": 60
+      "weight": 60,
+      "sequence": 7
     },
     {
       "id": "1737878400000_7",
       "exerciseId": "1769598356908_63m870ao9",
       "date": "2026-01-26",
       "reps": 10,
-      "weight": 60
+      "weight": 60,
+      "sequence": 8
     },
     {
       "id": "1737878400000_8",
       "exerciseId": "1769598356908_63m870ao9",
       "date": "2026-01-26",
       "reps": 10,
-      "weight": 60
+      "weight": 60,
+      "sequence": 9
     },
     {
       "id": "1737878400000_9",
       "exerciseId": "1769598356911_barbshldpress",
       "date": "2026-01-26",
       "reps": 15,
-      "weight": 30
+      "weight": 30,
+      "sequence": 10
     },
     {
       "id": "1737878400000_10",
       "exerciseId": "1769598356911_barbshldpress",
       "date": "2026-01-26",
       "reps": 15,
-      "weight": 30
+      "weight": 30,
+      "sequence": 2
     },
     {
       "id": "1769750109222_xhkzps3up",
       "exerciseId": "1769598356908_63m870ao9",
       "date": "2026-01-30",
       "reps": 11,
-      "weight": 60
+      "weight": 60,
+      "sequence": 1
     },
     {
       "id": "1769750253592_gtykmah98",
       "exerciseId": "1769598356908_63m870ao9",
       "date": "2026-01-30",
       "reps": 11,
-      "weight": 60
+      "weight": 60,
+      "sequence": 2
     },
     {
       "id": "1769750369869_tmqwll699",
       "exerciseId": "1769598356908_63m870ao9",
       "date": "2026-01-30",
       "reps": 11,
-      "weight": 60
+      "weight": 60,
+      "sequence": 3
     }
   ]
 }

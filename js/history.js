@@ -446,8 +446,9 @@ export const History = {
         try {
             showLoading(true);
 
-            // Get all workouts for this date - pass date string directly to avoid timezone issues
-            const allWorkouts = await Storage.getWorkoutsInRange(date, date);
+            // Get all workouts for this date - convert date string to Date object
+            const dateObj = new Date(date + 'T00:00:00');
+            const allWorkouts = await Storage.getWorkoutsInRange(dateObj, dateObj);
             const workoutsForDate = allWorkouts.filter(w => w.date === date);
             
             // Group by exercise

@@ -97,12 +97,21 @@ export const History = {
         const dateTitle = document.createElement('h3');
         dateTitle.textContent = this.formatDateHeader(date);
         
-        const workoutCount = document.createElement('span');
-        workoutCount.className = 'workout-count';
-        workoutCount.textContent = `${workouts.length} workout${workouts.length !== 1 ? 's' : ''}`;
+        // Group workouts by exercise
+        const exerciseGroups = new Map();
+        for (const workout of workouts) {
+            if (!exerciseGroups.has(workout.exerciseId)) {
+                exerciseGroups.set(workout.exerciseId, []);
+            }
+            exerciseGroups.get(workout.exerciseId).push(workout);
+        }
+        
+        const exerciseCount = document.createElement('span');
+        exerciseCount.className = 'workout-count';
+        exerciseCount.textContent = `${exerciseGroups.size} exercise${exerciseGroups.size !== 1 ? 's' : ''}`;
         
         header.appendChild(dateTitle);
-        header.appendChild(workoutCount);
+        header.appendChild(exerciseCount);
         group.appendChild(header);
 
         // Workouts list
@@ -110,10 +119,11 @@ export const History = {
         list.className = 'history-workouts-list';
         list.dataset.date = date;
 
-        workouts.forEach(workout => {
-            const item = this.createHistoryWorkoutItem(workout);
+        // Create grouped items
+        for (const [exerciseId, exerciseWorkouts] of exerciseGroups) {
+            const item = this.createGroupedExerciseItem(date, exerciseId, exerciseWorkouts);
             list.appendChild(item);
-        });
+        }
 
         group.appendChild(list);
 
@@ -121,9 +131,71 @@ export const History = {
     },
 
     /**
+     * Create grouped exercise item showing all sets
+     * @param {string} date - Date string (YYYY-MM-DD)
+     * @param {string} exerciseId - Exercise ID
+     * @param {array} workouts - Array of workout objects for this exercise
+     * @returns {HTMLElement} Grouped exercise item element
+     */
+    createGroupedExerciseItem(date, exerciseId, workouts) {
+        const exercise = Storage.getExerciseById(exerciseId);
+        
+        const item = document.createElement('div');
+        item.className = 'history-exercise-group';
+        item.dataset.date = date;
+        item.dataset.exerciseId = exerciseId;
+
+        // Exercise header
+        const header = document.createElement('div');
+        header.className = 'exercise-group-header';
+
+        const title = document.createElement('h4');
+        title.textContent = exercise ? exercise.name : 'Unknown Exercise';
+        header.appendChild(title);
+
+        const setCount = document.createElement('span');
+        setCount.className = 'set-count';
+        setCount.textContent = `${workouts.length} set${workouts.length !== 1 ? 's' : ''}`;
+        header.appendChild(setCount);
+
+        item.appendChild(header);
+
+        // Sets list
+        const setsList = document.createElement('div');
+        setsList.className = 'sets-list';
+
+        workouts.forEach((workout, index) => {
+            const setItem = document.createElement('div');
+            setItem.className = 'set-item';
+
+            const setNumber = document.createElement('span');
+            setNumber.className = 'set-number';
+            setNumber.textContent = `Set ${index + 1}:`;
+            setItem.appendChild(setNumber);
+
+            const setDetails = document.createElement('span');
+            setDetails.className = 'set-details';
+            
+            let detailsText = `${workout.reps} reps`;
+            if (workout.weight) {
+                detailsText += ` @ ${workout.weight} kg`;
+            }
+            setDetails.textContent = detailsText;
+            setItem.appendChild(setDetails);
+
+            setsList.appendChild(setItem);
+        });
+
+        item.appendChild(setsList);
+
+        return item;
+    },
+
+    /**
      * Create history workout item with drag-and-drop and sequence badge
      * @param {object} workout - Workout object
      * @returns {HTMLElement} Workout item element
+     * @deprecated Use createGroupedExerciseItem instead
      */
     createHistoryWorkoutItem(workout) {
         const exercise = Storage.getExerciseById(workout.exerciseId);

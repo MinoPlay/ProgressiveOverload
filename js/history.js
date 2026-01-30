@@ -508,6 +508,10 @@ export const History = {
             console.error('Error reordering exercises:', error);
             showToast(`Failed to reorder: ${error.message}`, 'error');
             showLoading(false);
+        } finally {
+            // Clear drag state
+            this.draggedExerciseId = null;
+            this.draggedDate = null;
         }
     },
 
@@ -520,7 +524,7 @@ export const History = {
             item.classList.remove('dragging', 'drag-over');
         });
         
-        this.draggedExerciseId = null;
-        this.draggedDate = null;
+        // Don't clear draggedExerciseId and draggedDate here
+        // They are cleared in handleExerciseGroupDrop after the drop completes
     }
 };

@@ -882,3 +882,150 @@
         flex: 1;
     }
 }
+
+/* ================================================== */
+/* VIEW TOGGLE BUTTONS (Chart/Table)                  */
+/* ================================================== */
+.view-toggle {
+    display: flex;
+    gap: 0.5rem;
+    margin: var(--spacing-lg) 0;
+    padding: var(--spacing-sm);
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    width: fit-content;
+}
+
+.view-toggle-btn {
+    padding: 0.6rem 1.2rem;
+    border: 2px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.view-toggle-btn:hover {
+    color: var(--primary-color);
+    background: var(--bg-primary);
+}
+
+.view-toggle-btn.active {
+    background: var(--primary-color);
+    color: var(--text-inverse);
+    border-color: var(--primary-color);
+}
+
+/* ================================================== */
+/* STATISTICS TABLE VIEW                              */
+/* ================================================== */
+.stats-table-container {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xl);
+    margin-top: var(--spacing-xxl);
+    padding-top: var(--spacing-xxl);
+    border-top: 3px solid var(--border-light);
+}
+
+.stats-table-container::before {
+    content: '📊 Exercise Summary';
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: var(--spacing-lg);
+    margin-top: calc(-1 * var(--spacing-xxl));
+}
+
+.stats-summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: var(--bg-primary);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.stats-summary-table thead {
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
+}
+
+.stats-summary-table th {
+    padding: var(--spacing-md) var(--spacing-md);
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+}
+
+.stats-summary-table th.sortable {
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-base);
+}
+
+.stats-summary-table th.sortable:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.sort-indicator {
+    display: inline-block;
+    margin-left: 0.3rem;
+    font-size: 0.9rem;
+    color: var(--text-inverse);
+}
+
+.stats-summary-table tbody tr {
+    border-bottom: 1px solid var(--border-light);
+    transition: background var(--transition-base);
+}
+
+.stats-summary-table tbody tr:hover {
+    background: var(--bg-secondary);
+}
+
+.stats-summary-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.stats-summary-table td {
+    padding: var(--spacing-md) var(--spacing-md);
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+.exercise-name-cell {
+    color: var(--primary-color);
+    font-weight: 600;
+    white-space: nowrap;
+    max-width: 250px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+    .stats-summary-table {
+        font-size: 0.8rem;
+    }
+
+    .stats-summary-table th,
+    .stats-summary-table td {
+        padding: var(--spacing-sm);
+        font-size: 0.75rem;
+    }
+
+    .stats-table-container::before {
+        font-size: 1.2rem;
+    }
+}

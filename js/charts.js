@@ -97,6 +97,9 @@ export const Charts = {
 
             // Render unified chart
             this.renderUnifiedChart();
+            
+            // Render table view under chart
+            this.renderTableView();
 
         } catch (error) {
             console.error('Error loading chart data:', error);
@@ -132,7 +135,10 @@ export const Charts = {
                     this.selectedExerciseIds = this.selectedExerciseIds.filter(id => id !== exercise.id);
                 }
                 localStorage.setItem('selectedExerciseIds', JSON.stringify(this.selectedExerciseIds));
+                
+                // Update both chart and table
                 this.renderUnifiedChart();
+                this.renderTableView();
             });
             
             label.appendChild(checkbox);
@@ -352,5 +358,279 @@ export const Charts = {
             labels: sortedDates.map(entry => entry[0]),
             values: sortedDates.map(entry => entry[1])
         };
+    },
+
+    /**
+     * Render table view with statistics for selected exercises
+     */
+    renderTableView() {
+        const statsTableContent = document.getElementById('statsTableContent');
+        if (!statsTableContent) return;
+
+        if (this.selectedExerciseIds.length === 0) {
+            statsTableContent.innerHTML = '<p class="empty-state">Select exercises from the checkboxes above to view statistics.</p>';
+            return;
+        }
+
+        // Filter to selected exercises
+        const selectedData = this.allExercisesData.filter(d => 
+            this.selectedExerciseIds.includes(d.exercise.id)
+        );
+
+        if (selectedData.length === 0) {
+            statsTableContent.innerHTML = '<p class="empty-state">No data available for selected exercises.</p>';
+            return;
+        }
+
+        // Store table data for sorting
+        this.tableData = selectedData.map(({ exercise, workouts }) => {
+            const stats = this.calculateExerciseStats(workouts, exercise.requiresWeight);
+            return {
+                exercise,
+                stats
+            };
+        });
+
+        // Render table with current sort
+        this.renderSortedTable();
+    },
+
+    /**
+     * Render table with sorting applied
+     */
+    renderSortedTable() {
+        const statsTableContent = document.getElementById('statsTableContent');
+        if (!statsTableContent || !this.tableData) return;
+
+        const hasWeightedExercises = this.tableData.some(d => d.exercise.requiresWeight);
+
+        // Build concise summary table
+        let tableHTML = '<div class="stats-table-container">';
+        
+        tableHTML += `
+            <table class="stats-summary-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-sort="name">Exercise <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-sort="equipment">Equipment <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-sort="workouts">Workouts <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-sort="totalReps">Total Reps <span class="sort-indicator"></span></th>
+                        ${hasWeightedExercises ? '<th class="sortable" data-sort="totalVolume">Total Volume <span class="sort-indicator"></span></th>' : ''}
+                        <th class="sortable" data-sort="avgReps">Avg Reps <span class="sort-indicator"></span></th>
+                        ${hasWeightedExercises ? '<th class="sortable" data-sort="avgWeight">Avg Weight <span class="sort-indicator"></span></th>' : ''}
+                        ${hasWeightedExercises ? '<th class="sortable" data-sort="avgVolume">Avg Volume <span class="sort-indicator"></span></th>' : ''}
+                        <th class="sortable" data-sort="pr">PR <span class="sort-indicator"></span></th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        this.tableData.forEach(({ exercise, stats }) => {
+            const prValue = exercise.requiresWeight && stats.maxWeight > 0
+                ? `${stats.maxWeight.toFixed(1)} kg`
+                : `${stats.maxReps} reps`;
+            
+            tableHTML += `
+                <tr>
+                    <td class="exercise-name-cell"><strong>${exercise.name}</strong></td>
+                    <td>${this.formatEquipmentType(exercise.equipmentType)}</td>
+                    <td>${stats.totalWorkouts}</td>
+                    <td>${stats.totalReps}</td>
+                    ${hasWeightedExercises ? `<td>${exercise.requiresWeight ? stats.totalVolume.toFixed(0) : '-'}</td>` : ''}
+                    <td>${stats.avgReps.toFixed(1)}</td>
+                    ${hasWeightedExercises ? `<td>${exercise.requiresWeight && stats.avgWeight > 0 ? stats.avgWeight.toFixed(1) + ' kg' : '-'}</td>` : ''}
+                    ${hasWeightedExercises ? `<td>${exercise.requiresWeight && stats.avgVolume > 0 ? stats.avgVolume.toFixed(0) : '-'}</td>` : ''}
+                    <td><strong>${prValue}</strong></td>
+                </tr>
+            `;
+        });
+
+        tableHTML += `
+                </tbody>
+            </table>
+        `;
+
+        tableHTML += '</div>';
+        statsTableContent.innerHTML = tableHTML;
+
+        // Add click handlers for sorting
+        const headers = statsTableContent.querySelectorAll('.sortable');
+        headers.forEach(header => {
+            header.addEventListener('click', () => {
+                const sortKey = header.dataset.sort;
+                this.sortTable(sortKey);
+            });
+        });
+    },
+
+    /**
+     * Sort table by column
+     * @param {string} sortKey - Key to sort by
+     */
+    sortTable(sortKey) {
+        if (!this.tableData) return;
+
+        // Toggle sort direction if same column
+        if (this.currentSortKey === sortKey) {
+            this.sortAscending = !this.sortAscending;
+        } else {
+            this.currentSortKey = sortKey;
+            this.sortAscending = true;
+        }
+
+        // Sort the data
+        this.tableData.sort((a, b) => {
+            let valA, valB;
+
+            switch (sortKey) {
+                case 'name':
+                    valA = a.exercise.name.toLowerCase();
+                    valB = b.exercise.name.toLowerCase();
+                    break;
+                case 'equipment':
+                    valA = this.formatEquipmentType(a.exercise.equipmentType).toLowerCase();
+                    valB = this.formatEquipmentType(b.exercise.equipmentType).toLowerCase();
+                    break;
+                case 'workouts':
+                    valA = a.stats.totalWorkouts;
+                    valB = b.stats.totalWorkouts;
+                    break;
+                case 'totalReps':
+                    valA = a.stats.totalReps;
+                    valB = b.stats.totalReps;
+                    break;
+                case 'totalVolume':
+                    valA = a.stats.totalVolume;
+                    valB = b.stats.totalVolume;
+                    break;
+                case 'avgReps':
+                    valA = a.stats.avgReps;
+                    valB = b.stats.avgReps;
+                    break;
+                case 'avgWeight':
+                    valA = a.stats.avgWeight;
+                    valB = b.stats.avgWeight;
+                    break;
+                case 'avgVolume':
+                    valA = a.stats.avgVolume;
+                    valB = b.stats.avgVolume;
+                    break;
+                case 'pr':
+                    // For PR, use maxWeight for weighted, maxReps for bodyweight
+                    valA = a.exercise.requiresWeight ? a.stats.maxWeight : a.stats.maxReps;
+                    valB = b.exercise.requiresWeight ? b.stats.maxWeight : b.stats.maxReps;
+                    break;
+                default:
+                    return 0;
+            }
+
+            // Handle string comparisons
+            if (typeof valA === 'string') {
+                return this.sortAscending 
+                    ? valA.localeCompare(valB)
+                    : valB.localeCompare(valA);
+            }
+
+            // Handle numeric comparisons
+            return this.sortAscending ? valA - valB : valB - valA;
+        });
+
+        // Re-render table
+        this.renderSortedTable();
+
+        // Update sort indicator
+        this.updateSortIndicators();
+    },
+
+    /**
+     * Update sort indicators in table headers
+     */
+    updateSortIndicators() {
+        const statsTableContent = document.getElementById('statsTableContent');
+        if (!statsTableContent) return;
+
+        // Clear all indicators
+        statsTableContent.querySelectorAll('.sort-indicator').forEach(indicator => {
+            indicator.textContent = '';
+        });
+
+        // Set current indicator
+        const currentHeader = statsTableContent.querySelector(`[data-sort="${this.currentSortKey}"]`);
+        if (currentHeader) {
+            const indicator = currentHeader.querySelector('.sort-indicator');
+            if (indicator) {
+                indicator.textContent = this.sortAscending ? ' ↑' : ' ↓';
+            }
+        }
+    },
+
+    /**
+     * Calculate statistics for an exercise
+     * @param {Array} workouts - Array of workout objects
+     * @param {boolean} requiresWeight - Whether exercise requires weight
+     * @returns {Object} Statistics object
+     */
+    calculateExerciseStats(workouts, requiresWeight) {
+        const totalWorkouts = workouts.length;
+        const totalReps = workouts.reduce((sum, w) => sum + w.reps, 0);
+        const totalVolume = requiresWeight 
+            ? workouts.reduce((sum, w) => sum + (w.reps * (w.weight || 0)), 0)
+            : 0;
+        const avgReps = totalReps / totalWorkouts;
+        
+        const weightsUsed = workouts.filter(w => w.weight > 0).map(w => w.weight);
+        const avgWeight = weightsUsed.length > 0 
+            ? weightsUsed.reduce((sum, w) => sum + w, 0) / weightsUsed.length 
+            : 0;
+        const maxWeight = weightsUsed.length > 0 
+            ? Math.max(...weightsUsed) 
+            : 0;
+        
+        // For bodyweight exercises, PR is max reps
+        const maxReps = Math.max(...workouts.map(w => w.reps));
+        
+        const volumesPerWorkout = workouts
+            .filter(w => requiresWeight && w.weight > 0)
+            .map(w => w.reps * w.weight);
+        const avgVolume = volumesPerWorkout.length > 0
+            ? volumesPerWorkout.reduce((sum, v) => sum + v, 0) / volumesPerWorkout.length
+            : 0;
+
+        return {
+            totalWorkouts,
+            totalReps,
+            totalVolume,
+            avgReps,
+            avgWeight,
+            avgVolume,
+            maxWeight,
+            maxReps
+        };
+    },
+
+    /**
+     * Format equipment type for display
+     * @param {string} equipmentType - Equipment type key
+     * @returns {string} Formatted equipment type
+     */
+    formatEquipmentType(equipmentType) {
+        if (!equipmentType) return 'Unknown';
+        const types = CONFIG.equipmentTypes;
+        if (!types || !types[equipmentType]) return equipmentType;
+        return types[equipmentType].label || equipmentType;
+    },
+
+    /**
+     * Format date for display
+     * @param {string} dateString - ISO date string
+     * @returns {string} Formatted date
+     */
+    formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric' 
+        });
     }
 };

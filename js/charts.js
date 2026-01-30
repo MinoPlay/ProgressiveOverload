@@ -120,7 +120,12 @@ export const Charts = {
 
         container.innerHTML = '';
         
-        exercisesData.forEach(({ exercise }) => {
+        // Sort exercises alphabetically by name
+        const sortedExercises = [...exercisesData].sort((a, b) => 
+            a.exercise.name.localeCompare(b.exercise.name)
+        );
+        
+        sortedExercises.forEach(({ exercise }) => {
             const label = document.createElement('label');
             label.className = 'comparison-checkbox-label';
             
@@ -128,6 +133,7 @@ export const Charts = {
             checkbox.type = 'checkbox';
             checkbox.value = exercise.id;
             checkbox.checked = this.selectedExerciseIds.includes(exercise.id);
+            checkbox.className = 'exercise-checkbox';
             checkbox.addEventListener('change', (e) => {
                 if (e.target.checked) {
                     this.selectedExerciseIds.push(exercise.id);
@@ -139,12 +145,66 @@ export const Charts = {
                 // Update both chart and table
                 this.renderUnifiedChart();
                 this.renderTableView();
+                
+                // Update toggle button text
+                this.updateToggleButtonText();
             });
             
             label.appendChild(checkbox);
             label.appendChild(document.createTextNode(' ' + exercise.name));
             container.appendChild(label);
         });
+        
+        // Set up toggle all button
+        this.setupToggleAllButton();
+        this.updateToggleButtonText();
+    },
+
+    /**
+     * Set up the toggle all button event listener
+     */
+    setupToggleAllButton() {
+        const toggleBtn = document.getElementById('toggleAllExercises');
+        if (!toggleBtn) return;
+        
+        // Remove existing listener if any
+        const newBtn = toggleBtn.cloneNode(true);
+        toggleBtn.parentNode.replaceChild(newBtn, toggleBtn);
+        
+        newBtn.addEventListener('click', () => {
+            const checkboxes = document.querySelectorAll('.exercise-checkbox');
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            
+            checkboxes.forEach(checkbox => {
+                checkbox.checked = !allChecked;
+            });
+            
+            // Update selected IDs
+            if (allChecked) {
+                this.selectedExerciseIds = [];
+            } else {
+                this.selectedExerciseIds = Array.from(checkboxes).map(cb => cb.value);
+            }
+            
+            localStorage.setItem('selectedExerciseIds', JSON.stringify(this.selectedExerciseIds));
+            
+            // Update both chart and table
+            this.renderUnifiedChart();
+            this.renderTableView();
+            this.updateToggleButtonText();
+        });
+    },
+
+    /**
+     * Update toggle button text based on current selection
+     */
+    updateToggleButtonText() {
+        const toggleBtn = document.getElementById('toggleAllExercises');
+        const checkboxes = document.querySelectorAll('.exercise-checkbox');
+        if (!toggleBtn || checkboxes.length === 0) return;
+        
+        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+        toggleBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
     },
 
 
@@ -412,7 +472,6 @@ export const Charts = {
                 <thead>
                     <tr>
                         <th class="sortable" data-sort="name">Exercise <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-sort="equipment">Equipment <span class="sort-indicator"></span></th>
                         <th class="sortable" data-sort="workouts">Workouts <span class="sort-indicator"></span></th>
                         <th class="sortable" data-sort="totalReps">Total Reps <span class="sort-indicator"></span></th>
                         ${hasWeightedExercises ? '<th class="sortable" data-sort="totalVolume">Total Volume <span class="sort-indicator"></span></th>' : ''}
@@ -433,7 +492,6 @@ export const Charts = {
             tableHTML += `
                 <tr>
                     <td class="exercise-name-cell"><strong>${exercise.name}</strong></td>
-                    <td>${this.formatEquipmentType(exercise.equipmentType)}</td>
                     <td>${stats.totalWorkouts}</td>
                     <td>${stats.totalReps}</td>
                     ${hasWeightedExercises ? `<td>${exercise.requiresWeight ? stats.totalVolume.toFixed(0) : '-'}</td>` : ''}
@@ -486,10 +544,6 @@ export const Charts = {
                 case 'name':
                     valA = a.exercise.name.toLowerCase();
                     valB = b.exercise.name.toLowerCase();
-                    break;
-                case 'equipment':
-                    valA = this.formatEquipmentType(a.exercise.equipmentType).toLowerCase();
-                    valB = this.formatEquipmentType(b.exercise.equipmentType).toLowerCase();
                     break;
                 case 'workouts':
                     valA = a.stats.totalWorkouts;

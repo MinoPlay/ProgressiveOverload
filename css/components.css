@@ -864,6 +864,15 @@
     font-weight: 500;
 }
 
+/* Compact sets notation */
+.sets-compact {
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    font-weight: 500;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    white-space: nowrap;
+}
+
 /* Responsive adjustments for compact form */
 @media (max-width: 768px) {
     .compact-workout-form .form-row {

@@ -162,14 +162,6 @@ export const History = {
         item.addEventListener('drop', (e) => this.handleExerciseGroupDrop(e, exerciseId, date));
         item.addEventListener('dragend', () => this.handleExerciseGroupDragEnd());
 
-        // Exercise header
-        const header = document.createElement('div');
-        header.className = 'exercise-group-header';
-
-        const title = document.createElement('h4');
-        title.textContent = exercise ? exercise.name : 'Unknown Exercise';
-        header.appendChild(title);
-
         // Sequence badge showing display order
         if (displayOrder) {
             const badge = document.createElement('span');
@@ -178,40 +170,31 @@ export const History = {
             item.appendChild(badge);
         }
 
-        const setCount = document.createElement('span');
-        setCount.className = 'set-count';
-        setCount.textContent = `${workouts.length} set${workouts.length !== 1 ? 's' : ''}`;
-        header.appendChild(setCount);
+        // Exercise header with inline sets
+        const header = document.createElement('div');
+        header.className = 'exercise-group-header';
+
+        const title = document.createElement('h4');
+        title.textContent = exercise ? exercise.name : 'Unknown Exercise';
+        header.appendChild(title);
+
+        // Format sets in compact notation
+        const setsText = document.createElement('span');
+        setsText.className = 'sets-compact';
+        
+        // Build compact set notation (e.g., "11x60 12x60 12x60" or "10x 20x 30x")
+        const setNotations = workouts.map(workout => {
+            if (workout.weight) {
+                return `${workout.reps}x${workout.weight}`;
+            } else {
+                return `${workout.reps}x`;
+            }
+        });
+        
+        setsText.textContent = setNotations.join(' ');
+        header.appendChild(setsText);
 
         item.appendChild(header);
-
-        // Sets list
-        const setsList = document.createElement('div');
-        setsList.className = 'sets-list';
-
-        workouts.forEach((workout, index) => {
-            const setItem = document.createElement('div');
-            setItem.className = 'set-item';
-
-            const setNumber = document.createElement('span');
-            setNumber.className = 'set-number';
-            setNumber.textContent = `Set ${index + 1}:`;
-            setItem.appendChild(setNumber);
-
-            const setDetails = document.createElement('span');
-            setDetails.className = 'set-details';
-            
-            let detailsText = `${workout.reps} reps`;
-            if (workout.weight) {
-                detailsText += ` @ ${workout.weight} kg`;
-            }
-            setDetails.textContent = detailsText;
-            setItem.appendChild(setDetails);
-
-            setsList.appendChild(setItem);
-        });
-
-        item.appendChild(setsList);
 
         return item;
     },

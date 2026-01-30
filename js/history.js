@@ -440,11 +440,13 @@ export const History = {
             showLoading(true);
 
             // Get all workouts for this date
-            const allWorkouts = await Storage.getWorkoutsForDate(date);
+            const dateObj = new Date(date + 'T00:00:00');
+            const allWorkouts = await Storage.getWorkoutsInRange(dateObj, dateObj);
+            const workoutsForDate = allWorkouts.filter(w => w.date === date);
             
             // Group by exercise
             const exerciseGroups = new Map();
-            for (const workout of allWorkouts) {
+            for (const workout of workoutsForDate) {
                 if (!exerciseGroups.has(workout.exerciseId)) {
                     exerciseGroups.set(workout.exerciseId, []);
                 }

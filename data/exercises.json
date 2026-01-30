@@ -143,6 +143,12 @@
       "name": "Chest-Supported Dumbbell Rows",
       "equipmentType": "dumbbell",
       "requiresWeight": true
+    },
+    {
+      "id": "1769748072765_qu8ca2o2p",
+      "name": "Seated Cable Rows",
+      "equipmentType": "machines",
+      "requiresWeight": true
     }
   ]
 }

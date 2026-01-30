@@ -137,6 +137,12 @@
       "name": "Neck Turns",
       "equipmentType": "bodyweight",
       "requiresWeight": false
+    },
+    {
+      "id": "1769748047444_cfopuwtws",
+      "name": "Chest-Supported Dumbbell Rows",
+      "equipmentType": "dumbbell",
+      "requiresWeight": true
     }
   ]
 }

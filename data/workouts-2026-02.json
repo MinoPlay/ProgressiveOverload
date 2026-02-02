@@ -95,6 +95,14 @@
       "reps": 24,
       "weight": 25,
       "sequence": 12
+    },
+    {
+      "id": "1770012610801_arirtawdy",
+      "exerciseId": "1769598356923_neckturns",
+      "date": "2026-02-02",
+      "reps": 30,
+      "weight": null,
+      "sequence": 13
     }
   ]
 }

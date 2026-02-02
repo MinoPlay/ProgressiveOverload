@@ -173,6 +173,12 @@
       "name": "Rotating dumbbell shoulder press",
       "equipmentType": "dumbbell",
       "requiresWeight": true
+    },
+    {
+      "id": "1770012654787_hjl6qszi3",
+      "name": "Cable flies",
+      "equipmentType": "machines",
+      "requiresWeight": true
     }
   ]
 }

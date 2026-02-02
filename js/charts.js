@@ -520,9 +520,8 @@ export const Charts = {
 
         const hasWeightedExercises = this.tableData.some(d => d.exercise.requiresWeight);
 
-        // Build concise summary table
+        // Build summary table with collapsible workout history
         let tableHTML = '<div class="stats-table-container">';
-        
         tableHTML += `
             <table class="stats-summary-table">
                 <thead>
@@ -532,24 +531,89 @@ export const Charts = {
                         <th class="sortable" data-sort="avgReps">Avg Reps <span class="sort-indicator"></span></th>
                         ${hasWeightedExercises ? '<th class="sortable" data-sort="avgWeight">Avg Weight <span class="sort-indicator"></span></th>' : ''}
                         <th class="sortable" data-sort="pr">PR <span class="sort-indicator"></span></th>
+                        <th></th>
                     </tr>
                 </thead>
                 <tbody>
         `;
 
+        // We need access to workouts for each exercise, so get from allExercisesData
         this.tableData.forEach(({ exercise, stats }) => {
-            // PR format: reps×weight (e.g., 20x65) or just reps for bodyweight
             const prValue = exercise.requiresWeight && stats.prReps && stats.prWeight
                 ? `${stats.prReps}x${stats.prWeight.toFixed(1)}`
                 : `${stats.maxReps} reps`;
-            
+
+            // Find workouts for this exercise
+            const exerciseData = this.allExercisesData.find(d => d.exercise.id === exercise.id);
+            const workouts = exerciseData ? exerciseData.workouts : [];
+            const collapseId = `workout-list-${exercise.id}`;
+
+            // Group workouts by date
+            const groupedByDate = {};
+            workouts.forEach(w => {
+                if (!groupedByDate[w.date]) groupedByDate[w.date] = [];
+                groupedByDate[w.date].push(w);
+            });
+            // Sort dates descending (latest first)
+            const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
+
+            // Prepare daily summary rows
+            let prevBest = null;
+            const dailyRows = sortedDates.map(date => {
+                const sets = groupedByDate[date];
+                // For each set: reps x weight (or just reps for bodyweight)
+                const setStrings = sets.map(s => exercise.requiresWeight ? `${s.reps}x${s.weight || 0}` : `${s.reps}`).join(' ');
+                // Calculate best set for the day (by volume for weighted, reps for bodyweight)
+                let best = 0;
+                sets.forEach(s => {
+                    const val = exercise.requiresWeight ? (s.reps * (s.weight || 0)) : s.reps;
+                    if (val > best) best = val;
+                });
+                // Compare to previous day
+                let arrow = '<span style="color:gray">-</span>';
+                if (prevBest !== null) {
+                    if (best > prevBest) {
+                        arrow = '<span style="color:green">&#8593;</span>';
+                    } else if (best < prevBest) {
+                        arrow = '<span style="color:red">&#8595;</span>';
+                    }
+                }
+                prevBest = best;
+                return `
+                    <tr>
+                        <td>${this.formatDate(date)}</td>
+                        <td>${setStrings}</td>
+                        <td style="text-align:center">${arrow}</td>
+                    </tr>
+                `;
+            });
+
             tableHTML += `
-                <tr>
+                <tr class="exercise-summary-row" data-target="${collapseId}" style="cursor:pointer;">
                     <td class="exercise-name-cell"><strong>${exercise.name}</strong></td>
                     <td>${stats.totalWorkouts}</td>
                     <td>${stats.avgReps.toFixed(1)}</td>
                     ${hasWeightedExercises ? `<td>${exercise.requiresWeight && stats.avgWeight > 0 ? stats.avgWeight.toFixed(1) + ' kg' : '-'}</td>` : ''}
                     <td><strong>${prValue}</strong></td>
+                    <td style="text-align:center; color:#888;">&#9660;</td>
+                </tr>
+                <tr class="workout-list-row" id="${collapseId}" style="display:none; background:#f9f9f9;">
+                    <td colspan="${hasWeightedExercises ? 6 : 5}" style="padding:0;">
+                        <div class="workout-list-container" style="max-height:250px; overflow-y:auto;">
+                            <table class="workout-list-table" style="width:100%; font-size:0.95em;">
+                                <thead>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Sets (reps x weight)</th>
+                                        <th style="text-align:center">&#8597;</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${dailyRows.join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </td>
                 </tr>
             `;
         });
@@ -558,7 +622,6 @@ export const Charts = {
                 </tbody>
             </table>
         `;
-
         tableHTML += '</div>';
         statsTableContent.innerHTML = tableHTML;
 
@@ -568,6 +631,24 @@ export const Charts = {
             header.addEventListener('click', () => {
                 const sortKey = header.dataset.sort;
                 this.sortTable(sortKey);
+            });
+        });
+
+        // Add toggle handlers for workout lists (row click)
+        const summaryRows = statsTableContent.querySelectorAll('.exercise-summary-row');
+        summaryRows.forEach(row => {
+            row.addEventListener('click', function() {
+                const targetId = row.getAttribute('data-target');
+                const workoutRow = document.getElementById(targetId);
+                if (workoutRow) {
+                    const isOpen = workoutRow.style.display !== 'none';
+                    workoutRow.style.display = isOpen ? 'none' : '';
+                    // Optionally update arrow icon
+                    const arrowCell = row.querySelector('td:last-child');
+                    if (arrowCell) {
+                        arrowCell.innerHTML = isOpen ? '&#9660;' : '&#9650;';
+                    }
+                }
             });
         });
     },

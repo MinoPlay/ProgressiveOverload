@@ -3,9 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Progressive Pumping!!! - Track your gym workouts and strength gains">
-    <title>Progressive Pumping!!!</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💪</text></svg>">
+    <title>Progressive Overload Tracker</title>
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/styles.css">
@@ -16,7 +14,7 @@
         <!-- Header -->
         <header class="app-header">
             <div class="header-content">
-                <h1>💪 Progressive Overload Tracker</h1>
+                <h1 id="main-header" style="cursor: pointer;">💪 Progressive Overload Tracker</h1>
             </div>
         </header>
 
@@ -37,7 +35,7 @@
         <!-- Main Content -->
         <main class="app-content">
             <!-- GitHub Configuration -->
-            <section class="config-section" id="config-section">
+            <section class="config-section" id="config-section" style="display: none;">
                 <h2 onclick="toggleConfig()" style="cursor: pointer;">⚙️ Configuration</h2>
                 <div class="mode-toggle">
                     <button onclick="setMode('local')" class="mode-btn" id="mode-local">🏠 Local Mode</button>

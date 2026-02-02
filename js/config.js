@@ -10,7 +10,7 @@ export const CONFIG = {
     // 
     // ⚠️  IMPORTANT: Must be 'false' when deploying to production!
     // ═══════════════════════════════════════════════════════════════
-    devMode: false,
+    devMode: true,
 
     // GitHub Configuration
     github: {

@@ -1,3 +1,17 @@
+// Toggle Configuration section visibility when clicking the header
+window.addEventListener('DOMContentLoaded', function() {
+    const header = document.getElementById('main-header');
+    const configSection = document.getElementById('config-section');
+    if (header && configSection) {
+        header.addEventListener('click', function() {
+            if (configSection.style.display === 'none' || configSection.style.display === '') {
+                configSection.style.display = 'block';
+            } else {
+                configSection.style.display = 'none';
+            }
+        });
+    }
+});
 // Main Application
 // Initializes and coordinates all modules
 

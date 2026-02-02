@@ -243,7 +243,8 @@ body {
 }
 
 .chart-container canvas {
-    max-height: 400px;
+    min-height: 400px;
+    height: 500px;
 }
 
 /* Portrait mobile - fixed chart height */
@@ -253,8 +254,8 @@ body {
     }
     
     .chart-container canvas {
-        height: 300px !important;
-        max-height: none;
+        height: 350px !important;
+        min-height: 350px;
     }
 }
 

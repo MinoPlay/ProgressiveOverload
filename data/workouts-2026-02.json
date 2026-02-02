@@ -1,3 +1,12 @@
 {
-  "workouts": []
+  "workouts": [
+    {
+      "id": "1770010346187_n3z4yp565",
+      "exerciseId": "1770010228345_o1qup7585",
+      "date": "2026-02-02",
+      "reps": 25,
+      "weight": null,
+      "sequence": 1
+    }
+  ]
 }

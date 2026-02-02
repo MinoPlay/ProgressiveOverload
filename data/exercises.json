@@ -167,6 +167,12 @@
       "name": "Leg press",
       "equipmentType": "machines",
       "requiresWeight": true
+    },
+    {
+      "id": "1770011336623_x5imb6ehs",
+      "name": "Rotating dumbbell shoulder press",
+      "equipmentType": "dumbbell",
+      "requiresWeight": true
     }
   ]
 }

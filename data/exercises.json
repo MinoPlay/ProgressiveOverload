@@ -161,6 +161,12 @@
       "name": "Pushups",
       "equipmentType": "bodyweight",
       "requiresWeight": false
+    },
+    {
+      "id": "1770010828876_iomixwb3f",
+      "name": "Leg press",
+      "equipmentType": "machines",
+      "requiresWeight": true
     }
   ]
 }

@@ -23,6 +23,14 @@
       "reps": 20,
       "weight": null,
       "sequence": 3
+    },
+    {
+      "id": "1770010943932_4c35kzj5p",
+      "exerciseId": "1770010828876_iomixwb3f",
+      "date": "2026-02-02",
+      "reps": 20,
+      "weight": 100,
+      "sequence": 4
     }
   ]
 }

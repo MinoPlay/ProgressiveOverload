@@ -36,6 +36,32 @@
 
         <!-- Main Content -->
         <main class="app-content">
+            <!-- GitHub Configuration -->
+            <section class="config-section" id="config-section">
+                <h2 onclick="toggleConfig()" style="cursor: pointer;">⚙️ Configuration</h2>
+                <div class="mode-toggle">
+                    <button onclick="setMode('local')" class="mode-btn" id="mode-local">🏠 Local Mode</button>
+                    <button onclick="setMode('github')" class="mode-btn" id="mode-github">🐙 GitHub Mode</button>
+                </div>
+                <div class="config-form" id="github-config">
+                    <input type="password" id="github-token" placeholder="GitHub Personal Access Token" autocomplete="off">
+                    <input type="text" id="repo-owner" placeholder="GitHub Username" autocomplete="off">
+                    <input type="text" id="repo-name" placeholder="Repository Name" autocomplete="off">
+                    <button onclick="saveConfig()" class="btn-save">Save Configuration</button>
+                </div>
+                <div class="local-controls" id="local-controls" style="display: none;">
+                    <button onclick="generateDummyData()" class="btn-generate">🎲 Generate Sample Data</button>
+                    <button onclick="clearLocalData()" class="btn-clear">🗑️ Clear All Data</button>
+                </div>
+                <p class="config-help" id="github-help">
+                    Create a token with 'repo' scope at 
+                    <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings</a>
+                </p>
+                <p class="config-help" id="local-help" style="display: none;">
+                    Local mode stores data in your browser's localStorage. Data persists between sessions.
+                </p>
+            </section>
+
             <!-- Exercises Section -->
             <section id="exercisesSection" class="content-section" role="region" aria-labelledby="exercises-heading">
                 <div class="section-header">

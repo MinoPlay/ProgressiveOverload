@@ -7,7 +7,7 @@ import { Exercises } from './exercises.js';
 import { Workouts } from './workouts.js';
 import { Charts } from './charts.js';
 import { History } from './history.js';
-import { CONFIG } from './config.js';
+import { CONFIG, loadConfig } from './config.js';
 
 /**
  * Main App object
@@ -18,6 +18,9 @@ const App = {
      */
     async init() {
         console.log('Progressive Pumping!!! - Initializing...');
+
+        // Load configuration first
+        loadConfig();
 
         // In dev mode, skip authentication
         if (CONFIG.devMode) {

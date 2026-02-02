@@ -22,6 +22,9 @@ export const Charts = {
         window.addEventListener('exercisesUpdated', () => {
             this.renderCombinedChart();
         });
+        
+        // Set up collapsible chart
+        this.setupCollapsibleChart();
     },
 
     /**
@@ -175,12 +178,58 @@ export const Charts = {
         
         if (!toggle || !checkboxContainer) return;
         
+        // Restore saved state or default to expanded
+        const savedState = localStorage.getItem('exerciseSelectorCollapsed');
+        const isCollapsed = savedState === 'true';
+        
+        // Apply saved state
+        checkboxContainer.style.display = isCollapsed ? 'none' : 'grid';
+        const chevron = toggle.querySelector('.chevron');
+        if (chevron) {
+            chevron.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+        
         toggle.addEventListener('click', () => {
             const chevron = toggle.querySelector('.chevron');
             const isHidden = checkboxContainer.style.display === 'none';
             
             checkboxContainer.style.display = isHidden ? 'grid' : 'none';
             chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+            
+            // Save state to localStorage
+            localStorage.setItem('exerciseSelectorCollapsed', !isHidden);
+        });
+    },
+
+    /**
+     * Set up collapsible chart
+     */
+    setupCollapsibleChart() {
+        const toggle = document.getElementById('chartToggle');
+        const chartContent = document.getElementById('statsContent');
+        
+        if (!toggle || !chartContent) return;
+        
+        // Restore saved state or default to expanded
+        const savedState = localStorage.getItem('chartCollapsed');
+        const isCollapsed = savedState === 'true';
+        
+        // Apply saved state
+        chartContent.style.display = isCollapsed ? 'none' : 'block';
+        const chevron = toggle.querySelector('.chevron');
+        if (chevron) {
+            chevron.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+        
+        toggle.addEventListener('click', () => {
+            const chevron = toggle.querySelector('.chevron');
+            const isHidden = chartContent.style.display === 'none';
+            
+            chartContent.style.display = isHidden ? 'block' : 'none';
+            chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+            
+            // Save state to localStorage
+            localStorage.setItem('chartCollapsed', !isHidden);
         });
     },
 

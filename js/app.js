@@ -123,8 +123,31 @@ const App = {
                         section.classList.remove('active');
                     }
                 });
+
+                // Save current section to localStorage
+                localStorage.setItem('activeSection', targetSection);
             });
         });
+
+        // Restore saved section on load
+        const savedSection = localStorage.getItem('activeSection');
+        if (savedSection) {
+            const targetBtn = Array.from(navBtns).find(btn => btn.dataset.section === savedSection);
+            if (targetBtn) {
+                // Update active nav button
+                navBtns.forEach(b => b.classList.remove('active'));
+                targetBtn.classList.add('active');
+
+                // Update active section
+                sections.forEach(section => {
+                    if (section.id === `${savedSection}Section`) {
+                        section.classList.add('active');
+                    } else {
+                        section.classList.remove('active');
+                    }
+                });
+            }
+        }
     }
 };
 

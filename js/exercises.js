@@ -136,19 +136,111 @@ export const Exercises = {
     },
 
     /**
-     * Render exercise list
+     * Render exercise list grouped by equipment type
      */
     render() {
         const container = document.getElementById('exerciseList');
         const exercises = Storage.getExercises();
 
-        // Clear container and rebuild with safe DOM methods
+        // Clear container
         container.innerHTML = '';
         
+        // Group exercises by equipment type
+        const groupedExercises = this.groupByEquipmentType(exercises);
+        
+        // Create collapsible section for each equipment type
+        Object.keys(groupedExercises).sort().forEach(equipmentType => {
+            const section = this.createCollapsibleSection(equipmentType, groupedExercises[equipmentType]);
+            container.appendChild(section);
+        });
+    },
+
+    /**
+     * Group exercises by equipment type
+     * @param {Array} exercises - Array of exercise objects
+     * @returns {Object} Exercises grouped by equipment type
+     */
+    groupByEquipmentType(exercises) {
+        return exercises.reduce((groups, exercise) => {
+            const type = exercise.equipmentType || 'other';
+            if (!groups[type]) {
+                groups[type] = [];
+            }
+            groups[type].push(exercise);
+            return groups;
+        }, {});
+    },
+
+    /**
+     * Create collapsible section for equipment type
+     * @param {string} equipmentType - Equipment type
+     * @param {Array} exercises - Exercises of this type
+     * @returns {HTMLElement} Section element
+     */
+    createCollapsibleSection(equipmentType, exercises) {
+        const section = document.createElement('div');
+        section.className = 'equipment-group';
+
+        // Create header
+        const header = document.createElement('div');
+        header.className = 'equipment-group-header collapsed';
+        header.onclick = () => this.toggleSection(header);
+
+        const titleWrapper = document.createElement('div');
+        titleWrapper.className = 'equipment-group-title';
+
+        const title = document.createElement('h3');
+        title.textContent = formatEquipmentType(equipmentType);
+
+        const count = document.createElement('span');
+        count.className = 'exercise-count';
+        count.textContent = `(${exercises.length})`;
+
+        titleWrapper.appendChild(title);
+        titleWrapper.appendChild(count);
+
+        const chevron = document.createElement('span');
+        chevron.className = 'equipment-chevron';
+        chevron.innerHTML = '▼';
+
+        header.appendChild(titleWrapper);
+        header.appendChild(chevron);
+
+        // Create content container
+        const content = document.createElement('div');
+        content.className = 'equipment-group-content';
+        content.style.display = 'none'; // Collapsed by default
+
         exercises.forEach(exercise => {
             const card = this.createExerciseCard(exercise);
-            container.appendChild(card);
+            content.appendChild(card);
         });
+
+        section.appendChild(header);
+        section.appendChild(content);
+
+        return section;
+    },
+
+    /**
+     * Toggle collapsible section
+     * @param {HTMLElement} header - Header element
+     */
+    toggleSection(header) {
+        const content = header.nextElementSibling;
+        const chevron = header.querySelector('.equipment-chevron');
+        
+        if (header.classList.contains('collapsed')) {
+            // Expand
+            header.classList.remove('collapsed');
+            content.style.display = 'grid';
+            chevron.innerHTML = '▲';
+        } else {
+            // Collapse
+            header.classList.add('collapsed');
+            content.style.display = 'none';
+            chevron.innerHTML = '▼';
+        }
     },
 
     /**

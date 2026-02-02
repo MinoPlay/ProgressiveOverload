@@ -115,9 +115,9 @@ body {
 
 /* Grid Layouts */
 .exercise-list {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--spacing-lg);
+    display: flex;
+    flex-direction: column;
+    gap: 0;
     margin-top: var(--spacing-xl);
 }
 

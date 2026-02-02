@@ -149,6 +149,67 @@
     color: #1976d2;
 }
 
+/* Equipment Group Collapsible Sections */
+.equipment-group {
+    margin-bottom: var(--spacing-lg);
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    box-shadow: var(--shadow-sm);
+}
+
+.equipment-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-md) var(--spacing-lg);
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    transition: all var(--transition-base);
+}
+
+.equipment-group-header:hover {
+    background: linear-gradient(135deg, #5568d3 0%, #653a91 100%);
+}
+
+.equipment-group-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.equipment-group-title h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.exercise-count {
+    font-size: 0.9rem;
+    opacity: 0.9;
+    font-weight: 400;
+}
+
+.equipment-chevron {
+    font-size: 0.8rem;
+    transition: transform var(--transition-base);
+    opacity: 0.9;
+}
+
+.equipment-group-header.collapsed .equipment-chevron {
+    transform: rotate(0deg);
+}
+
+.equipment-group-content {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+    padding: var(--spacing-lg);
+    background: var(--bg-secondary);
+}
+
 .equipment-badge.barbell { background: #fff3e0; color: #f57c00; }
 .equipment-badge.dumbbell { background: #e8f5e9; color: #388e3c; }
 .equipment-badge.kettlebell { background: #fce4ec; color: #c2185b; }

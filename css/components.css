@@ -1090,8 +1090,8 @@
     padding: var(--spacing-md) var(--spacing-lg);
 }
 
-.config-section.collapsed > *:not(h2) {
-    display: none;
+.config-section.collapsed *:not(h2) {
+    display: none !important;
 }
 
 .config-section h2 {

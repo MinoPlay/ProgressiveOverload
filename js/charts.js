@@ -3,7 +3,7 @@
 
 import { Storage } from './storage.js';
 import { CONFIG } from './config.js';
-import { calculateLinearRegression } from './chart-helpers.js';
+import { calculateLinearRegression, calculateProgressPercentage } from './chart-helpers.js';
 
 // Register Chart.js plugins globally when available
 // Plugins are loaded via CDN and auto-register with Chart.js 4.x
@@ -300,13 +300,24 @@ export const Charts = {
                 return dataIdx !== -1 ? dailyData.values[dataIdx] : null;
             });
             
+            // Calculate progress percentage for non-null values
+            const nonNullValues = alignedData.filter(v => v !== null);
+            const progressPercentages = this.calculateProgressPercentage(nonNullValues);
+            
+            // Map back to aligned data structure
+            let progressIdx = 0;
+            const alignedProgress = alignedData.map(val => {
+                if (val === null) return null;
+                return progressPercentages[progressIdx++];
+            });
+            
             const barColor = barColors[idx % barColors.length];
             const trendColor = trendColors[idx % trendColors.length];
             
-            // Add bar chart for actual data
+            // Add bar chart for progress percentage
             datasets.push({
                 label: data.exercise.name,
-                data: alignedData,
+                data: alignedProgress,
                 type: 'bar',
                 backgroundColor: barColor.replace(')', ', 0.6)').replace('rgb', 'rgba'),
                 borderColor: barColor,
@@ -315,7 +326,7 @@ export const Charts = {
             });
             
             // Add trend line (dotted)
-            const validPoints = alignedData
+            const validPoints = alignedProgress
                 .map((val, idx) => ({ x: idx, y: val }))
                 .filter(p => p.y !== null);
             
@@ -376,7 +387,7 @@ export const Charts = {
                         },
                         title: {
                             display: true,
-                            text: 'Workout Progress (Bars: Actual Data | Dotted Lines: Trends)'
+                            text: 'Workout Progress Tracking (% Improvement vs Baseline)'
                         },
                         tooltip: {
                             callbacks: {
@@ -387,17 +398,29 @@ export const Charts = {
                                     const label = context.dataset.label || '';
                                     const value = context.parsed.y;
                                     if (value === null) return '';
-                                    return `${label}: ${value.toFixed(1)}`;
+                                    
+                                    // Show percentage and change from baseline
+                                    const changeFromBaseline = value - 100;
+                                    const changeText = changeFromBaseline >= 0 
+                                        ? `+${changeFromBaseline.toFixed(1)}%` 
+                                        : `${changeFromBaseline.toFixed(1)}%`;
+                                    
+                                    return `${label}: ${value.toFixed(1)}% (${changeText} vs baseline)`;
                                 }
                             }
                         }
                     },
                     scales: {
                         y: {
-                            beginAtZero: true,
+                            beginAtZero: false,
                             title: {
                                 display: true,
-                                text: 'Value'
+                                text: 'Progress (% of Baseline)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toFixed(0) + '%';
+                                }
                             }
                         },
                         x: {
@@ -410,6 +433,15 @@ export const Charts = {
                 }
             });
         }
+    },
+
+    /**
+     * Calculate progress percentage relative to baseline
+     * @param {Array<number>} values - Chronologically ordered values
+     * @returns {Array<number>} Progress percentages
+     */
+    calculateProgressPercentage(values) {
+        return calculateProgressPercentage(values);
     },
 
     /**

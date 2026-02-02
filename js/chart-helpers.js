@@ -266,3 +266,22 @@ export function normalizeToPercent(values) {
     
     return values.map(v => (v / max) * 100);
 }
+
+/**
+ * Calculate progress percentage relative to baseline
+ * Uses the average of the first 3 workouts (or fewer if not available) as baseline
+ * @param {Array<number>} values - Array of numeric values in chronological order
+ * @returns {Array<number>} Progress percentages (100 = baseline, >100 = improvement, <100 = decline)
+ */
+export function calculateProgressPercentage(values) {
+    if (!values || values.length === 0) return [];
+    
+    // Calculate baseline: average of first 1-3 workouts
+    const baselineCount = Math.min(3, values.length);
+    const baseline = values.slice(0, baselineCount).reduce((sum, val) => sum + val, 0) / baselineCount;
+    
+    if (baseline === 0) return values.map(() => 0);
+    
+    // Convert each value to percentage of baseline
+    return values.map(v => (v / baseline) * 100);
+}

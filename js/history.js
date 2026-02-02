@@ -162,13 +162,13 @@ export const History = {
         item.addEventListener('drop', (e) => this.handleExerciseGroupDrop(e, exerciseId, date));
         item.addEventListener('dragend', () => this.handleExerciseGroupDragEnd());
 
-        // Sequence badge showing display order
-        if (displayOrder) {
-            const badge = document.createElement('span');
-            badge.className = 'sequence-badge';
-            badge.textContent = `#${displayOrder}`;
-            item.appendChild(badge);
-        }
+        // Sequence badge removed - was blocking reps/weights info on mobile
+        // if (displayOrder) {
+        //     const badge = document.createElement('span');
+        //     badge.className = 'sequence-badge';
+        //     badge.textContent = `#${displayOrder}`;
+        //     item.appendChild(badge);
+        // }
 
         // Exercise header with inline sets
         const header = document.createElement('div');

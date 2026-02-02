@@ -53,6 +53,9 @@ export const Workouts = {
         // Keep first option (placeholder)
         select.innerHTML = '<option value="">Select Exercise...</option>';
 
+        // Sort exercises alphabetically by name
+        exercises.sort((a, b) => a.name.localeCompare(b.name));
+
         exercises.forEach(exercise => {
             const option = document.createElement('option');
             option.value = exercise.id;

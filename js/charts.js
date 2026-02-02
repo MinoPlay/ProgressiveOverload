@@ -158,6 +158,30 @@ export const Charts = {
         // Set up toggle all button
         this.setupToggleAllButton();
         this.updateToggleButtonText();
+        
+        // Set up collapsible functionality (once)
+        if (!this.collapsibleSetup) {
+            this.setupCollapsibleSelector();
+            this.collapsibleSetup = true;
+        }
+    },
+
+    /**
+     * Set up collapsible exercise selector
+     */
+    setupCollapsibleSelector() {
+        const toggle = document.getElementById('exerciseSelectorToggle');
+        const checkboxContainer = document.getElementById('exerciseCheckboxes');
+        
+        if (!toggle || !checkboxContainer) return;
+        
+        toggle.addEventListener('click', () => {
+            const chevron = toggle.querySelector('.chevron');
+            const isHidden = checkboxContainer.style.display === 'none';
+            
+            checkboxContainer.style.display = isHidden ? 'grid' : 'none';
+            chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+        });
     },
 
     /**
@@ -325,7 +349,7 @@ export const Charts = {
                 },
                 options: {
                     responsive: true,
-                    maintainAspectRatio: true,
+                    maintainAspectRatio: false,
                     interaction: {
                         mode: 'index',
                         intersect: false
@@ -473,11 +497,8 @@ export const Charts = {
                     <tr>
                         <th class="sortable" data-sort="name">Exercise <span class="sort-indicator"></span></th>
                         <th class="sortable" data-sort="workouts">Workouts <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-sort="totalReps">Total Reps <span class="sort-indicator"></span></th>
-                        ${hasWeightedExercises ? '<th class="sortable" data-sort="totalVolume">Total Volume <span class="sort-indicator"></span></th>' : ''}
                         <th class="sortable" data-sort="avgReps">Avg Reps <span class="sort-indicator"></span></th>
                         ${hasWeightedExercises ? '<th class="sortable" data-sort="avgWeight">Avg Weight <span class="sort-indicator"></span></th>' : ''}
-                        ${hasWeightedExercises ? '<th class="sortable" data-sort="avgVolume">Avg Volume <span class="sort-indicator"></span></th>' : ''}
                         <th class="sortable" data-sort="pr">PR <span class="sort-indicator"></span></th>
                     </tr>
                 </thead>
@@ -485,19 +506,17 @@ export const Charts = {
         `;
 
         this.tableData.forEach(({ exercise, stats }) => {
-            const prValue = exercise.requiresWeight && stats.maxWeight > 0
-                ? `${stats.maxWeight.toFixed(1)} kg`
+            // PR format: reps×weight (e.g., 20x65) or just reps for bodyweight
+            const prValue = exercise.requiresWeight && stats.prReps && stats.prWeight
+                ? `${stats.prReps}x${stats.prWeight.toFixed(1)}`
                 : `${stats.maxReps} reps`;
             
             tableHTML += `
                 <tr>
                     <td class="exercise-name-cell"><strong>${exercise.name}</strong></td>
                     <td>${stats.totalWorkouts}</td>
-                    <td>${stats.totalReps}</td>
-                    ${hasWeightedExercises ? `<td>${exercise.requiresWeight ? stats.totalVolume.toFixed(0) : '-'}</td>` : ''}
                     <td>${stats.avgReps.toFixed(1)}</td>
                     ${hasWeightedExercises ? `<td>${exercise.requiresWeight && stats.avgWeight > 0 ? stats.avgWeight.toFixed(1) + ' kg' : '-'}</td>` : ''}
-                    ${hasWeightedExercises ? `<td>${exercise.requiresWeight && stats.avgVolume > 0 ? stats.avgVolume.toFixed(0) : '-'}</td>` : ''}
                     <td><strong>${prValue}</strong></td>
                 </tr>
             `;
@@ -549,14 +568,6 @@ export const Charts = {
                     valA = a.stats.totalWorkouts;
                     valB = b.stats.totalWorkouts;
                     break;
-                case 'totalReps':
-                    valA = a.stats.totalReps;
-                    valB = b.stats.totalReps;
-                    break;
-                case 'totalVolume':
-                    valA = a.stats.totalVolume;
-                    valB = b.stats.totalVolume;
-                    break;
                 case 'avgReps':
                     valA = a.stats.avgReps;
                     valB = b.stats.avgReps;
@@ -565,14 +576,18 @@ export const Charts = {
                     valA = a.stats.avgWeight;
                     valB = b.stats.avgWeight;
                     break;
-                case 'avgVolume':
-                    valA = a.stats.avgVolume;
-                    valB = b.stats.avgVolume;
-                    break;
                 case 'pr':
-                    // For PR, use maxWeight for weighted, maxReps for bodyweight
-                    valA = a.exercise.requiresWeight ? a.stats.maxWeight : a.stats.maxReps;
-                    valB = b.exercise.requiresWeight ? b.stats.maxWeight : b.stats.maxReps;
+                    // For PR, use volume (reps×weight) for weighted, maxReps for bodyweight
+                    if (a.exercise.requiresWeight && a.stats.prReps && a.stats.prWeight) {
+                        valA = a.stats.prReps * a.stats.prWeight;
+                    } else {
+                        valA = a.stats.maxReps;
+                    }
+                    if (b.exercise.requiresWeight && b.stats.prReps && b.stats.prWeight) {
+                        valB = b.stats.prReps * b.stats.prWeight;
+                    } else {
+                        valB = b.stats.maxReps;
+                    }
                     break;
                 default:
                     return 0;
@@ -627,38 +642,41 @@ export const Charts = {
     calculateExerciseStats(workouts, requiresWeight) {
         const totalWorkouts = workouts.length;
         const totalReps = workouts.reduce((sum, w) => sum + w.reps, 0);
-        const totalVolume = requiresWeight 
-            ? workouts.reduce((sum, w) => sum + (w.reps * (w.weight || 0)), 0)
-            : 0;
         const avgReps = totalReps / totalWorkouts;
         
         const weightsUsed = workouts.filter(w => w.weight > 0).map(w => w.weight);
         const avgWeight = weightsUsed.length > 0 
             ? weightsUsed.reduce((sum, w) => sum + w, 0) / weightsUsed.length 
             : 0;
-        const maxWeight = weightsUsed.length > 0 
-            ? Math.max(...weightsUsed) 
-            : 0;
         
         // For bodyweight exercises, PR is max reps
         const maxReps = Math.max(...workouts.map(w => w.reps));
         
-        const volumesPerWorkout = workouts
-            .filter(w => requiresWeight && w.weight > 0)
-            .map(w => w.reps * w.weight);
-        const avgVolume = volumesPerWorkout.length > 0
-            ? volumesPerWorkout.reduce((sum, v) => sum + v, 0) / volumesPerWorkout.length
-            : 0;
+        // For weighted exercises, find PR workout (highest volume = reps × weight)
+        let prReps = null;
+        let prWeight = null;
+        if (requiresWeight && weightsUsed.length > 0) {
+            let maxVolume = 0;
+            workouts.forEach(w => {
+                if (w.weight > 0) {
+                    const volume = w.reps * w.weight;
+                    if (volume > maxVolume) {
+                        maxVolume = volume;
+                        prReps = w.reps;
+                        prWeight = w.weight;
+                    }
+                }
+            });
+        }
 
         return {
             totalWorkouts,
             totalReps,
-            totalVolume,
             avgReps,
             avgWeight,
-            avgVolume,
-            maxWeight,
-            maxReps
+            maxReps,
+            prReps,
+            prWeight
         };
     },
 

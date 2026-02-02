@@ -246,6 +246,18 @@ body {
     max-height: 400px;
 }
 
+/* Portrait mobile - fixed chart height */
+@media (max-width: 480px) {
+    .chart-container {
+        padding: var(--spacing-md);
+    }
+    
+    .chart-container canvas {
+        height: 300px !important;
+        max-height: none;
+    }
+}
+
 /* Responsive Design */
 @media (max-width: 768px) {
     .app-header {

@@ -892,6 +892,26 @@
     }
 }
 
+/* Portrait mobile - more compact spacing */
+@media (max-width: 480px) {
+    .compact-workout-form .form-row {
+        gap: var(--spacing-xs);
+    }
+
+    .compact-workout-form input,
+    .compact-workout-form select {
+        height: 42px;
+        padding: 0 var(--spacing-sm);
+        font-size: 0.9rem;
+    }
+
+    .btn-icon {
+        width: 42px;
+        height: 42px;
+        font-size: 1.25rem;
+    }
+}
+
 /* ================================================== */
 /* VIEW TOGGLE BUTTONS (Chart/Table)                  */
 /* ================================================== */
@@ -1036,5 +1056,18 @@
 
     .stats-table-container::before {
         font-size: 1.2rem;
+    }
+}
+
+/* Portrait mobile - more compact table */
+@media (max-width: 480px) {
+    .stats-summary-table th,
+    .stats-summary-table td {
+        padding: var(--spacing-xs) 0.3rem;
+        font-size: 0.7rem;
+    }
+    
+    .exercise-name-cell {
+        max-width: 100px;
     }
 }

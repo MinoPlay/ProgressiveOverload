@@ -1,6 +1,12 @@
 {
   "exercises": [
     {
+      "id": "1770128780584_yvc249ggy",
+      "name": "Around the world",
+      "equipmentType": "kettlebell",
+      "requiresWeight": true
+    },
+    {
       "id": "1769598356910_assistpullup",
       "name": "Assisted Pull-ups",
       "equipmentType": "machines",
@@ -181,8 +187,8 @@
       "requiresWeight": true
     },
     {
-      "id": "1770128780584_yvc249ggy",
-      "name": "Around the world",
+      "id": "1770129543414_0ta8erxpi",
+      "name": "Goblet squats",
       "equipmentType": "kettlebell",
       "requiresWeight": true
     }

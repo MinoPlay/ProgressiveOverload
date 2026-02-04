@@ -145,6 +145,12 @@
       "requiresWeight": true
     },
     {
+      "id": "1770183066002_whlo1n7y7",
+      "name": "Low row",
+      "equipmentType": "machines",
+      "requiresWeight": true
+    },
+    {
       "id": "1769759085099_6xqb1io2v",
       "name": "Neck Harness",
       "equipmentType": "bodyweight+",
@@ -199,9 +205,9 @@
       "requiresWeight": true
     },
     {
-      "id": "1770183066002_whlo1n7y7",
-      "name": "Low row",
-      "equipmentType": "machines",
+      "id": "1770183966156_6whslwg5f",
+      "name": "Bent over shoulder raises",
+      "equipmentType": "dumbbell",
       "requiresWeight": true
     }
   ]

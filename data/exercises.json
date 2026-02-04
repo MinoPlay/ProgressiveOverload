@@ -103,6 +103,12 @@
       "requiresWeight": true
     },
     {
+      "id": "1770129543414_0ta8erxpi",
+      "name": "Goblet squats",
+      "equipmentType": "kettlebell",
+      "requiresWeight": true
+    },
+    {
       "id": "1769598356920_hipthrust",
       "name": "Hip Thrust",
       "equipmentType": "barbell",
@@ -187,9 +193,9 @@
       "requiresWeight": true
     },
     {
-      "id": "1770129543414_0ta8erxpi",
-      "name": "Goblet squats",
-      "equipmentType": "kettlebell",
+      "id": "1770182681432_b4c3ijz9x",
+      "name": "Inclined barbell press",
+      "equipmentType": "barbell",
       "requiresWeight": true
     }
   ]

@@ -8,9 +8,11 @@ export const CONFIG = {
     // Set to 'true' for local testing with dummy data (no GitHub required)
     // Set to 'false' for production (uses GitHub API)
     // 
-    // ⚠️  IMPORTANT: Must be 'false' when deploying to production!
+    // 🧂 Automatically detects local environment
     // ═══════════════════════════════════════════════════════════════
-    devMode: false,
+    devMode: window.location.hostname === 'localhost' ||
+        window.location.hostname === '127.0.0.1' ||
+        window.location.protocol === 'file:',
 
     // GitHub Configuration
     github: {

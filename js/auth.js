@@ -1,7 +1,7 @@
 // Authentication Module
 // Handles GitHub Personal Access Token storage
 
-import { CONFIG } from './config.js';
+import { CONFIG, getConfig } from './config.js';
 
 export const Auth = {
     /**
@@ -9,8 +9,13 @@ export const Auth = {
      * @returns {string|null} The stored token or null
      */
     getToken() {
+        const config = getConfig();
+        if (config.token) {
+            return config.token;
+        }
         return localStorage.getItem(CONFIG.storage.authKey);
     },
+
 
     /**
      * Store token in localStorage
@@ -53,7 +58,7 @@ export const Auth = {
             '2. Generate new token (classic) with "repo" scope\n' +
             '3. Copy and paste it here'
         );
-        
+
         if (token && token.trim()) {
             try {
                 this.setToken(token.trim());

@@ -2,12 +2,22 @@
 // Handles all interactions with GitHub REST API v3
 
 import { Auth } from './auth.js';
+import { getConfig, CONFIG } from './config.js';
 
-const GITHUB_API = 'https://api.github.com';
-const REPO_OWNER = 'MinoPlay';
-const REPO_NAME = 'ProgressiveOverload';
 
 export const GitHubAPI = {
+    /**
+     * Get current repository configuration
+     * @returns {object} {owner, repo}
+     */
+    getRepoInfo() {
+        const userConfig = getConfig();
+        return {
+            owner: userConfig.owner || CONFIG.github.owner,
+            repo: userConfig.repo || CONFIG.github.repo
+        };
+    },
+
     /**
      * Get common headers for API requests
      * @returns {object} Headers object
@@ -27,8 +37,9 @@ export const GitHubAPI = {
      */
     async listFiles(path) {
         try {
+            const { owner, repo } = this.getRepoInfo();
             const response = await fetch(
-                `${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`,
+                `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`,
                 { headers: this.getHeaders() }
             );
 
@@ -51,14 +62,15 @@ export const GitHubAPI = {
      */
     async getFile(path, silent = false) {
         try {
+            const { owner, repo } = this.getRepoInfo();
             const response = await fetch(
-                `${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`,
+                `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`,
                 { headers: this.getHeaders() }
             );
 
             if (response.status === 404) {
                 // File doesn't exist yet - this is normal for months without workouts
-                if (!silent && !path.includes('workouts-')) {
+                if (!silent && !path.includes(CONFIG.paths.workoutsPrefix)) {
                     console.log(`File not found: ${path}`);
                 }
                 return null;
@@ -69,10 +81,10 @@ export const GitHubAPI = {
             }
 
             const data = await response.json();
-            
+
             // Decode base64 content
             const content = JSON.parse(atob(data.content));
-            
+
             return {
                 content,
                 sha: data.sha
@@ -93,6 +105,7 @@ export const GitHubAPI = {
      */
     async putFile(path, content, message, sha = null) {
         try {
+            const { owner, repo } = this.getRepoInfo();
             // Encode content to base64
             const encodedContent = btoa(JSON.stringify(content, null, 2));
 
@@ -107,7 +120,7 @@ export const GitHubAPI = {
             }
 
             const response = await fetch(
-                `${GITHUB_API}/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`,
+                `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`,
                 {
                     method: 'PUT',
                     headers: this.getHeaders(),
@@ -134,8 +147,8 @@ export const GitHubAPI = {
      * @returns {Promise<{exercises: array, sha: string}>}
      */
     async getExercises() {
-        const result = await this.getFile('data/exercises.json');
-        
+        const result = await this.getFile(CONFIG.paths.exercises);
+
         if (!result) {
             // Return empty structure if file doesn't exist
             return {
@@ -160,13 +173,13 @@ export const GitHubAPI = {
         // WARNING: This file accepts unlimited growth. 
         // If you create hundreds of exercises, it may eventually exceed 
         // GitHub's 1MB API limit. For typical use (50-100 exercises), this won't be an issue.
-        
+
         const content = { exercises };
-        const message = sha 
+        const message = sha
             ? `Update exercises (${exercises.length} total)`
             : 'Initialize exercises';
 
-        return await this.putFile('data/exercises.json', content, message, sha);
+        return await this.putFile(CONFIG.paths.exercises, content, message, sha);
     },
 
     /**
@@ -177,7 +190,7 @@ export const GitHubAPI = {
     getWorkoutFilePath(date) {
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
-        return `data/workouts-${year}-${month}.json`;
+        return `${CONFIG.paths.workoutsPrefix}${year}-${month}.json`;
     },
 
     /**
@@ -188,7 +201,7 @@ export const GitHubAPI = {
     async getWorkouts(date) {
         const path = this.getWorkoutFilePath(date);
         const result = await this.getFile(path, true); // Silent mode for workouts
-        
+
         if (!result) {
             // Return empty structure if file doesn't exist
             return {
@@ -215,10 +228,10 @@ export const GitHubAPI = {
     async saveWorkouts(date, workouts, sha = null) {
         const path = this.getWorkoutFilePath(date);
         const content = { workouts };
-        
+
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
-        const message = sha 
+        const message = sha
             ? `Update workouts for ${year}-${month}`
             : `Initialize workouts for ${year}-${month}`;
 
@@ -233,37 +246,42 @@ export const GitHubAPI = {
      */
     async getWorkoutsInRange(startDate, endDate) {
         // First, list all files in the data folder
-        const files = await this.listFiles('data');
-        
-        // Filter to only workout files (workouts-YYYY-MM.json)
+        const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/'));
+        const files = await this.listFiles(dataPath || 'data');
+
+        // Filter to only workout files
+        const prefix = CONFIG.paths.workoutsPrefix.split('/').pop();
         const workoutFiles = files
-            .filter(file => file.name.startsWith('workouts-') && file.name.endsWith('.json'))
+            .filter(file => file.name.startsWith(prefix) && file.name.endsWith('.json'))
             .map(file => file.name);
-        
+
         // Parse the dates from filenames and filter by range
+        const regex = new RegExp(`${prefix}(\\d{4})-(\\d{2})\\.json`);
         const relevantFiles = workoutFiles.filter(filename => {
-            const match = filename.match(/workouts-(\d{4})-(\d{2})\.json/);
+            const match = filename.match(regex);
             if (!match) return false;
-            
+
+
             const year = parseInt(match[1]);
             const month = parseInt(match[2]);
             const fileDate = new Date(year, month - 1, 1);
-            
+
             const rangeStart = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
             const rangeEnd = new Date(endDate.getFullYear(), endDate.getMonth(), 1);
-            
+
             return fileDate >= rangeStart && fileDate <= rangeEnd;
         });
-        
+
         // Fetch only the files that exist
         const workouts = [];
         for (const filename of relevantFiles) {
             try {
-                const match = filename.match(/workouts-(\d{4})-(\d{2})\.json/);
+                const match = filename.match(regex);
                 const year = parseInt(match[1]);
+
                 const month = parseInt(match[2]);
                 const date = new Date(year, month - 1, 1);
-                
+
                 const monthData = await this.getWorkouts(date);
                 workouts.push(...monthData.workouts);
             } catch (error) {
@@ -281,7 +299,7 @@ export const GitHubAPI = {
     async getRateLimit() {
         try {
             const response = await fetch(
-                `${GITHUB_API}/rate_limit`,
+                `${CONFIG.github.apiUrl}/rate_limit`,
                 { headers: this.getHeaders() }
             );
 

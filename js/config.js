@@ -136,14 +136,15 @@ window.saveConfig = function () {
     }
 
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
-    showStatus('Configuration saved!', 'success');
+    showStatus('Configuration saved! Reloading...', 'success');
     document.getElementById('config-section').classList.add('collapsed');
 
-    // Reload data with new configuration
-    if (typeof loadData === 'function') {
-        loadData();
-    }
+    // Reload the page to apply new configuration
+    setTimeout(() => {
+        location.reload();
+    }, 1000);
 };
+
 
 /**
  * Toggle configuration panel visibility

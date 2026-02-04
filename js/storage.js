@@ -363,18 +363,24 @@ export const Storage = {
 
         // 2. If not found, look at other files in data directory
         try {
-            const files = await GitHubAPI.listFiles('data');
+            const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/')) || 'data';
+            const files = await GitHubAPI.listFiles(dataPath);
+
+            const prefix = CONFIG.paths.workoutsPrefix.split('/').pop();
             const workoutFiles = files
-                .filter(file => file.name.startsWith('workouts-') && file.name.endsWith('.json'))
+                .filter(file => file.name.startsWith(prefix) && file.name.endsWith('.json'))
                 .map(file => file.name)
                 .sort((a, b) => b.localeCompare(a)); // Sort descending (newest first)
 
             const currentMonthFile = GitHubAPI.getWorkoutFilePath(new Date()).split('/').pop();
             const olderFiles = workoutFiles.filter(f => f !== currentMonthFile);
 
+            const regex = new RegExp(`${prefix}(\\d{4})-(\\d{2})\\.json`);
+
             for (let i = 0; i < Math.min(olderFiles.length, 6); i++) {
                 const filename = olderFiles[i];
-                const match = filename.match(/workouts-(\d{4})-(\d{2})\.json/);
+                const match = filename.match(regex);
+
                 if (!match) continue;
 
                 const date = new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1);

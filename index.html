@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -8,6 +9,7 @@
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/styles.css">
 </head>
+
 <body>
     <!-- Main Application -->
     <div id="app" style="display: none;">
@@ -20,14 +22,18 @@
 
         <!-- Navigation -->
         <nav class="app-nav" role="navigation" aria-label="Main navigation">
-            <button class="nav-btn active" data-section="workout" aria-label="Navigate to Log Workout section" aria-current="page">Log Workout</button>
+            <button class="nav-btn active" data-section="workout" aria-label="Navigate to Log Workout section"
+                aria-current="page">Log Workout</button>
             <button class="nav-btn" data-section="history" aria-label="Navigate to History section">History</button>
-            <button class="nav-btn" data-section="statistics" aria-label="Navigate to Statistics section">Statistics</button>
-            <button class="nav-btn" data-section="exercises" aria-label="Navigate to Manage Exercises section">Manage Exercises</button>
+            <button class="nav-btn" data-section="statistics"
+                aria-label="Navigate to Statistics section">Statistics</button>
+            <button class="nav-btn" data-section="exercises" aria-label="Navigate to Manage Exercises section">Manage
+                Exercises</button>
         </nav>
 
         <!-- Loading Indicator -->
-        <div id="loadingIndicator" class="loading" style="display: none;" role="status" aria-live="polite" aria-label="Loading content">
+        <div id="loadingIndicator" class="loading" style="display: none;" role="status" aria-live="polite"
+            aria-label="Loading content">
             <div class="spinner" aria-hidden="true"></div>
             <p>Loading...</p>
         </div>
@@ -42,7 +48,8 @@
                     <button onclick="setMode('github')" class="mode-btn" id="mode-github">🐙 GitHub Mode</button>
                 </div>
                 <div class="config-form" id="github-config">
-                    <input type="password" id="github-token" placeholder="GitHub Personal Access Token" autocomplete="off">
+                    <input type="password" id="github-token" placeholder="GitHub Personal Access Token"
+                        autocomplete="off">
                     <input type="text" id="repo-owner" placeholder="GitHub Username" autocomplete="off">
                     <input type="text" id="repo-name" placeholder="Repository Name" autocomplete="off">
                     <button onclick="saveConfig()" class="btn-save">Save Configuration</button>
@@ -52,7 +59,7 @@
                     <button onclick="clearLocalData()" class="btn-clear">🗑️ Clear All Data</button>
                 </div>
                 <p class="config-help" id="github-help">
-                    Create a token with 'repo' scope at 
+                    Create a token with 'repo' scope at
                     <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings</a>
                 </p>
                 <p class="config-help" id="local-help" style="display: none;">
@@ -61,10 +68,10 @@
             </section>
 
             <!-- Exercises Section -->
-            <section id="exercisesSection" class="content-section" role="region" aria-labelledby="exercises-heading">
+            <section id="exercisesSection" class="content-section" role="region" aria-label="Manage Exercises">
                 <div class="section-header">
-                    <h2 id="exercises-heading">Manage Exercises</h2>
-                    <button id="addExerciseBtn" class="btn btn-primary" aria-label="Add new exercise">+ Add New Exercise</button>
+                    <button id="addExerciseBtn" class="btn btn-primary" aria-label="Add new exercise">+ Add New
+                        Exercise</button>
                 </div>
 
                 <!-- Add/Edit Exercise Form -->
@@ -72,19 +79,13 @@
                     <h3 id="exerciseFormTitle">Add New Exercise</h3>
                     <form id="exerciseFormElement">
                         <input type="hidden" id="exerciseId">
-                        
+
                         <div class="form-group">
                             <label for="exerciseName">
                                 Exercise Name <span class="required" aria-label="required">*</span>
                             </label>
-                            <input 
-                                type="text" 
-                                id="exerciseName" 
-                                placeholder="e.g., Bench Press"
-                                required
-                                aria-required="true"
-                                maxlength="100"
-                            >
+                            <input type="text" id="exerciseName" placeholder="e.g., Bench Press" required
+                                aria-required="true" maxlength="100">
                         </div>
 
                         <div class="form-group">
@@ -114,10 +115,7 @@
             </section>
 
             <!-- Workout Section -->
-            <section id="workoutSection" class="content-section active" role="region" aria-labelledby="workout-heading">
-                <div class="section-header">
-                    <h2 id="workout-heading">Log Workout</h2>
-                </div>
+            <section id="workoutSection" class="content-section active" role="region" aria-label="Log Workout">
 
                 <div class="form-container">
                     <form id="workoutFormElement" class="compact-workout-form">
@@ -130,44 +128,27 @@
                             </div>
 
                             <div class="form-group">
-                                <input 
-                                    type="number" 
-                                    id="workoutReps" 
-                                    min="1" 
-                                    max="999" 
-                                    placeholder="Reps"
-                                    required
-                                    aria-required="true"
-                                    aria-label="Number of repetitions"
-                                >
+                                <input type="number" id="workoutReps" min="1" max="999" placeholder="Reps" required
+                                    aria-required="true" aria-label="Number of repetitions">
                             </div>
 
                             <div class="form-group" id="weightGroup">
-                                <input 
-                                    type="number" 
-                                    id="workoutWeight" 
-                                    min="0" 
-                                    step="any" 
-                                    placeholder="Weight (kg)"
-                                    aria-label="Weight in kilograms"
-                                >
+                                <input type="number" id="workoutWeight" min="0" step="any" placeholder="Weight (kg)"
+                                    aria-label="Weight in kilograms">
                             </div>
 
                             <div class="form-group">
-                                <input 
-                                    type="date" 
-                                    id="workoutDate" 
-                                    required
-                                    aria-required="true"
-                                    aria-label="Workout date"
-                                >
+                                <input type="date" id="workoutDate" required aria-required="true"
+                                    aria-label="Workout date">
                             </div>
 
                             <div class="form-actions-inline">
-                                <button type="submit" class="btn-icon btn-primary" title="Log Workout" aria-label="Log workout">
+                                <button type="submit" class="btn-icon btn-primary" title="Log Workout"
+                                    aria-label="Log workout">
                                     <span aria-hidden="true">✓</span>
                                 </button>
-                                <button type="button" id="clearWorkoutBtn" class="btn-icon btn-secondary" title="Clear Form" aria-label="Clear form">
+                                <button type="button" id="clearWorkoutBtn" class="btn-icon btn-secondary"
+                                    title="Clear Form" aria-label="Clear form">
                                     <span aria-hidden="true">✕</span>
                                 </button>
                             </div>
@@ -183,24 +164,20 @@
             </section>
 
             <!-- History Section -->
-            <section id="historySection" class="content-section" role="region" aria-labelledby="history-heading">
-                <div class="section-header">
-                    <h2 id="history-heading">Workout History</h2>
-                </div>
+            <section id="historySection" class="content-section" role="region" aria-label="Workout History">
                 <div id="historyContent" class="history-container"></div>
             </section>
 
             <!-- Statistics Section -->
-            <section id="statisticsSection" class="content-section" role="region" aria-labelledby="statistics-heading">
-                <div class="section-header">
-                    <h2 id="statistics-heading">Statistics & Progress</h2>
-                </div>
+            <section id="statisticsSection" class="content-section" role="region" aria-label="Statistics & Progress">
 
                 <!-- Exercise Selection Controls -->
                 <div id="exerciseSelection" class="comparison-controls">
                     <div class="comparison-header">
                         <h3 id="exerciseSelectorToggle" style="cursor: pointer; user-select: none;">
-                            <span class="chevron" style="display: inline-block; transition: transform 0.3s ease;">▼</span> Select Exercises to View
+                            <span class="chevron"
+                                style="display: inline-block; transition: transform 0.3s ease;">▼</span> Select
+                            Exercises to View
                         </h3>
                         <button id="toggleAllExercises" class="btn btn-small btn-secondary">Select All</button>
                     </div>
@@ -211,8 +188,10 @@
 
                 <!-- Chart Section with Collapsible Header -->
                 <div id="chartSection" style="margin-top: 20px;">
-                    <h3 id="chartToggle" style="cursor: pointer; user-select: none; padding: 10px; background: #f5f5f5; border-radius: 4px;">
-                        <span class="chevron" style="display: inline-block; transition: transform 0.3s ease;">▼</span> Progress Chart
+                    <h3 id="chartToggle"
+                        style="cursor: pointer; user-select: none; padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                        <span class="chevron" style="display: inline-block; transition: transform 0.3s ease;">▼</span>
+                        Progress Chart
                     </h3>
                     <div id="statsContent">
                         <!-- Exercise Sub-Tabs for All Exercises -->
@@ -230,15 +209,18 @@
         </main>
 
         <!-- Toast Notifications -->
-        <div id="toastContainer" class="toast-container" role="region" aria-live="polite" aria-label="Notifications"></div>
+        <div id="toastContainer" class="toast-container" role="region" aria-live="polite" aria-label="Notifications">
+        </div>
     </div>
 
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
 
     <!-- Application Scripts -->
     <script type="module" src="js/app.js"></script>
 </body>
+
 </html>

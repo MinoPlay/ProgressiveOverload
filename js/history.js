@@ -26,7 +26,7 @@ export const History = {
      */
     async renderDailyHistory() {
         const container = document.getElementById('historyContent');
-        
+
         try {
             showLoading(true);
 
@@ -93,10 +93,10 @@ export const History = {
         // Date header
         const header = document.createElement('div');
         header.className = 'history-date-header';
-        
+
         const dateTitle = document.createElement('h3');
         dateTitle.textContent = this.formatDateHeader(date);
-        
+
         // Group workouts by exercise
         const exerciseGroups = new Map();
         for (const workout of workouts) {
@@ -105,11 +105,11 @@ export const History = {
             }
             exerciseGroups.get(workout.exerciseId).push(workout);
         }
-        
+
         const exerciseCount = document.createElement('span');
         exerciseCount.className = 'workout-count';
         exerciseCount.textContent = `${exerciseGroups.size} exercise${exerciseGroups.size !== 1 ? 's' : ''}`;
-        
+
         header.appendChild(dateTitle);
         header.appendChild(exerciseCount);
         group.appendChild(header);
@@ -149,7 +149,7 @@ export const History = {
      */
     createGroupedExerciseItem(date, exerciseId, workouts, displayOrder) {
         const exercise = Storage.getExerciseById(exerciseId);
-        
+
         const item = document.createElement('div');
         item.className = 'history-exercise-group';
         item.dataset.date = date;
@@ -178,25 +178,140 @@ export const History = {
         title.textContent = exercise ? exercise.name : 'Unknown Exercise';
         header.appendChild(title);
 
-        // Format sets in compact notation
-        const setsText = document.createElement('span');
-        setsText.className = 'sets-compact';
-        
-        // Build compact set notation (e.g., "11x60 12x60 12x60" or "10x 20x 30x")
-        const setNotations = workouts.map(workout => {
-            if (workout.weight) {
-                return `${workout.reps}x${workout.weight}`;
-            } else {
-                return `${workout.reps}x`;
-            }
-        });
-        
-        setsText.textContent = setNotations.join(' ');
-        header.appendChild(setsText);
+        const setCount = document.createElement('span');
+        setCount.className = 'set-count';
+        setCount.textContent = `${workouts.length} set${workouts.length !== 1 ? 's' : ''}`;
+        header.appendChild(setCount);
 
         item.appendChild(header);
 
+        // Sets list
+        const setsList = document.createElement('div');
+        setsList.className = 'sets-list';
+
+        workouts.forEach((workout, index) => {
+            const setItem = document.createElement('div');
+            setItem.className = 'set-item';
+            setItem.dataset.workoutId = workout.id;
+
+            const setNum = document.createElement('span');
+            setNum.className = 'set-number';
+            setNum.textContent = `Set ${index + 1}`;
+            setItem.appendChild(setNum);
+
+            const setDetails = document.createElement('span');
+            setDetails.className = 'set-details';
+            setDetails.textContent = workout.weight
+                ? `${workout.reps} reps × ${workout.weight} kg`
+                : `${workout.reps} reps`;
+            setItem.appendChild(setDetails);
+
+            // Actions container
+            const actions = document.createElement('div');
+            actions.className = 'set-actions';
+            actions.style.marginLeft = 'auto';
+            actions.style.display = 'flex';
+            actions.style.gap = 'var(--spacing-xs)';
+
+            const editBtn = document.createElement('button');
+            editBtn.className = 'btn-icon btn-small btn-secondary';
+            editBtn.innerHTML = '✎';
+            editBtn.title = 'Edit Set';
+            editBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.handleEditWorkout(workout);
+            };
+
+            const deleteBtn = document.createElement('button');
+            deleteBtn.className = 'btn-icon btn-small btn-secondary';
+            deleteBtn.innerHTML = '🗑';
+            deleteBtn.title = 'Delete Set';
+            deleteBtn.style.color = 'var(--error-color)';
+            deleteBtn.onclick = (e) => {
+                e.stopPropagation();
+                this.handleDeleteWorkout(workout);
+            };
+
+            actions.appendChild(editBtn);
+            actions.appendChild(deleteBtn);
+            setItem.appendChild(actions);
+
+            setsList.appendChild(setItem);
+        });
+
+        item.appendChild(setsList);
+
         return item;
+    },
+
+    /**
+     * Handle editing a workout entry
+     * @param {object} workout - Workout object to edit
+     */
+    async handleEditWorkout(workout) {
+        const newReps = prompt('Enter new reps:', workout.reps);
+        if (newReps === null) return;
+
+        const reps = parseInt(newReps, 10);
+        if (isNaN(reps) || reps <= 0) {
+            showToast('Please enter a valid number of reps', 'error');
+            return;
+        }
+
+        let weight = workout.weight;
+        const exercise = Storage.getExerciseById(workout.exerciseId);
+
+        if (exercise && exercise.requiresWeight) {
+            const newWeight = prompt('Enter new weight (kg):', workout.weight || '');
+            if (newWeight === null) return;
+            weight = newWeight === '' ? null : parseFloat(newWeight);
+            if (newWeight !== '' && (isNaN(weight) || weight < 0)) {
+                showToast('Please enter a valid weight', 'error');
+                return;
+            }
+        }
+
+        try {
+            showLoading(true);
+            await Storage.updateWorkout(workout.id, workout.date, { reps, weight });
+
+            // Dispatch event to update other components
+            window.dispatchEvent(new CustomEvent('workoutsUpdated'));
+
+            await this.renderDailyHistory();
+            showToast('Workout updated successfully', 'success');
+        } catch (error) {
+            console.error('Error updating workout:', error);
+            showToast(`Failed to update: ${error.message}`, 'error');
+        } finally {
+            showLoading(false);
+        }
+    },
+
+    /**
+     * Handle deleting a workout entry
+     * @param {object} workout - Workout object to delete
+     */
+    async handleDeleteWorkout(workout) {
+        if (!confirm('Are you sure you want to delete this set?')) {
+            return;
+        }
+
+        try {
+            showLoading(true);
+            await Storage.deleteWorkout(workout.id, workout.date);
+
+            // Dispatch event to update other components (like Statistics)
+            window.dispatchEvent(new CustomEvent('workoutsUpdated'));
+
+            await this.renderDailyHistory();
+            showToast('Workout deleted successfully', 'success');
+        } catch (error) {
+            console.error('Error deleting workout:', error);
+            showToast(`Failed to delete: ${error.message}`, 'error');
+        } finally {
+            showLoading(false);
+        }
     },
 
     /**
@@ -207,7 +322,7 @@ export const History = {
      */
     createHistoryWorkoutItem(workout) {
         const exercise = Storage.getExerciseById(workout.exerciseId);
-        
+
         const item = document.createElement('div');
         item.className = 'history-workout-item';
         item.draggable = true;
@@ -268,7 +383,7 @@ export const History = {
         const date = new Date(dateStr + 'T00:00:00');
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        
+
         const yesterday = new Date(today);
         yesterday.setDate(yesterday.getDate() - 1);
 
@@ -301,7 +416,7 @@ export const History = {
     handleDragOver(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        
+
         const item = e.currentTarget;
         if (item.dataset.date === this.draggedDate) {
             item.classList.add('drag-over');
@@ -336,14 +451,14 @@ export const History = {
             // Get all workouts for this date
             const list = item.parentElement;
             const workoutItems = Array.from(list.querySelectorAll('.history-workout-item'));
-            
+
             // Get current order of workout IDs
             const currentOrder = workoutItems.map(el => el.dataset.workoutId);
-            
+
             // Remove dragged workout from its current position
             const draggedIndex = currentOrder.indexOf(this.draggedWorkout.id);
             currentOrder.splice(draggedIndex, 1);
-            
+
             // Insert at new position
             const targetIndex = currentOrder.indexOf(targetWorkout.id);
             currentOrder.splice(targetIndex, 0, this.draggedWorkout.id);
@@ -371,7 +486,7 @@ export const History = {
         document.querySelectorAll('.history-workout-item').forEach(item => {
             item.classList.remove('dragging', 'drag-over');
         });
-        
+
         this.draggedWorkout = null;
         this.draggedDate = null;
     },
@@ -396,7 +511,7 @@ export const History = {
     handleExerciseGroupDragOver(e) {
         e.preventDefault();
         e.dataTransfer.dropEffect = 'move';
-        
+
         const item = e.currentTarget;
         if (item.dataset.date === this.draggedDate && item.dataset.exerciseId !== this.draggedExerciseId) {
             item.classList.add('drag-over');
@@ -433,7 +548,7 @@ export const History = {
             const dateObj = new Date(date + 'T00:00:00');
             const allWorkouts = await Storage.getWorkoutsInRange(dateObj, dateObj);
             const workoutsForDate = allWorkouts.filter(w => w.date === date);
-            
+
             // Group by exercise
             const exerciseGroups = new Map();
             for (const workout of workoutsForDate) {
@@ -451,7 +566,7 @@ export const History = {
             // Remove dragged exercise from its current position
             const draggedIndex = currentOrder.indexOf(this.draggedExerciseId);
             currentOrder.splice(draggedIndex, 1);
-            
+
             // Insert at new position
             const targetIndex = currentOrder.indexOf(targetExerciseId);
             currentOrder.splice(targetIndex, 0, this.draggedExerciseId);
@@ -459,17 +574,17 @@ export const History = {
             // Build new workout order with updated sequences
             const newWorkoutOrder = [];
             let sequenceCounter = 1;
-            
+
             for (const exerciseId of currentOrder) {
                 const workouts = exerciseGroups.get(exerciseId);
                 if (!workouts) {
                     console.warn(`No workouts found for exercise ${exerciseId} on ${date}`);
                     continue;
                 }
-                
+
                 // Sort workouts within exercise by their current sequence
                 workouts.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
-                
+
                 for (const workout of workouts) {
                     newWorkoutOrder.push({
                         id: workout.id,
@@ -506,7 +621,7 @@ export const History = {
         document.querySelectorAll('.history-exercise-group').forEach(item => {
             item.classList.remove('dragging', 'drag-over');
         });
-        
+
         // Don't clear draggedExerciseId and draggedDate here
         // They are cleared in handleExerciseGroupDrop after the drop completes
     }

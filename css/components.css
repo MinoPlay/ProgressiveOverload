@@ -210,12 +210,35 @@
     background: var(--bg-secondary);
 }
 
-.equipment-badge.barbell { background: #fff3e0; color: #f57c00; }
-.equipment-badge.dumbbell { background: #e8f5e9; color: #388e3c; }
-.equipment-badge.kettlebell { background: #fce4ec; color: #c2185b; }
-.equipment-badge.machines { background: #f3e5f5; color: #7b1fa2; }
-.equipment-badge.bodyweight { background: #e0f2f1; color: #00796b; }
-.equipment-badge.bodyweight-plus { background: #e1f5fe; color: #0277bd; }
+.equipment-badge.barbell {
+    background: #fff3e0;
+    color: #f57c00;
+}
+
+.equipment-badge.dumbbell {
+    background: #e8f5e9;
+    color: #388e3c;
+}
+
+.equipment-badge.kettlebell {
+    background: #fce4ec;
+    color: #c2185b;
+}
+
+.equipment-badge.machines {
+    background: #f3e5f5;
+    color: #7b1fa2;
+}
+
+.equipment-badge.bodyweight {
+    background: #e0f2f1;
+    color: #00796b;
+}
+
+.equipment-badge.bodyweight-plus {
+    background: #e1f5fe;
+    color: #0277bd;
+}
 
 /* Workout Items */
 .workout-item {
@@ -494,8 +517,13 @@
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 /* Error Message */
@@ -547,6 +575,7 @@
         transform: translateX(400px);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
@@ -567,6 +596,7 @@
 
 /* Responsive Adjustments */
 @media (max-width: 768px) {
+
     /* Increase all button sizes for thumb-friendly touch */
     .btn {
         padding: 1rem 1.5rem;
@@ -910,6 +940,29 @@
     align-items: center;
     gap: var(--spacing-sm);
     padding: 0.2rem 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.set-item:last-child {
+    border-bottom: none;
+}
+
+.set-actions {
+    display: flex;
+    gap: 4px;
+    opacity: 0.6;
+    transition: opacity var(--transition-fast);
+}
+
+.set-item:hover .set-actions {
+    opacity: 1;
+}
+
+.btn-icon.btn-small {
+    width: 32px;
+    height: 32px;
+    font-size: 0.9rem;
+    min-height: unset;
 }
 
 .set-number {
@@ -1122,12 +1175,13 @@
 
 /* Portrait mobile - more compact table */
 @media (max-width: 480px) {
+
     .stats-summary-table th,
     .stats-summary-table td {
         padding: var(--spacing-xs) 0.3rem;
         font-size: 0.7rem;
     }
-    
+
     .exercise-name-cell {
         max-width: 100px;
     }
@@ -1295,8 +1349,54 @@
     .mode-toggle {
         flex-direction: column;
     }
-    
+
     .local-controls {
         flex-direction: column;
     }
+}
+
+/* Last Workout Info Badge */
+.last-workout-info {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    background: var(--primary-light);
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-radius: var(--radius-md);
+    margin-top: var(--spacing-sm);
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-xs);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    animation: fadeIn var(--transition-fast) ease;
+    width: 100%;
+}
+
+.last-workout-info .label {
+    font-weight: 700;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    font-size: 0.65rem;
+    letter-spacing: 0.05em;
+}
+
+.last-workout-info .value {
+    color: var(--text-primary);
+    font-weight: 500;
+}
+.sets-list {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+}
+
+.set-badge {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    padding: 2px 8px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+    font-weight: 600;
+    font-size: 0.85rem;
+    box-shadow: var(--shadow-sm);
 }

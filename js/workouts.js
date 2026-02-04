@@ -20,6 +20,11 @@ export const Workouts = {
         window.addEventListener('exercisesUpdated', () => {
             this.populateExerciseDropdown();
         });
+
+        // Listen for workout updates
+        window.addEventListener('workoutsUpdated', () => {
+            this.renderRecentWorkouts();
+        });
     },
 
     /**
@@ -31,7 +36,7 @@ export const Workouts = {
         const clearBtn = document.getElementById('clearWorkoutBtn');
 
         form.addEventListener('submit', (e) => this.handleSubmit(e));
-        
+
         // Show/hide weight field based on exercise selection
         exerciseSelect.addEventListener('change', () => {
             this.updateWeightField();
@@ -66,7 +71,7 @@ export const Workouts = {
     },
 
     /**
-     * Update weight field visibility based on selected exercise
+     * Update weight field visibility and show last workout info based on selected exercise
      */
     updateWeightField() {
         const select = document.getElementById('workoutExercise');
@@ -85,6 +90,72 @@ export const Workouts = {
                 weightInput.required = false;
                 weightInput.value = '';
             }
+
+            // Show last workout info
+            this.updateLastWorkoutInfo(select.value);
+        } else {
+            // Hide last workout info if no exercise selected
+            const infoContainer = document.getElementById('lastWorkoutInfo');
+            if (infoContainer) infoContainer.style.display = 'none';
+        }
+    },
+
+    /**
+     * Show compact last workout info for the selected exercise
+     * @param {string} exerciseId - Selected exercise ID
+     */
+    async updateLastWorkoutInfo(exerciseId) {
+        const infoContainer = document.getElementById('lastWorkoutInfo');
+        if (!infoContainer) return;
+
+        // Reset and show loading state if it takes a moment
+        infoContainer.innerHTML = '<span class="label">Loading last session...</span>';
+        infoContainer.style.display = 'inline-flex';
+
+        try {
+            const lastSession = await Storage.getLastWorkoutSessionForExercise(exerciseId);
+
+            if (!lastSession || lastSession.length === 0) {
+                infoContainer.style.display = 'none';
+                return;
+            }
+
+            infoContainer.innerHTML = '';
+            infoContainer.style.display = 'inline-flex';
+            infoContainer.style.flexWrap = 'wrap';
+
+            const label = document.createElement('span');
+            label.className = 'label';
+            label.textContent = 'Last Session: ';
+            infoContainer.appendChild(label);
+
+            const setsContainer = document.createElement('div');
+            setsContainer.className = 'sets-list';
+            setsContainer.style.display = 'flex';
+            setsContainer.style.gap = 'var(--spacing-xs)';
+            setsContainer.style.flexWrap = 'wrap';
+
+            lastSession.forEach((set, index) => {
+                const setBadge = document.createElement('span');
+                setBadge.className = 'set-badge';
+
+                let text = `${set.reps}`;
+                if (set.weight) {
+                    text += `@${set.weight}kg`;
+                }
+
+                setBadge.textContent = text;
+                setsContainer.appendChild(setBadge);
+            });
+
+            infoContainer.appendChild(setsContainer);
+
+            // Add date and total sets as hover title
+            const lastDate = lastSession[0].date;
+            infoContainer.title = `${lastSession.length} sets on ${lastDate}`;
+        } catch (error) {
+            console.error('Error updating last workout info:', error);
+            infoContainer.style.display = 'none';
         }
     },
 
@@ -123,9 +194,9 @@ export const Workouts = {
 
         // Validate reps
         const repsValidation = validateNumber(
-            reps, 
-            CONFIG.limits.minReps, 
-            CONFIG.limits.maxReps, 
+            reps,
+            CONFIG.limits.minReps,
+            CONFIG.limits.maxReps,
             'Reps'
         );
         if (!repsValidation.valid) {
@@ -136,9 +207,9 @@ export const Workouts = {
         // Validate weight if provided
         if (weight) {
             const weightValidation = validateNumber(
-                weight, 
-                CONFIG.limits.minWeight, 
-                CONFIG.limits.maxWeight, 
+                weight,
+                CONFIG.limits.minWeight,
+                CONFIG.limits.maxWeight,
                 'Weight'
             );
             if (!weightValidation.valid) {
@@ -156,15 +227,15 @@ export const Workouts = {
             };
 
             await Storage.addWorkout(workout);
-            
+
             const exercise = Storage.getExerciseById(exerciseId);
             showToast(`Workout logged: ${exercise.name}`, 'success');
 
             // Don't reset form - keep fields for quick re-logging
             this.renderRecentWorkouts();
 
-            // Update weight field visibility
-            document.getElementById('weightGroup').style.display = 'block';
+            // Refresh UI and show last workout info
+            this.updateWeightField();
         } catch (error) {
             showToast(error.message, 'error');
         }
@@ -200,7 +271,7 @@ export const Workouts = {
 
         // Clear and rebuild with safe DOM methods
         container.innerHTML = '';
-        
+
         // Show all workouts with repeat functionality
         workouts.forEach(workout => {
             const item = this.createWorkoutItemWithRepeat(workout);
@@ -215,7 +286,7 @@ export const Workouts = {
      */
     createWorkoutItemWithRepeat(workout) {
         const exercise = Storage.getExerciseById(workout.exerciseId);
-        
+
         const item = document.createElement('div');
         item.className = 'workout-item fade-in workout-item-quick';
 
@@ -223,7 +294,7 @@ export const Workouts = {
         header.className = 'workout-item-header';
 
         const titleContainer = document.createElement('div');
-        
+
         const title = document.createElement('h4');
         title.textContent = exercise ? exercise.name : 'Unknown Exercise';
 
@@ -259,7 +330,7 @@ export const Workouts = {
         repeatBtn.textContent = '🔁 Repeat';
         repeatBtn.setAttribute('aria-label', `Repeat workout: ${exercise ? exercise.name : 'Unknown'}`);
         repeatBtn.addEventListener('click', () => this.repeatWorkout(workout));
-        
+
         const btnContainer = document.createElement('div');
         btnContainer.style.marginTop = 'var(--spacing-md)';
         btnContainer.appendChild(repeatBtn);
@@ -279,13 +350,13 @@ export const Workouts = {
         // Pre-fill form
         document.getElementById('workoutExercise').value = workout.exerciseId;
         document.getElementById('workoutReps').value = workout.reps;
-        
+
         // Update weight field visibility and value
         this.updateWeightField();
         if (workout.weight) {
             document.getElementById('workoutWeight').value = workout.weight;
         }
-        
+
         // Set today's date by default
         this.setDefaultDate();
 
@@ -303,7 +374,7 @@ export const Workouts = {
      */
     createWorkoutItem(workout) {
         const exercise = Storage.getExerciseById(workout.exerciseId);
-        
+
         const item = document.createElement('div');
         item.className = 'workout-item fade-in';
 

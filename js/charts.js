@@ -22,7 +22,12 @@ export const Charts = {
         window.addEventListener('exercisesUpdated', () => {
             this.renderCombinedChart();
         });
-        
+
+        // Listen for workout updates
+        window.addEventListener('workoutsUpdated', () => {
+            this.renderCombinedChart();
+        });
+
         // Set up collapsible chart
         this.setupCollapsibleChart();
     },
@@ -42,7 +47,7 @@ export const Charts = {
         // Remove all children
         statsContent.innerHTML = '';
         const exercises = Storage.getExercises();
-        
+
         if (!exercises.length) {
             if (noStatsMessage) {
                 noStatsMessage.style.display = 'block';
@@ -53,7 +58,7 @@ export const Charts = {
 
         // Load and render tabs
         await this.loadAndRenderTabs();
-        
+
         // Show content after loading
         statsContent.style.display = 'block';
     },
@@ -65,7 +70,7 @@ export const Charts = {
         const { startDate, endDate } = this.getDateRange();
         const exercises = Storage.getExercises();
         const loadingIndicator = document.getElementById('loadingIndicator');
-        
+
         try {
             // Show loading indicator
             if (loadingIndicator) loadingIndicator.style.display = 'flex';
@@ -86,7 +91,7 @@ export const Charts = {
 
             // Filter out exercises with no data
             const dataWithWorkouts = exerciseData.filter(d => d.workouts.length > 0);
-            
+
             // Store all exercise data
             this.allExercisesData = dataWithWorkouts;
 
@@ -94,13 +99,13 @@ export const Charts = {
                 document.getElementById('statsContent').innerHTML = '<p class="empty-state">No workout data found in the selected time range.</p>';
                 return;
             }
-            
+
             // Populate exercise checkboxes
             this.populateExerciseCheckboxes(dataWithWorkouts);
 
             // Render unified chart
             this.renderUnifiedChart();
-            
+
             // Render table view under chart
             this.renderTableView();
 
@@ -122,16 +127,16 @@ export const Charts = {
         if (!container) return;
 
         container.innerHTML = '';
-        
+
         // Sort exercises alphabetically by name
-        const sortedExercises = [...exercisesData].sort((a, b) => 
+        const sortedExercises = [...exercisesData].sort((a, b) =>
             a.exercise.name.localeCompare(b.exercise.name)
         );
-        
+
         sortedExercises.forEach(({ exercise }) => {
             const label = document.createElement('label');
             label.className = 'comparison-checkbox-label';
-            
+
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.value = exercise.id;
@@ -144,24 +149,24 @@ export const Charts = {
                     this.selectedExerciseIds = this.selectedExerciseIds.filter(id => id !== exercise.id);
                 }
                 localStorage.setItem('selectedExerciseIds', JSON.stringify(this.selectedExerciseIds));
-                
+
                 // Update both chart and table
                 this.renderUnifiedChart();
                 this.renderTableView();
-                
+
                 // Update toggle button text
                 this.updateToggleButtonText();
             });
-            
+
             label.appendChild(checkbox);
             label.appendChild(document.createTextNode(' ' + exercise.name));
             container.appendChild(label);
         });
-        
+
         // Set up toggle all button
         this.setupToggleAllButton();
         this.updateToggleButtonText();
-        
+
         // Set up collapsible functionality (once)
         if (!this.collapsibleSetup) {
             this.setupCollapsibleSelector();
@@ -175,27 +180,27 @@ export const Charts = {
     setupCollapsibleSelector() {
         const toggle = document.getElementById('exerciseSelectorToggle');
         const checkboxContainer = document.getElementById('exerciseCheckboxes');
-        
+
         if (!toggle || !checkboxContainer) return;
-        
+
         // Restore saved state or default to expanded
         const savedState = localStorage.getItem('exerciseSelectorCollapsed');
         const isCollapsed = savedState === 'true';
-        
+
         // Apply saved state
         checkboxContainer.style.display = isCollapsed ? 'none' : 'grid';
         const chevron = toggle.querySelector('.chevron');
         if (chevron) {
             chevron.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
         }
-        
+
         toggle.addEventListener('click', () => {
             const chevron = toggle.querySelector('.chevron');
             const isHidden = checkboxContainer.style.display === 'none';
-            
+
             checkboxContainer.style.display = isHidden ? 'grid' : 'none';
             chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
-            
+
             // Save state to localStorage
             localStorage.setItem('exerciseSelectorCollapsed', !isHidden);
         });
@@ -207,27 +212,27 @@ export const Charts = {
     setupCollapsibleChart() {
         const toggle = document.getElementById('chartToggle');
         const chartContent = document.getElementById('statsContent');
-        
+
         if (!toggle || !chartContent) return;
-        
+
         // Restore saved state or default to expanded
         const savedState = localStorage.getItem('chartCollapsed');
         const isCollapsed = savedState === 'true';
-        
+
         // Apply saved state
         chartContent.style.display = isCollapsed ? 'none' : 'block';
         const chevron = toggle.querySelector('.chevron');
         if (chevron) {
             chevron.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
         }
-        
+
         toggle.addEventListener('click', () => {
             const chevron = toggle.querySelector('.chevron');
             const isHidden = chartContent.style.display === 'none';
-            
+
             chartContent.style.display = isHidden ? 'block' : 'none';
             chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
-            
+
             // Save state to localStorage
             localStorage.setItem('chartCollapsed', !isHidden);
         });
@@ -239,28 +244,28 @@ export const Charts = {
     setupToggleAllButton() {
         const toggleBtn = document.getElementById('toggleAllExercises');
         if (!toggleBtn) return;
-        
+
         // Remove existing listener if any
         const newBtn = toggleBtn.cloneNode(true);
         toggleBtn.parentNode.replaceChild(newBtn, toggleBtn);
-        
+
         newBtn.addEventListener('click', () => {
             const checkboxes = document.querySelectorAll('.exercise-checkbox');
             const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-            
+
             checkboxes.forEach(checkbox => {
                 checkbox.checked = !allChecked;
             });
-            
+
             // Update selected IDs
             if (allChecked) {
                 this.selectedExerciseIds = [];
             } else {
                 this.selectedExerciseIds = Array.from(checkboxes).map(cb => cb.value);
             }
-            
+
             localStorage.setItem('selectedExerciseIds', JSON.stringify(this.selectedExerciseIds));
-            
+
             // Update both chart and table
             this.renderUnifiedChart();
             this.renderTableView();
@@ -275,7 +280,7 @@ export const Charts = {
         const toggleBtn = document.getElementById('toggleAllExercises');
         const checkboxes = document.querySelectorAll('.exercise-checkbox');
         if (!toggleBtn || checkboxes.length === 0) return;
-        
+
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
         toggleBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
     },
@@ -302,14 +307,14 @@ export const Charts = {
 
         // Clear existing content
         Array.from(statsContent.querySelectorAll('.exercise-tab-pane')).forEach(el => el.remove());
-        
+
         if (this.selectedExerciseIds.length === 0) {
             statsContent.innerHTML = '<p class="empty-state">Select exercises from the checkboxes above to view.</p>';
             return;
         }
 
         // Filter to selected exercises
-        const selectedData = this.allExercisesData.filter(d => 
+        const selectedData = this.allExercisesData.filter(d =>
             this.selectedExerciseIds.includes(d.exercise.id)
         );
 
@@ -333,7 +338,7 @@ export const Charts = {
         const barColors = ['#667eea', '#4caf50', '#ff9800', '#e91e63', '#00bcd4'];
         const trendColors = ['#2196f3', '#ff5722', '#9c27b0', '#00bcd4', '#4caf50'];
         const datasets = [];
-        
+
         // Get all unique dates across all exercises
         const allDates = new Set();
         selectedData.forEach(data => {
@@ -348,21 +353,21 @@ export const Charts = {
                 const dataIdx = dailyData.labels.indexOf(date);
                 return dataIdx !== -1 ? dailyData.values[dataIdx] : null;
             });
-            
+
             // Calculate progress percentage for non-null values
             const nonNullValues = alignedData.filter(v => v !== null);
             const progressPercentages = this.calculateProgressPercentage(nonNullValues);
-            
+
             // Map back to aligned data structure
             let progressIdx = 0;
             const alignedProgress = alignedData.map(val => {
                 if (val === null) return null;
                 return progressPercentages[progressIdx++];
             });
-            
+
             const barColor = barColors[idx % barColors.length];
             const trendColor = trendColors[idx % trendColors.length];
-            
+
             // Add bar chart for progress percentage
             datasets.push({
                 label: data.exercise.name,
@@ -373,16 +378,16 @@ export const Charts = {
                 borderWidth: 1,
                 order: 2 // Bars render behind lines
             });
-            
+
             // Add trend line (dotted)
             const validPoints = alignedProgress
                 .map((val, idx) => ({ x: idx, y: val }))
                 .filter(p => p.y !== null);
-            
+
             if (validPoints.length >= 2) {
                 const regression = calculateLinearRegression(validPoints);
                 const trendLine = sortedDates.map((_, idx) => regression.predict(idx));
-                
+
                 datasets.push({
                     label: `${data.exercise.name} Trend`,
                     data: trendLine,
@@ -447,13 +452,13 @@ export const Charts = {
                                     const label = context.dataset.label || '';
                                     const value = context.parsed.y;
                                     if (value === null) return '';
-                                    
+
                                     // Show percentage and change from baseline
                                     const changeFromBaseline = value - 100;
-                                    const changeText = changeFromBaseline >= 0 
-                                        ? `+${changeFromBaseline.toFixed(1)}%` 
+                                    const changeText = changeFromBaseline >= 0
+                                        ? `+${changeFromBaseline.toFixed(1)}%`
                                         : `${changeFromBaseline.toFixed(1)}%`;
-                                    
+
                                     return `${label}: ${value.toFixed(1)}% (${changeText} vs baseline)`;
                                 }
                             }
@@ -467,7 +472,7 @@ export const Charts = {
                                 text: 'Progress (% of Baseline)'
                             },
                             ticks: {
-                                callback: function(value) {
+                                callback: function (value) {
                                     return value.toFixed(0) + '%';
                                 }
                             }
@@ -510,8 +515,8 @@ export const Charts = {
             }
 
             // Calculate volume (reps × weight) for weighted exercises, or total reps for bodyweight
-            const value = isWeighted && workout.weight 
-                ? workout.reps * workout.weight 
+            const value = isWeighted && workout.weight
+                ? workout.reps * workout.weight
                 : workout.reps;
             dates.set(dateLabel, dates.get(dateLabel) + value);
         });
@@ -538,7 +543,7 @@ export const Charts = {
         }
 
         // Filter to selected exercises
-        const selectedData = this.allExercisesData.filter(d => 
+        const selectedData = this.allExercisesData.filter(d =>
             this.selectedExerciseIds.includes(d.exercise.id)
         );
 
@@ -686,7 +691,7 @@ export const Charts = {
         // Add toggle handlers for workout lists (row click)
         const summaryRows = statsTableContent.querySelectorAll('.exercise-summary-row');
         summaryRows.forEach(row => {
-            row.addEventListener('click', function() {
+            row.addEventListener('click', function () {
                 const targetId = row.getAttribute('data-target');
                 const workoutRow = document.getElementById(targetId);
                 if (workoutRow) {
@@ -757,7 +762,7 @@ export const Charts = {
 
             // Handle string comparisons
             if (typeof valA === 'string') {
-                return this.sortAscending 
+                return this.sortAscending
                     ? valA.localeCompare(valB)
                     : valB.localeCompare(valA);
             }
@@ -805,15 +810,15 @@ export const Charts = {
         const totalWorkouts = workouts.length;
         const totalReps = workouts.reduce((sum, w) => sum + w.reps, 0);
         const avgReps = totalReps / totalWorkouts;
-        
+
         const weightsUsed = workouts.filter(w => w.weight > 0).map(w => w.weight);
-        const avgWeight = weightsUsed.length > 0 
-            ? weightsUsed.reduce((sum, w) => sum + w, 0) / weightsUsed.length 
+        const avgWeight = weightsUsed.length > 0
+            ? weightsUsed.reduce((sum, w) => sum + w, 0) / weightsUsed.length
             : 0;
-        
+
         // For bodyweight exercises, PR is max reps
         const maxReps = Math.max(...workouts.map(w => w.reps));
-        
+
         // For weighted exercises, find PR workout (highest volume = reps × weight)
         let prReps = null;
         let prWeight = null;
@@ -861,10 +866,10 @@ export const Charts = {
      */
     formatDate(dateString) {
         const date = new Date(dateString);
-        return date.toLocaleDateString('en-US', { 
-            year: 'numeric', 
-            month: 'short', 
-            day: 'numeric' 
+        return date.toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric'
         });
     }
 };

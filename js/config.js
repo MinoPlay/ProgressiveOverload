@@ -10,7 +10,7 @@ export const CONFIG = {
     // 
     // ⚠️  IMPORTANT: Must be 'false' when deploying to production!
     // ═══════════════════════════════════════════════════════════════
-    devMode: false,
+    devMode: true,
 
     // GitHub Configuration
     github: {
@@ -108,14 +108,14 @@ export function loadConfig() {
         document.getElementById('repo-owner').value = config.owner || '';
         document.getElementById('repo-name').value = config.repo || '';
         config.mode = config.mode || 'local';
-        
+
         if (config.mode === 'local' || isConfigured()) {
             document.getElementById('config-section').classList.add('collapsed');
         }
     } else {
         config.mode = 'local';
     }
-    
+
     // Update UI to reflect current mode
     updateModeUI();
 }
@@ -123,20 +123,20 @@ export function loadConfig() {
 /**
  * Save configuration to localStorage
  */
-window.saveConfig = function() {
+window.saveConfig = function () {
     config.token = document.getElementById('github-token').value.trim();
     config.owner = document.getElementById('repo-owner').value.trim();
     config.repo = document.getElementById('repo-name').value.trim();
-    
+
     if (!config.token || !config.owner || !config.repo) {
         showStatus('Please fill in all configuration fields', 'error');
         return;
     }
-    
+
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     showStatus('Configuration saved!', 'success');
     document.getElementById('config-section').classList.add('collapsed');
-    
+
     // Reload data with new configuration
     if (typeof loadData === 'function') {
         loadData();
@@ -146,7 +146,7 @@ window.saveConfig = function() {
 /**
  * Toggle configuration panel visibility
  */
-window.toggleConfig = function() {
+window.toggleConfig = function () {
     document.getElementById('config-section').classList.toggle('collapsed');
 };
 
@@ -160,7 +160,7 @@ function isConfigured() {
 /**
  * Set mode (local or github)
  */
-window.setMode = function(mode) {
+window.setMode = function (mode) {
     config.mode = mode;
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     updateModeUI();
@@ -172,11 +172,11 @@ window.setMode = function(mode) {
  */
 function updateModeUI() {
     const isLocal = config.mode === 'local';
-    
+
     // Update mode buttons
     document.getElementById('mode-local').classList.toggle('active', isLocal);
     document.getElementById('mode-github').classList.toggle('active', !isLocal);
-    
+
     // Show/hide appropriate controls
     document.getElementById('github-config').style.display = isLocal ? 'none' : 'block';
     document.getElementById('local-controls').style.display = isLocal ? 'flex' : 'none';
@@ -187,7 +187,7 @@ function updateModeUI() {
 /**
  * Generate dummy data for local testing
  */
-window.generateDummyData = function() {
+window.generateDummyData = function () {
     if (confirm('Generate sample workout and exercise data? This will not overwrite existing data.')) {
         // This function should be implemented to generate sample data
         showStatus('Sample data generation not yet implemented', 'info');
@@ -197,7 +197,7 @@ window.generateDummyData = function() {
 /**
  * Clear all local data
  */
-window.clearLocalData = function() {
+window.clearLocalData = function () {
     if (confirm('⚠️ This will delete ALL local data including exercises and workouts. Are you sure?')) {
         localStorage.clear();
         showStatus('All local data cleared', 'success');

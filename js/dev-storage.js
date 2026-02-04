@@ -17,23 +17,23 @@ export const DevStorage = {
      */
     async initialize() {
         console.log('🧪 DEV MODE: Loading data from dev-data.json');
-        
+
         try {
             const response = await fetch(DEV_API_URL);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
-            
+
             const data = await response.json();
             this.exercises = data.exercises || [];
             this.currentMonthWorkouts = data.workouts || [];
-            
+
             // Set current month path
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
             this.currentMonthPath = `data/workouts-${year}-${month}.json`;
-            
+
             console.log(`📦 Loaded ${this.exercises.length} exercises`);
             console.log(`📦 Loaded ${this.currentMonthWorkouts.length} workouts`);
             console.log('💾 Changes will be saved to data/dev-data.json');
@@ -53,7 +53,7 @@ export const DevStorage = {
                 exercises: this.exercises,
                 workouts: this.currentMonthWorkouts
             };
-            
+
             const response = await fetch(DEV_API_URL, {
                 method: 'POST',
                 headers: {
@@ -61,11 +61,11 @@ export const DevStorage = {
                 },
                 body: JSON.stringify(data)
             });
-            
+
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
-            
+
             console.log('💾 DEV MODE: Saved to dev-data.json');
         } catch (error) {
             console.error('❌ Failed to save dev data:', error);
@@ -155,13 +155,13 @@ export const DevStorage = {
      */
     async addWorkout(workout) {
         console.log('🧪 DEV MODE: Adding workout');
-        
+
         // Add sequence number if not present
         if (!workout.sequence) {
             const sameDay = this.currentMonthWorkouts.filter(w => w.date === workout.date);
             workout.sequence = sameDay.length + 1;
         }
-        
+
         this.currentMonthWorkouts.push(workout);
         await this.saveToFile();
         return workout;
@@ -172,14 +172,17 @@ export const DevStorage = {
      * @param {Object} workout
      * @returns {Promise<Object>}
      */
-    async updateWorkout(workout) {
+    async updateWorkout(id, date, updates) {
         console.log('🧪 DEV MODE: Updating workout');
-        const index = this.currentMonthWorkouts.findIndex(w => w.id === workout.id);
+        const index = this.currentMonthWorkouts.findIndex(w => w.id === id);
         if (index !== -1) {
-            this.currentMonthWorkouts[index] = workout;
+            this.currentMonthWorkouts[index] = {
+                ...this.currentMonthWorkouts[index],
+                ...updates
+            };
         }
         await this.saveToFile();
-        return workout;
+        return this.currentMonthWorkouts[index];
     },
 
     /**
@@ -187,9 +190,19 @@ export const DevStorage = {
      * @param {string} id
      * @returns {Promise<void>}
      */
-    async deleteWorkout(id) {
+    async deleteWorkout(id, date) {
         console.log('🧪 DEV MODE: Deleting workout');
         this.currentMonthWorkouts = this.currentMonthWorkouts.filter(w => w.id !== id);
+
+        // Re-sequence
+        const sameDateWorkouts = this.currentMonthWorkouts
+            .filter(w => w.date === date)
+            .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+
+        sameDateWorkouts.forEach((w, i) => {
+            w.sequence = i + 1;
+        });
+
         await this.saveToFile();
     },
 
@@ -242,7 +255,7 @@ export const DevStorage = {
     async getWorkoutsInRange(startDate, endDate) {
         // Normalize to YYYY-MM-DD strings for comparison to avoid timezone issues
         let startStr, endStr;
-        
+
         if (startDate instanceof Date) {
             // Convert Date to YYYY-MM-DD in local timezone (not UTC)
             const year = startDate.getFullYear();
@@ -252,7 +265,7 @@ export const DevStorage = {
         } else {
             startStr = startDate.split('T')[0];
         }
-        
+
         if (endDate instanceof Date) {
             // Convert Date to YYYY-MM-DD in local timezone (not UTC)
             const year = endDate.getFullYear();
@@ -262,12 +275,12 @@ export const DevStorage = {
         } else {
             endStr = endDate.split('T')[0];
         }
-        
+
         const filtered = this.currentMonthWorkouts.filter(w => {
             // Compare date strings directly (YYYY-MM-DD format)
             return w.date >= startStr && w.date <= endStr;
         });
-        
+
         console.log(`🧪 DEV MODE: getWorkoutsInRange(${startStr} to ${endStr}) returned ${filtered.length} workouts`);
         return filtered;
     },
@@ -282,7 +295,7 @@ export const DevStorage = {
         console.log('🧪 DEV MODE: Updating workout sequences');
         console.log('  Date:', date);
         console.log('  Workout IDs to update:', workoutIds);
-        
+
         // Update sequence numbers based on the provided order
         let updatedCount = 0;
         workoutIds.forEach((id, index) => {
@@ -296,9 +309,9 @@ export const DevStorage = {
                 console.warn(`  Workout not found: ${id} on date ${date}`);
             }
         });
-        
+
         console.log(`  Total updated: ${updatedCount}/${workoutIds.length}`);
-        
+
         // Save to file to persist the changes
         await this.saveToFile();
     }

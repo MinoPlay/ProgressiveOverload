@@ -375,6 +375,14 @@
       "reps": 12,
       "weight": 14,
       "sequence": 15
+    },
+    {
+      "id": "1770184704812_hmuadcgan",
+      "exerciseId": "1769598356923_neckturns",
+      "date": "2026-02-04",
+      "reps": 25,
+      "weight": null,
+      "sequence": 16
     }
   ]
 }

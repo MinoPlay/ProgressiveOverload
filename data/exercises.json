@@ -115,6 +115,12 @@
       "requiresWeight": true
     },
     {
+      "id": "1770182681432_b4c3ijz9x",
+      "name": "Inclined barbell press",
+      "equipmentType": "barbell",
+      "requiresWeight": true
+    },
+    {
       "id": "1769598356917_inclinedumbflies",
       "name": "Inclined Dumbbell Flies",
       "equipmentType": "dumbbell",
@@ -193,9 +199,9 @@
       "requiresWeight": true
     },
     {
-      "id": "1770182681432_b4c3ijz9x",
-      "name": "Inclined barbell press",
-      "equipmentType": "barbell",
+      "id": "1770183066002_whlo1n7y7",
+      "name": "Low row",
+      "equipmentType": "machines",
       "requiresWeight": true
     }
   ]

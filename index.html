@@ -171,39 +171,31 @@
             <!-- Statistics Section -->
             <section id="statisticsSection" class="content-section" role="region" aria-label="Statistics & Progress">
 
-                <!-- Exercise Selection Controls -->
-                <div id="exerciseSelection" class="comparison-controls">
-                    <div class="comparison-header">
-                        <h3 id="exerciseSelectorToggle" style="cursor: pointer; user-select: none;">
-                            <span class="chevron"
-                                style="display: inline-block; transition: transform 0.3s ease;">▼</span> Select
-                            Exercises to View
-                        </h3>
-                        <button id="toggleAllExercises" class="btn btn-small btn-secondary">Select All</button>
-                    </div>
-                    <div id="exerciseCheckboxes" class="comparison-checkboxes">
-                        <!-- Checkboxes will be dynamically populated -->
-                    </div>
-                </div>
-
-                <!-- Chart Section with Collapsible Header -->
-                <div id="chartSection" style="margin-top: 20px;">
-                    <h3 id="chartToggle"
+                <!-- Exercise Summary Table (Grouped by Category) -->
+                <div id="exerciseSummarySection" style="margin-bottom: 30px;">
+                    <h3 id="summaryToggle"
                         style="cursor: pointer; user-select: none; padding: 10px; background: #f5f5f5; border-radius: 4px;">
                         <span class="chevron" style="display: inline-block; transition: transform 0.3s ease;">▼</span>
-                        Progress Chart
+                        Exercise Summary
                     </h3>
-                    <div id="statsContent">
-                        <!-- Exercise Sub-Tabs for All Exercises -->
+                    <div id="statsTableContent">
+                        <!-- Summary table grouped by category -->
                     </div>
                 </div>
 
-                <div id="statsTableContent">
-                    <!-- Table view will be rendered here -->
+                <!-- Category Tabs -->
+                <div id="categoryTabsContainer">
+                    <div class="category-tabs" id="categoryTabs">
+                        <!-- Tabs will be dynamically populated -->
+                    </div>
+                    
+                    <div class="category-tab-content" id="categoryTabContent">
+                        <!-- Tab content will be dynamically populated -->
+                    </div>
                 </div>
 
                 <div id="noStatsMessage" class="empty-state">
-                    <p>Select an exercise to view statistics</p>
+                    <p>No workout data available</p>
                 </div>
             </section>
         </main>

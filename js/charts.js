@@ -11,6 +11,8 @@ import { calculateLinearRegression, calculateProgressPercentage } from './chart-
 
 export const Charts = {
     selectedExerciseIds: JSON.parse(localStorage.getItem('selectedExerciseIds') || '[]'),
+    categorySelections: JSON.parse(localStorage.getItem('categorySelections') || '{}'), // Per-category selections
+    currentCategory: localStorage.getItem('currentCategory') || null,
     allExercisesData: [], // Store all exercise data
 
     /**
@@ -28,24 +30,25 @@ export const Charts = {
             this.renderCombinedChart();
         });
 
-        // Set up collapsible chart
-        this.setupCollapsibleChart();
+        // Set up collapsible summary
+        this.setupCollapsibleSummary();
     },
 
     /**
      * Render combined chart with all exercises and overview table
      */
     async renderCombinedChart() {
-        const statsContent = document.getElementById('statsContent');
+        const statsTableContent = document.getElementById('statsTableContent');
         const noStatsMessage = document.getElementById('noStatsMessage');
-        if (!statsContent) return;
+        const categoryTabsContainer = document.getElementById('categoryTabsContainer');
+        
+        if (!statsTableContent || !categoryTabsContainer) return;
 
-        // Hide content during loading
-        statsContent.style.display = 'none';
+        // Hide/show elements during loading
+        if (categoryTabsContainer) categoryTabsContainer.style.display = 'none';
         if (noStatsMessage) noStatsMessage.style.display = 'none';
+        statsTableContent.innerHTML = '';
 
-        // Remove all children
-        statsContent.innerHTML = '';
         const exercises = Storage.getExercises();
 
         if (!exercises.length) {
@@ -58,13 +61,10 @@ export const Charts = {
 
         // Load and render tabs
         await this.loadAndRenderTabs();
-
-        // Show content after loading
-        statsContent.style.display = 'block';
     },
 
     /**
-     * Load and render tabs for each exercise
+     * Load and render tabs for each category
      */
     async loadAndRenderTabs() {
         const { startDate, endDate } = this.getDateRange();
@@ -96,243 +96,352 @@ export const Charts = {
             this.allExercisesData = dataWithWorkouts;
 
             if (dataWithWorkouts.length === 0) {
-                document.getElementById('statsContent').innerHTML = '<p class="empty-state">No workout data found in the selected time range.</p>';
+                const noStatsMessage = document.getElementById('noStatsMessage');
+                if (noStatsMessage) {
+                    noStatsMessage.style.display = 'block';
+                    noStatsMessage.innerHTML = '<p class="empty-state">No workout data found in the selected time range.</p>';
+                }
                 return;
             }
 
-            // Populate exercise checkboxes
-            this.populateExerciseCheckboxes(dataWithWorkouts);
+            // Group exercises by equipment type
+            const groupedExercises = this.groupExercisesByCategory(dataWithWorkouts);
 
-            // Render unified chart
-            this.renderUnifiedChart();
+            // Render Exercise Summary Table (grouped by category)
+            this.renderSummaryTable(groupedExercises);
 
-            // Render table view under chart
-            this.renderTableView();
+            // Render Category Tabs and Content
+            this.renderCategoryTabs(groupedExercises);
 
         } catch (error) {
             console.error('Error loading chart data:', error);
             // Hide loading indicator on error
             const loadingIndicator = document.getElementById('loadingIndicator');
             if (loadingIndicator) loadingIndicator.style.display = 'none';
-            document.getElementById('statsContent').innerHTML = '<p class="empty-state">Error loading statistics. Please try again.</p>';
+            const noStatsMessage = document.getElementById('noStatsMessage');
+            if (noStatsMessage) {
+                noStatsMessage.style.display = 'block';
+                noStatsMessage.innerHTML = '<p class="empty-state">Error loading statistics. Please try again.</p>';
+            }
         }
     },
 
     /**
-     * Populate exercise selection checkboxes
+     * Group exercises by equipment type (category)
      * @param {Array} exercisesData - Array of {exercise, workouts} objects
+     * @returns {Object} Exercises grouped by equipment type
      */
-    populateExerciseCheckboxes(exercisesData) {
-        const container = document.getElementById('exerciseCheckboxes');
-        if (!container) return;
+    groupExercisesByCategory(exercisesData) {
+        const grouped = {};
+        
+        exercisesData.forEach(data => {
+            const category = data.exercise.equipmentType || 'other';
+            if (!grouped[category]) {
+                grouped[category] = [];
+            }
+            grouped[category].push(data);
+        });
 
-        container.innerHTML = '';
+        // Sort exercises within each category alphabetically
+        Object.keys(grouped).forEach(category => {
+            grouped[category].sort((a, b) => 
+                a.exercise.name.localeCompare(b.exercise.name)
+            );
+        });
 
-        // Sort exercises alphabetically by name
-        const sortedExercises = [...exercisesData].sort((a, b) =>
-            a.exercise.name.localeCompare(b.exercise.name)
-        );
+        return grouped;
+    },
 
-        sortedExercises.forEach(({ exercise }) => {
+    /**
+     * Render summary table grouped by category
+     * @param {Object} groupedExercises - Exercises grouped by category
+     */
+    renderSummaryTable(groupedExercises) {
+        const statsTableContent = document.getElementById('statsTableContent');
+        if (!statsTableContent) return;
+
+        const categories = Object.keys(groupedExercises).sort();
+        const hasWeightedExercises = this.allExercisesData.some(d => d.exercise.requiresWeight);
+
+        let tableHTML = '<div class="stats-table-container">';
+        tableHTML += `
+            <table class="stats-summary-table">
+                <thead>
+                    <tr>
+                        <th class="sortable" data-sort="name">Exercise <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-sort="category">Category <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-sort="workouts">Workouts <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-sort="avgReps">Avg Reps <span class="sort-indicator"></span></th>
+                        ${hasWeightedExercises ? '<th class="sortable" data-sort="avgWeight">Avg Weight <span class="sort-indicator"></span></th>' : ''}
+                        <th class="sortable" data-sort="pr">PR <span class="sort-indicator"></span></th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        categories.forEach(category => {
+            // Add category header row
+            tableHTML += `
+                <tr class="category-header-row" style="background: #f0f0f0; font-weight: bold;">
+                    <td colspan="${hasWeightedExercises ? 6 : 5}" style="padding: var(--spacing-md);">
+                        ${this.formatEquipmentType(category)}
+                    </td>
+                </tr>
+            `;
+
+            // Add exercise rows for this category
+            groupedExercises[category].forEach(({ exercise, workouts }) => {
+                const stats = this.calculateExerciseStats(workouts, exercise.requiresWeight);
+                const prValue = exercise.requiresWeight && stats.prReps && stats.prWeight
+                    ? `${stats.prReps}x${stats.prWeight.toFixed(1)}`
+                    : `${stats.maxReps} reps`;
+
+                tableHTML += `
+                    <tr>
+                        <td class="exercise-name-cell"><strong>${exercise.name}</strong></td>
+                        <td>${this.formatEquipmentType(category)}</td>
+                        <td>${stats.totalWorkouts}</td>
+                        <td>${stats.avgReps.toFixed(1)}</td>
+                        ${hasWeightedExercises ? `<td>${exercise.requiresWeight && stats.avgWeight > 0 ? stats.avgWeight.toFixed(1) + ' kg' : '-'}</td>` : ''}
+                        <td><strong>${prValue}</strong></td>
+                    </tr>
+                `;
+            });
+        });
+
+        tableHTML += `
+                </tbody>
+            </table>
+        `;
+        tableHTML += '</div>';
+        statsTableContent.innerHTML = tableHTML;
+    },
+
+    /**
+     * Render category tabs and their content
+     * @param {Object} groupedExercises - Exercises grouped by category
+     */
+    renderCategoryTabs(groupedExercises) {
+        const categoryTabsContainer = document.getElementById('categoryTabsContainer');
+        const categoryTabs = document.getElementById('categoryTabs');
+        const categoryTabContent = document.getElementById('categoryTabContent');
+        
+        if (!categoryTabs || !categoryTabContent) return;
+
+        // Clear existing content
+        categoryTabs.innerHTML = '';
+        categoryTabContent.innerHTML = '';
+
+        const categories = Object.keys(groupedExercises).sort();
+
+        // Set default category if not set
+        if (!this.currentCategory || !categories.includes(this.currentCategory)) {
+            this.currentCategory = categories[0];
+        }
+
+        // Create tab buttons
+        categories.forEach(category => {
+            const tabBtn = document.createElement('button');
+            tabBtn.className = 'category-tab-btn';
+            if (category === this.currentCategory) {
+                tabBtn.classList.add('active');
+            }
+            tabBtn.textContent = this.formatEquipmentType(category);
+            tabBtn.dataset.category = category;
+            tabBtn.addEventListener('click', () => this.switchCategory(category));
+            categoryTabs.appendChild(tabBtn);
+        });
+
+        // Create tab content panes
+        categories.forEach(category => {
+            const pane = document.createElement('div');
+            pane.className = 'category-tab-pane';
+            pane.id = `category-pane-${category}`;
+            if (category === this.currentCategory) {
+                pane.classList.add('active');
+            }
+
+            // Create exercise selector for this category
+            const selector = this.createCategoryExerciseSelector(category, groupedExercises[category]);
+            pane.appendChild(selector);
+
+            // Create chart container for this category
+            const chartContainer = document.createElement('div');
+            chartContainer.className = 'category-chart-container';
+            chartContainer.innerHTML = `
+                <div class="chart-container">
+                    <canvas id="chart-${category}"></canvas>
+                </div>
+            `;
+            pane.appendChild(chartContainer);
+
+            categoryTabContent.appendChild(pane);
+        });
+
+        // Show the container
+        categoryTabsContainer.style.display = 'block';
+
+        // Render chart for current category
+        this.renderCategoryChart(this.currentCategory, groupedExercises[this.currentCategory]);
+    },
+
+    /**
+     * Create exercise selector for a category
+     * @param {string} category - Category name
+     * @param {Array} exercisesData - Exercises in this category
+     * @returns {HTMLElement} Selector element
+     */
+    createCategoryExerciseSelector(category, exercisesData) {
+        const container = document.createElement('div');
+        container.className = 'category-exercise-selector';
+
+        // Get saved selections for this category
+        if (!this.categorySelections[category]) {
+            this.categorySelections[category] = [];
+        }
+
+        const header = document.createElement('div');
+        header.className = 'category-selector-header';
+        header.innerHTML = `
+            <h4>
+                <span class="chevron" style="display: inline-block; transition: transform 0.3s ease;">▼</span>
+                Select Exercises to View
+            </h4>
+            <button class="btn btn-small btn-secondary toggle-all-btn" data-category="${category}">Select All</button>
+        `;
+
+        const checkboxContainer = document.createElement('div');
+        checkboxContainer.className = 'category-checkboxes';
+
+        exercisesData.forEach(({ exercise }) => {
             const label = document.createElement('label');
-            label.className = 'comparison-checkbox-label';
+            label.className = 'category-checkbox-label';
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.value = exercise.id;
-            checkbox.checked = this.selectedExerciseIds.includes(exercise.id);
+            checkbox.checked = this.categorySelections[category].includes(exercise.id);
             checkbox.className = 'exercise-checkbox';
+            checkbox.dataset.category = category;
             checkbox.addEventListener('change', (e) => {
-                if (e.target.checked) {
-                    this.selectedExerciseIds.push(exercise.id);
-                } else {
-                    this.selectedExerciseIds = this.selectedExerciseIds.filter(id => id !== exercise.id);
-                }
-                localStorage.setItem('selectedExerciseIds', JSON.stringify(this.selectedExerciseIds));
-
-                // Update both chart and table
-                this.renderUnifiedChart();
-                this.renderTableView();
-
-                // Update toggle button text
-                this.updateToggleButtonText();
+                this.handleCategoryCheckboxChange(category, exercise.id, e.target.checked, exercisesData);
             });
 
             label.appendChild(checkbox);
             label.appendChild(document.createTextNode(' ' + exercise.name));
-            container.appendChild(label);
+            checkboxContainer.appendChild(label);
         });
+
+        container.appendChild(header);
+        container.appendChild(checkboxContainer);
 
         // Set up toggle all button
-        this.setupToggleAllButton();
-        this.updateToggleButtonText();
+        const toggleBtn = header.querySelector('.toggle-all-btn');
+        toggleBtn.addEventListener('click', () => {
+            this.toggleAllCategoryExercises(category, exercisesData);
+        });
 
-        // Set up collapsible functionality (once)
-        if (!this.collapsibleSetup) {
-            this.setupCollapsibleSelector();
-            this.collapsibleSetup = true;
-        }
-    },
-
-    /**
-     * Set up collapsible exercise selector
-     */
-    setupCollapsibleSelector() {
-        const toggle = document.getElementById('exerciseSelectorToggle');
-        const checkboxContainer = document.getElementById('exerciseCheckboxes');
-
-        if (!toggle || !checkboxContainer) return;
-
-        // Restore saved state or default to expanded
-        const savedState = localStorage.getItem('exerciseSelectorCollapsed');
-        const isCollapsed = savedState === 'true';
-
-        // Apply saved state
-        checkboxContainer.style.display = isCollapsed ? 'none' : 'grid';
-        const chevron = toggle.querySelector('.chevron');
-        if (chevron) {
-            chevron.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
-        }
-
-        toggle.addEventListener('click', () => {
-            const chevron = toggle.querySelector('.chevron');
+        // Set up collapsible functionality
+        const headerTitle = header.querySelector('h4');
+        headerTitle.style.cursor = 'pointer';
+        headerTitle.addEventListener('click', () => {
+            const chevron = headerTitle.querySelector('.chevron');
             const isHidden = checkboxContainer.style.display === 'none';
-
             checkboxContainer.style.display = isHidden ? 'grid' : 'none';
             chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
-
-            // Save state to localStorage
-            localStorage.setItem('exerciseSelectorCollapsed', !isHidden);
         });
+
+        return container;
     },
 
     /**
-     * Set up collapsible chart
+     * Handle checkbox change in category
+     * @param {string} category - Category name
+     * @param {string} exerciseId - Exercise ID
+     * @param {boolean} checked - Checked state
+     * @param {Array} exercisesData - Exercises in this category
      */
-    setupCollapsibleChart() {
-        const toggle = document.getElementById('chartToggle');
-        const chartContent = document.getElementById('statsContent');
-
-        if (!toggle || !chartContent) return;
-
-        // Restore saved state or default to expanded
-        const savedState = localStorage.getItem('chartCollapsed');
-        const isCollapsed = savedState === 'true';
-
-        // Apply saved state
-        chartContent.style.display = isCollapsed ? 'none' : 'block';
-        const chevron = toggle.querySelector('.chevron');
-        if (chevron) {
-            chevron.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+    handleCategoryCheckboxChange(category, exerciseId, checked, exercisesData) {
+        if (!this.categorySelections[category]) {
+            this.categorySelections[category] = [];
         }
 
-        toggle.addEventListener('click', () => {
-            const chevron = toggle.querySelector('.chevron');
-            const isHidden = chartContent.style.display === 'none';
-
-            chartContent.style.display = isHidden ? 'block' : 'none';
-            chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
-
-            // Save state to localStorage
-            localStorage.setItem('chartCollapsed', !isHidden);
-        });
-    },
-
-    /**
-     * Set up the toggle all button event listener
-     */
-    setupToggleAllButton() {
-        const toggleBtn = document.getElementById('toggleAllExercises');
-        if (!toggleBtn) return;
-
-        // Remove existing listener if any
-        const newBtn = toggleBtn.cloneNode(true);
-        toggleBtn.parentNode.replaceChild(newBtn, toggleBtn);
-
-        newBtn.addEventListener('click', () => {
-            const checkboxes = document.querySelectorAll('.exercise-checkbox');
-            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-
-            checkboxes.forEach(checkbox => {
-                checkbox.checked = !allChecked;
-            });
-
-            // Update selected IDs
-            if (allChecked) {
-                this.selectedExerciseIds = [];
-            } else {
-                this.selectedExerciseIds = Array.from(checkboxes).map(cb => cb.value);
+        if (checked) {
+            if (!this.categorySelections[category].includes(exerciseId)) {
+                this.categorySelections[category].push(exerciseId);
             }
+        } else {
+            this.categorySelections[category] = this.categorySelections[category].filter(id => id !== exerciseId);
+        }
 
-            localStorage.setItem('selectedExerciseIds', JSON.stringify(this.selectedExerciseIds));
+        // Save to localStorage
+        localStorage.setItem('categorySelections', JSON.stringify(this.categorySelections));
 
-            // Update both chart and table
-            this.renderUnifiedChart();
-            this.renderTableView();
-            this.updateToggleButtonText();
-        });
+        // Re-render chart for this category
+        this.renderCategoryChart(category, exercisesData);
     },
 
     /**
-     * Update toggle button text based on current selection
+     * Toggle all exercises in a category
+     * @param {string} category - Category name
+     * @param {Array} exercisesData - Exercises in this category
      */
-    updateToggleButtonText() {
-        const toggleBtn = document.getElementById('toggleAllExercises');
-        const checkboxes = document.querySelectorAll('.exercise-checkbox');
-        if (!toggleBtn || checkboxes.length === 0) return;
+    toggleAllCategoryExercises(category, exercisesData) {
+        const pane = document.getElementById(`category-pane-${category}`);
+        if (!pane) return;
 
+        const checkboxes = pane.querySelectorAll('.exercise-checkbox');
         const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-        toggleBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
+
+        checkboxes.forEach(checkbox => {
+            checkbox.checked = !allChecked;
+        });
+
+        // Update selections
+        if (allChecked) {
+            this.categorySelections[category] = [];
+        } else {
+            this.categorySelections[category] = exercisesData.map(d => d.exercise.id);
+        }
+
+        // Save to localStorage
+        localStorage.setItem('categorySelections', JSON.stringify(this.categorySelections));
+
+        // Re-render chart
+        this.renderCategoryChart(category, exercisesData);
     },
 
-
-
     /**
-     * Get date range for loading all workout data
-     * @returns {{startDate: Date, endDate: Date}}
+     * Render chart for a specific category
+     * @param {string} category - Category name
+     * @param {Array} exercisesData - Exercises in this category
      */
-    getDateRange() {
-        const endDate = new Date();
-        const startDate = new Date();
-        startDate.setFullYear(startDate.getFullYear() - 10); // 10 years back for all data
-        return { startDate, endDate };
-    },
+    renderCategoryChart(category, exercisesData) {
+        const canvas = document.getElementById(`chart-${category}`);
+        if (!canvas) return;
 
-    /**
-     * Render unified chart: Bars for actual data + Dotted lines for trends
-     */
-    renderUnifiedChart() {
-        const statsContent = document.getElementById('statsContent');
-        if (!statsContent) return;
+        // Get selected exercises for this category
+        const selectedIds = this.categorySelections[category] || [];
 
-        // Clear existing content
-        Array.from(statsContent.querySelectorAll('.exercise-tab-pane')).forEach(el => el.remove());
-
-        if (this.selectedExerciseIds.length === 0) {
-            statsContent.innerHTML = '<p class="empty-state">Select exercises from the checkboxes above to view.</p>';
+        if (selectedIds.length === 0) {
+            const container = canvas.parentElement;
+            container.innerHTML = '<p class="empty-state">Select exercises from the checkboxes above to view.</p>';
             return;
         }
 
         // Filter to selected exercises
-        const selectedData = this.allExercisesData.filter(d =>
-            this.selectedExerciseIds.includes(d.exercise.id)
-        );
+        const selectedData = exercisesData.filter(d => selectedIds.includes(d.exercise.id));
 
         if (selectedData.length === 0) {
-            statsContent.innerHTML = '<p class="empty-state">No data available for selected exercises.</p>';
+            const container = canvas.parentElement;
+            container.innerHTML = '<p class="empty-state">No data available for selected exercises.</p>';
             return;
         }
 
-        // Create chart container
-        const container = document.createElement('div');
-        container.className = 'exercise-tab-pane';
-        container.style.display = 'block';
-        container.innerHTML = `
-            <div class="chart-container">
-                <canvas id="unifiedChart"></canvas>
-            </div>
-        `;
-        statsContent.appendChild(container);
+        // Recreate canvas if it was removed
+        const container = canvas.parentElement;
+        container.innerHTML = `<canvas id="chart-${category}"></canvas>`;
+        const newCanvas = document.getElementById(`chart-${category}`);
 
         // Color palettes
         const barColors = ['#667eea', '#4caf50', '#ff9800', '#e91e63', '#00bcd4'];
@@ -404,89 +513,157 @@ export const Charts = {
         });
 
         // Create mixed chart (bars + lines)
-        const ctx = document.getElementById('unifiedChart');
-        if (ctx) {
-            new Chart(ctx.getContext('2d'), {
-                type: 'bar',
-                data: {
-                    labels: sortedDates,
-                    datasets: datasets
+        const ctx = newCanvas.getContext('2d');
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: sortedDates,
+                datasets: datasets
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    interaction: {
-                        mode: 'index',
-                        intersect: false
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top'
                     },
-                    plugins: {
-                        legend: {
-                            display: true,
-                            position: 'top'
+                    zoom: {
+                        pan: {
+                            enabled: true,
+                            mode: 'x'
                         },
                         zoom: {
-                            pan: {
-                                enabled: true,
-                                mode: 'x'
+                            wheel: {
+                                enabled: true
                             },
-                            zoom: {
-                                wheel: {
-                                    enabled: true
-                                },
-                                pinch: {
-                                    enabled: true
-                                },
-                                mode: 'x'
-                            }
-                        },
-                        title: {
-                            display: true,
-                            text: 'Workout Progress Tracking (% Improvement vs Baseline)'
-                        },
-                        tooltip: {
-                            callbacks: {
-                                title: (tooltipItems) => {
-                                    return tooltipItems[0].label;
-                                },
-                                label: (context) => {
-                                    const label = context.dataset.label || '';
-                                    const value = context.parsed.y;
-                                    if (value === null) return '';
-
-                                    // Show percentage and change from baseline
-                                    const changeFromBaseline = value - 100;
-                                    const changeText = changeFromBaseline >= 0
-                                        ? `+${changeFromBaseline.toFixed(1)}%`
-                                        : `${changeFromBaseline.toFixed(1)}%`;
-
-                                    return `${label}: ${value.toFixed(1)}% (${changeText} vs baseline)`;
-                                }
-                            }
+                            pinch: {
+                                enabled: true
+                            },
+                            mode: 'x'
                         }
                     },
-                    scales: {
-                        y: {
-                            beginAtZero: false,
-                            title: {
-                                display: true,
-                                text: 'Progress (% of Baseline)'
+                    title: {
+                        display: true,
+                        text: `${this.formatEquipmentType(category)} - Workout Progress Tracking (% Improvement vs Baseline)`
+                    },
+                    tooltip: {
+                        callbacks: {
+                            title: (tooltipItems) => {
+                                return tooltipItems[0].label;
                             },
-                            ticks: {
-                                callback: function (value) {
-                                    return value.toFixed(0) + '%';
-                                }
-                            }
-                        },
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Date'
+                            label: (context) => {
+                                const label = context.dataset.label || '';
+                                const value = context.parsed.y;
+                                if (value === null) return '';
+
+                                // Show percentage and change from baseline
+                                const changeFromBaseline = value - 100;
+                                const changeText = changeFromBaseline >= 0
+                                    ? `+${changeFromBaseline.toFixed(1)}%`
+                                    : `${changeFromBaseline.toFixed(1)}%`;
+
+                                return `${label}: ${value.toFixed(1)}% (${changeText} vs baseline)`;
                             }
                         }
                     }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: false,
+                        title: {
+                            display: true,
+                            text: 'Progress (% of Baseline)'
+                        },
+                        ticks: {
+                            callback: function (value) {
+                                return value.toFixed(0) + '%';
+                            }
+                        }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Date'
+                        }
+                    }
                 }
-            });
+            }
+        });
+    },
+
+    /**
+     * Switch to a different category tab
+     * @param {string} category - Category name
+     */
+    switchCategory(category) {
+        this.currentCategory = category;
+        localStorage.setItem('currentCategory', category);
+
+        // Update tab buttons
+        document.querySelectorAll('.category-tab-btn').forEach(btn => {
+            if (btn.dataset.category === category) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        });
+
+        // Update tab panes
+        document.querySelectorAll('.category-tab-pane').forEach(pane => {
+            if (pane.id === `category-pane-${category}`) {
+                pane.classList.add('active');
+            } else {
+                pane.classList.remove('active');
+            }
+        });
+    },
+
+    /**
+     * Get date range for loading all workout data
+     * @returns {{startDate: Date, endDate: Date}}
+     */
+    getDateRange() {
+        const endDate = new Date();
+        const startDate = new Date();
+        startDate.setFullYear(startDate.getFullYear() - 10); // 10 years back for all data
+        return { startDate, endDate };
+    },
+
+    /**
+     * Set up collapsible summary table
+     */
+    setupCollapsibleSummary() {
+        const toggle = document.getElementById('summaryToggle');
+        const summaryContent = document.getElementById('statsTableContent');
+
+        if (!toggle || !summaryContent) return;
+
+        // Restore saved state or default to expanded
+        const savedState = localStorage.getItem('summaryCollapsed');
+        const isCollapsed = savedState === 'true';
+
+        // Apply saved state
+        summaryContent.style.display = isCollapsed ? 'none' : 'block';
+        const chevron = toggle.querySelector('.chevron');
+        if (chevron) {
+            chevron.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
         }
+
+        toggle.addEventListener('click', () => {
+            const chevron = toggle.querySelector('.chevron');
+            const isHidden = summaryContent.style.display === 'none';
+
+            summaryContent.style.display = isHidden ? 'block' : 'none';
+            chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+
+            // Save state to localStorage
+            localStorage.setItem('summaryCollapsed', !isHidden);
+        });
     },
 
     /**
@@ -528,276 +705,6 @@ export const Charts = {
             labels: sortedDates.map(entry => entry[0]),
             values: sortedDates.map(entry => entry[1])
         };
-    },
-
-    /**
-     * Render table view with statistics for selected exercises
-     */
-    renderTableView() {
-        const statsTableContent = document.getElementById('statsTableContent');
-        if (!statsTableContent) return;
-
-        if (this.selectedExerciseIds.length === 0) {
-            statsTableContent.innerHTML = '<p class="empty-state">Select exercises from the checkboxes above to view statistics.</p>';
-            return;
-        }
-
-        // Filter to selected exercises
-        const selectedData = this.allExercisesData.filter(d =>
-            this.selectedExerciseIds.includes(d.exercise.id)
-        );
-
-        if (selectedData.length === 0) {
-            statsTableContent.innerHTML = '<p class="empty-state">No data available for selected exercises.</p>';
-            return;
-        }
-
-        // Store table data for sorting
-        this.tableData = selectedData.map(({ exercise, workouts }) => {
-            const stats = this.calculateExerciseStats(workouts, exercise.requiresWeight);
-            return {
-                exercise,
-                stats
-            };
-        });
-
-        // Render table with current sort
-        this.renderSortedTable();
-    },
-
-    /**
-     * Render table with sorting applied
-     */
-    renderSortedTable() {
-        const statsTableContent = document.getElementById('statsTableContent');
-        if (!statsTableContent || !this.tableData) return;
-
-        const hasWeightedExercises = this.tableData.some(d => d.exercise.requiresWeight);
-
-        // Build summary table with collapsible workout history
-        let tableHTML = '<div class="stats-table-container">';
-        tableHTML += `
-            <table class="stats-summary-table">
-                <thead>
-                    <tr>
-                        <th class="sortable" data-sort="name">Exercise <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-sort="workouts">Workouts <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-sort="avgReps">Avg Reps <span class="sort-indicator"></span></th>
-                        ${hasWeightedExercises ? '<th class="sortable" data-sort="avgWeight">Avg Weight <span class="sort-indicator"></span></th>' : ''}
-                        <th class="sortable" data-sort="pr">PR <span class="sort-indicator"></span></th>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        // We need access to workouts for each exercise, so get from allExercisesData
-        this.tableData.forEach(({ exercise, stats }) => {
-            const prValue = exercise.requiresWeight && stats.prReps && stats.prWeight
-                ? `${stats.prReps}x${stats.prWeight.toFixed(1)}`
-                : `${stats.maxReps} reps`;
-
-            // Find workouts for this exercise
-            const exerciseData = this.allExercisesData.find(d => d.exercise.id === exercise.id);
-            const workouts = exerciseData ? exerciseData.workouts : [];
-            const collapseId = `workout-list-${exercise.id}`;
-
-            // Group workouts by date
-            const groupedByDate = {};
-            workouts.forEach(w => {
-                if (!groupedByDate[w.date]) groupedByDate[w.date] = [];
-                groupedByDate[w.date].push(w);
-            });
-            // Sort dates descending (latest first)
-            const sortedDates = Object.keys(groupedByDate).sort((a, b) => b.localeCompare(a));
-
-            // Prepare daily summary rows
-            let prevBest = null;
-            const dailyRows = sortedDates.map(date => {
-                const sets = groupedByDate[date];
-                // For each set: reps x weight (or just reps for bodyweight)
-                const setStrings = sets.map(s => exercise.requiresWeight ? `${s.reps}x${s.weight || 0}` : `${s.reps}`).join(' ');
-                // Calculate best set for the day (by volume for weighted, reps for bodyweight)
-                let best = 0;
-                sets.forEach(s => {
-                    const val = exercise.requiresWeight ? (s.reps * (s.weight || 0)) : s.reps;
-                    if (val > best) best = val;
-                });
-                // Compare to previous day
-                let arrow = '<span style="color:gray">-</span>';
-                if (prevBest !== null) {
-                    if (best > prevBest) {
-                        arrow = '<span style="color:green">&#8593;</span>';
-                    } else if (best < prevBest) {
-                        arrow = '<span style="color:red">&#8595;</span>';
-                    }
-                }
-                prevBest = best;
-                return `
-                    <tr>
-                        <td>${this.formatDate(date)}</td>
-                        <td>${setStrings}</td>
-                        <td style="text-align:center">${arrow}</td>
-                    </tr>
-                `;
-            });
-
-            tableHTML += `
-                <tr class="exercise-summary-row" data-target="${collapseId}" style="cursor:pointer;">
-                    <td class="exercise-name-cell"><strong>${exercise.name}</strong></td>
-                    <td>${stats.totalWorkouts}</td>
-                    <td>${stats.avgReps.toFixed(1)}</td>
-                    ${hasWeightedExercises ? `<td>${exercise.requiresWeight && stats.avgWeight > 0 ? stats.avgWeight.toFixed(1) + ' kg' : '-'}</td>` : ''}
-                    <td><strong>${prValue}</strong></td>
-                    <td style="text-align:center; color:#888;">&#9660;</td>
-                </tr>
-                <tr class="workout-list-row" id="${collapseId}" style="display:none; background:#f9f9f9;">
-                    <td colspan="${hasWeightedExercises ? 6 : 5}" style="padding:0;">
-                        <div class="workout-list-container" style="max-height:250px; overflow-y:auto;">
-                            <table class="workout-list-table" style="width:100%; font-size:0.95em;">
-                                <thead>
-                                    <tr>
-                                        <th>Date</th>
-                                        <th>Sets (reps x weight)</th>
-                                        <th style="text-align:center">&#8597;</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${dailyRows.join('')}
-                                </tbody>
-                            </table>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
-
-        tableHTML += `
-                </tbody>
-            </table>
-        `;
-        tableHTML += '</div>';
-        statsTableContent.innerHTML = tableHTML;
-
-        // Add click handlers for sorting
-        const headers = statsTableContent.querySelectorAll('.sortable');
-        headers.forEach(header => {
-            header.addEventListener('click', () => {
-                const sortKey = header.dataset.sort;
-                this.sortTable(sortKey);
-            });
-        });
-
-        // Add toggle handlers for workout lists (row click)
-        const summaryRows = statsTableContent.querySelectorAll('.exercise-summary-row');
-        summaryRows.forEach(row => {
-            row.addEventListener('click', function () {
-                const targetId = row.getAttribute('data-target');
-                const workoutRow = document.getElementById(targetId);
-                if (workoutRow) {
-                    const isOpen = workoutRow.style.display !== 'none';
-                    workoutRow.style.display = isOpen ? 'none' : '';
-                    // Optionally update arrow icon
-                    const arrowCell = row.querySelector('td:last-child');
-                    if (arrowCell) {
-                        arrowCell.innerHTML = isOpen ? '&#9660;' : '&#9650;';
-                    }
-                }
-            });
-        });
-    },
-
-    /**
-     * Sort table by column
-     * @param {string} sortKey - Key to sort by
-     */
-    sortTable(sortKey) {
-        if (!this.tableData) return;
-
-        // Toggle sort direction if same column
-        if (this.currentSortKey === sortKey) {
-            this.sortAscending = !this.sortAscending;
-        } else {
-            this.currentSortKey = sortKey;
-            this.sortAscending = true;
-        }
-
-        // Sort the data
-        this.tableData.sort((a, b) => {
-            let valA, valB;
-
-            switch (sortKey) {
-                case 'name':
-                    valA = a.exercise.name.toLowerCase();
-                    valB = b.exercise.name.toLowerCase();
-                    break;
-                case 'workouts':
-                    valA = a.stats.totalWorkouts;
-                    valB = b.stats.totalWorkouts;
-                    break;
-                case 'avgReps':
-                    valA = a.stats.avgReps;
-                    valB = b.stats.avgReps;
-                    break;
-                case 'avgWeight':
-                    valA = a.stats.avgWeight;
-                    valB = b.stats.avgWeight;
-                    break;
-                case 'pr':
-                    // For PR, use volume (reps×weight) for weighted, maxReps for bodyweight
-                    if (a.exercise.requiresWeight && a.stats.prReps && a.stats.prWeight) {
-                        valA = a.stats.prReps * a.stats.prWeight;
-                    } else {
-                        valA = a.stats.maxReps;
-                    }
-                    if (b.exercise.requiresWeight && b.stats.prReps && b.stats.prWeight) {
-                        valB = b.stats.prReps * b.stats.prWeight;
-                    } else {
-                        valB = b.stats.maxReps;
-                    }
-                    break;
-                default:
-                    return 0;
-            }
-
-            // Handle string comparisons
-            if (typeof valA === 'string') {
-                return this.sortAscending
-                    ? valA.localeCompare(valB)
-                    : valB.localeCompare(valA);
-            }
-
-            // Handle numeric comparisons
-            return this.sortAscending ? valA - valB : valB - valA;
-        });
-
-        // Re-render table
-        this.renderSortedTable();
-
-        // Update sort indicator
-        this.updateSortIndicators();
-    },
-
-    /**
-     * Update sort indicators in table headers
-     */
-    updateSortIndicators() {
-        const statsTableContent = document.getElementById('statsTableContent');
-        if (!statsTableContent) return;
-
-        // Clear all indicators
-        statsTableContent.querySelectorAll('.sort-indicator').forEach(indicator => {
-            indicator.textContent = '';
-        });
-
-        // Set current indicator
-        const currentHeader = statsTableContent.querySelector(`[data-sort="${this.currentSortKey}"]`);
-        if (currentHeader) {
-            const indicator = currentHeader.querySelector('.sort-indicator');
-            if (indicator) {
-                indicator.textContent = this.sortAscending ? ' ↑' : ' ↓';
-            }
-        }
     },
 
     /**

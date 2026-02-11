@@ -1102,20 +1102,8 @@
 .stats-table-container {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-xl);
-    margin-top: var(--spacing-xxl);
-    padding-top: var(--spacing-xxl);
-    border-top: 3px solid var(--border-light);
-}
-
-.stats-table-container::before {
-    content: '📊 Exercise Summary';
-    display: block;
-    font-size: 1.5rem;
-    font-weight: 600;
-    color: var(--text-primary);
-    margin-bottom: var(--spacing-lg);
-    margin-top: calc(-1 * var(--spacing-xxl));
+    gap: var(--spacing-lg);
+    margin-top: var(--spacing-md);
 }
 
 .stats-summary-table {
@@ -1199,8 +1187,8 @@
         font-size: 0.75rem;
     }
 
-    .stats-table-container::before {
-        font-size: 1.2rem;
+    .stats-table-container {
+        margin-top: var(--spacing-sm);
     }
 }
 
@@ -1415,6 +1403,7 @@
     color: var(--text-primary);
     font-weight: 500;
 }
+
 .sets-list {
     display: flex;
     gap: 6px;
@@ -1431,6 +1420,7 @@
     font-size: 0.85rem;
     box-shadow: var(--shadow-sm);
 }
+
 /* Category Tabs */
 .category-tabs {
     display: flex;

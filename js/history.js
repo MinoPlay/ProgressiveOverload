@@ -202,7 +202,7 @@ export const History = {
             const setDetails = document.createElement('span');
             setDetails.className = 'set-details';
             setDetails.textContent = workout.weight
-                ? `${workout.reps} reps × ${workout.weight} kg`
+                ? `${workout.reps}x${workout.weight}`
                 : `${workout.reps} reps`;
             setItem.appendChild(setDetails);
 

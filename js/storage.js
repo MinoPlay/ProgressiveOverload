@@ -340,28 +340,44 @@ export const Storage = {
     },
 
     /**
-     * Get all workout entries from the most recent day a specific exercise was performed
+     * Get workout entries for the last N distinct days a specific exercise was performed
      * Searches backwards through months if not found in current month
      * @param {string} exerciseId - Exercise ID
-     * @returns {Promise<array>} Array of workout objects from the last session
+     * @param {number} sessionCount - Number of sessions to retrieve
+     * @returns {Promise<array>} Array of session objects {date, sets[]}
      */
-    async getLastWorkoutSessionForExercise(exerciseId) {
-        // 1. Check current month first
+    async getLastWorkoutSessionsForExercise(exerciseId, sessionCount = 3) {
+        let allMatches = [];
+
+        // 1. Check current month
         const currentMonthMatches = this.currentMonthWorkouts
             .filter(w => w.exerciseId === exerciseId);
+        allMatches.push(...currentMonthMatches);
 
-        if (currentMonthMatches.length > 0) {
-            // Find the most recent date
-            const dates = currentMonthMatches.map(w => w.date);
-            const lastDate = dates.sort((a, b) => new Date(b) - new Date(a))[0];
+        // Helper to group, sort and format sessions
+        const getGroupedSessions = (matches) => {
+            const groups = {};
+            matches.forEach(w => {
+                if (!groups[w.date]) groups[w.date] = [];
+                groups[w.date].push(w);
+            });
 
-            // Return all sets from that date, sorted by sequence
-            return currentMonthMatches
-                .filter(w => w.date === lastDate)
-                .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+            // Return as array of {date, sets}, sorted by date desc
+            return Object.entries(groups)
+                .map(([date, sets]) => ({
+                    date,
+                    sets: sets.sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
+                }))
+                .sort((a, b) => new Date(b.date) - new Date(a.date));
+        };
+
+        let sessions = getGroupedSessions(allMatches);
+
+        if (sessions.length >= sessionCount) {
+            return sessions.slice(0, sessionCount);
         }
 
-        // 2. If not found, look at other files in data directory
+        // 2. If not enough sessions, look at other files in data directory
         try {
             const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/')) || 'data';
             const files = await GitHubAPI.listFiles(dataPath);
@@ -377,7 +393,8 @@ export const Storage = {
 
             const regex = new RegExp(`${prefix}(\\d{4})-(\\d{2})\\.json`);
 
-            for (let i = 0; i < Math.min(olderFiles.length, 6); i++) {
+            // Search back up to 12 months if needed
+            for (let i = 0; i < Math.min(olderFiles.length, 12); i++) {
                 const filename = olderFiles[i];
                 const match = filename.match(regex);
 
@@ -389,19 +406,19 @@ export const Storage = {
                 const monthMatches = monthData.workouts.filter(w => w.exerciseId === exerciseId);
 
                 if (monthMatches.length > 0) {
-                    const dates = monthMatches.map(w => w.date);
-                    const lastDate = dates.sort((a, b) => new Date(b) - new Date(a))[0];
+                    allMatches.push(...monthMatches);
+                    sessions = getGroupedSessions(allMatches);
 
-                    return monthMatches
-                        .filter(w => w.date === lastDate)
-                        .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+                    if (sessions.length >= sessionCount) {
+                        return sessions.slice(0, sessionCount);
+                    }
                 }
             }
         } catch (error) {
-            console.warn('Error searching for last workout session:', error);
+            console.warn('Error searching for last workout sessions:', error);
         }
 
-        return [];
+        return sessions;
     },
     /**
      * Get workouts for a specific month

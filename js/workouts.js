@@ -109,50 +109,67 @@ export const Workouts = {
         if (!infoContainer) return;
 
         // Reset and show loading state if it takes a moment
-        infoContainer.innerHTML = '<span class="label">Loading last session...</span>';
+        infoContainer.innerHTML = '<span class="label">Loading last sessions...</span>';
         infoContainer.style.display = 'inline-flex';
 
         try {
-            const lastSession = await Storage.getLastWorkoutSessionForExercise(exerciseId);
+            // Get last 3 sessions
+            const lastSessions = await Storage.getLastWorkoutSessionsForExercise(exerciseId, 3);
 
-            if (!lastSession || lastSession.length === 0) {
+            if (!lastSessions || lastSessions.length === 0) {
                 infoContainer.style.display = 'none';
                 return;
             }
 
             infoContainer.innerHTML = '';
             infoContainer.style.display = 'inline-flex';
-            infoContainer.style.flexWrap = 'wrap';
+            infoContainer.style.flexDirection = 'column';
+            infoContainer.style.alignItems = 'stretch';
+            infoContainer.style.gap = 'var(--spacing-xs)';
 
-            const label = document.createElement('span');
-            label.className = 'label';
-            label.textContent = 'Last Session: ';
-            infoContainer.appendChild(label);
+            const header = document.createElement('div');
+            header.className = 'label';
+            header.textContent = lastSessions.length > 1 ? `Last ${lastSessions.length} Sessions:` : 'Last Session:';
+            infoContainer.appendChild(header);
 
-            const setsContainer = document.createElement('div');
-            setsContainer.className = 'sets-list';
-            setsContainer.style.display = 'flex';
-            setsContainer.style.gap = 'var(--spacing-xs)';
-            setsContainer.style.flexWrap = 'wrap';
-
-            lastSession.forEach((set, index) => {
-                const setBadge = document.createElement('span');
-                setBadge.className = 'set-badge';
-
-                let text = `${set.reps}`;
-                if (set.weight) {
-                    text += `@${set.weight}kg`;
+            lastSessions.forEach((session, sIdx) => {
+                const sessionRow = document.createElement('div');
+                sessionRow.className = 'session-row';
+                sessionRow.style.padding = sIdx === 0 ? '0 0 var(--spacing-xs) 0' : 'var(--spacing-xs) 0';
+                if (sIdx > 0) {
+                    sessionRow.style.borderTop = '1px solid rgba(102, 126, 234, 0.1)';
                 }
 
-                setBadge.textContent = text;
-                setsContainer.appendChild(setBadge);
+                const dateLabel = document.createElement('div');
+                dateLabel.style.fontSize = '0.7rem';
+                dateLabel.style.fontWeight = '600';
+                dateLabel.style.color = 'var(--text-secondary)';
+                dateLabel.style.marginBottom = '4px';
+                dateLabel.textContent = session.date;
+                sessionRow.appendChild(dateLabel);
+
+                const setsContainer = document.createElement('div');
+                setsContainer.className = 'sets-list';
+                setsContainer.style.display = 'flex';
+                setsContainer.style.gap = '4px';
+                setsContainer.style.flexWrap = 'wrap';
+
+                session.sets.forEach((set) => {
+                    const setBadge = document.createElement('span');
+                    setBadge.className = 'set-badge';
+
+                    let text = `${set.reps}`;
+                    if (set.weight) {
+                        text += `x${set.weight}`;
+                    }
+
+                    setBadge.textContent = text;
+                    setsContainer.appendChild(setBadge);
+                });
+
+                sessionRow.appendChild(setsContainer);
+                infoContainer.appendChild(sessionRow);
             });
-
-            infoContainer.appendChild(setsContainer);
-
-            // Add date and total sets as hover title
-            const lastDate = lastSession[0].date;
-            infoContainer.title = `${lastSession.length} sets on ${lastDate}`;
         } catch (error) {
             console.error('Error updating last workout info:', error);
             infoContainer.style.display = 'none';

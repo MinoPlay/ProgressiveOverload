@@ -41,7 +41,7 @@ export const Charts = {
         const statsTableContent = document.getElementById('statsTableContent');
         const noStatsMessage = document.getElementById('noStatsMessage');
         const categoryTabsContainer = document.getElementById('categoryTabsContainer');
-        
+
         if (!statsTableContent || !categoryTabsContainer) return;
 
         // Hide/show elements during loading
@@ -107,6 +107,9 @@ export const Charts = {
             // Group exercises by equipment type
             const groupedExercises = this.groupExercisesByCategory(dataWithWorkouts);
 
+            // Apply default selections from latest workout
+            this.applyLatestWorkoutDefaults(dataWithWorkouts);
+
             // Render Exercise Summary Table (grouped by category)
             this.renderSummaryTable(groupedExercises);
 
@@ -133,7 +136,7 @@ export const Charts = {
      */
     groupExercisesByCategory(exercisesData) {
         const grouped = {};
-        
+
         exercisesData.forEach(data => {
             const category = data.exercise.equipmentType || 'other';
             if (!grouped[category]) {
@@ -144,12 +147,79 @@ export const Charts = {
 
         // Sort exercises within each category alphabetically
         Object.keys(grouped).forEach(category => {
-            grouped[category].sort((a, b) => 
+            grouped[category].sort((a, b) =>
                 a.exercise.name.localeCompare(b.exercise.name)
             );
         });
 
         return grouped;
+    },
+
+    /**
+     * Apply default selections from the latest workout if it's a new workout date
+     * or if no selections are set for a category.
+     * @param {Array} dataWithWorkouts - Exercises with their workout data
+     */
+    applyLatestWorkoutDefaults(dataWithWorkouts) {
+        if (!dataWithWorkouts || dataWithWorkouts.length === 0) return;
+
+        // Find the latest workout date across all exercises
+        let latestDate = '';
+        dataWithWorkouts.forEach(d => {
+            d.workouts.forEach(w => {
+                if (w.date > latestDate) latestDate = w.date;
+            });
+        });
+
+        if (!latestDate) return;
+
+        const lastProcessed = localStorage.getItem('lastProcessedLatestWorkoutDate');
+        const isNewDate = lastProcessed !== latestDate;
+
+        // Get all exercise IDs from the latest workout
+        const latestExerciseIds = dataWithWorkouts
+            .filter(d => d.workouts.some(w => w.date === latestDate))
+            .map(d => d.exercise.id);
+
+        // Group them by category
+        const latestByCategory = {};
+        dataWithWorkouts.forEach(d => {
+            if (latestExerciseIds.includes(d.exercise.id)) {
+                const category = d.exercise.equipmentType || 'other';
+                if (!latestByCategory[category]) {
+                    latestByCategory[category] = [];
+                }
+                latestByCategory[category].push(d.exercise.id);
+            }
+        });
+
+        let changed = false;
+
+        // Identify all unique categories present in the data
+        const categories = [...new Set(dataWithWorkouts.map(d => d.exercise.equipmentType || 'other'))];
+
+        categories.forEach(category => {
+            // Update if it's a new date AND this category was in the latest workout
+            // OR if this category has no selection yet (even if it wasn't in the latest workout)
+            if ((isNewDate && latestByCategory[category]) || this.categorySelections[category] === undefined) {
+                // If it was in the latest workout, select those exercises
+                if (latestByCategory[category]) {
+                    this.categorySelections[category] = latestByCategory[category];
+                    changed = true;
+                }
+                // If it's a brand new category (no selection yet) but not in latest workout, 
+                // just initialize to empty (safety)
+                else if (this.categorySelections[category] === undefined) {
+                    this.categorySelections[category] = [];
+                    changed = true;
+                }
+            }
+        });
+
+        if (changed || isNewDate) {
+            localStorage.setItem('categorySelections', JSON.stringify(this.categorySelections));
+            localStorage.setItem('lastProcessedLatestWorkoutDate', latestDate);
+        }
     },
 
     /**
@@ -225,7 +295,7 @@ export const Charts = {
         const categoryTabsContainer = document.getElementById('categoryTabsContainer');
         const categoryTabs = document.getElementById('categoryTabs');
         const categoryTabContent = document.getElementById('categoryTabContent');
-        
+
         if (!categoryTabs || !categoryTabContent) return;
 
         // Clear existing content

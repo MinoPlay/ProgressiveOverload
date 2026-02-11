@@ -318,7 +318,7 @@ export const Charts = {
             }
             tabBtn.textContent = this.formatEquipmentType(category);
             tabBtn.dataset.category = category;
-            tabBtn.addEventListener('click', () => this.switchCategory(category));
+            tabBtn.addEventListener('click', () => this.switchCategory(category, groupedExercises[category]));
             categoryTabs.appendChild(tabBtn);
         });
 
@@ -669,8 +669,9 @@ export const Charts = {
     /**
      * Switch to a different category tab
      * @param {string} category - Category name
+     * @param {Array} categoryData - Optional data for the category
      */
-    switchCategory(category) {
+    switchCategory(category, categoryData = null) {
         this.currentCategory = category;
         localStorage.setItem('currentCategory', category);
 
@@ -691,6 +692,10 @@ export const Charts = {
                 pane.classList.remove('active');
             }
         });
+
+        // Ensure chart is rendered for the new category
+        const data = categoryData || this.allExercisesData.filter(d => (d.exercise.equipmentType || 'other') === category);
+        this.renderCategoryChart(category, data);
     },
 
     /**

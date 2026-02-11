@@ -89,13 +89,30 @@ export const History = {
     createDateGroup(date, workouts) {
         const group = document.createElement('div');
         group.className = 'history-date-group';
+        const isToday = this.formatDateHeader(date) === 'Today';
+        if (!isToday) {
+            group.classList.add('collapsed');
+        }
 
         // Date header
         const header = document.createElement('div');
         header.className = 'history-date-header';
+        header.onclick = () => group.classList.toggle('collapsed');
+
+        const titleContainer = document.createElement('div');
+        titleContainer.style.display = 'flex';
+        titleContainer.style.alignItems = 'center';
+        titleContainer.style.gap = 'var(--spacing-sm)';
+
+        const chevron = document.createElement('span');
+        chevron.className = 'chevron';
+        chevron.textContent = '▼';
 
         const dateTitle = document.createElement('h3');
         dateTitle.textContent = this.formatDateHeader(date);
+
+        titleContainer.appendChild(chevron);
+        titleContainer.appendChild(dateTitle);
 
         // Group workouts by exercise
         const exerciseGroups = new Map();
@@ -110,7 +127,7 @@ export const History = {
         exerciseCount.className = 'workout-count';
         exerciseCount.textContent = `${exerciseGroups.size} exercise${exerciseGroups.size !== 1 ? 's' : ''}`;
 
-        header.appendChild(dateTitle);
+        header.appendChild(titleContainer);
         header.appendChild(exerciseCount);
         group.appendChild(header);
 

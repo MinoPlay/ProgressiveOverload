@@ -802,6 +802,37 @@
     border-radius: var(--radius-xl);
 }
 
+/* Collapsible History Groups */
+.history-date-group {
+    transition: all var(--transition-base);
+    overflow: hidden;
+}
+
+.history-date-group.collapsed .history-workouts-list {
+    display: none;
+}
+
+.history-date-header {
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-base);
+}
+
+.history-date-header:hover {
+    background: var(--bg-secondary);
+}
+
+.history-date-header .chevron {
+    margin-left: var(--spacing-sm);
+    transition: transform var(--transition-base);
+    font-size: 0.8rem;
+    color: var(--text-light);
+}
+
+.history-date-group.collapsed .chevron {
+    transform: rotate(-90deg);
+}
+
 .history-workouts-list {
     display: flex;
     flex-direction: column;

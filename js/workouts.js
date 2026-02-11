@@ -122,44 +122,31 @@ export const Workouts = {
             }
 
             infoContainer.innerHTML = '';
-            infoContainer.style.display = 'flex';
+            infoContainer.style.display = 'inline-flex';
             infoContainer.style.flexDirection = 'column';
-            infoContainer.style.alignItems = 'stretch';
+            infoContainer.style.alignItems = 'flex-start';
             infoContainer.style.gap = 'var(--spacing-xs)';
-            infoContainer.style.width = '100%';
+            infoContainer.style.width = 'auto';
 
             const header = document.createElement('div');
             header.className = 'label';
-            header.style.marginBottom = 'var(--spacing-xs)';
+            header.style.marginBottom = '2px';
             header.textContent = lastSessions.length > 1 ? `Last ${lastSessions.length} Sessions:` : 'Last Session:';
             infoContainer.appendChild(header);
 
             const sessionsContainer = document.createElement('div');
             sessionsContainer.className = 'sessions-horizontal';
             sessionsContainer.style.display = 'flex';
-            sessionsContainer.style.gap = 'var(--spacing-sm)';
-            sessionsContainer.style.overflowX = 'auto';
-            sessionsContainer.style.paddingBottom = 'var(--spacing-xs)';
-            sessionsContainer.style.width = '100%';
+            sessionsContainer.style.gap = 'var(--spacing-xs)';
+            sessionsContainer.style.flexWrap = 'wrap';
 
             lastSessions.forEach((session, sIdx) => {
                 const sessionBox = document.createElement('div');
                 sessionBox.className = 'session-box';
-                sessionBox.style.flex = '1';
-                sessionBox.style.minWidth = '120px';
                 sessionBox.style.background = 'rgba(102, 126, 234, 0.05)';
-                sessionBox.style.padding = 'var(--spacing-sm)';
+                sessionBox.style.padding = '4px 8px';
                 sessionBox.style.borderRadius = 'var(--radius-sm)';
                 sessionBox.style.border = '1px solid rgba(102, 126, 234, 0.1)';
-
-                const dateLabel = document.createElement('div');
-                dateLabel.style.fontSize = '0.65rem';
-                dateLabel.style.fontWeight = '700';
-                dateLabel.style.color = 'var(--primary-color)';
-                dateLabel.style.marginBottom = '6px';
-                dateLabel.style.textTransform = 'uppercase';
-                dateLabel.textContent = session.date;
-                sessionBox.appendChild(dateLabel);
 
                 const setsContainer = document.createElement('div');
                 setsContainer.className = 'sets-list';

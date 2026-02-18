@@ -3,7 +3,7 @@
 
 import { Storage } from './storage.js';
 import { CONFIG } from './config.js';
-import { calculateLinearRegression, calculateProgressPercentage } from './chart-helpers.js';
+import { calculateLinearRegression, calculateProgressPercentage, estimate1RM, findPersonalRecords, aggregateByWeek } from './chart-helpers.js';
 
 // Register Chart.js plugins globally when available
 // Plugins are loaded via CDN and auto-register with Chart.js 4.x
@@ -13,6 +13,7 @@ export const Charts = {
     selectedExerciseIds: JSON.parse(localStorage.getItem('selectedExerciseIds') || '[]'),
     categorySelections: JSON.parse(localStorage.getItem('categorySelections') || '{}'), // Per-category selections
     currentCategory: localStorage.getItem('currentCategory') || null,
+    selectedMetric: localStorage.getItem('selectedMetric') || 'relative', // 'relative', 'volume', '1rm', 'weight'
     allExercisesData: [], // Store all exercise data
 
     /**
@@ -110,6 +111,9 @@ export const Charts = {
             // Apply default selections from latest workout
             this.applyLatestWorkoutDefaults(dataWithWorkouts);
 
+            // Render Statistics Dashboard (KPIs and Heatmap)
+            this.renderDashboard(dataWithWorkouts);
+
             // Render Exercise Summary Table (grouped by category)
             this.renderSummaryTable(groupedExercises);
 
@@ -127,6 +131,448 @@ export const Charts = {
                 noStatsMessage.innerHTML = '<p class="empty-state">Error loading statistics. Please try again.</p>';
             }
         }
+    },
+
+    /**
+     * Render the main statistics dashboard
+     * @param {Array} dataWithWorkouts - Flattened array of exercises with their workouts
+     */
+    renderDashboard(dataWithWorkouts) {
+        const allWorkouts = dataWithWorkouts.flatMap(d =>
+            d.workouts.map(w => ({ ...w, exerciseName: d.exercise.name }))
+        );
+        this.renderKPICards(dataWithWorkouts);
+        this.renderHeatmap(dataWithWorkouts); // Passed dataWithWorkouts for the frequency matrix
+        this.renderMilestones(dataWithWorkouts);
+        this.renderWeeklyStats(allWorkouts);
+    },
+
+    /**
+     * Render KPI cards (Volume, PRs, Frequency)
+     * @param {Array} allWorkouts - Flat array of all workouts
+     */
+    renderKPICards(dataWithWorkouts) {
+        const kpiGrid = document.getElementById('kpiGrid');
+        if (!kpiGrid) return;
+
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+        const sixtyDaysAgoStr = sixtyDaysAgo.toISOString().split('T')[0];
+
+        // Filter for active exercises (any workout in last 60 days)
+        const activeExercises = dataWithWorkouts.filter(d =>
+            d.workouts.some(w => w.date >= sixtyDaysAgoStr)
+        );
+
+        if (activeExercises.length === 0) {
+            kpiGrid.innerHTML = '<p class="empty-state">No active exercise data for KPIs.</p>';
+            return;
+        }
+
+        let totalProgressPct = 0;
+        let liftsAdvancingCount = 0;
+        let totalActiveInPeriod = activeExercises.length;
+
+        activeExercises.forEach(d => {
+            const daily = this.groupByDate(d.workouts, d.exercise.requiresWeight);
+            const volumes = daily.values;
+
+            if (volumes.length >= 1) {
+                // Progress Index (Latest vs Baseline)
+                const baseline = volumes[0];
+                const latest = volumes[volumes.length - 1];
+                if (baseline > 0) {
+                    totalProgressPct += ((latest - baseline) / baseline) * 100;
+                }
+
+                // Advancing? (Latest vs Previous)
+                if (volumes.length >= 2) {
+                    if (volumes[volumes.length - 1] > volumes[volumes.length - 2]) {
+                        liftsAdvancingCount++;
+                    }
+                }
+            }
+        });
+
+        const avgOverloadIndex = totalProgressPct / totalActiveInPeriod;
+        const advancementRate = (liftsAdvancingCount / totalActiveInPeriod) * 100;
+
+        // Consistency calculation (Last 12 weeks)
+        const allWorkouts = dataWithWorkouts.flatMap(d => d.workouts);
+        const uniqueDates = new Set(allWorkouts.map(w => w.date));
+
+        // Count days in last 12 full weeks
+        const today = new Date();
+        const startOf12Weeks = new Date(today);
+        startOf12Weeks.setDate(today.getDate() - (12 * 7));
+        const startStr = startOf12Weeks.toISOString().split('T')[0];
+
+        const recentDates = Array.from(uniqueDates).filter(d => d >= startStr);
+
+        // Accurate weeks counter (min 1, max 12)
+        const earliestDate = uniqueDates.size > 0 ? new Date(Math.min(...Array.from(uniqueDates).map(d => new Date(d)))) : today;
+        const weeksSinceStart = Math.max(1, Math.min(12, Math.ceil((today - earliestDate) / (1000 * 60 * 60 * 24 * 7))));
+        const avgWeeklyFrequency = recentDates.length / weeksSinceStart;
+
+        kpiGrid.innerHTML = `
+            <div class="kpi-card">
+                <span class="kpi-label" title="Average % improvement across all active exercises since they were first logged">Avg. Performance Gain</span>
+                <div class="kpi-value">${avgOverloadIndex >= 0 ? '+' : ''}${avgOverloadIndex.toFixed(1)}%</div>
+                <span class="kpi-trend trend-neutral">Compared to your baseline</span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label" title="Percentage of exercises that improved volume in their most recent session compared to the one before">Lifts Advancing</span>
+                <div class="kpi-value">${advancementRate.toFixed(0)}%</div>
+                <span class="kpi-trend ${advancementRate >= 50 ? 'trend-up' : (advancementRate > 0 ? 'trend-neutral' : 'trend-down')}">
+                    Across ${totalActiveInPeriod} exercises
+                </span>
+            </div>
+            <div class="kpi-card">
+                <span class="kpi-label" title="Average training sessions per week over the last 12 weeks">Weekly Habit</span>
+                <div class="kpi-value">${avgWeeklyFrequency.toFixed(1)} <small>days/wk</small></div>
+                <span class="kpi-trend ${avgWeeklyFrequency >= 3 ? 'trend-up' : 'trend-neutral'}">
+                    12-week consistency
+                </span>
+            </div>
+        `;
+    },
+
+
+    /**
+     * Render the GitHub-style training heatmap
+     * @param {Array} allWorkouts - Flat array of all workouts
+     */
+    renderHeatmap(dataWithWorkouts) {
+        const matrixContainer = document.getElementById('exerciseMatrix');
+        if (!matrixContainer) return;
+
+        const weeksToShow = 12;
+        const today = new Date();
+
+        // Find current week's Monday
+        const startOfCurrentWeek = new Date(today);
+        const currentDay = today.getDay();
+        const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+        startOfCurrentWeek.setDate(today.getDate() + diffToMonday);
+
+        // Go back 11 full weeks
+        const startDate = new Date(startOfCurrentWeek);
+        startDate.setDate(startOfCurrentWeek.getDate() - (weeksToShow - 1) * 7);
+
+        // Define week boundaries
+        const weekRanges = [];
+        for (let i = 0; i < weeksToShow; i++) {
+            const wStart = new Date(startDate);
+            wStart.setDate(startDate.getDate() + (i * 7));
+            const wEnd = new Date(wStart);
+            wEnd.setDate(wStart.getDate() + 6);
+            weekRanges.push({ start: wStart, end: wEnd });
+        }
+
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+        // Start building HTML
+        let html = '<div class="matrix-header">';
+        html += '<span>Exercise</span>';
+        weekRanges.forEach(range => {
+            html += `<span>${months[range.start.getMonth()]} ${range.start.getDate()}</span>`;
+        });
+        html += '</div>';
+
+        // Filter exercises to those done in the last 12 weeks
+        const minDateStr = startDate.toISOString().split('T')[0];
+        const activeExercises = dataWithWorkouts.filter(d =>
+            d.workouts.some(w => w.date >= minDateStr)
+        ).sort((a, b) => a.exercise.name.localeCompare(b.exercise.name));
+
+        if (activeExercises.length === 0) {
+            matrixContainer.innerHTML = '<p class="empty-state">No exercise data for the last 12 weeks.</p>';
+            return;
+        }
+
+        activeExercises.forEach(d => {
+            html += `<div class="matrix-row">`;
+            html += `<div class="matrix-label" title="${d.exercise.name}">${d.exercise.name}</div>`;
+
+            // For each week, count SESSIONS (distinct days) this exercise was done
+            weekRanges.forEach(range => {
+                const sStr = range.start.toISOString().split('T')[0];
+                const eStr = range.end.toISOString().split('T')[0];
+
+                const sessionDates = new Set(
+                    d.workouts
+                        .filter(w => w.date >= sStr && w.date <= eStr)
+                        .map(w => w.date)
+                );
+
+                const count = sessionDates.size;
+                let level = 0;
+                if (count > 0) level = 1;      // Once a week
+                if (count > 1) level = 2;      // Twice a week
+                if (count > 2) level = 3;      // 3+ times a week
+
+                const levelClass = level > 0 ? ` level-${level}` : '';
+                const title = `${d.exercise.name}\nWeek of ${this.formatDate(sStr).split(',')[0]}\nSessions: ${count}`;
+                html += `<div class="matrix-cell${levelClass}" title="${title}"></div>`;
+            });
+
+            html += `</div>`;
+        });
+
+        matrixContainer.innerHTML = html;
+    },
+
+    /**
+     * Render the weekly aggregate statistics chart
+     * @param {Array} allWorkouts - Flat array of all workouts
+     */
+    renderWeeklyStats(allWorkouts) {
+        const canvas = document.getElementById('weeklyVolumeChart');
+        if (!canvas) return;
+
+        const weeklyData = aggregateByWeek(allWorkouts);
+        // Only show last 12 weeks for the dashboard
+        const displayData = weeklyData.slice(-12);
+
+        const ctx = canvas.getContext('2d');
+
+        // Destroy existing chart if it exists
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: displayData.map(d => `Week of ${this.formatDate(d.weekStart).split(',')[0]}`),
+                datasets: [
+                    {
+                        label: 'Training Days',
+                        data: displayData.map(d => d.frequency),
+                        backgroundColor: 'rgba(76, 175, 80, 0.6)',
+                        borderColor: '#4caf50',
+                        borderWidth: 1,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Different Exercises',
+                        data: displayData.map(d => d.uniqueExercisesCount),
+                        type: 'line',
+                        borderColor: '#667eea',
+                        backgroundColor: '#667eea',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        yAxisID: 'y1',
+                        tension: 0.3
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: (context) => {
+                                const index = context[0].dataIndex;
+                                const item = displayData[index];
+                                return [
+                                    `Weekly Volume: ${Math.round(item.totalVolume)}kg`,
+                                    `Total Reps: ${item.totalReps}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        type: 'linear',
+                        display: true,
+                        position: 'left',
+                        title: { display: true, text: 'Sessions (Days)' },
+                        min: 0,
+                        max: 7,
+                        ticks: { stepSize: 1 }
+                    },
+                    y1: {
+                        type: 'linear',
+                        display: true,
+                        position: 'right',
+                        title: { display: true, text: 'Unique Exercises' },
+                        beginAtZero: true,
+                        grid: { drawOnChartArea: false },
+                        ticks: { stepSize: 1 }
+                    },
+                    x: {
+                        ticks: {
+                            callback: function (val, index) {
+                                const label = this.getLabelForValue(val);
+                                return label.replace('Week of ', '');
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    },
+
+    /**
+     * Render the achievements/milestones list
+     * @param {Array} dataWithWorkouts - Exercises with their workouts
+     */
+    renderMilestones(dataWithWorkouts) {
+        const milestonesSection = document.getElementById('statsMilestones');
+        const milestonesList = document.getElementById('milestonesList');
+        if (!milestonesSection || !milestonesList) return;
+
+        const milestones = this.getRecentMilestones(dataWithWorkouts);
+
+        if (milestones.length === 0) {
+            milestonesSection.style.display = 'none';
+            return;
+        }
+
+        milestonesSection.style.display = 'block';
+        milestonesList.innerHTML = milestones.map(m => `
+            <div class="milestone-item">
+                <span class="milestone-date">${this.formatDate(m.date)}</span>
+                <span class="milestone-text">${m.text}</span>
+                <span class="milestone-badge">${m.type}</span>
+            </div>
+        `).join('');
+    },
+
+    /**
+     * Calculate significant milestones from history
+     * @param {Array} dataWithWorkouts - Exercises with their workouts
+     */
+    getRecentMilestones(dataWithWorkouts) {
+        let milestones = [];
+        const today = new Date();
+
+        // Find current week's Monday for streak calculation
+        const currentMonday = new Date(today);
+        const currentDay = today.getDay();
+        const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
+        currentMonday.setDate(today.getDate() + diffToMonday);
+        currentMonday.setHours(0, 0, 0, 0);
+
+        dataWithWorkouts.forEach(d => {
+            const exerciseWorkouts = d.workouts;
+            if (exerciseWorkouts.length === 0) return;
+
+            // 1. Check for recent PRs (Personal Best) - Fallback for no streaks
+            const records = findPersonalRecords(exerciseWorkouts);
+            const sixtyDaysAgo = new Date();
+            sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+
+            records.forEach(r => {
+                if (new Date(r.date) >= sixtyDaysAgo) {
+                    let text = '';
+                    if (r.type.includes('weight')) text = `<strong>${d.exercise.name}</strong>: New heavy set at ${r.weight}kg!`;
+                    else if (r.type.includes('volume')) text = `<strong>${d.exercise.name}</strong>: New Volume record!`;
+
+                    if (text) {
+                        milestones.push({
+                            date: r.date,
+                            text: text,
+                            type: 'BEST',
+                            timestamp: new Date(r.date).getTime(),
+                            priority: 5
+                        });
+                    }
+                }
+            });
+
+            // 2. Check for Streaks
+            if (exerciseWorkouts.length < 3) return;
+
+            const weeklyStats = aggregateByWeek(exerciseWorkouts);
+            if (weeklyStats.length < 2) return;
+
+            const sortedWeeks = [...weeklyStats].reverse();
+
+            // Recency check for streaks (90 days for better visibility with dev data)
+            const latestWeekStart = new Date(sortedWeeks[0].weekStart);
+            const daysSinceLatest = Math.floor((currentMonday - latestWeekStart) / (1000 * 60 * 60 * 24));
+            if (daysSinceLatest > 90) return;
+
+            // Consistency Streak
+            let consistencyStreak = 1;
+            let currentStreakMonday = latestWeekStart;
+            for (let i = 1; i < sortedWeeks.length; i++) {
+                const prevWeekMonday = new Date(sortedWeeks[i].weekStart);
+                const gap = Math.round((currentStreakMonday - prevWeekMonday) / (1000 * 60 * 60 * 24));
+                if (gap === 7) {
+                    consistencyStreak++;
+                    currentStreakMonday = prevWeekMonday;
+                } else break;
+            }
+
+            if (consistencyStreak >= 3) {
+                milestones.push({
+                    date: sortedWeeks[0].weekStart,
+                    text: `<strong>${d.exercise.name}</strong>: ${consistencyStreak} week streak!`,
+                    type: 'STREAK',
+                    timestamp: latestWeekStart.getTime(),
+                    priority: 10 + consistencyStreak
+                });
+            }
+
+            // Volume/Strength Streaks
+            let volumeStreak = 1;
+            let weightStreak = 1;
+            for (let i = 0; i < sortedWeeks.length - 1; i++) {
+                const curM = new Date(sortedWeeks[i].weekStart);
+                const preM = new Date(sortedWeeks[i + 1].weekStart);
+                const gap = Math.round((curM - preM) / (1000 * 60 * 60 * 24));
+                if (gap !== 7) break;
+
+                if (sortedWeeks[i].totalVolume > sortedWeeks[i + 1].totalVolume) volumeStreak++;
+                else volumeStreak = 0;
+
+                if (d.exercise.requiresWeight && sortedWeeks[i].avgWeight > sortedWeeks[i + 1].avgWeight) weightStreak++;
+                else weightStreak = 0;
+            }
+
+            if (volumeStreak >= 3) {
+                milestones.push({
+                    date: sortedWeeks[0].weekStart,
+                    text: `<strong>${d.exercise.name}</strong>: Volume growing for ${volumeStreak} weeks!`,
+                    type: 'PROGRESS',
+                    timestamp: latestWeekStart.getTime(),
+                    priority: 20 + volumeStreak
+                });
+            }
+
+            if (weightStreak >= 3) {
+                milestones.push({
+                    date: sortedWeeks[0].weekStart,
+                    text: `<strong>${d.exercise.name}</strong>: Weight increasing for ${weightStreak} weeks!`,
+                    type: 'POWER',
+                    timestamp: latestWeekStart.getTime(),
+                    priority: 30 + weightStreak
+                });
+            }
+        });
+
+        // Deduplicate: If multiple milestones for same exercise, take highest priority
+        const exerciseGroups = {};
+        milestones.forEach(m => {
+            const match = m.text.match(/<strong>(.*?)<\/strong>/);
+            if (match) {
+                const name = match[1];
+                if (!exerciseGroups[name] || m.priority > exerciseGroups[name].priority) {
+                    exerciseGroups[name] = m;
+                }
+            }
+        });
+
+        return Object.values(exerciseGroups)
+            .sort((a, b) => b.priority - a.priority || b.timestamp - a.timestamp)
+            .slice(0, 5);
     },
 
     /**
@@ -239,8 +685,8 @@ export const Charts = {
                 <thead>
                     <tr>
                         <th class="sortable" data-sort="name">Exercise <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-sort="category">Category <span class="sort-indicator"></span></th>
-                        <th class="sortable" data-sort="workouts">Workouts <span class="sort-indicator"></span></th>
+                        <th>vs Prev</th>
+                        <th>Progress</th>
                         <th class="sortable" data-sort="avgReps">Avg Reps <span class="sort-indicator"></span></th>
                         ${hasWeightedExercises ? '<th class="sortable" data-sort="avgWeight">Avg Weight <span class="sort-indicator"></span></th>' : ''}
                         <th class="sortable" data-sort="pr">PR <span class="sort-indicator"></span></th>
@@ -252,7 +698,7 @@ export const Charts = {
         categories.forEach(category => {
             // Add category header row
             tableHTML += `
-                <tr class="category-header-row" style="background: #f0f0f0; font-weight: bold;">
+                <tr class="category-header-row">
                     <td colspan="${hasWeightedExercises ? 6 : 5}" style="padding: var(--spacing-md);">
                         ${this.formatEquipmentType(category)}
                     </td>
@@ -262,15 +708,29 @@ export const Charts = {
             // Add exercise rows for this category
             groupedExercises[category].forEach(({ exercise, workouts }) => {
                 const stats = this.calculateExerciseStats(workouts, exercise.requiresWeight);
+                if (!stats) return;
+
                 const prValue = exercise.requiresWeight && stats.prReps && stats.prWeight
                     ? `${stats.prReps}x${stats.prWeight.toFixed(1)}`
                     : `${stats.maxReps} reps`;
 
+                const trendClass = stats.trend > 0 ? 'trend-up' : (stats.trend < 0 ? 'trend-down' : 'trend-neutral');
+                const trendIcon = stats.trend > 0 ? '↑' : (stats.trend < 0 ? '↓' : '→');
+                const trendText = stats.trend !== 0 ? `${Math.abs(stats.trend).toFixed(1)}%` : '-';
+
                 tableHTML += `
                     <tr>
-                        <td class="exercise-name-cell"><strong>${exercise.name}</strong></td>
-                        <td>${this.formatEquipmentType(category)}</td>
-                        <td>${stats.totalWorkouts}</td>
+                        <td class="exercise-name-cell">
+                            <strong>${exercise.name}</strong>
+                        </td>
+                        <td>
+                            <span class="kpi-trend ${trendClass}" style="margin: 0; white-space: nowrap;">
+                                ${trendIcon} ${trendText}
+                            </span>
+                        </td>
+                        <td style="min-width: 90px;">
+                            ${this.renderSparkline(stats.volumes)}
+                        </td>
                         <td>${stats.avgReps.toFixed(1)}</td>
                         ${hasWeightedExercises ? `<td>${exercise.requiresWeight && stats.avgWeight > 0 ? stats.avgWeight.toFixed(1) + ' kg' : '-'}</td>` : ''}
                         <td><strong>${prValue}</strong></td>
@@ -285,6 +745,35 @@ export const Charts = {
         `;
         tableHTML += '</div>';
         statsTableContent.innerHTML = tableHTML;
+    },
+
+    /**
+     * Generate a simple SVG sparkline
+     * @param {Array} values - Array of numeric values
+     * @returns {string} SVG HTML string
+     */
+    renderSparkline(values) {
+        if (!values || values.length < 2) return '<span class="text-light">-</span>';
+
+        const width = 80;
+        const height = 24;
+        const padding = 2;
+
+        const min = Math.min(...values);
+        const max = Math.max(...values);
+        const range = max - min || 1;
+
+        const points = values.map((v, i) => {
+            const x = (i / (values.length - 1)) * (width - 2 * padding) + padding;
+            const y = height - ((v - min) / range) * (height - 2 * padding) - padding;
+            return `${x},${y}`;
+        }).join(' ');
+
+        return `
+            <svg width="${width}" height="${height}" class="sparkline" style="display: block;">
+                <polyline points="${points}" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        `;
     },
 
     /**
@@ -308,6 +797,9 @@ export const Charts = {
         if (!this.currentCategory || !categories.includes(this.currentCategory)) {
             this.currentCategory = categories[0];
         }
+
+        // Create metric selector
+        this.renderMetricSelector(groupedExercises[this.currentCategory]);
 
         // Create tab buttons
         categories.forEach(category => {
@@ -487,14 +979,16 @@ export const Charts = {
      * @param {Array} exercisesData - Exercises in this category
      */
     renderCategoryChart(category, exercisesData) {
-        const canvas = document.getElementById(`chart-${category}`);
-        if (!canvas) return;
+        const pane = document.getElementById(`category-pane-${category}`);
+        if (!pane) return;
+
+        const container = pane.querySelector('.chart-container');
+        if (!container) return;
 
         // Get selected exercises for this category
         const selectedIds = this.categorySelections[category] || [];
 
         if (selectedIds.length === 0) {
-            const container = canvas.parentElement;
             container.innerHTML = '<p class="empty-state">Select exercises from the checkboxes above to view.</p>';
             return;
         }
@@ -503,13 +997,11 @@ export const Charts = {
         const selectedData = exercisesData.filter(d => selectedIds.includes(d.exercise.id));
 
         if (selectedData.length === 0) {
-            const container = canvas.parentElement;
             container.innerHTML = '<p class="empty-state">No data available for selected exercises.</p>';
             return;
         }
 
-        // Recreate canvas if it was removed
-        const container = canvas.parentElement;
+        // Recreate canvas
         container.innerHTML = `<canvas id="chart-${category}"></canvas>`;
         const newCanvas = document.getElementById(`chart-${category}`);
 
@@ -527,21 +1019,34 @@ export const Charts = {
         const sortedDates = Array.from(allDates).sort();
 
         selectedData.forEach((data, idx) => {
-            const dailyData = this.groupByDate(data.workouts, data.exercise.requiresWeight);
-            const alignedData = sortedDates.map(date => {
-                const dataIdx = dailyData.labels.indexOf(date);
-                return dataIdx !== -1 ? dailyData.values[dataIdx] : null;
-            });
+            let metricValues = [];
+            let yAxisLabel = '';
+            let titleSuffix = '';
 
-            // Calculate progress percentage for non-null values
-            const nonNullValues = alignedData.filter(v => v !== null);
-            const progressPercentages = this.calculateProgressPercentage(nonNullValues);
+            // Group by date to get the raw data for this exercise
+            const dailyRaw = this.groupByDate(data.workouts, data.exercise.requiresWeight);
 
-            // Map back to aligned data structure
-            let progressIdx = 0;
-            const alignedProgress = alignedData.map(val => {
-                if (val === null) return null;
-                return progressPercentages[progressIdx++];
+            if (this.selectedMetric === 'relative') {
+                const progressPercentages = this.calculateProgressPercentage(dailyRaw.values);
+                metricValues = progressPercentages;
+                yAxisLabel = 'Progress (% of Baseline)';
+                titleSuffix = '(% Improvement vs Baseline)';
+            } else if (this.selectedMetric === 'volume') {
+                metricValues = dailyRaw.values;
+                yAxisLabel = 'Volume (kg)';
+                titleSuffix = '(Total Volume)';
+            } else if (this.selectedMetric === 'reps') {
+                metricValues = dailyRaw.labels.map(date => {
+                    const daySets = dailyRaw.setsMap[date];
+                    return daySets.reduce((sum, s) => sum + s.reps, 0);
+                });
+                yAxisLabel = 'Total Reps';
+                titleSuffix = '(Total Repetitions)';
+            }
+
+            const alignedValues = sortedDates.map(date => {
+                const dataIdx = dailyRaw.labels.indexOf(date);
+                return dataIdx !== -1 ? metricValues[dataIdx] : null;
             });
 
             const barColor = barColors[idx % barColors.length];
@@ -549,13 +1054,13 @@ export const Charts = {
 
             // Align original sets to the dates
             const alignedSets = sortedDates.map(date => {
-                return dailyData.setsMap[date] || null;
+                return dailyRaw.setsMap[date] || null;
             });
 
             // Add bar chart for progress percentage
             datasets.push({
                 label: data.exercise.name,
-                data: alignedProgress,
+                data: alignedValues,
                 originalSets: alignedSets, // Store for tooltip
                 exercise: data.exercise,   // Store for tooltip
                 type: 'bar',
@@ -566,7 +1071,7 @@ export const Charts = {
             });
 
             // Add trend line (dotted)
-            const validPoints = alignedProgress
+            const validPoints = alignedValues
                 .map((val, idx) => ({ x: idx, y: val }))
                 .filter(p => p.y !== null);
 
@@ -588,6 +1093,14 @@ export const Charts = {
                 });
             }
         });
+
+        // Use the suffix of the last exercise for the entire chart title
+        const firstData = selectedData[0];
+        let mainTitleSuffix = '';
+        let yAxisLabel = 'Value';
+        if (this.selectedMetric === 'relative') { mainTitleSuffix = '(% Improvement vs Baseline)'; yAxisLabel = 'Progress (% of Baseline)'; }
+        else if (this.selectedMetric === 'volume') { mainTitleSuffix = '(Total Volume)'; yAxisLabel = 'Volume (kg)'; }
+        else if (this.selectedMetric === 'reps') { mainTitleSuffix = '(Total Repetitions)'; yAxisLabel = 'Total Reps'; }
 
         // Create mixed chart (bars + lines)
         const ctx = newCanvas.getContext('2d');
@@ -626,7 +1139,7 @@ export const Charts = {
                     },
                     title: {
                         display: true,
-                        text: `${this.formatEquipmentType(category)} - Workout Progress Tracking (% Improvement vs Baseline)`
+                        text: `${this.formatEquipmentType(category)} - Workout Progress Tracking ${mainTitleSuffix}`
                     },
                     tooltip: {
                         callbacks: {
@@ -636,15 +1149,19 @@ export const Charts = {
                             label: (context) => {
                                 const label = context.dataset.label || '';
                                 const value = context.parsed.y;
-                                if (value === null || context.dataset.type === 'line') return `${label}: ${value?.toFixed(1)}%`;
+                                if (value === null || context.dataset.type === 'line') {
+                                    return `${label}: ${value?.toFixed(1)}${this.selectedMetric === 'relative' ? '%' : ''}`;
+                                }
 
-                                // Show percentage and change from baseline
-                                const changeFromBaseline = value - 100;
-                                const changeText = changeFromBaseline >= 0
-                                    ? `+${changeFromBaseline.toFixed(1)}%`
-                                    : `${changeFromBaseline.toFixed(1)}%`;
+                                if (this.selectedMetric === 'relative') {
+                                    const changeFromBaseline = value - 100;
+                                    const changeText = changeFromBaseline >= 0
+                                        ? `+${changeFromBaseline.toFixed(1)}%`
+                                        : `${changeFromBaseline.toFixed(1)}%`;
+                                    return `${label}: ${value.toFixed(1)}% (${changeText})`;
+                                }
 
-                                return `${label}: ${value.toFixed(1)}% (${changeText})`;
+                                return `${label}: ${value.toFixed(1)}${this.selectedMetric === 'volume' ? 'kg' : (this.selectedMetric === 'reps' ? ' reps' : '')}`;
                             },
                             afterLabel: (context) => {
                                 const sets = context.dataset.originalSets?.[context.dataIndex];
@@ -664,11 +1181,13 @@ export const Charts = {
                         beginAtZero: false,
                         title: {
                             display: true,
-                            text: 'Progress (% of Baseline)'
+                            text: yAxisLabel
                         },
                         ticks: {
-                            callback: function (value) {
-                                return value.toFixed(0) + '%';
+                            callback: (value) => {
+                                if (this.selectedMetric === 'relative') return value.toFixed(0) + '%';
+                                if (this.selectedMetric === 'reps') return value.toFixed(0) + ' reps';
+                                return value.toFixed(0) + 'kg';
                             }
                         }
                     },
@@ -681,6 +1200,48 @@ export const Charts = {
                 }
             }
         });
+    },
+
+    /**
+     * Render the metric selector buttons
+     * @param {Array} categoryData - Data for the current category
+     */
+    renderMetricSelector(categoryData) {
+        const controls = document.getElementById('chartControls');
+        if (!controls) return;
+
+        controls.innerHTML = `
+            <label>View Metric:</label>
+            <div class="metric-btns">
+                <button class="metric-btn ${this.selectedMetric === 'relative' ? 'active' : ''}" data-metric="relative" title="Progress relative to your first workouts">Relative %</button>
+                <button class="metric-btn ${this.selectedMetric === 'volume' ? 'active' : ''}" data-metric="volume" title="Total work done (Reps × Weight)">Volume</button>
+                <button class="metric-btn ${this.selectedMetric === 'reps' ? 'active' : ''}" data-metric="reps" title="Total repetitions performed">Reps</button>
+            </div>
+        `;
+
+        controls.querySelectorAll('.metric-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchMetric(e.target.dataset.metric, categoryData);
+            });
+        });
+    },
+
+    /**
+     * Switch the active metric for charts
+     * @param {string} metric - Selected metric key
+     * @param {Array} categoryData - Data for the current category
+     */
+    switchMetric(metric, categoryData) {
+        this.selectedMetric = metric;
+        localStorage.setItem('selectedMetric', metric);
+
+        // Update button active states
+        document.querySelectorAll('.metric-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.metric === metric);
+        });
+
+        // Re-render chart
+        this.renderCategoryChart(this.currentCategory, categoryData);
     },
 
     /**
@@ -812,6 +1373,8 @@ export const Charts = {
      */
     calculateExerciseStats(workouts, requiresWeight) {
         const totalWorkouts = workouts.length;
+        if (totalWorkouts === 0) return null;
+
         const totalReps = workouts.reduce((sum, w) => sum + w.reps, 0);
         const avgReps = totalReps / totalWorkouts;
 
@@ -822,6 +1385,20 @@ export const Charts = {
 
         // For bodyweight exercises, PR is max reps
         const maxReps = Math.max(...workouts.map(w => w.reps));
+
+        // Group by date to get volume per session
+        const dailyData = this.groupByDate(workouts, requiresWeight);
+        const volumes = dailyData.values;
+
+        // Calculate Trend (compare last volume to average of previous)
+        let trend = 0;
+        if (volumes.length >= 2) {
+            const lastVolume = volumes[volumes.length - 1];
+            const prevVolume = volumes[volumes.length - 2];
+            if (prevVolume > 0) {
+                trend = ((lastVolume - prevVolume) / prevVolume) * 100;
+            }
+        }
 
         // For weighted exercises, find PR workout (highest volume = reps × weight)
         let prReps = null;
@@ -847,7 +1424,9 @@ export const Charts = {
             avgWeight,
             maxReps,
             prReps,
-            prWeight
+            prWeight,
+            trend,
+            volumes
         };
     },
 

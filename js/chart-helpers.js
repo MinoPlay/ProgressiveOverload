@@ -44,9 +44,9 @@ export function calculateLinearRegression(dataPoints) {
  */
 export function calculateMovingAverage(values, windowSize = 7) {
     if (!values || values.length === 0) return [];
-    
+
     const result = [];
-    
+
     for (let i = 0; i < values.length; i++) {
         if (i < windowSize - 1) {
             // Not enough data points yet
@@ -60,7 +60,7 @@ export function calculateMovingAverage(values, windowSize = 7) {
             result.push(sum / windowSize);
         }
     }
-    
+
     return result;
 }
 
@@ -100,7 +100,8 @@ export function aggregateByWeek(workouts) {
                 totalReps: 0,
                 frequency: 0,
                 totalWeight: 0,
-                workoutDates: new Set()
+                workoutDates: new Set(),
+                uniqueExerciseNames: new Set()
             });
         }
 
@@ -110,6 +111,9 @@ export function aggregateByWeek(workouts) {
         weekData.totalReps += workout.reps;
         weekData.totalWeight += (workout.weight || 0);
         weekData.workoutDates.add(workout.date);
+        if (workout.exerciseName) {
+            weekData.uniqueExerciseNames.add(workout.exerciseName);
+        }
     }
 
     // Convert to array and calculate averages
@@ -119,6 +123,7 @@ export function aggregateByWeek(workouts) {
             totalVolume: Math.round(week.totalVolume * 10) / 10,
             totalReps: week.totalReps,
             frequency: week.workoutDates.size,
+            uniqueExercisesCount: week.uniqueExerciseNames.size,
             avgWeight: week.totalWeight > 0 ? Math.round((week.totalWeight / week.frequency) * 10) / 10 : 0
         }))
         .sort((a, b) => new Date(a.weekStart) - new Date(b.weekStart));
@@ -160,7 +165,7 @@ export function findPersonalRecords(workouts) {
     let maxVolume = 0;
 
     // Sort by date to track progressive records
-    const sortedWorkouts = [...workouts].sort((a, b) => 
+    const sortedWorkouts = [...workouts].sort((a, b) =>
         new Date(a.date) - new Date(b.date)
     );
 
@@ -260,10 +265,10 @@ export function calculateSessionDistribution(workouts) {
  */
 export function normalizeToPercent(values) {
     if (!values || values.length === 0) return [];
-    
+
     const max = Math.max(...values);
     if (max === 0) return values.map(() => 0);
-    
+
     return values.map(v => (v / max) * 100);
 }
 
@@ -275,13 +280,27 @@ export function normalizeToPercent(values) {
  */
 export function calculateProgressPercentage(values) {
     if (!values || values.length === 0) return [];
-    
+
     // Calculate baseline: average of first 1-3 workouts
     const baselineCount = Math.min(3, values.length);
     const baseline = values.slice(0, baselineCount).reduce((sum, val) => sum + val, 0) / baselineCount;
-    
+
     if (baseline === 0) return values.map(() => 0);
-    
+
     // Convert each value to percentage of baseline
     return values.map(v => (v / baseline) * 100);
+}
+
+/**
+ * Estimate 1 Rep Max using Brzycki formula
+ * @param {number} weight - Weight lifted
+ * @param {number} reps - Number of repetitions
+ * @returns {number} Estimated 1RM
+ */
+export function estimate1RM(weight, reps) {
+    if (!weight || !reps) return 0;
+    if (reps === 1) return weight;
+    // Brzycki Formula: Weight * (36 / (37 - reps))
+    // Only valid for reps <= 10 for best accuracy, but we'll use it for all
+    return weight * (36 / (37 - Math.min(reps, 30)));
 }

@@ -171,6 +171,54 @@
             <!-- Statistics Section -->
             <section id="statisticsSection" class="content-section" role="region" aria-label="Statistics & Progress">
 
+                <!-- Statistics Dashboard -->
+                <div id="statsDashboard" class="stats-dashboard">
+                    <div class="kpi-grid" id="kpiGrid">
+                        <!-- KPI Cards will be injected here -->
+                    </div>
+
+                    <!-- Weekly Performance Chart (Main Dashboard Focus) -->
+                    <div class="dashboard-main-chart">
+                        <div class="section-card">
+                            <h4>Weekly Performance (Volume & Frequency)</h4>
+                            <div class="chart-wrapper" style="height: 250px;">
+                                <canvas id="weeklyVolumeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Consistency Tracker (Secondary) -->
+                <div id="consistencyTracker" class="consistency-tracker">
+                    <div class="matrix-container section-card" id="heatmapContainer">
+                        <h4>Exercise Breakdown (Sessions per Week)</h4>
+                        <div class="matrix-wrapper">
+                            <div id="exerciseMatrix" class="exercise-matrix">
+                                <!-- Matrix will be injected here -->
+                            </div>
+                        </div>
+                        <div class="matrix-legend">
+                            <span>Frequency:</span>
+                            <div class="matrix-level level-0" title="0 sessions"></div>
+                            <span>0</span>
+                            <div class="matrix-level level-1" title="1 session"></div>
+                            <span>1</span>
+                            <div class="matrix-level level-2" title="2 sessions"></div>
+                            <span>2</span>
+                            <div class="matrix-level level-3" title="3+ sessions"></div>
+                            <span>3+</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Milestones -->
+                <div id="statsMilestones" class="stats-milestones" style="display: none;">
+                    <h4>🔥 Progress & Consistency Milestones</h4>
+                    <div id="milestonesList" class="milestones-list">
+                        <!-- Milestones will be injected here -->
+                    </div>
+                </div>
+
                 <!-- Exercise Summary Table (Grouped by Category) -->
                 <div id="exerciseSummarySection" style="margin-bottom: 30px;">
                     <h3 id="summaryToggle"
@@ -185,10 +233,13 @@
 
                 <!-- Category Tabs -->
                 <div id="categoryTabsContainer">
+                    <div id="chartControls" class="chart-controls">
+                        <!-- Metric selector will be injected here -->
+                    </div>
                     <div class="category-tabs" id="categoryTabs">
                         <!-- Tabs will be dynamically populated -->
                     </div>
-                    
+
                     <div class="category-tab-content" id="categoryTabContent">
                         <!-- Tab content will be dynamically populated -->
                     </div>

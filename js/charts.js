@@ -20,6 +20,12 @@ export const Charts = {
      * Initialize charts UI
      */
     init() {
+        // Migrate 'volume' to 'weight'
+        if (this.selectedMetric === 'volume') {
+            this.selectedMetric = 'weight';
+            localStorage.setItem('selectedMetric', 'weight');
+        }
+
         this.renderCombinedChart();
         // Listen for exercise updates
         window.addEventListener('exercisesUpdated', () => {
@@ -148,7 +154,7 @@ export const Charts = {
     },
 
     /**
-     * Render KPI cards (Volume, PRs, Frequency)
+     * Render KPI cards (Performance, PRs, Frequency)
      * @param {Array} allWorkouts - Flat array of all workouts
      */
     renderKPICards(dataWithWorkouts) {
@@ -175,19 +181,19 @@ export const Charts = {
 
         activeExercises.forEach(d => {
             const daily = this.groupByDate(d.workouts, d.exercise.requiresWeight);
-            const volumes = daily.values;
+            const weights = daily.maxWeights;
 
-            if (volumes.length >= 1) {
+            if (weights.length >= 1) {
                 // Progress Index (Latest vs Baseline)
-                const baseline = volumes[0];
-                const latest = volumes[volumes.length - 1];
+                const baseline = weights[0];
+                const latest = weights[weights.length - 1];
                 if (baseline > 0) {
                     totalProgressPct += ((latest - baseline) / baseline) * 100;
                 }
 
                 // Advancing? (Latest vs Previous)
-                if (volumes.length >= 2) {
-                    if (volumes[volumes.length - 1] > volumes[volumes.length - 2]) {
+                if (weights.length >= 2) {
+                    if (weights[weights.length - 1] > weights[weights.length - 2]) {
                         liftsAdvancingCount++;
                     }
                 }
@@ -221,7 +227,7 @@ export const Charts = {
                 <span class="kpi-trend trend-neutral">Compared to your baseline</span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-label" title="Percentage of exercises that improved volume in their most recent session compared to the one before">Lifts Advancing</span>
+                <span class="kpi-label" title="Percentage of exercises that improved their personal record (max weight or reps) in their most recent session compared to the one before">Lifts Advancing</span>
                 <div class="kpi-value">${advancementRate.toFixed(0)}%</div>
                 <span class="kpi-trend ${advancementRate >= 50 ? 'trend-up' : (advancementRate > 0 ? 'trend-neutral' : 'trend-down')}">
                     Across ${totalActiveInPeriod} exercises
@@ -472,7 +478,7 @@ export const Charts = {
                 if (new Date(r.date) >= sixtyDaysAgo) {
                     let text = '';
                     if (r.type.includes('weight')) text = `<strong>${d.exercise.name}</strong>: New heavy set at ${r.weight}kg!`;
-                    else if (r.type.includes('volume')) text = `<strong>${d.exercise.name}</strong>: New Volume record!`;
+                    else if (r.type.includes('volume')) text = `<strong>${d.exercise.name}</strong>: New Personal Record!`;
 
                     if (text) {
                         milestones.push({
@@ -540,7 +546,7 @@ export const Charts = {
             if (volumeStreak >= 3) {
                 milestones.push({
                     date: sortedWeeks[0].weekStart,
-                    text: `<strong>${d.exercise.name}</strong>: Volume growing for ${volumeStreak} weeks!`,
+                    text: `<strong>${d.exercise.name}</strong>: Performance growing for ${volumeStreak} weeks!`,
                     type: 'PROGRESS',
                     timestamp: latestWeekStart.getTime(),
                     priority: 20 + volumeStreak
@@ -729,7 +735,7 @@ export const Charts = {
                             </span>
                         </td>
                         <td style="min-width: 90px;">
-                            ${this.renderSparkline(stats.volumes)}
+                            ${this.renderSparkline(stats.maxWeights)}
                         </td>
                         <td>${stats.avgReps.toFixed(1)}</td>
                         ${hasWeightedExercises ? `<td>${exercise.requiresWeight && stats.avgWeight > 0 ? stats.avgWeight.toFixed(1) + ' kg' : '-'}</td>` : ''}
@@ -1031,10 +1037,10 @@ export const Charts = {
                 metricValues = progressPercentages;
                 yAxisLabel = 'Progress (% of Baseline)';
                 titleSuffix = '(% Improvement vs Baseline)';
-            } else if (this.selectedMetric === 'volume') {
-                metricValues = dailyRaw.values;
-                yAxisLabel = 'Volume (kg)';
-                titleSuffix = '(Total Volume)';
+            } else if (this.selectedMetric === 'weight') {
+                metricValues = dailyRaw.maxWeights;
+                yAxisLabel = data.exercise.requiresWeight ? 'Weight (kg)' : 'Max Reps';
+                titleSuffix = '(Personal Record)';
             } else if (this.selectedMetric === 'reps') {
                 metricValues = dailyRaw.labels.map(date => {
                     const daySets = dailyRaw.setsMap[date];
@@ -1099,7 +1105,7 @@ export const Charts = {
         let mainTitleSuffix = '';
         let yAxisLabel = 'Value';
         if (this.selectedMetric === 'relative') { mainTitleSuffix = '(% Improvement vs Baseline)'; yAxisLabel = 'Progress (% of Baseline)'; }
-        else if (this.selectedMetric === 'volume') { mainTitleSuffix = '(Total Volume)'; yAxisLabel = 'Volume (kg)'; }
+        else if (this.selectedMetric === 'weight') { mainTitleSuffix = '(Personal Record)'; yAxisLabel = 'Weight (kg)'; }
         else if (this.selectedMetric === 'reps') { mainTitleSuffix = '(Total Repetitions)'; yAxisLabel = 'Total Reps'; }
 
         // Create mixed chart (bars + lines)
@@ -1161,7 +1167,7 @@ export const Charts = {
                                     return `${label}: ${value.toFixed(1)}% (${changeText})`;
                                 }
 
-                                return `${label}: ${value.toFixed(1)}${this.selectedMetric === 'volume' ? 'kg' : (this.selectedMetric === 'reps' ? ' reps' : '')}`;
+                                return `${label}: ${value.toFixed(1)}${this.selectedMetric === 'weight' ? (context.dataset.exercise?.requiresWeight ? 'kg' : ' reps') : (this.selectedMetric === 'reps' ? ' reps' : '')}`;
                             },
                             afterLabel: (context) => {
                                 const sets = context.dataset.originalSets?.[context.dataIndex];
@@ -1214,7 +1220,7 @@ export const Charts = {
             <label>View Metric:</label>
             <div class="metric-btns">
                 <button class="metric-btn ${this.selectedMetric === 'relative' ? 'active' : ''}" data-metric="relative" title="Progress relative to your first workouts">Relative %</button>
-                <button class="metric-btn ${this.selectedMetric === 'volume' ? 'active' : ''}" data-metric="volume" title="Total work done (Reps × Weight)">Volume</button>
+                <button class="metric-btn ${this.selectedMetric === 'weight' ? 'active' : ''}" data-metric="weight" title="Heaviest weight lifted (PR)">Weight (PR)</button>
                 <button class="metric-btn ${this.selectedMetric === 'reps' ? 'active' : ''}" data-metric="reps" title="Total repetitions performed">Reps</button>
             </div>
         `;
@@ -1336,6 +1342,7 @@ export const Charts = {
      */
     groupByDate(workouts, isWeighted = true) {
         const dates = new Map();
+        const maxWeights = new Map();
         const setsMap = {};
 
         workouts.forEach(workout => {
@@ -1343,24 +1350,32 @@ export const Charts = {
 
             if (!dates.has(dateLabel)) {
                 dates.set(dateLabel, 0);
+                maxWeights.set(dateLabel, 0);
                 setsMap[dateLabel] = [];
             }
 
             setsMap[dateLabel].push(workout);
 
             // Calculate volume (reps × weight) for weighted exercises, or total reps for bodyweight
-            const value = isWeighted && workout.weight
+            const volumeValue = isWeighted && workout.weight
                 ? workout.reps * workout.weight
                 : workout.reps;
-            dates.set(dateLabel, dates.get(dateLabel) + value);
+            dates.set(dateLabel, dates.get(dateLabel) + volumeValue);
+
+            // Track max weight (PR) for the day
+            const weightValue = (isWeighted && workout.weight) ? workout.weight : workout.reps;
+            if (weightValue > maxWeights.get(dateLabel)) {
+                maxWeights.set(dateLabel, weightValue);
+            }
         });
 
         // Sort by date
-        const sortedDates = Array.from(dates.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+        const sortedDates = Array.from(dates.keys()).sort((a, b) => a.localeCompare(b));
 
         return {
-            labels: sortedDates.map(entry => entry[0]),
-            values: sortedDates.map(entry => entry[1]),
+            labels: sortedDates,
+            values: sortedDates.map(date => dates.get(date)),
+            maxWeights: sortedDates.map(date => maxWeights.get(date)),
             setsMap: setsMap
         };
     },
@@ -1389,6 +1404,7 @@ export const Charts = {
         // Group by date to get volume per session
         const dailyData = this.groupByDate(workouts, requiresWeight);
         const volumes = dailyData.values;
+        const maxWeights = dailyData.maxWeights;
 
         // Calculate Trend (compare last volume to average of previous)
         let trend = 0;
@@ -1426,7 +1442,8 @@ export const Charts = {
             prReps,
             prWeight,
             trend,
-            volumes
+            volumes,
+            maxWeights
         };
     },
 

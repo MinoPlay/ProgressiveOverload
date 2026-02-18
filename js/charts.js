@@ -547,10 +547,17 @@ export const Charts = {
             const barColor = barColors[idx % barColors.length];
             const trendColor = trendColors[idx % trendColors.length];
 
+            // Align original sets to the dates
+            const alignedSets = sortedDates.map(date => {
+                return dailyData.setsMap[date] || null;
+            });
+
             // Add bar chart for progress percentage
             datasets.push({
                 label: data.exercise.name,
                 data: alignedProgress,
+                originalSets: alignedSets, // Store for tooltip
+                exercise: data.exercise,   // Store for tooltip
                 type: 'bar',
                 backgroundColor: barColor.replace(')', ', 0.6)').replace('rgb', 'rgba'),
                 borderColor: barColor,
@@ -629,7 +636,7 @@ export const Charts = {
                             label: (context) => {
                                 const label = context.dataset.label || '';
                                 const value = context.parsed.y;
-                                if (value === null) return '';
+                                if (value === null || context.dataset.type === 'line') return `${label}: ${value?.toFixed(1)}%`;
 
                                 // Show percentage and change from baseline
                                 const changeFromBaseline = value - 100;
@@ -637,7 +644,17 @@ export const Charts = {
                                     ? `+${changeFromBaseline.toFixed(1)}%`
                                     : `${changeFromBaseline.toFixed(1)}%`;
 
-                                return `${label}: ${value.toFixed(1)}% (${changeText} vs baseline)`;
+                                return `${label}: ${value.toFixed(1)}% (${changeText})`;
+                            },
+                            afterLabel: (context) => {
+                                const sets = context.dataset.originalSets?.[context.dataIndex];
+                                if (!sets || sets.length === 0) return '';
+
+                                const setStrings = sets.map(s => {
+                                    return s.weight ? `${s.reps}x${s.weight}` : `${s.reps} reps`;
+                                });
+
+                                return 'Sets: ' + setStrings.join(', ');
                             }
                         }
                     }
@@ -754,17 +771,21 @@ export const Charts = {
      * Group workouts by date and calculate volume or total reps
      * @param {array} workouts - Array of workout objects
      * @param {boolean} isWeighted - Whether exercise requires weight
-     * @returns {{labels: array, values: array}}
+     * @returns {{labels: array, values: array, setsMap: object}}
      */
     groupByDate(workouts, isWeighted = true) {
         const dates = new Map();
+        const setsMap = {};
 
         workouts.forEach(workout => {
             const dateLabel = workout.date;
 
             if (!dates.has(dateLabel)) {
                 dates.set(dateLabel, 0);
+                setsMap[dateLabel] = [];
             }
+
+            setsMap[dateLabel].push(workout);
 
             // Calculate volume (reps × weight) for weighted exercises, or total reps for bodyweight
             const value = isWeighted && workout.weight
@@ -778,7 +799,8 @@ export const Charts = {
 
         return {
             labels: sortedDates.map(entry => entry[0]),
-            values: sortedDates.map(entry => entry[1])
+            values: sortedDates.map(entry => entry[1]),
+            setsMap: setsMap
         };
     },
 

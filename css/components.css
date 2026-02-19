@@ -1984,3 +1984,44 @@
     position: relative;
     width: 100%;
 }
+
+/* Heatmap Controls */
+.matrix-header-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-md);
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+}
+
+.matrix-header-line h4 {
+    margin-bottom: 0 !important;
+}
+
+.matrix-controls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.matrix-controls label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.heatmap-sort-btns {
+    display: flex;
+    gap: 2px;
+    background: var(--bg-secondary);
+    padding: 2px;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+}
+
+.heatmap-sort-btns .metric-btn {
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    border-radius: 4px;
+}

@@ -14,6 +14,7 @@ export const Charts = {
     categorySelections: JSON.parse(localStorage.getItem('categorySelections') || '{}'), // Per-category selections
     currentCategory: localStorage.getItem('currentCategory') || null,
     selectedMetric: localStorage.getItem('selectedMetric') || 'relative', // 'relative', 'volume', '1rm', 'weight'
+    heatmapSort: localStorage.getItem('heatmapSort') || 'frequency', // 'frequency' or 'alphabetical'
     allExercisesData: [], // Store all exercise data
 
     /**
@@ -246,11 +247,29 @@ export const Charts = {
 
     /**
      * Render the GitHub-style training heatmap
-     * @param {Array} allWorkouts - Flat array of all workouts
+     * @param {Array} dataWithWorkouts - Flat array of all workouts
      */
     renderHeatmap(dataWithWorkouts) {
         const matrixContainer = document.getElementById('exerciseMatrix');
+        const controlsContainer = document.getElementById('heatmapControls');
         if (!matrixContainer) return;
+
+        // Render controls if they exist
+        if (controlsContainer) {
+            controlsContainer.innerHTML = `
+                <label>Sort By:</label>
+                <div class="heatmap-sort-btns">
+                    <button class="metric-btn ${this.heatmapSort === 'frequency' ? 'active' : ''}" 
+                        data-sort="frequency" title="Sort by most active exercises">Frequency</button>
+                    <button class="metric-btn ${this.heatmapSort === 'alphabetical' ? 'active' : ''}" 
+                        data-sort="alphabetical" title="Sort alphabetically by name">A-Z</button>
+                </div>
+            `;
+
+            controlsContainer.querySelectorAll('.metric-btn').forEach(btn => {
+                btn.addEventListener('click', () => this.switchHeatmapSort(btn.dataset.sort));
+            });
+        }
 
         const weeksToShow = 12;
         const today = new Date();
@@ -287,9 +306,26 @@ export const Charts = {
 
         // Filter exercises to those done in the last 12 weeks
         const minDateStr = startDate.toISOString().split('T')[0];
-        const activeExercises = dataWithWorkouts.filter(d =>
+        let activeExercises = dataWithWorkouts.filter(d =>
             d.workouts.some(w => w.date >= minDateStr)
-        ).sort((a, b) => a.exercise.name.localeCompare(b.exercise.name));
+        );
+
+        // Calculate total sessions for each exercise for frequency sorting
+        activeExercises.forEach(d => {
+            const sessionsInPeriod = new Set(
+                d.workouts
+                    .filter(w => w.date >= minDateStr)
+                    .map(w => w.date)
+            );
+            d.recentFrequency = sessionsInPeriod.size;
+        });
+
+        // Sort based on current preference
+        if (this.heatmapSort === 'frequency') {
+            activeExercises.sort((a, b) => b.recentFrequency - a.recentFrequency || a.exercise.name.localeCompare(b.exercise.name));
+        } else {
+            activeExercises.sort((a, b) => a.exercise.name.localeCompare(b.exercise.name));
+        }
 
         if (activeExercises.length === 0) {
             matrixContainer.innerHTML = '<p class="empty-state">No exercise data for the last 12 weeks.</p>';
@@ -1323,6 +1359,16 @@ export const Charts = {
             // Save state to localStorage
             localStorage.setItem('summaryCollapsed', !isHidden);
         });
+    },
+
+    /**
+     * Switch heatmap sort preference
+     * @param {string} sort - 'frequency' or 'alphabetical'
+     */
+    switchHeatmapSort(sort) {
+        this.heatmapSort = sort;
+        localStorage.setItem('heatmapSort', sort);
+        this.renderHeatmap(this.allExercisesData);
     },
 
     /**

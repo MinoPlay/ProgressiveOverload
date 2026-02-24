@@ -37,8 +37,14 @@ export const Workouts = {
 
         form.addEventListener('submit', (e) => this.handleSubmit(e));
 
-        // Show/hide weight field based on exercise selection
+        // Show/hide weight field and clear reps/weight based on exercise selection
         exerciseSelect.addEventListener('change', () => {
+            const repsInput = document.getElementById('workoutReps');
+            const weightInput = document.getElementById('workoutWeight');
+            
+            if (repsInput) repsInput.value = '';
+            if (weightInput) weightInput.value = '';
+            
             this.updateWeightField();
         });
 

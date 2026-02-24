@@ -701,6 +701,17 @@
     min-width: 120px;
 }
 
+.compact-workout-form .form-group-row {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex: 2;
+    min-width: 200px;
+}
+
+.compact-workout-form .form-group-row .form-group {
+    margin-bottom: 0;
+}
+
 .compact-workout-form input,
 .compact-workout-form select {
     width: 100%;
@@ -1026,6 +1037,15 @@
 
     .compact-workout-form .form-group {
         width: 100%;
+    }
+
+    .compact-workout-form .form-group-row {
+        width: 100%;
+        flex-direction: row; /* Keep reps/weight on the same row even on mobile */
+    }
+
+    .compact-workout-form .form-group-row .form-group {
+        flex: 1;
     }
 
     .form-actions-inline {

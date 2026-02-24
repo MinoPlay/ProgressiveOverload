@@ -109,10 +109,25 @@ const App = {
      * Initialize navigation between sections
      */
     initNavigation() {
-        const navElements = document.querySelectorAll('.nav-btn, .dropdown-item');
+        const navElements = document.querySelectorAll('.nav-btn[data-section], .dropdown-item[data-section], #navAddExercise');
+
+        // Section label map for the trigger button
+        const sectionLabels = {
+            workout: 'Log Workout',
+            history: 'History',
+            statistics: 'Statistics',
+            exercises: 'Manage'
+        };
+
+        const activeNavLabel = document.getElementById('activeNavLabel');
 
         const switchSection = (targetSection) => {
             if (!targetSection) return;
+
+            // Update the trigger label
+            if (activeNavLabel && sectionLabels[targetSection]) {
+                activeNavLabel.textContent = sectionLabels[targetSection];
+            }
 
             // Update active state for all navigation elements
             navElements.forEach(el => {
@@ -124,6 +139,10 @@ const App = {
                     el.removeAttribute('aria-current');
                 }
             });
+
+            // Also mark the trigger button active when it represents the active section
+            const trigger = document.querySelector('.main-nav-trigger');
+            if (trigger) trigger.classList.add('active');
 
             // Update active section visibility
             const sections = document.querySelectorAll('.content-section');
@@ -139,12 +158,23 @@ const App = {
             localStorage.setItem('activeSection', targetSection);
         };
 
+        const closeDropdown = () => {
+            const trigger = document.querySelector('.dropdown-trigger');
+            const content = document.querySelector('.dropdown-content');
+            if (trigger && content) {
+                trigger.setAttribute('aria-expanded', 'false');
+                content.style.display = 'none';
+            }
+        };
+
         navElements.forEach(el => {
-            el.addEventListener('click', () => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation();
                 const targetSection = el.dataset.section;
 
                 if (el.id === 'navAddExercise') {
                     switchSection('exercises');
+                    closeDropdown();
                     if (window.Exercises) {
                         window.Exercises.showForm();
                     }
@@ -155,31 +185,24 @@ const App = {
                     switchSection(targetSection);
                 }
 
-                // Close dropdown if it's open
-                const dropdownTrigger = document.querySelector('.dropdown-trigger');
-                const dropdownContent = document.querySelector('.dropdown-content');
-                if (dropdownTrigger && dropdownContent) {
-                    dropdownTrigger.setAttribute('aria-expanded', 'false');
-                    dropdownContent.style.display = 'none';
-                }
+                closeDropdown();
             });
         });
 
-        // Toggle dropdown on click (especially for mobile)
+        // Toggle dropdown on click
         const dropdownTrigger = document.querySelector('.dropdown-trigger');
         const dropdownContent = document.querySelector('.dropdown-content');
         if (dropdownTrigger && dropdownContent) {
             dropdownTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const isExpanded = dropdownTrigger.getAttribute('aria-expanded') === 'true';
-                dropdownTrigger.setAttribute('aria-expanded', !isExpanded);
+                dropdownTrigger.setAttribute('aria-expanded', String(!isExpanded));
                 dropdownContent.style.display = isExpanded ? 'none' : 'block';
             });
 
             // Close dropdown when clicking outside
             document.addEventListener('click', () => {
-                dropdownTrigger.setAttribute('aria-expanded', 'false');
-                dropdownContent.style.display = ''; // Reset to CSS hover behavior
+                closeDropdown();
             });
         }
 

@@ -27,26 +27,33 @@
                 </h1>
 
                 <nav class="header-nav" role="navigation" aria-label="Main navigation">
-                    <button class="nav-btn active" data-section="workout" aria-label="Navigate to Log Workout section">
-                        <i data-lucide="plus-circle" class="nav-icon"></i> <span>Log Workout</span>
-                    </button>
-                    <button class="nav-btn" data-section="history" aria-label="Navigate to History section">
-                        <i data-lucide="calendar" class="nav-icon"></i> <span>History</span>
-                    </button>
-                    <button class="nav-btn" data-section="statistics" aria-label="Navigate to Statistics section">
-                        <i data-lucide="line-chart" class="nav-icon"></i> <span>Statistics</span>
-                    </button>
-                    <div class="nav-dropdown">
-                        <button class="nav-btn dropdown-trigger" aria-haspopup="true" aria-expanded="false">
-                            <i data-lucide="settings" class="nav-icon"></i> <span>Manage Exercises</span> <i
-                                data-lucide="chevron-down" class="chevron-icon"></i>
+                    <div class="nav-dropdown main-nav-dropdown">
+                        <button class="nav-btn dropdown-trigger main-nav-trigger" aria-haspopup="true"
+                            aria-expanded="false" aria-label="Open navigation menu">
+                            <i data-lucide="menu" class="nav-icon"></i>
+                            <span id="activeNavLabel">Log Workout</span>
+                            <i data-lucide="chevron-down" class="chevron-icon"></i>
                         </button>
-                        <div class="dropdown-content">
-                            <button class="dropdown-item" data-section="exercises">
-                                <i data-lucide="list" class="nav-icon"></i> View All
+                        <div class="dropdown-content main-nav-content">
+                            <button class="nav-btn dropdown-item" data-section="workout"
+                                aria-label="Navigate to Log Workout section">
+                                <i data-lucide="plus-circle" class="nav-icon"></i> Log Workout
+                            </button>
+                            <button class="nav-btn dropdown-item" data-section="history"
+                                aria-label="Navigate to History section">
+                                <i data-lucide="calendar" class="nav-icon"></i> History
+                            </button>
+                            <button class="nav-btn dropdown-item" data-section="statistics"
+                                aria-label="Navigate to Statistics section">
+                                <i data-lucide="line-chart" class="nav-icon"></i> Statistics
+                            </button>
+                            <div class="dropdown-divider"></div>
+                            <button class="nav-btn dropdown-item" data-section="exercises"
+                                aria-label="Navigate to Manage Exercises section">
+                                <i data-lucide="list" class="nav-icon"></i> Manage
                             </button>
                             <button class="dropdown-item" id="navAddExercise">
-                                <i data-lucide="plus" class="nav-icon"></i> Add New
+                                <i data-lucide="plus" class="nav-icon"></i> Add New Exercise
                             </button>
                         </div>
                     </div>

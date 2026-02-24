@@ -41,10 +41,10 @@ export const Workouts = {
         exerciseSelect.addEventListener('change', () => {
             const repsInput = document.getElementById('workoutReps');
             const weightInput = document.getElementById('workoutWeight');
-            
+
             if (repsInput) repsInput.value = '';
             if (weightInput) weightInput.value = '';
-            
+
             this.updateWeightField();
         });
 
@@ -359,7 +359,7 @@ export const Workouts = {
         repeatBtn.addEventListener('click', () => this.repeatWorkout(workout));
 
         const btnContainer = document.createElement('div');
-        btnContainer.style.marginTop = 'var(--spacing-md)';
+        btnContainer.className = 'btn-container';
         btnContainer.appendChild(repeatBtn);
         item.appendChild(btnContainer);
 

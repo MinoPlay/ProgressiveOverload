@@ -118,7 +118,7 @@ export const Exercises = {
      */
     async handleDelete(id) {
         const exercise = Storage.getExerciseById(id);
-        
+
         if (!confirm(`Are you sure you want to delete "${exercise.name}"? This action cannot be undone.`)) {
             return;
         }
@@ -144,15 +144,20 @@ export const Exercises = {
 
         // Clear container
         container.innerHTML = '';
-        
+
         // Group exercises by equipment type
         const groupedExercises = this.groupByEquipmentType(exercises);
-        
+
         // Create collapsible section for each equipment type
         Object.keys(groupedExercises).sort().forEach(equipmentType => {
             const section = this.createCollapsibleSection(equipmentType, groupedExercises[equipmentType]);
             container.appendChild(section);
         });
+
+        // Initialize icons
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
     },
 
     /**
@@ -229,7 +234,7 @@ export const Exercises = {
     toggleSection(header) {
         const content = header.nextElementSibling;
         const chevron = header.querySelector('.equipment-chevron');
-        
+
         if (header.classList.contains('collapsed')) {
             // Expand
             header.classList.remove('collapsed');
@@ -272,12 +277,12 @@ export const Exercises = {
 
         const editBtn = document.createElement('button');
         editBtn.className = 'btn btn-small btn-secondary';
-        editBtn.textContent = 'Edit';
+        editBtn.innerHTML = '<i data-lucide="edit-2"></i> Edit';
         editBtn.onclick = () => this.showForm(exercise);
 
         const deleteBtn = document.createElement('button');
         deleteBtn.className = 'btn btn-small btn-danger';
-        deleteBtn.textContent = 'Delete';
+        deleteBtn.innerHTML = '<i data-lucide="trash-2"></i> Delete';
         deleteBtn.onclick = () => this.handleDelete(exercise.id);
 
         actions.appendChild(editBtn);

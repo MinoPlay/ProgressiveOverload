@@ -123,58 +123,43 @@ export const Workouts = {
             const lastSessions = await Storage.getLastWorkoutSessionsForExercise(exerciseId, 3);
 
             if (!lastSessions || lastSessions.length === 0) {
-                infoContainer.style.display = 'none';
+                infoContainer.innerHTML = '<span class="label"><i data-lucide="clock" class="icon-xs"></i> No history found.</span>';
+                infoContainer.style.display = 'flex';
+                if (window.lucide) window.lucide.createIcons();
                 return;
             }
 
             infoContainer.innerHTML = '';
-            infoContainer.style.display = 'inline-flex';
-            infoContainer.style.flexDirection = 'column';
-            infoContainer.style.alignItems = 'flex-start';
-            infoContainer.style.gap = 'var(--spacing-xs)';
-            infoContainer.style.width = 'auto';
+            infoContainer.style.display = 'flex';
 
             const header = document.createElement('div');
             header.className = 'label';
-            header.style.marginBottom = '2px';
-            header.textContent = lastSessions.length > 1 ? `Last ${lastSessions.length} Sessions:` : 'Last Session:';
+            header.innerHTML = `<i data-lucide="clock" class="icon-xs"></i> ${lastSessions.length > 1 ? `Last ${lastSessions.length} Sessions:` : 'Previous Session:'}`;
             infoContainer.appendChild(header);
 
             // Add Volume Suggestion for the most recent session
-            const suggestions = this.calculateVolumeSuggestions(lastSessions[0]);
-            if (suggestions.length > 0) {
-                const suggestionBox = this.renderVolumeSuggestions(suggestions);
+            const { suggestions, maxVolume } = this.calculateVolumeSuggestions(lastSessions[0]);
+            if (suggestions && suggestions.length > 0) {
+                const suggestionBox = this.renderVolumeSuggestions(suggestions, maxVolume);
                 infoContainer.appendChild(suggestionBox);
             }
 
             const sessionsContainer = document.createElement('div');
             sessionsContainer.className = 'sessions-horizontal';
-            sessionsContainer.style.display = 'flex';
-            sessionsContainer.style.gap = 'var(--spacing-xs)';
-            sessionsContainer.style.flexWrap = 'wrap';
 
-            lastSessions.forEach((session, sIdx) => {
+            lastSessions.forEach((session) => {
                 const sessionBox = document.createElement('div');
                 sessionBox.className = 'session-box';
-                sessionBox.style.background = 'rgba(102, 126, 234, 0.05)';
-                sessionBox.style.padding = '4px 8px';
-                sessionBox.style.borderRadius = 'var(--radius-sm)';
-                sessionBox.style.border = '1px solid rgba(102, 126, 234, 0.1)';
 
                 const setsContainer = document.createElement('div');
                 setsContainer.className = 'sets-list';
-                setsContainer.style.display = 'flex';
-                setsContainer.style.gap = '4px';
-                setsContainer.style.flexWrap = 'wrap';
 
                 session.sets.forEach((set) => {
                     const setBadge = document.createElement('span');
-                    setBadge.className = 'set-badge';
-                    setBadge.style.fontSize = '0.75rem';
-                    setBadge.style.padding = '2px 4px';
+                    setBadge.className = 'set-badge-item';
 
                     let text = `${set.reps}`;
-                    if (set.weight) {
+                    if (set.weight !== null && set.weight !== undefined) {
                         text += `x${set.weight}`;
                     }
 
@@ -206,16 +191,19 @@ export const Workouts = {
         let bestSet = null;
 
         lastSession.sets.forEach(set => {
-            if (set.weight && set.reps) {
-                const volume = set.weight * set.reps;
+            const weight = parseFloat(set.weight);
+            const reps = parseInt(set.reps, 10);
+
+            if (!isNaN(weight) && !isNaN(reps) && weight > 0 && reps > 0) {
+                const volume = weight * reps;
                 if (volume >= maxVolume) {
                     maxVolume = volume;
-                    bestSet = set;
+                    bestSet = { weight, reps };
                 }
             }
         });
 
-        if (!bestSet) return [];
+        if (!bestSet) return { suggestions: [], maxVolume: 0 };
 
         const suggestions = [];
 
@@ -256,46 +244,54 @@ export const Workouts = {
             }
         });
 
-        return uniqueSuggestions.slice(0, 3); // Return top 3 suggestions
+        return {
+            suggestions: uniqueSuggestions.slice(0, 3),
+            maxVolume
+        };
     },
 
     /**
      * Render volume suggestions as a UI element
      * @param {array} suggestions - Array of suggestion objects
+     * @param {number} maxVolume - Previous max volume
      * @returns {HTMLElement} Suggestion container
      */
-    renderVolumeSuggestions(suggestions) {
+    renderVolumeSuggestions(suggestions, maxVolume) {
         const container = document.createElement('div');
         container.className = 'volume-suggestions';
 
         const hint = document.createElement('div');
         hint.className = 'suggestion-hint';
-        hint.innerHTML = '<span>💡</span> <strong>Progress Tip:</strong> To beat previous volume, try:';
+        hint.innerHTML = '<i data-lucide="zap" class="icon-xs"></i> <strong>Progress Tip:</strong> To beat previous volume, try:';
         container.appendChild(hint);
+        if (window.lucide) window.lucide.createIcons();
 
         const list = document.createElement('div');
+        list.className = 'suggestion-chips-container';
         list.style.display = 'flex';
         list.style.flexWrap = 'wrap';
+        list.style.gap = '4px';
 
         suggestions.forEach(s => {
             const chip = document.createElement('div');
             chip.className = 'suggestion-chip';
-            chip.title = `Suggested: ${s.reps} reps at ${s.weight}kg`;
+            chip.title = `Total Volume: ${(s.reps * s.weight).toFixed(1)}kg (Better than ${maxVolume.toFixed(1)}kg)`;
 
-            chip.innerHTML = `<strong>${s.reps}x${s.weight}</strong> <span class="label-tag">(${s.label})</span>`;
+            chip.innerHTML = `<strong>${s.reps}x${s.weight}</strong> <span class="label-tag">${s.label}</span>`;
 
-            chip.addEventListener('click', () => {
+            chip.addEventListener('click', (e) => {
+                e.preventDefault();
                 const repsInput = document.getElementById('workoutReps');
                 const weightInput = document.getElementById('workoutWeight');
 
                 if (repsInput) repsInput.value = s.reps;
                 if (weightInput) weightInput.value = s.weight;
 
-                showToast(`Set to ${s.reps}x${s.weight}`, 'info');
+                showToast(`Target set: ${s.reps}x${s.weight}kg`, 'info');
 
-                // Trigger any change listeners if needed
-                repsInput.dispatchEvent(new Event('input'));
-                weightInput.dispatchEvent(new Event('input'));
+                // Trigger change event for any other listeners
+                repsInput.dispatchEvent(new Event('change', { bubbles: true }));
+                weightInput.dispatchEvent(new Event('change', { bubbles: true }));
             });
 
             list.appendChild(chip);
@@ -423,6 +419,10 @@ export const Workouts = {
             const item = this.createWorkoutItemWithRepeat(workout);
             container.appendChild(item);
         });
+
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
     },
 
     /**
@@ -468,7 +468,7 @@ export const Workouts = {
         // Add Repeat button
         const repeatBtn = document.createElement('button');
         repeatBtn.className = 'btn btn-secondary btn-small workout-repeat-btn';
-        repeatBtn.textContent = '🔁 Repeat';
+        repeatBtn.innerHTML = '<i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i> Repeat';
         repeatBtn.setAttribute('aria-label', `Repeat workout: ${exercise ? exercise.name : 'Unknown'}`);
         repeatBtn.addEventListener('click', () => this.repeatWorkout(workout));
 

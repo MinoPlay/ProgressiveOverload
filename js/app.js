@@ -1,9 +1,9 @@
 // Toggle Configuration section visibility when clicking the header
-window.addEventListener('DOMContentLoaded', function() {
+window.addEventListener('DOMContentLoaded', function () {
     const header = document.getElementById('main-header');
     const configSection = document.getElementById('config-section');
     if (header && configSection) {
-        header.addEventListener('click', function() {
+        header.addEventListener('click', function () {
             if (configSection.style.display === 'none' || configSection.style.display === '') {
                 configSection.style.display = 'block';
             } else {
@@ -53,9 +53,14 @@ const App = {
 
         // Show app
         document.getElementById('app').style.display = 'block';
-        
+
         // Initialize
         await this.initApp();
+
+        // Initialize Lucide icons
+        if (window.lucide) {
+            window.lucide.createIcons();
+        }
     },
 
     /**
@@ -67,13 +72,13 @@ const App = {
             showLoading(true);
 
             console.log('Initializing storage...');
-            
+
             // In dev mode, replace Storage methods with DevStorage
             if (CONFIG.devMode) {
                 const { DevStorage } = await import('./dev-storage.js');
                 Object.assign(Storage, DevStorage);
             }
-            
+
             // Initialize storage
             await Storage.initialize();
 
@@ -94,7 +99,7 @@ const App = {
             console.error('Error initializing application:', error);
             showToast(`Failed to initialize app: ${error.message}`, 'error');
             showLoading(false);
-            
+
             // Show app anyway so user isn't stuck
             document.getElementById('app').style.display = 'block';
         }
@@ -172,7 +177,7 @@ export function showToast(message, type = 'info') {
     toast.className = `toast ${type}`;
     toast.setAttribute('role', 'alert');
     toast.setAttribute('aria-live', 'polite');
-    
+
     const span = document.createElement('span');
     span.textContent = message; // Automatically escaped, safe from XSS
     toast.appendChild(span);

@@ -72,6 +72,11 @@ export const History = {
                 container.appendChild(dateGroup);
             }
 
+            // Initialize icons
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+
             showLoading(false);
         } catch (error) {
             console.error('Error rendering history:', error);
@@ -232,7 +237,7 @@ export const History = {
 
             const editBtn = document.createElement('button');
             editBtn.className = 'btn-icon btn-small btn-secondary';
-            editBtn.innerHTML = '✎';
+            editBtn.innerHTML = '<i data-lucide="edit-2" style="width: 14px; height: 14px;"></i>';
             editBtn.title = 'Edit Set';
             editBtn.onclick = (e) => {
                 e.stopPropagation();
@@ -241,7 +246,7 @@ export const History = {
 
             const deleteBtn = document.createElement('button');
             deleteBtn.className = 'btn-icon btn-small btn-secondary';
-            deleteBtn.innerHTML = '🗑';
+            deleteBtn.innerHTML = '<i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>';
             deleteBtn.title = 'Delete Set';
             deleteBtn.style.color = 'var(--error-color)';
             deleteBtn.onclick = (e) => {

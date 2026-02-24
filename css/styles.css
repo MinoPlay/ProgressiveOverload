@@ -7,29 +7,29 @@
     --primary-dark: #5568d3;
     --primary-light: rgba(102, 126, 234, 0.1);
     --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    
+
     --secondary-color: #e0e0e0;
     --secondary-dark: #bdbdbd;
-    
+
     --success-color: #4caf50;
     --success-light: #d4edda;
     --error-color: #f44336;
     --error-light: #f8d7da;
     --info-color: #2196f3;
     --info-light: #d1ecf1;
-    
+
     --text-primary: #333;
     --text-secondary: #666;
     --text-light: #999;
     --text-inverse: #ffffff;
-    
+
     --bg-primary: #ffffff;
     --bg-secondary: #f5f5f5;
     --bg-overlay: rgba(0, 0, 0, 0.5);
-    
+
     --border-color: #ddd;
     --border-light: #e0e0e0;
-    
+
     /* Spacing */
     --spacing-xs: 0.25rem;
     --spacing-sm: 0.5rem;
@@ -37,25 +37,25 @@
     --spacing-lg: 1.5rem;
     --spacing-xl: 2rem;
     --spacing-xxl: 3rem;
-    
+
     /* Border Radius */
     --radius-sm: 4px;
     --radius-md: 6px;
     --radius-lg: 8px;
     --radius-xl: 12px;
     --radius-full: 50%;
-    
+
     /* Shadows */
     --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
     --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
     --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.2);
-    
+
     /* Transitions */
     --transition-fast: 0.15s ease;
     --transition-base: 0.3s ease;
     --transition-slow: 0.5s ease;
-    
+
     /* Z-index layers */
     --z-dropdown: 1000;
     --z-sticky: 1020;
@@ -112,15 +112,37 @@ html {
     text-align: right;
 }
 
-.mt-1 { margin-top: var(--spacing-sm); }
-.mt-2 { margin-top: var(--spacing-md); }
-.mt-3 { margin-top: var(--spacing-lg); }
-.mt-4 { margin-top: var(--spacing-xl); }
+.mt-1 {
+    margin-top: var(--spacing-sm);
+}
 
-.mb-1 { margin-bottom: var(--spacing-sm); }
-.mb-2 { margin-bottom: var(--spacing-md); }
-.mb-3 { margin-bottom: var(--spacing-lg); }
-.mb-4 { margin-bottom: var(--spacing-xl); }
+.mt-2 {
+    margin-top: var(--spacing-md);
+}
+
+.mt-3 {
+    margin-top: var(--spacing-lg);
+}
+
+.mt-4 {
+    margin-top: var(--spacing-xl);
+}
+
+.mb-1 {
+    margin-bottom: var(--spacing-sm);
+}
+
+.mb-2 {
+    margin-bottom: var(--spacing-md);
+}
+
+.mb-3 {
+    margin-bottom: var(--spacing-lg);
+}
+
+.mb-4 {
+    margin-bottom: var(--spacing-xl);
+}
 
 .hidden {
     display: none !important;
@@ -140,12 +162,56 @@ html {
     margin-top: var(--spacing-xs);
 }
 
+/* Icon Utilities */
+.nav-icon {
+    width: 20px;
+    height: 20px;
+    margin-right: var(--spacing-sm);
+}
+
+.icon-xs {
+    width: 14px;
+    height: 14px;
+    display: inline-block;
+    vertical-align: middle;
+}
+
+.kpi-icon-row {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.kpi-icon {
+    width: 24px;
+    height: 24px;
+}
+
+.text-warning {
+    color: #f39c12;
+}
+
+.text-error {
+    color: var(--error-color);
+}
+
+.text-primary {
+    color: var(--primary-color);
+}
+
+.text-success {
+    color: var(--success-color);
+}
+
 /* Fade In Animation */
 @keyframes fadeIn {
     from {
         opacity: 0;
         transform: translateY(10px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -158,6 +224,7 @@ html {
 
 /* Print Styles */
 @media print {
+
     .app-header,
     .app-nav,
     .btn,

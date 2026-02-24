@@ -223,25 +223,36 @@ export const Charts = {
 
         kpiGrid.innerHTML = `
             <div class="kpi-card">
-                <span class="kpi-label" title="Average % improvement across all active exercises since they were first logged">Avg. Performance Gain</span>
+                <div class="kpi-icon-row">
+                    <i data-lucide="trending-up" class="kpi-icon text-primary"></i>
+                    <span class="kpi-label" title="Average % improvement across all active exercises since they were first logged">Avg. Performance Gain</span>
+                </div>
                 <div class="kpi-value">${avgOverloadIndex >= 0 ? '+' : ''}${avgOverloadIndex.toFixed(1)}%</div>
                 <span class="kpi-trend trend-neutral">Compared to your baseline</span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-label" title="Percentage of exercises that improved their personal record (max weight or reps) in their most recent session compared to the one before">Lifts Advancing</span>
+                <div class="kpi-icon-row">
+                    <i data-lucide="zap" class="kpi-icon text-warning"></i>
+                    <span class="kpi-label" title="Percentage of exercises that improved their personal record (max weight or reps) in their most recent session compared to the one before">Lifts Advancing</span>
+                </div>
                 <div class="kpi-value">${advancementRate.toFixed(0)}%</div>
                 <span class="kpi-trend ${advancementRate >= 50 ? 'trend-up' : (advancementRate > 0 ? 'trend-neutral' : 'trend-down')}">
                     Across ${totalActiveInPeriod} exercises
                 </span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-label" title="Average training sessions per week over the last 12 weeks">Weekly Habit</span>
+                <div class="kpi-icon-row">
+                    <i data-lucide="calendar" class="kpi-icon text-success"></i>
+                    <span class="kpi-label" title="Average training sessions per week over the last 12 weeks">Weekly Habit</span>
+                </div>
                 <div class="kpi-value">${avgWeeklyFrequency.toFixed(1)} <small>days/wk</small></div>
                 <span class="kpi-trend ${avgWeeklyFrequency >= 3 ? 'trend-up' : 'trend-neutral'}">
                     12-week consistency
                 </span>
             </div>
         `;
+
+        if (window.lucide) window.lucide.createIcons();
     },
 
 
@@ -481,9 +492,14 @@ export const Charts = {
             <div class="milestone-item">
                 <span class="milestone-date">${this.formatDate(m.date)}</span>
                 <span class="milestone-text">${m.text}</span>
-                <span class="milestone-badge">${m.type}</span>
+                <span class="milestone-badge">
+                    <i data-lucide="${m.type === 'BEST' ? 'star' : (m.type === 'STREAK' ? 'flame' : 'trending-up')}" class="icon-xs"></i>
+                    ${m.type}
+                </span>
             </div>
         `).join('');
+
+        if (window.lucide) window.lucide.createIcons();
     },
 
     /**
@@ -787,6 +803,7 @@ export const Charts = {
         `;
         tableHTML += '</div>';
         statsTableContent.innerHTML = tableHTML;
+        if (window.lucide) window.lucide.createIcons();
     },
 
     /**

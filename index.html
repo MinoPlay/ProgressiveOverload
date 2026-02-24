@@ -5,9 +5,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Progressive Overload Tracker</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <link rel="alternate icon" type="image/png" href="assets/favicon.svg">
+    <link rel="apple-touch-icon" href="assets/favicon.svg">
+    <meta name="theme-color" content="#667eea">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/styles.css">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 
 <body>
@@ -16,18 +22,22 @@
         <!-- Header -->
         <header class="app-header">
             <div class="header-content">
-                <h1 id="main-header" style="cursor: pointer;">💪 Progressive Overload Tracker</h1>
+                <h1 id="main-header" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="dumbbell"></i> Progressive Overload Tracker
+                </h1>
             </div>
         </header>
 
         <!-- Navigation -->
         <nav class="app-nav" role="navigation" aria-label="Main navigation">
             <button class="nav-btn active" data-section="workout" aria-label="Navigate to Log Workout section"
-                aria-current="page">Log Workout</button>
-            <button class="nav-btn" data-section="history" aria-label="Navigate to History section">History</button>
-            <button class="nav-btn" data-section="statistics"
-                aria-label="Navigate to Statistics section">Statistics</button>
-            <button class="nav-btn" data-section="exercises" aria-label="Navigate to Manage Exercises section">Manage
+                aria-current="page"><i data-lucide="plus-circle" class="nav-icon"></i> Log Workout</button>
+            <button class="nav-btn" data-section="history" aria-label="Navigate to History section"><i
+                    data-lucide="calendar" class="nav-icon"></i> History</button>
+            <button class="nav-btn" data-section="statistics" aria-label="Navigate to Statistics section"><i
+                    data-lucide="line-chart" class="nav-icon"></i> Statistics</button>
+            <button class="nav-btn" data-section="exercises" aria-label="Navigate to Manage Exercises section"><i
+                    data-lucide="settings" class="nav-icon"></i> Manage
                 Exercises</button>
         </nav>
 
@@ -42,21 +52,33 @@
         <main class="app-content">
             <!-- GitHub Configuration -->
             <section class="config-section" id="config-section" style="display: none;">
-                <h2 onclick="toggleConfig()" style="cursor: pointer;">⚙️ Configuration</h2>
+                <h2 onclick="toggleConfig()" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <i data-lucide="cog"></i> Configuration
+                </h2>
                 <div class="mode-toggle">
-                    <button onclick="setMode('local')" class="mode-btn" id="mode-local">🏠 Local Mode</button>
-                    <button onclick="setMode('github')" class="mode-btn" id="mode-github">🐙 GitHub Mode</button>
+                    <button onclick="setMode('local')" class="mode-btn" id="mode-local">
+                        <i data-lucide="home"></i> Local Mode
+                    </button>
+                    <button onclick="setMode('github')" class="mode-btn" id="mode-github">
+                        <i data-lucide="github"></i> GitHub Mode
+                    </button>
                 </div>
                 <div class="config-form" id="github-config">
                     <input type="password" id="github-token" placeholder="GitHub Personal Access Token"
                         autocomplete="off">
                     <input type="text" id="repo-owner" placeholder="GitHub Username" autocomplete="off">
                     <input type="text" id="repo-name" placeholder="Repository Name" autocomplete="off">
-                    <button onclick="saveConfig()" class="btn-save">Save Configuration</button>
+                    <button onclick="saveConfig()" class="btn-save">
+                        <i data-lucide="save"></i> Save Configuration
+                    </button>
                 </div>
                 <div class="local-controls" id="local-controls" style="display: none;">
-                    <button onclick="generateDummyData()" class="btn-generate">🎲 Generate Sample Data</button>
-                    <button onclick="clearLocalData()" class="btn-clear">🗑️ Clear All Data</button>
+                    <button onclick="generateDummyData()" class="btn-generate">
+                        <i data-lucide="dice-5"></i> Generate Sample Data
+                    </button>
+                    <button onclick="clearLocalData()" class="btn-clear text-error">
+                        <i data-lucide="trash-2"></i> Clear All Data
+                    </button>
                 </div>
                 <p class="config-help" id="github-help">
                     Create a token with 'repo' scope at
@@ -70,8 +92,9 @@
             <!-- Exercises Section -->
             <section id="exercisesSection" class="content-section" role="region" aria-label="Manage Exercises">
                 <div class="section-header">
-                    <button id="addExerciseBtn" class="btn btn-primary" aria-label="Add new exercise">+ Add New
-                        Exercise</button>
+                    <button id="addExerciseBtn" class="btn btn-primary" aria-label="Add new exercise">
+                        <i data-lucide="plus"></i> Add New Exercise
+                    </button>
                 </div>
 
                 <!-- Add/Edit Exercise Form -->
@@ -147,11 +170,11 @@
                             <div class="form-actions-inline">
                                 <button type="submit" class="btn-icon btn-primary" title="Log Workout"
                                     aria-label="Log workout">
-                                    <span aria-hidden="true">✓</span>
+                                    <i data-lucide="check"></i>
                                 </button>
                                 <button type="button" id="clearWorkoutBtn" class="btn-icon btn-secondary"
                                     title="Clear Form" aria-label="Clear form">
-                                    <span aria-hidden="true">✕</span>
+                                    <i data-lucide="x"></i>
                                 </button>
                             </div>
                         </div>
@@ -182,7 +205,9 @@
                     <!-- Weekly Performance Chart (Main Dashboard Focus) -->
                     <div class="dashboard-main-chart">
                         <div class="section-card">
-                            <h4>Weekly Performance (Volume & Frequency)</h4>
+                            <h4 style="display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="bar-chart-3"></i> Weekly Performance (Volume & Frequency)
+                            </h4>
                             <div class="chart-wrapper" style="height: 250px;">
                                 <canvas id="weeklyVolumeChart"></canvas>
                             </div>
@@ -194,7 +219,9 @@
                 <div id="consistencyTracker" class="consistency-tracker">
                     <div class="matrix-container section-card" id="heatmapContainer">
                         <div class="matrix-header-line">
-                            <h4>Exercise Breakdown (Sessions per Week)</h4>
+                            <h4 style="display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="layout-grid"></i> Exercise Breakdown (Sessions per Week)
+                            </h4>
                             <div id="heatmapControls" class="matrix-controls">
                                 <!-- Sort buttons will be injected here -->
                             </div>
@@ -220,7 +247,9 @@
 
                 <!-- Progress Milestones -->
                 <div id="statsMilestones" class="stats-milestones" style="display: none;">
-                    <h4>🔥 Progress & Consistency Milestones</h4>
+                    <h4 style="display: flex; align-items: center; gap: 8px;">
+                        <i data-lucide="trophy" class="text-warning"></i> Progress & Consistency Milestones
+                    </h4>
                     <div id="milestonesList" class="milestones-list">
                         <!-- Milestones will be injected here -->
                     </div>
@@ -229,9 +258,9 @@
                 <!-- Exercise Summary Table (Grouped by Category) -->
                 <div id="exerciseSummarySection" style="margin-bottom: 30px;">
                     <h3 id="summaryToggle"
-                        style="cursor: pointer; user-select: none; padding: 10px; background: #f5f5f5; border-radius: 4px;">
+                        style="cursor: pointer; user-select: none; padding: 10px; background: #f5f5f5; border-radius: 4px; display: flex; align-items: center; gap: 8px;">
                         <span class="chevron" style="display: inline-block; transition: transform 0.3s ease;">▼</span>
-                        📊 Exercise Summary
+                        <i data-lucide="table"></i> Exercise Summary
                     </h3>
                     <div id="statsTableContent">
                         <!-- Summary table grouped by category -->

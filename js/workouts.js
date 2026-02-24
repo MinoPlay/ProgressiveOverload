@@ -140,6 +140,13 @@ export const Workouts = {
             header.textContent = lastSessions.length > 1 ? `Last ${lastSessions.length} Sessions:` : 'Last Session:';
             infoContainer.appendChild(header);
 
+            // Add Volume Suggestion for the most recent session
+            const suggestions = this.calculateVolumeSuggestions(lastSessions[0]);
+            if (suggestions.length > 0) {
+                const suggestionBox = this.renderVolumeSuggestions(suggestions);
+                infoContainer.appendChild(suggestionBox);
+            }
+
             const sessionsContainer = document.createElement('div');
             sessionsContainer.className = 'sessions-horizontal';
             sessionsContainer.style.display = 'flex';
@@ -184,6 +191,118 @@ export const Workouts = {
             console.error('Error updating last workout info:', error);
             infoContainer.style.display = 'none';
         }
+    },
+
+    /**
+     * Calculate volume suggestions based on the last session
+     * @param {object} lastSession - Most recent session
+     * @returns {array} Array of suggestions
+     */
+    calculateVolumeSuggestions(lastSession) {
+        if (!lastSession || !lastSession.sets.length) return [];
+
+        // Find max volume set in the last session
+        let maxVolume = 0;
+        let bestSet = null;
+
+        lastSession.sets.forEach(set => {
+            if (set.weight && set.reps) {
+                const volume = set.weight * set.reps;
+                if (volume >= maxVolume) {
+                    maxVolume = volume;
+                    bestSet = set;
+                }
+            }
+        });
+
+        if (!bestSet) return [];
+
+        const suggestions = [];
+
+        // 1. Suggest same weight but +1 rep
+        suggestions.push({
+            weight: bestSet.weight,
+            reps: bestSet.reps + 1,
+            label: 'More Reps'
+        });
+
+        // 2. Suggest minor weight increments
+        // Typical increments: 1kg, 2kg, 2.5kg
+        const increments = [1, 2, 2.5];
+        increments.forEach(inc => {
+            const suggestedWeight = bestSet.weight + inc;
+            const suggestedReps = Math.ceil(maxVolume / suggestedWeight);
+
+            // Avoid suggesting reps that are too high (e.g. if increment is tiny)
+            // or suggesting the exact same set if volume matches exactly (unlikely with ceiling)
+            if (suggestedReps > 0) {
+                suggestions.push({
+                    weight: suggestedWeight,
+                    reps: suggestedReps,
+                    label: `+${inc}kg`
+                });
+            }
+        });
+
+        // Deduplicate suggestions (sometimes different increments result in same reps)
+        const uniqueSuggestions = [];
+        const seen = new Set();
+
+        suggestions.forEach(s => {
+            const key = `${s.reps}x${s.weight}`;
+            if (!seen.has(key)) {
+                seen.add(key);
+                uniqueSuggestions.push(s);
+            }
+        });
+
+        return uniqueSuggestions.slice(0, 3); // Return top 3 suggestions
+    },
+
+    /**
+     * Render volume suggestions as a UI element
+     * @param {array} suggestions - Array of suggestion objects
+     * @returns {HTMLElement} Suggestion container
+     */
+    renderVolumeSuggestions(suggestions) {
+        const container = document.createElement('div');
+        container.className = 'volume-suggestions';
+
+        const hint = document.createElement('div');
+        hint.className = 'suggestion-hint';
+        hint.innerHTML = '<span>💡</span> <strong>Progress Tip:</strong> To beat previous volume, try:';
+        container.appendChild(hint);
+
+        const list = document.createElement('div');
+        list.style.display = 'flex';
+        list.style.flexWrap = 'wrap';
+
+        suggestions.forEach(s => {
+            const chip = document.createElement('div');
+            chip.className = 'suggestion-chip';
+            chip.title = `Suggested: ${s.reps} reps at ${s.weight}kg`;
+
+            chip.innerHTML = `<strong>${s.reps}x${s.weight}</strong> <span class="label-tag">(${s.label})</span>`;
+
+            chip.addEventListener('click', () => {
+                const repsInput = document.getElementById('workoutReps');
+                const weightInput = document.getElementById('workoutWeight');
+
+                if (repsInput) repsInput.value = s.reps;
+                if (weightInput) weightInput.value = s.weight;
+
+                showToast(`Set to ${s.reps}x${s.weight}`, 'info');
+
+                // Trigger any change listeners if needed
+                repsInput.dispatchEvent(new Event('input'));
+                weightInput.dispatchEvent(new Event('input'));
+            });
+
+            list.appendChild(chip);
+        });
+
+        container.appendChild(list);
+        return container;
     },
 
     /**
@@ -325,13 +444,8 @@ export const Workouts = {
         const title = document.createElement('h4');
         title.textContent = exercise ? exercise.name : 'Unknown Exercise';
 
-        const dateSpan = document.createElement('span');
-        dateSpan.className = 'workout-date';
-        dateSpan.textContent = workout.date;
-
         titleContainer.appendChild(title);
         header.appendChild(titleContainer);
-        header.appendChild(dateSpan);
         item.appendChild(header);
 
         const details = document.createElement('div');

@@ -250,9 +250,9 @@
 }
 
 .workout-item-quick {
-    border-left: 4px solid var(--primary-color);
+    border-left: 3px solid var(--primary-color);
     box-shadow: var(--shadow-md);
-    padding: var(--spacing-sm) var(--spacing-md);
+    padding: var(--spacing-sm);
 }
 
 .workout-item-quick h4 {
@@ -261,7 +261,7 @@
 
 .workout-item-quick .workout-details {
     margin-top: var(--spacing-xs);
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
 }
 
 .workout-item-quick .workout-detail-label {
@@ -704,7 +704,7 @@
     }
 
     .workout-item-quick {
-        padding: var(--spacing-sm) !important;
+        padding: 6px 10px !important;
     }
 
     .workout-item-quick h4 {
@@ -712,7 +712,7 @@
     }
 
     .workout-item-quick .workout-detail-value {
-        font-size: 1rem !important;
+        font-size: 0.95rem !important;
     }
 
     /* Stat cards with better readability */
@@ -2082,4 +2082,59 @@
     padding: 4px 10px;
     font-size: 0.8rem;
     border-radius: 4px;
+}
+
+/* Volume Suggestions */
+.volume-suggestions {
+    background: rgba(102, 126, 234, 0.03);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+    border: 1px dashed rgba(102, 126, 234, 0.2);
+    margin-top: 4px;
+    margin-bottom: 8px;
+    width: 100%;
+}
+
+.suggestion-hint {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-xs);
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.suggestion-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: 16px;
+    font-size: 0.85rem;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    box-shadow: var(--shadow-sm);
+    user-select: none;
+    margin-right: 4px;
+    margin-bottom: 4px;
+}
+
+.suggestion-chip:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.suggestion-chip strong {
+    color: var(--primary-color);
+}
+
+.suggestion-chip .label-tag {
+    font-size: 0.7rem;
+    opacity: 0.7;
+    margin-left: 2px;
 }

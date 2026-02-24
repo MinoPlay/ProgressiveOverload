@@ -38,41 +38,48 @@ body {
 }
 
 .app-header h1 {
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     font-weight: 700;
+    flex-shrink: 0;
 }
 
-/* Navigation */
-.app-nav {
-    background: var(--bg-primary);
-    border-bottom: 2px solid var(--secondary-color);
-    padding: 0 var(--spacing-xl);
+/* Header Navigation */
+.header-nav {
     display: flex;
-    gap: var(--spacing-sm);
-    overflow-x: auto;
+    gap: var(--spacing-xs);
+    align-items: center;
 }
 
-.nav-btn {
-    padding: var(--spacing-md) var(--spacing-lg);
-    background: none;
+.header-nav .nav-btn {
+    padding: var(--spacing-sm) var(--spacing-md);
+    background: transparent;
     border: none;
-    border-bottom: 3px solid transparent;
-    font-size: 1rem;
+    color: rgba(255, 255, 255, 0.85);
     font-weight: 500;
-    color: var(--text-secondary);
+    border-bottom: 2px solid transparent;
+    border-radius: var(--radius-md);
     cursor: pointer;
     transition: all var(--transition-base);
-    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
 }
 
-.nav-btn:hover {
-    color: var(--primary-color);
-    background-color: var(--bg-secondary);
+.header-nav .nav-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
 }
 
-.nav-btn.active {
-    color: var(--primary-color);
-    border-bottom-color: var(--primary-color);
+.header-nav .nav-btn.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.2);
+    border-bottom-color: white;
+}
+
+.chevron-icon {
+    width: 16px;
+    height: 16px;
+    margin-left: 2px;
 }
 
 /* Main Content */
@@ -275,21 +282,33 @@ body {
     }
 
     .app-header h1 {
-        font-size: 1.25rem;
+        font-size: 1.1rem;
     }
 
-    .app-nav {
-        padding: 0 var(--spacing-md);
+    .header-nav {
+        gap: 2px;
     }
 
-    .nav-btn {
-        padding: 1rem var(--spacing-lg);
-        font-size: 1rem;
-        min-height: 48px;
+    .header-nav .nav-btn {
+        padding: var(--spacing-sm);
+        font-size: 0.85rem;
+    }
+
+    .header-nav .nav-btn span {
+        display: none;
+        /* We'll add spans in HTML to selectively hide text */
+    }
+
+    .nav-icon {
+        margin-right: 0;
+    }
+
+    .dropdown-content {
+        min-width: 150px;
     }
 
     .app-content {
-        padding: var(--spacing-md);
+        padding: var(--spacing-sm) var(--spacing-md);
     }
 
     .section-header {

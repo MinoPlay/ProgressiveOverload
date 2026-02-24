@@ -23,23 +23,36 @@
         <header class="app-header">
             <div class="header-content">
                 <h1 id="main-header" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
-                    <i data-lucide="dumbbell"></i> Progressive Overload Tracker
+                    <i data-lucide="dumbbell"></i> Progressive Tracker
                 </h1>
+
+                <nav class="header-nav" role="navigation" aria-label="Main navigation">
+                    <button class="nav-btn active" data-section="workout" aria-label="Navigate to Log Workout section">
+                        <i data-lucide="plus-circle" class="nav-icon"></i> <span>Log Workout</span>
+                    </button>
+                    <button class="nav-btn" data-section="history" aria-label="Navigate to History section">
+                        <i data-lucide="calendar" class="nav-icon"></i> <span>History</span>
+                    </button>
+                    <button class="nav-btn" data-section="statistics" aria-label="Navigate to Statistics section">
+                        <i data-lucide="line-chart" class="nav-icon"></i> <span>Statistics</span>
+                    </button>
+                    <div class="nav-dropdown">
+                        <button class="nav-btn dropdown-trigger" aria-haspopup="true" aria-expanded="false">
+                            <i data-lucide="settings" class="nav-icon"></i> <span>Manage Exercises</span> <i
+                                data-lucide="chevron-down" class="chevron-icon"></i>
+                        </button>
+                        <div class="dropdown-content">
+                            <button class="dropdown-item" data-section="exercises">
+                                <i data-lucide="list" class="nav-icon"></i> View All
+                            </button>
+                            <button class="dropdown-item" id="navAddExercise">
+                                <i data-lucide="plus" class="nav-icon"></i> Add New
+                            </button>
+                        </div>
+                    </div>
+                </nav>
             </div>
         </header>
-
-        <!-- Navigation -->
-        <nav class="app-nav" role="navigation" aria-label="Main navigation">
-            <button class="nav-btn active" data-section="workout" aria-label="Navigate to Log Workout section"
-                aria-current="page"><i data-lucide="plus-circle" class="nav-icon"></i> Log Workout</button>
-            <button class="nav-btn" data-section="history" aria-label="Navigate to History section"><i
-                    data-lucide="calendar" class="nav-icon"></i> History</button>
-            <button class="nav-btn" data-section="statistics" aria-label="Navigate to Statistics section"><i
-                    data-lucide="line-chart" class="nav-icon"></i> Statistics</button>
-            <button class="nav-btn" data-section="exercises" aria-label="Navigate to Manage Exercises section"><i
-                    data-lucide="settings" class="nav-icon"></i> Manage
-                Exercises</button>
-        </nav>
 
         <!-- Loading Indicator -->
         <div id="loadingIndicator" class="loading" style="display: none;" role="status" aria-live="polite"

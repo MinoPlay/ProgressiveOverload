@@ -2204,3 +2204,57 @@
     padding: 2px 6px;
     border-radius: 4px;
 }
+
+/* Navigation Dropdown */
+.nav-dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 100%;
+    background-color: var(--bg-primary);
+    min-width: 180px;
+    box-shadow: var(--shadow-xl);
+    border-radius: var(--radius-md);
+    z-index: var(--z-dropdown);
+    padding: var(--spacing-sm) 0;
+    margin-top: 5px;
+    border: 1px solid var(--border-light);
+    animation: fadeIn var(--transition-fast);
+}
+
+.nav-dropdown:hover .dropdown-content {
+    display: block;
+}
+
+.dropdown-item {
+    width: 100%;
+    padding: var(--spacing-md) var(--spacing-lg);
+    border: none;
+    background: transparent;
+    text-align: left;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    transition: background var(--transition-fast);
+}
+
+.dropdown-item:hover {
+    background-color: var(--bg-secondary);
+    color: var(--primary-color);
+}
+
+.dropdown-item .nav-icon {
+    width: 18px;
+    height: 18px;
+    color: var(--primary-color);
+    margin-right: 0;
+}

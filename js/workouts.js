@@ -137,10 +137,15 @@ export const Workouts = {
             header.innerHTML = `<i data-lucide="clock" class="icon-xs"></i> ${lastSessions.length > 1 ? `Last ${lastSessions.length} Sessions:` : 'Previous Session:'}`;
             infoContainer.appendChild(header);
 
+            // Identify current vs previous session
+            const todayStr = formatDate(new Date());
+            const currentSession = lastSessions[0]?.date === todayStr ? lastSessions[0] : null;
+            const previousSession = lastSessions[0]?.date === todayStr ? lastSessions[1] : lastSessions[0];
+
             // Add Volume Suggestion for the most recent session
-            const { suggestions, maxVolume } = this.calculateVolumeSuggestions(lastSessions[0]);
-            if (suggestions && suggestions.length > 0) {
-                const suggestionBox = this.renderVolumeSuggestions(suggestions, maxVolume);
+            const { suggestions, maxVolume, currentVolume } = this.calculateVolumeSuggestions(currentSession, previousSession);
+            if (suggestions && (suggestions.length > 0 || currentVolume > 0)) {
+                const suggestionBox = this.renderVolumeSuggestions(suggestions, maxVolume, currentVolume);
                 infoContainer.appendChild(suggestionBox);
             }
 
@@ -179,65 +184,131 @@ export const Workouts = {
     },
 
     /**
-     * Calculate volume suggestions based on the last session
-     * @param {object} lastSession - Most recent session
-     * @returns {array} Array of suggestions
+     * Calculate volume suggestions based on previous performance and current session progress
+     * @param {object} currentSession - Today's session data (if any)
+     * @param {object} previousSession - Most recent session before today
+     * @returns {object} Object containing suggestions array and volume statistics
      */
-    calculateVolumeSuggestions(lastSession) {
-        if (!lastSession || !lastSession.sets.length) return [];
+    calculateVolumeSuggestions(currentSession, previousSession) {
+        if (!previousSession || !previousSession.sets.length) return { suggestions: [], maxVolume: 0, currentVolume: 0 };
 
-        // Find max volume set in the last session
-        let maxVolume = 0;
-        let bestSet = null;
+        // Helper to calculate total volume for a session
+        const getSessionVolume = (session) => {
+            if (!session) return 0;
+            return session.sets.reduce((sum, set) => {
+                const w = parseFloat(set.weight);
+                const r = parseInt(set.reps, 10);
+                // For bodyweight, treat weight as 0 or 1 depending on how we handle it
+                const weight = (!isNaN(w) && w !== null) ? w : 0;
+                return sum + (weight * r);
+            }, 0);
+        };
 
-        lastSession.sets.forEach(set => {
-            const weight = parseFloat(set.weight);
-            const reps = parseInt(set.reps, 10);
+        const totalVolumePrev = getSessionVolume(previousSession);
+        const totalVolumeCurr = currentSession ? getSessionVolume(currentSession) : 0;
 
-            if (!isNaN(weight) && !isNaN(reps) && weight > 0 && reps > 0) {
-                const volume = weight * reps;
-                if (volume >= maxVolume) {
-                    maxVolume = volume;
-                    bestSet = { weight, reps };
-                }
+        // Find best set of previous session for individual set suggestions
+        let maxSetVolumePrev = 0;
+        let bestSetPrev = null;
+        previousSession.sets.forEach(set => {
+            const w = parseFloat(set.weight);
+            const r = parseInt(set.reps, 10);
+            const vol = (!isNaN(w) && w !== null) ? (w * r) : r;
+            if (vol >= maxSetVolumePrev) {
+                maxSetVolumePrev = vol;
+                bestSetPrev = { weight: (!isNaN(w) && w !== null) ? w : null, reps: r };
             }
         });
-
-        if (!bestSet) return { suggestions: [], maxVolume: 0 };
 
         const suggestions = [];
 
-        // 1. Suggest same weight but +1 rep
-        suggestions.push({
-            weight: bestSet.weight,
-            reps: bestSet.reps + 1,
-            label: 'More Reps'
-        });
+        if (totalVolumeCurr > 0) {
+            // User has already logged at least one set today
+            const targetVolume = totalVolumePrev;
+            const remainingVolume = targetVolume - totalVolumeCurr;
 
-        // 2. Suggest minor weight increments
-        // Typical increments: 1kg, 2kg, 2.5kg
-        const increments = [1, 2, 2.5];
-        increments.forEach(inc => {
-            const suggestedWeight = bestSet.weight + inc;
-            const suggestedReps = Math.ceil(maxVolume / suggestedWeight);
-
-            // Avoid suggesting reps that are too high (e.g. if increment is tiny)
-            // or suggesting the exact same set if volume matches exactly (unlikely with ceiling)
-            if (suggestedReps > 0) {
+            if (remainingVolume <= 0) {
+                // Goal already met!
                 suggestions.push({
-                    weight: suggestedWeight,
-                    reps: suggestedReps,
-                    label: `+${inc}kg`
+                    label: 'Volume Goal Met! 🎉',
+                    reps: 'PR',
+                    weight: 'Set',
+                    isMessage: true
+                });
+            } else {
+                // Suggest how to reach the goal
+                const lastSet = currentSession.sets[currentSession.sets.length - 1];
+                const lastWeightUsed = parseFloat(lastSet.weight);
+                const prevSetsCount = previousSession.sets.length;
+                const currSetsCount = currentSession.sets.length;
+                // Assume user wants to do at least as many sets as last time
+                const remainingSets = Math.max(1, prevSetsCount - currSetsCount);
+                const neededVolPerSet = Math.ceil(remainingVolume / remainingSets);
+
+                const isWeighted = !isNaN(lastWeightUsed) && lastWeightUsed !== null;
+
+                if (isWeighted && lastWeightUsed > 0) {
+                    // Suggestion 1: Use current weight
+                    const neededReps = Math.ceil(neededVolPerSet / lastWeightUsed);
+                    if (neededReps > 0 && neededReps < 100) {
+                        suggestions.push({
+                            weight: lastWeightUsed,
+                            reps: Math.max(1, neededReps),
+                            label: `Stay at ${lastWeightUsed}kg (${remainingSets} set${remainingSets > 1 ? 's' : ''} left)`
+                        });
+                    }
+
+                    // Suggestion 2: Small weight increase
+                    const nextWeight = lastWeightUsed + 2.5;
+                    const neededRepsNext = Math.ceil(neededVolPerSet / nextWeight);
+                    if (neededRepsNext > 0 && neededRepsNext < 100) {
+                        suggestions.push({
+                            weight: nextWeight,
+                            reps: Math.max(1, neededRepsNext),
+                            label: `+2.5kg (${remainingSets} set${remainingSets > 1 ? 's' : ''} left)`
+                        });
+                    }
+                } else {
+                    // Bodyweight - suggest reps to match volume (which is just reps if weight is 0)
+                    const neededReps = Math.ceil(remainingVolume / remainingSets);
+                    if (neededReps > 0) {
+                        suggestions.push({
+                            weight: null,
+                            reps: neededReps,
+                            label: `Target Reps (${remainingSets} set${remainingSets > 1 ? 's' : ''} left)`
+                        });
+                    }
+                }
+            }
+        } else if (bestSetPrev) {
+            // First time selecting exercise today - suggest beating previous best set
+            suggestions.push({
+                weight: bestSetPrev.weight,
+                reps: bestSetPrev.reps + 1,
+                label: 'Beat Best Set'
+            });
+
+            if (bestSetPrev.weight !== null) {
+                const increments = [1, 2.5];
+                increments.forEach(inc => {
+                    const suggestedWeight = bestSetPrev.weight + inc;
+                    const suggestedReps = Math.ceil(maxSetVolumePrev / suggestedWeight);
+                    if (suggestedReps > 0 && suggestedReps < 100) {
+                        suggestions.push({
+                            weight: suggestedWeight,
+                            reps: suggestedReps,
+                            label: `+${inc}kg`
+                        });
+                    }
                 });
             }
-        });
+        }
 
-        // Deduplicate suggestions (sometimes different increments result in same reps)
+        // Deduplicate
         const uniqueSuggestions = [];
         const seen = new Set();
-
         suggestions.forEach(s => {
-            const key = `${s.reps}x${s.weight}`;
+            const key = s.isMessage ? s.label : `${s.reps}x${s.weight}`;
             if (!seen.has(key)) {
                 seen.add(key);
                 uniqueSuggestions.push(s);
@@ -246,7 +317,8 @@ export const Workouts = {
 
         return {
             suggestions: uniqueSuggestions.slice(0, 3),
-            maxVolume
+            maxVolume: totalVolumePrev,
+            currentVolume: totalVolumeCurr
         };
     },
 
@@ -254,15 +326,23 @@ export const Workouts = {
      * Render volume suggestions as a UI element
      * @param {array} suggestions - Array of suggestion objects
      * @param {number} maxVolume - Previous max volume
+     * @param {number} currentVolume - Today's volume so far
      * @returns {HTMLElement} Suggestion container
      */
-    renderVolumeSuggestions(suggestions, maxVolume) {
+    renderVolumeSuggestions(suggestions, maxVolume, currentVolume = 0) {
         const container = document.createElement('div');
         container.className = 'volume-suggestions';
 
         const hint = document.createElement('div');
         hint.className = 'suggestion-hint';
-        hint.innerHTML = '<i data-lucide="zap" class="icon-xs"></i> <strong>Progress Tip:</strong> To beat previous volume, try:';
+
+        if (currentVolume > 0 && maxVolume > 0) {
+            const percentage = Math.min(100, (currentVolume / maxVolume) * 100).toFixed(0);
+            hint.innerHTML = `<i data-lucide="zap" class="icon-xs"></i> <strong>Volume:</strong> ${currentVolume.toFixed(0)} / ${maxVolume.toFixed(0)} kg <span class="percentage-pill" style="background: var(--primary-light); color: var(--primary-color); padding: 2px 6px; border-radius: 10px; font-size: 0.75rem; margin-left: 4px;">${percentage}%</span>`;
+        } else {
+            hint.innerHTML = '<i data-lucide="zap" class="icon-xs"></i> <strong>Progress Tip:</strong> To beat previous session, try:';
+        }
+
         container.appendChild(hint);
         if (window.lucide) window.lucide.createIcons();
 
@@ -271,28 +351,38 @@ export const Workouts = {
         list.style.display = 'flex';
         list.style.flexWrap = 'wrap';
         list.style.gap = '4px';
+        list.style.marginTop = '4px';
 
         suggestions.forEach(s => {
             const chip = document.createElement('div');
             chip.className = 'suggestion-chip';
-            chip.title = `Total Volume: ${(s.reps * s.weight).toFixed(1)}kg (Better than ${maxVolume.toFixed(1)}kg)`;
 
-            chip.innerHTML = `<strong>${s.reps}x${s.weight}</strong> <span class="label-tag">${s.label}</span>`;
+            if (s.isMessage) {
+                chip.innerHTML = `<span>${s.label}</span>`;
+                chip.style.backgroundColor = 'var(--success-light)';
+                chip.style.borderColor = 'var(--success-color)';
+                chip.style.color = 'var(--success-color)';
+                chip.style.cursor = 'default';
+            } else {
+                const weightText = (s.weight !== null && s.weight !== undefined) ? `x${s.weight}` : '';
+                chip.title = (s.weight !== null && s.weight !== undefined) ? `Predicted Set Volume: ${(s.reps * s.weight).toFixed(1)}kg` : `Target: ${s.reps} reps`;
+                chip.innerHTML = `<strong>${s.reps}${weightText}</strong> <span class="label-tag">${s.label}</span>`;
 
-            chip.addEventListener('click', (e) => {
-                e.preventDefault();
-                const repsInput = document.getElementById('workoutReps');
-                const weightInput = document.getElementById('workoutWeight');
+                chip.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const repsInput = document.getElementById('workoutReps');
+                    const weightInput = document.getElementById('workoutWeight');
 
-                if (repsInput) repsInput.value = s.reps;
-                if (weightInput) weightInput.value = s.weight;
+                    if (repsInput) repsInput.value = s.reps;
+                    if (weightInput && s.weight !== null) weightInput.value = s.weight;
 
-                showToast(`Target set: ${s.reps}x${s.weight}kg`, 'info');
+                    showToast(`Target set: ${s.reps}${weightText}`, 'info');
 
-                // Trigger change event for any other listeners
-                repsInput.dispatchEvent(new Event('change', { bubbles: true }));
-                weightInput.dispatchEvent(new Event('change', { bubbles: true }));
-            });
+                    // Trigger change event for any other listeners
+                    repsInput.dispatchEvent(new Event('change', { bubbles: true }));
+                    if (weightInput) weightInput.dispatchEvent(new Event('change', { bubbles: true }));
+                });
+            }
 
             list.appendChild(chip);
         });

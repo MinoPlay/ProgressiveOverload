@@ -109,50 +109,86 @@ const App = {
      * Initialize navigation between sections
      */
     initNavigation() {
-        const navBtns = document.querySelectorAll('.nav-btn');
-        const sections = document.querySelectorAll('.content-section');
+        const navElements = document.querySelectorAll('.nav-btn, .dropdown-item');
 
-        navBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const targetSection = btn.dataset.section;
+        const switchSection = (targetSection) => {
+            if (!targetSection) return;
 
-                // Update active nav button
-                navBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
+            // Update active state for all navigation elements
+            navElements.forEach(el => {
+                if (el.dataset.section === targetSection) {
+                    el.classList.add('active');
+                    el.setAttribute('aria-current', 'page');
+                } else {
+                    el.classList.remove('active');
+                    el.removeAttribute('aria-current');
+                }
+            });
 
-                // Update active section
-                sections.forEach(section => {
-                    if (section.id === `${targetSection}Section`) {
-                        section.classList.add('active');
-                    } else {
-                        section.classList.remove('active');
+            // Update active section visibility
+            const sections = document.querySelectorAll('.content-section');
+            sections.forEach(section => {
+                if (section.id === `${targetSection}Section`) {
+                    section.classList.add('active');
+                } else {
+                    section.classList.remove('active');
+                }
+            });
+
+            // Save to localStorage for persistence
+            localStorage.setItem('activeSection', targetSection);
+        };
+
+        navElements.forEach(el => {
+            el.addEventListener('click', () => {
+                const targetSection = el.dataset.section;
+
+                if (el.id === 'navAddExercise') {
+                    switchSection('exercises');
+                    if (window.Exercises) {
+                        window.Exercises.showForm();
                     }
-                });
+                    return;
+                }
 
-                // Save current section to localStorage
-                localStorage.setItem('activeSection', targetSection);
+                if (targetSection) {
+                    switchSection(targetSection);
+                }
+
+                // Close dropdown if it's open
+                const dropdownTrigger = document.querySelector('.dropdown-trigger');
+                const dropdownContent = document.querySelector('.dropdown-content');
+                if (dropdownTrigger && dropdownContent) {
+                    dropdownTrigger.setAttribute('aria-expanded', 'false');
+                    dropdownContent.style.display = 'none';
+                }
             });
         });
 
-        // Restore saved section on load
-        const savedSection = localStorage.getItem('activeSection');
-        if (savedSection) {
-            const targetBtn = Array.from(navBtns).find(btn => btn.dataset.section === savedSection);
-            if (targetBtn) {
-                // Update active nav button
-                navBtns.forEach(b => b.classList.remove('active'));
-                targetBtn.classList.add('active');
+        // Toggle dropdown on click (especially for mobile)
+        const dropdownTrigger = document.querySelector('.dropdown-trigger');
+        const dropdownContent = document.querySelector('.dropdown-content');
+        if (dropdownTrigger && dropdownContent) {
+            dropdownTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isExpanded = dropdownTrigger.getAttribute('aria-expanded') === 'true';
+                dropdownTrigger.setAttribute('aria-expanded', !isExpanded);
+                dropdownContent.style.display = isExpanded ? 'none' : 'block';
+            });
 
-                // Update active section
-                sections.forEach(section => {
-                    if (section.id === `${savedSection}Section`) {
-                        section.classList.add('active');
-                    } else {
-                        section.classList.remove('active');
-                    }
-                });
-            }
+            // Close dropdown when clicking outside
+            document.addEventListener('click', () => {
+                dropdownTrigger.setAttribute('aria-expanded', 'false');
+                dropdownContent.style.display = ''; // Reset to CSS hover behavior
+            });
         }
+
+        // Restore saved section on load
+        const savedSection = localStorage.getItem('activeSection') || 'workout';
+        switchSection(savedSection);
+
+        // Expose switchSection for potential use from other modules
+        this.switchSection = switchSection;
     }
 };
 

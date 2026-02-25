@@ -168,6 +168,15 @@ export const Charts = {
         const muscleGrid = document.getElementById('muscleGrid');
         if (!muscleGrid) return;
 
+        // Date ranges
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+
+        const currentMonthStart = new Date(year, month, 1).toISOString().split('T')[0];
+        const prevMonthStart = new Date(year, month - 1, 1).toISOString().split('T')[0];
+        const prevMonthEnd = new Date(year, month, 0).toISOString().split('T')[0];
+
         // Group data by muscle
         const muscleGroups = {};
         dataWithWorkouts.forEach(d => {
@@ -175,10 +184,22 @@ export const Charts = {
             if (!muscleGroups[muscle]) {
                 muscleGroups[muscle] = {
                     exercises: [],
-                    muscleName: muscle
+                    muscleName: muscle,
+                    currentMonthSessions: new Set(),
+                    currentMonthExCount: 0,
+                    prevMonthExCount: 0
                 };
             }
             muscleGroups[muscle].exercises.push(d);
+
+            d.workouts.forEach(w => {
+                if (w.date >= currentMonthStart) {
+                    muscleGroups[muscle].currentMonthSessions.add(w.date);
+                    muscleGroups[muscle].currentMonthExCount++;
+                } else if (w.date >= prevMonthStart && w.date <= prevMonthEnd) {
+                    muscleGroups[muscle].prevMonthExCount++;
+                }
+            });
         });
 
         const muscleIcons = {
@@ -203,43 +224,21 @@ export const Charts = {
 
         muscleGrid.innerHTML = sortedMuscles.map(muscle => {
             const group = muscleGroups[muscle];
-            const exercises = group.exercises;
+            const sessions = group.currentMonthSessions.size;
+            const exCount = group.currentMonthExCount;
+            const prevExCount = group.prevMonthExCount;
 
-            // Calculate sessions (unique dates)
-            const allDates = new Set();
-            let totalGain = 0;
-            let gainCount = 0;
-            let advancingCount = 0;
-
-            exercises.forEach(d => {
-                d.workouts.forEach(w => allDates.add(w.date));
-
-                const stats = this.calculateExerciseStats(d.workouts, d.exercise.requiresWeight);
-                if (stats && stats.maxWeights && stats.maxWeights.length > 0) {
-                    const weights = stats.maxWeights;
-                    const baseline = weights[0];
-                    const latest = weights[weights.length - 1];
-                    if (baseline > 0) {
-                        totalGain += ((latest - baseline) / baseline) * 100;
-                        gainCount++;
-                    }
-
-                    if (weights.length >= 2 && latest > weights[weights.length - 2]) {
-                        advancingCount++;
-                    }
-                }
-            });
-
-            const avgGain = gainCount > 0 ? totalGain / gainCount : 0;
-            const sessions = allDates.size;
-            const advancingPct = exercises.length > 0 ? (advancingCount / exercises.length) * 100 : 0;
-
-            // Find top exercise (most sessions)
-            const topExercise = [...exercises].sort((a, b) => {
-                const datesA = new Set(a.workouts.map(w => w.date)).size;
-                const datesB = new Set(b.workouts.map(w => w.date)).size;
-                return datesB - datesA;
-            })[0]?.exercise.name || 'None';
+            // Calculate change
+            let changeText = '0%';
+            let changeClass = 'neutral';
+            if (prevExCount > 0) {
+                const change = ((exCount - prevExCount) / prevExCount) * 100;
+                changeText = `${change >= 0 ? '+' : ''}${change.toFixed(1)}%`;
+                changeClass = change > 0 ? 'positive' : (change < 0 ? 'negative' : 'neutral');
+            } else if (exCount > 0) {
+                changeText = '+100%';
+                changeClass = 'positive';
+            }
 
             const icon = muscleIcons[muscle] || 'activity';
 
@@ -247,24 +246,24 @@ export const Charts = {
                 <div class="muscle-card">
                     <div class="muscle-card-header">
                         <i data-lucide="${icon}"></i>
-                        <h5>${muscle.replace('-', ' ')}</h5>
+                        <h5>${this.capitalize(muscle)}</h5>
                     </div>
                     <div class="muscle-card-stats">
                         <div class="muscle-card-stat">
-                            <span class="label">Sessions</span>
+                            <span class="label">Sessions (Month)</span>
                             <span class="value">${sessions}</span>
                         </div>
                         <div class="muscle-card-stat">
-                            <span class="label">Avg Gain</span>
-                            <span class="value ${avgGain > 0 ? 'positive' : 'neutral'}">${avgGain >= 0 ? '+' : ''}${avgGain.toFixed(1)}%</span>
+                            <span class="label">Total Exercises</span>
+                            <span class="value">${exCount}</span>
                         </div>
                         <div class="muscle-card-stat">
-                            <span class="label">Advancing</span>
-                            <span class="value">${advancingCount}/${exercises.length}</span>
+                            <span class="label">MoM Change</span>
+                            <span class="value ${changeClass}">${changeText}</span>
                         </div>
                     </div>
-                    <div class="muscle-card-footer" title="Top exercise: ${topExercise}">
-                        Top: <strong>${topExercise}</strong>
+                    <div class="muscle-card-footer">
+                        vs Prev Month: <strong>${prevExCount}</strong> exercises
                     </div>
                 </div>
             `;
@@ -318,26 +317,36 @@ export const Charts = {
 
         // Muscle groups trained this week
         const muscleSessions = {}; // Count unique dates (sessions) per muscle
+        const muscleExercises = {}; // Count total exercises per muscle
         const weekWorkouts = allWorkouts.filter(w => w.date >= weekStartStr);
 
         weekWorkouts.forEach(w => {
             if (w.muscle) {
-                if (!muscleSessions[w.muscle]) muscleSessions[w.muscle] = new Set();
+                if (!muscleSessions[w.muscle]) {
+                    muscleSessions[w.muscle] = new Set();
+                    muscleExercises[w.muscle] = 0;
+                }
                 // Treat each unique training day as 1 "session" for that muscle group
                 muscleSessions[w.muscle].add(w.date);
+                // Total exercises count (not unique)
+                muscleExercises[w.muscle]++;
             }
         });
 
         // Convert to array and sort by frequency
         const sortedMuscles = Object.entries(muscleSessions)
-            .map(([muscle, sessions]) => ({ name: muscle, count: sessions.size }))
+            .map(([muscle, sessions]) => ({
+                name: muscle,
+                count: sessions.size,
+                exCount: muscleExercises[muscle]
+            }))
             .sort((a, b) => b.count - a.count);
 
         const muscleFocusHTML = sortedMuscles.length > 0
             ? sortedMuscles.map(m => `
                 <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid var(--border-light); padding: 4px 0;">
                     <span style="text-transform: capitalize; font-weight: 500;">${m.name.replace('-', ' ')}</span>
-                    <span style="font-weight: 800; color: var(--primary-color);">${m.count}x</span>
+                    <span style="font-weight: 800; color: var(--primary-color);">${m.count} ses | ${m.exCount} ex</span>
                 </div>
             `).join('')
             : '<div style="color: var(--text-light); font-style: italic; margin-top: 10px;">No sessions logged yet</div>';
@@ -364,7 +373,7 @@ export const Charts = {
             <div class="kpi-card" style="display: flex; flex-direction: column;">
                 <div class="kpi-icon-row">
                     <i data-lucide="biceps-flexed" class="kpi-icon text-success"></i>
-                    <span class="kpi-label" title="How many unique training days each muscle group has been targeted this week">Muscle Training Sessions</span>
+                    <span class="kpi-label" title="How many unique training days each muscle group has been targeted this week (s) and total exercises performed (e)">Muscle Training Sessions</span>
                 </div>
                 <div class="muscle-focus-list" style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start; margin-top: 5px;">
                     ${muscleFocusHTML}

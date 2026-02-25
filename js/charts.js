@@ -153,9 +153,122 @@ export const Charts = {
             }))
         );
         this.renderKPICards(dataWithWorkouts);
+        this.renderMuscleBreakdown(dataWithWorkouts);
         this.renderHeatmap(dataWithWorkouts); // Passed dataWithWorkouts for the frequency matrix
         this.renderMilestones(dataWithWorkouts);
         this.renderWeeklyStats(allWorkouts);
+    },
+
+    /**
+     * Render the muscle group breakdown section
+     * @param {Array} dataWithWorkouts - Array of {exercise, workouts}
+     */
+    renderMuscleBreakdown(dataWithWorkouts) {
+        const muscleGrid = document.getElementById('muscleGrid');
+        if (!muscleGrid) return;
+
+        // Group data by muscle
+        const muscleGroups = {};
+        dataWithWorkouts.forEach(d => {
+            const muscle = d.exercise.muscle || 'other';
+            if (!muscleGroups[muscle]) {
+                muscleGroups[muscle] = {
+                    exercises: [],
+                    muscleName: muscle
+                };
+            }
+            muscleGroups[muscle].exercises.push(d);
+        });
+
+        const muscleIcons = {
+            'chest': 'dumbbell',
+            'back': 'align-center',
+            'shoulders': 'arrow-up-circle',
+            'legs': 'footprints',
+            'arms': 'biceps-flexed',
+            'core': 'target',
+            'neck': 'circle',
+            'full-body': 'user',
+            'other': 'help-circle'
+        };
+
+        const sortedMuscles = Object.keys(muscleGroups).sort();
+
+        if (sortedMuscles.length === 0) {
+            muscleGrid.innerHTML = '<p class="empty-state">No muscle group data available.</p>';
+            return;
+        }
+
+        muscleGrid.innerHTML = sortedMuscles.map(muscle => {
+            const group = muscleGroups[muscle];
+            const exercises = group.exercises;
+
+            // Calculate sessions (unique dates)
+            const allDates = new Set();
+            let totalGain = 0;
+            let gainCount = 0;
+            let advancingCount = 0;
+
+            exercises.forEach(d => {
+                d.workouts.forEach(w => allDates.add(w.date));
+
+                const stats = this.calculateExerciseStats(d.workouts, d.exercise.requiresWeight);
+                if (stats && stats.maxWeights && stats.maxWeights.length > 0) {
+                    const weights = stats.maxWeights;
+                    const baseline = weights[0];
+                    const latest = weights[weights.length - 1];
+                    if (baseline > 0) {
+                        totalGain += ((latest - baseline) / baseline) * 100;
+                        gainCount++;
+                    }
+
+                    if (weights.length >= 2 && latest > weights[weights.length - 2]) {
+                        advancingCount++;
+                    }
+                }
+            });
+
+            const avgGain = gainCount > 0 ? totalGain / gainCount : 0;
+            const sessions = allDates.size;
+            const advancingPct = exercises.length > 0 ? (advancingCount / exercises.length) * 100 : 0;
+
+            // Find top exercise (most sessions)
+            const topExercise = [...exercises].sort((a, b) => {
+                const datesA = new Set(a.workouts.map(w => w.date)).size;
+                const datesB = new Set(b.workouts.map(w => w.date)).size;
+                return datesB - datesA;
+            })[0]?.exercise.name || 'None';
+
+            const icon = muscleIcons[muscle] || 'activity';
+
+            return `
+                <div class="muscle-card">
+                    <div class="muscle-card-header">
+                        <i data-lucide="${icon}"></i>
+                        <h5>${muscle.replace('-', ' ')}</h5>
+                    </div>
+                    <div class="muscle-card-stats">
+                        <div class="muscle-card-stat">
+                            <span class="label">Sessions</span>
+                            <span class="value">${sessions}</span>
+                        </div>
+                        <div class="muscle-card-stat">
+                            <span class="label">Avg Gain</span>
+                            <span class="value ${avgGain > 0 ? 'positive' : 'neutral'}">${avgGain >= 0 ? '+' : ''}${avgGain.toFixed(1)}%</span>
+                        </div>
+                        <div class="muscle-card-stat">
+                            <span class="label">Advancing</span>
+                            <span class="value">${advancingCount}/${exercises.length}</span>
+                        </div>
+                    </div>
+                    <div class="muscle-card-footer" title="Top exercise: ${topExercise}">
+                        Top: <strong>${topExercise}</strong>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        if (window.lucide) window.lucide.createIcons();
     },
 
     /**

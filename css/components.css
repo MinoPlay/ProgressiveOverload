@@ -2271,3 +2271,107 @@
     color: var(--primary-color);
     margin-right: 0;
 }
+
+/* Muscle Group Breakdown */
+.muscle-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: var(--spacing-sm);
+}
+
+.muscle-card {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-md);
+    box-shadow: var(--shadow-sm);
+    border-top: 3px solid var(--primary-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+    transition: all var(--transition-base);
+}
+
+.muscle-card:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-md);
+}
+
+.muscle-card-header {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    color: var(--text-primary);
+}
+
+.muscle-card-header i {
+    color: var(--primary-color);
+    width: 18px;
+    height: 18px;
+}
+
+.muscle-card-header h5 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-transform: capitalize;
+}
+
+.muscle-card-stats {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.muscle-card-stat {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+}
+
+.muscle-card-stat .label {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.muscle-card-stat .value {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.muscle-card-stat .value.positive {
+    color: var(--success-color);
+}
+
+.muscle-card-stat .value.neutral {
+    color: var(--text-secondary);
+}
+
+.muscle-card-footer {
+    margin-top: auto;
+    padding-top: var(--spacing-sm);
+    border-top: 1px solid var(--border-light);
+    font-size: 0.7rem;
+    color: var(--text-light);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.muscle-card-footer strong {
+    color: var(--text-secondary);
+}
+
+@media (max-width: 600px) {
+    .muscle-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 400px) {
+    .muscle-grid {
+        grid-template-columns: 1fr;
+    }
+}

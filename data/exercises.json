@@ -53,7 +53,7 @@
       "id": "1769598356908_vaei2f8dr",
       "name": "Bicep Curls",
       "equipmentType": "dumbbell",
-      "muscle": "arms",
+      "muscle": "biceps",
       "requiresWeight": true
     },
     {
@@ -88,7 +88,7 @@
       "id": "1769598356908_xjkjvzp40",
       "name": "Dips",
       "equipmentType": "bodyweight",
-      "muscle": "chest",
+      "muscle": "triceps",
       "requiresWeight": false
     },
     {

@@ -280,92 +280,98 @@ export const Charts = {
         const kpiGrid = document.getElementById('kpiGrid');
         if (!kpiGrid) return;
 
-        const sixtyDaysAgo = new Date();
-        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
-        const sixtyDaysAgoStr = sixtyDaysAgo.toISOString().split('T')[0];
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
 
-        // Filter for active exercises (any workout in last 60 days)
-        const activeExercises = dataWithWorkouts.filter(d =>
-            d.workouts.some(w => w.date >= sixtyDaysAgoStr)
+        // Month start
+        const monthStart = new Date(year, month, 1);
+        const monthStartStr = monthStart.toISOString().split('T')[0];
+
+        // Week start (Monday)
+        const dayOfWeek = now.getDay();
+        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const weekStart = new Date(now);
+        weekStart.setDate(now.getDate() + diffToMonday);
+        weekStart.setHours(0, 0, 0, 0);
+        const weekStartStr = weekStart.toISOString().split('T')[0];
+
+        // All workouts
+        const allWorkouts = dataWithWorkouts.flatMap(d =>
+            d.workouts.map(w => ({
+                ...w,
+                muscle: d.exercise.muscle
+            }))
         );
 
-        if (activeExercises.length === 0) {
-            kpiGrid.innerHTML = '<p class="empty-state">No active exercise data for KPIs.</p>';
-            return;
-        }
+        // Workouts this month (unique dates)
+        const workoutsThisMonth = new Set(
+            allWorkouts
+                .filter(w => w.date >= monthStartStr)
+                .map(w => w.date)
+        ).size;
 
-        let totalProgressPct = 0;
-        let liftsAdvancingCount = 0;
-        let totalActiveInPeriod = activeExercises.length;
+        // Workouts this week (unique dates)
+        const workoutsThisWeek = new Set(
+            allWorkouts
+                .filter(w => w.date >= weekStartStr)
+                .map(w => w.date)
+        ).size;
 
-        activeExercises.forEach(d => {
-            const daily = this.groupByDate(d.workouts, d.exercise.requiresWeight);
-            const weights = daily.maxWeights;
+        // Muscle groups trained this week
+        const muscleDates = {};
+        const weekWorkouts = allWorkouts.filter(w => w.date >= weekStartStr);
 
-            if (weights.length >= 1) {
-                // Progress Index (Latest vs Baseline)
-                const baseline = weights[0];
-                const latest = weights[weights.length - 1];
-                if (baseline > 0) {
-                    totalProgressPct += ((latest - baseline) / baseline) * 100;
-                }
-
-                // Advancing? (Latest vs Previous)
-                if (weights.length >= 2) {
-                    if (weights[weights.length - 1] > weights[weights.length - 2]) {
-                        liftsAdvancingCount++;
-                    }
-                }
+        weekWorkouts.forEach(w => {
+            if (w.muscle) {
+                if (!muscleDates[w.muscle]) muscleDates[w.muscle] = new Set();
+                muscleDates[w.muscle].add(w.date);
             }
         });
 
-        const avgOverloadIndex = totalProgressPct / totalActiveInPeriod;
-        const advancementRate = (liftsAdvancingCount / totalActiveInPeriod) * 100;
+        // Convert to array and sort by frequency
+        const sortedMuscles = Object.entries(muscleDates)
+            .map(([muscle, dates]) => ({ name: muscle, count: dates.size }))
+            .sort((a, b) => b.count - a.count);
 
-        // Consistency calculation (Last 12 weeks)
-        const allWorkouts = dataWithWorkouts.flatMap(d => d.workouts);
-        const uniqueDates = new Set(allWorkouts.map(w => w.date));
-
-        // Count days in last 12 full weeks
-        const today = new Date();
-        const startOf12Weeks = new Date(today);
-        startOf12Weeks.setDate(today.getDate() - (12 * 7));
-        const startStr = startOf12Weeks.toISOString().split('T')[0];
-
-        const recentDates = Array.from(uniqueDates).filter(d => d >= startStr);
-
-        // Accurate weeks counter (min 1, max 12)
-        const earliestDate = uniqueDates.size > 0 ? new Date(Math.min(...Array.from(uniqueDates).map(d => new Date(d)))) : today;
-        const weeksSinceStart = Math.max(1, Math.min(12, Math.ceil((today - earliestDate) / (1000 * 60 * 60 * 24 * 7))));
-        const avgWeeklyFrequency = recentDates.length / weeksSinceStart;
+        const muscleFocusHTML = sortedMuscles.length > 0
+            ? sortedMuscles.map(m => `
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid var(--border-light); padding: 4px 0;">
+                    <span style="text-transform: capitalize; font-weight: 500;">${m.name.replace('-', ' ')}</span>
+                    <span style="font-weight: 800; color: var(--primary-color);">${m.count}x</span>
+                </div>
+            `).join('')
+            : '<div style="color: var(--text-light); font-style: italic; margin-top: 10px;">No sessions logged yet</div>';
 
         kpiGrid.innerHTML = `
             <div class="kpi-card">
                 <div class="kpi-icon-row">
-                    <i data-lucide="trending-up" class="kpi-icon text-primary"></i>
-                    <span class="kpi-label" title="Average % improvement across all active exercises since they were first logged">Avg. Performance Gain</span>
+                    <i data-lucide="calendar-check" class="kpi-icon text-primary"></i>
+                    <span class="kpi-label" title="Total unique training days this calendar month">Workouts This Month</span>
                 </div>
-                <div class="kpi-value">${avgOverloadIndex >= 0 ? '+' : ''}${avgOverloadIndex.toFixed(1)}%</div>
-                <span class="kpi-trend trend-neutral">Compared to your baseline</span>
+                <div class="kpi-value">${workoutsThisMonth}</div>
+                <span class="kpi-trend trend-neutral">In ${now.toLocaleString('default', { month: 'long' })}</span>
             </div>
             <div class="kpi-card">
                 <div class="kpi-icon-row">
-                    <i data-lucide="zap" class="kpi-icon text-warning"></i>
-                    <span class="kpi-label" title="Percentage of exercises that improved their personal record (max weight or reps) in their most recent session compared to the one before">Lifts Advancing</span>
+                    <i data-lucide="calendar-days" class="kpi-icon text-warning"></i>
+                    <span class="kpi-label" title="Total unique training days this calendar week (Mon-Sun)">Workouts This Week</span>
                 </div>
-                <div class="kpi-value">${advancementRate.toFixed(0)}%</div>
-                <span class="kpi-trend ${advancementRate >= 50 ? 'trend-up' : (advancementRate > 0 ? 'trend-neutral' : 'trend-down')}">
-                    Across ${totalActiveInPeriod} exercises
+                <div class="kpi-value">${workoutsThisWeek}</div>
+                <span class="kpi-trend ${workoutsThisWeek >= 3 ? 'trend-up' : 'trend-neutral'}">
+                    Current week progress
                 </span>
             </div>
-            <div class="kpi-card">
+            <div class="kpi-card" style="display: flex; flex-direction: column;">
                 <div class="kpi-icon-row">
-                    <i data-lucide="calendar" class="kpi-icon text-success"></i>
-                    <span class="kpi-label" title="Average training sessions per week over the last 12 weeks">Weekly Habit</span>
+                    <i data-lucide="biceps-flexed" class="kpi-icon text-success"></i>
+                    <span class="kpi-label" title="Frequency of training for each muscle group this week">Muscle Training Frequency</span>
                 </div>
-                <div class="kpi-value">${avgWeeklyFrequency.toFixed(1)} <small>days/wk</small></div>
-                <span class="kpi-trend ${avgWeeklyFrequency >= 3 ? 'trend-up' : 'trend-neutral'}">
-                    12-week consistency
+                <div class="muscle-focus-list" style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start; margin-top: 5px;">
+                    ${muscleFocusHTML}
+                </div>
+                <span class="kpi-trend trend-neutral" style="margin-top: 10px;">
+                    Unique groups: ${sortedMuscles.length}
                 </span>
             </div>
         `;

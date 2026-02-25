@@ -1,17 +1,3 @@
-// Toggle Configuration section visibility when clicking the header
-window.addEventListener('DOMContentLoaded', function () {
-    const header = document.getElementById('main-header');
-    const configSection = document.getElementById('config-section');
-    if (header && configSection) {
-        header.addEventListener('click', function () {
-            if (configSection.style.display === 'none' || configSection.style.display === '') {
-                configSection.style.display = 'block';
-            } else {
-                configSection.style.display = 'none';
-            }
-        });
-    }
-});
 // Main Application
 // Initializes and coordinates all modules
 
@@ -204,6 +190,28 @@ const App = {
             document.addEventListener('click', () => {
                 closeDropdown();
             });
+        }
+
+        // Config gear dropdown toggle
+        const configTrigger = document.getElementById('configDropdownTrigger');
+        const configContent = document.getElementById('configDropdownContent');
+        if (configTrigger && configContent) {
+            configTrigger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                // Close the main nav dropdown if open
+                closeDropdown();
+                const isExpanded = configTrigger.getAttribute('aria-expanded') === 'true';
+                configTrigger.setAttribute('aria-expanded', String(!isExpanded));
+                configContent.style.display = isExpanded ? 'none' : 'block';
+            });
+
+            document.addEventListener('click', () => {
+                configTrigger.setAttribute('aria-expanded', 'false');
+                configContent.style.display = 'none';
+            });
+
+            // Prevent clicks inside the config panel from closing it
+            configContent.addEventListener('click', (e) => e.stopPropagation());
         }
 
         // Restore saved section on load

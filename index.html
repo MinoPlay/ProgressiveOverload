@@ -22,11 +22,57 @@
         <!-- Header -->
         <header class="app-header">
             <div class="header-content">
-                <h1 id="main-header" style="cursor: pointer; display: flex; align-items: center; gap: 10px;">
+                <h1 id="main-header" style="display: flex; align-items: center; gap: 10px;">
                     <i data-lucide="dumbbell"></i> Progressive Tracker
                 </h1>
 
                 <nav class="header-nav" role="navigation" aria-label="Main navigation">
+                    <!-- Config dropdown -->
+                    <div class="nav-dropdown config-nav-dropdown">
+                        <button class="nav-btn config-dropdown-trigger" id="configDropdownTrigger" aria-haspopup="true"
+                            aria-expanded="false" aria-label="Configuration">
+                            <i data-lucide="settings" class="nav-icon"></i>
+                            <i data-lucide="chevron-down" class="chevron-icon"></i>
+                        </button>
+                        <div class="dropdown-content config-dropdown-content" id="configDropdownContent">
+                            <div class="config-dropdown-body">
+                                <div class="mode-toggle">
+                                    <button onclick="setMode('local')" class="mode-btn" id="mode-local">
+                                        <i data-lucide="home"></i> Local
+                                    </button>
+                                    <button onclick="setMode('github')" class="mode-btn" id="mode-github">
+                                        <i data-lucide="github"></i> GitHub
+                                    </button>
+                                </div>
+                                <div class="config-form" id="github-config">
+                                    <input type="password" id="github-token" placeholder="GitHub Token"
+                                        autocomplete="off">
+                                    <input type="text" id="repo-owner" placeholder="GitHub Username" autocomplete="off">
+                                    <input type="text" id="repo-name" placeholder="Repository Name" autocomplete="off">
+                                    <button onclick="saveConfig()" class="btn-save">
+                                        <i data-lucide="save"></i> Save
+                                    </button>
+                                </div>
+                                <div class="local-controls" id="local-controls" style="display: none;">
+                                    <button onclick="generateDummyData()" class="btn-generate">
+                                        <i data-lucide="dice-5"></i> Sample Data
+                                    </button>
+                                    <button onclick="clearLocalData()" class="btn-clear text-error">
+                                        <i data-lucide="trash-2"></i> Clear Data
+                                    </button>
+                                </div>
+                                <p class="config-help" id="github-help">
+                                    Create a token with 'repo' scope at
+                                    <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings</a>
+                                </p>
+                                <p class="config-help" id="local-help" style="display: none;">
+                                    Local mode stores data in your browser's localStorage.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main nav dropdown -->
                     <div class="nav-dropdown main-nav-dropdown">
                         <button class="nav-btn dropdown-trigger main-nav-trigger" aria-haspopup="true"
                             aria-expanded="false" aria-label="Open navigation menu">
@@ -70,44 +116,7 @@
 
         <!-- Main Content -->
         <main class="app-content">
-            <!-- GitHub Configuration -->
-            <section class="config-section" id="config-section" style="display: none;">
-                <h2 onclick="toggleConfig()" style="cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                    <i data-lucide="cog"></i> Configuration
-                </h2>
-                <div class="mode-toggle">
-                    <button onclick="setMode('local')" class="mode-btn" id="mode-local">
-                        <i data-lucide="home"></i> Local Mode
-                    </button>
-                    <button onclick="setMode('github')" class="mode-btn" id="mode-github">
-                        <i data-lucide="github"></i> GitHub Mode
-                    </button>
-                </div>
-                <div class="config-form" id="github-config">
-                    <input type="password" id="github-token" placeholder="GitHub Personal Access Token"
-                        autocomplete="off">
-                    <input type="text" id="repo-owner" placeholder="GitHub Username" autocomplete="off">
-                    <input type="text" id="repo-name" placeholder="Repository Name" autocomplete="off">
-                    <button onclick="saveConfig()" class="btn-save">
-                        <i data-lucide="save"></i> Save Configuration
-                    </button>
-                </div>
-                <div class="local-controls" id="local-controls" style="display: none;">
-                    <button onclick="generateDummyData()" class="btn-generate">
-                        <i data-lucide="dice-5"></i> Generate Sample Data
-                    </button>
-                    <button onclick="clearLocalData()" class="btn-clear text-error">
-                        <i data-lucide="trash-2"></i> Clear All Data
-                    </button>
-                </div>
-                <p class="config-help" id="github-help">
-                    Create a token with 'repo' scope at
-                    <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings</a>
-                </p>
-                <p class="config-help" id="local-help" style="display: none;">
-                    Local mode stores data in your browser's localStorage. Data persists between sessions.
-                </p>
-            </section>
+
 
             <!-- Exercises Section -->
             <section id="exercisesSection" class="content-section" role="region" aria-label="Manage Exercises">

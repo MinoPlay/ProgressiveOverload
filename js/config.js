@@ -110,10 +110,6 @@ export function loadConfig() {
         document.getElementById('repo-owner').value = config.owner || '';
         document.getElementById('repo-name').value = config.repo || '';
         config.mode = config.mode || 'local';
-
-        if (config.mode === 'local' || isConfigured()) {
-            document.getElementById('config-section').classList.add('collapsed');
-        }
     } else {
         config.mode = 'local';
     }
@@ -137,7 +133,14 @@ window.saveConfig = function () {
 
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     showStatus('Configuration saved! Reloading...', 'success');
-    document.getElementById('config-section').classList.add('collapsed');
+
+    // Close the config dropdown
+    const trigger = document.getElementById('configDropdownTrigger');
+    const content = document.getElementById('configDropdownContent');
+    if (trigger && content) {
+        trigger.setAttribute('aria-expanded', 'false');
+        content.style.display = 'none';
+    }
 
     // Reload the page to apply new configuration
     setTimeout(() => {
@@ -150,7 +153,12 @@ window.saveConfig = function () {
  * Toggle configuration panel visibility
  */
 window.toggleConfig = function () {
-    document.getElementById('config-section').classList.toggle('collapsed');
+    const trigger = document.getElementById('configDropdownTrigger');
+    const content = document.getElementById('configDropdownContent');
+    if (!trigger || !content) return;
+    const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
+    trigger.setAttribute('aria-expanded', String(!isExpanded));
+    content.style.display = isExpanded ? 'none' : 'block';
 };
 
 /**

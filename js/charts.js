@@ -400,7 +400,7 @@ export const Charts = {
             });
         }
 
-        const weeksToShow = 4;
+        const weeksToShow = 12;
         const today = new Date();
 
         // Find current week's Monday

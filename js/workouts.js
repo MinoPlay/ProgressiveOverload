@@ -14,6 +14,7 @@ export const Workouts = {
         this.bindEvents();
         this.populateExerciseDropdown();
         this.setDefaultDate();
+        this.updateDateTooltip();
 
         // Listen for exercise updates
         window.addEventListener('exercisesUpdated', () => {
@@ -47,6 +48,12 @@ export const Workouts = {
         // Clear form button
         if (clearBtn) {
             clearBtn.addEventListener('click', () => this.clearForm());
+        }
+
+        // Update tooltip when date changes
+        const dateInput = document.getElementById('workoutDate');
+        if (dateInput) {
+            dateInput.addEventListener('change', () => this.updateDateTooltip());
         }
     },
 
@@ -394,6 +401,19 @@ export const Workouts = {
         const dateInput = document.getElementById('workoutDate');
         const today = new Date();
         dateInput.value = formatDate(today);
+    },
+
+    /**
+     * Update the date input container tooltip
+     */
+    updateDateTooltip() {
+        const dateInput = document.getElementById('workoutDate');
+        if (dateInput) {
+            const container = dateInput.closest('.date-input-container');
+            if (container) {
+                container.title = `Workout Date: ${dateInput.value}`;
+            }
+        }
     },
 
     /**

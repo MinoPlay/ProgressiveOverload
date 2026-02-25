@@ -134,9 +134,9 @@ window.saveConfig = function () {
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     showStatus('Configuration saved! Reloading...', 'success');
 
-    // Close the config dropdown
-    const trigger = document.getElementById('configDropdownTrigger');
-    const content = document.getElementById('configDropdownContent');
+    // Close the navigation dropdown
+    const trigger = document.getElementById('mainNavTrigger');
+    const content = document.getElementById('mainNavContent');
     if (trigger && content) {
         trigger.setAttribute('aria-expanded', 'false');
         content.style.display = 'none';
@@ -146,19 +146,6 @@ window.saveConfig = function () {
     setTimeout(() => {
         location.reload();
     }, 1000);
-};
-
-
-/**
- * Toggle configuration panel visibility
- */
-window.toggleConfig = function () {
-    const trigger = document.getElementById('configDropdownTrigger');
-    const content = document.getElementById('configDropdownContent');
-    if (!trigger || !content) return;
-    const isExpanded = trigger.getAttribute('aria-expanded') === 'true';
-    trigger.setAttribute('aria-expanded', String(!isExpanded));
-    content.style.display = isExpanded ? 'none' : 'block';
 };
 
 /**

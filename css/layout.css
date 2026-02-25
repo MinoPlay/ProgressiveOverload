@@ -203,6 +203,33 @@ body {
     margin-bottom: 0;
 }
 
+.config-toggle-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    padding: var(--spacing-md) var(--spacing-lg);
+    width: 100%;
+    border: none;
+    background: transparent;
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background var(--transition-fast);
+}
+
+.config-toggle-btn:hover {
+    background-color: var(--bg-secondary);
+    color: var(--primary-color);
+}
+
+.config-chevron {
+    transition: transform var(--transition-base);
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+}
+
 .config-dropdown-body .mode-btn {
     flex: 1;
     padding: var(--spacing-sm) var(--spacing-md);

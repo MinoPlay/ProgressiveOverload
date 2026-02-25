@@ -48,9 +48,14 @@
                             <button class="nav-btn dropdown-item" data-section="exercises">
                                 <i data-lucide="list" class="nav-icon"></i> Manage
                             </button>
-                            <!-- Config section -->
+                            <!-- Collapsible config -->
                             <div class="dropdown-divider"></div>
-                            <div class="config-dropdown-body">
+                            <button class="dropdown-item config-toggle-btn" id="configToggleBtn" type="button">
+                                <i data-lucide="settings" class="nav-icon"></i>
+                                <span style="flex:1; text-align:left;">Configuration</span>
+                                <i data-lucide="chevron-right" class="config-chevron" id="configChevron"></i>
+                            </button>
+                            <div class="config-dropdown-body" id="configBody" style="display:none;">
                                 <div class="mode-toggle">
                                     <button onclick="setMode('local')" class="mode-btn" id="mode-local">
                                         <i data-lucide="home"></i> Local
@@ -89,6 +94,7 @@
                 </nav>
             </div>
         </header>
+
 
         <!-- Loading Indicator -->
         <div id="loadingIndicator" class="loading" style="display: none;" role="status" aria-live="polite"

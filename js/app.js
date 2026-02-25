@@ -180,6 +180,21 @@ const App = {
             });
         }
 
+        // Config collapsible toggle
+        const configToggleBtn = document.getElementById('configToggleBtn');
+        const configBody = document.getElementById('configBody');
+        const configChevron = document.getElementById('configChevron');
+        if (configToggleBtn && configBody) {
+            configToggleBtn.addEventListener('click', (e) => {
+                e.stopPropagation();
+                const isHidden = configBody.style.display === 'none';
+                configBody.style.display = isHidden ? 'block' : 'none';
+                if (configChevron) {
+                    configChevron.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+                }
+            });
+        }
+
         // Restore saved section on load
         const savedSection = localStorage.getItem('activeSection') || 'workout';
         switchSection(savedSection);

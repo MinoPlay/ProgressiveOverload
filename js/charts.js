@@ -1004,7 +1004,7 @@ export const Charts = {
         }
 
         // Create metric selector
-        this.renderMetricSelector(groupedExercises[this.currentCategory]);
+        this.renderMetricSelector();
 
         // Create tab buttons
         categories.forEach(category => {
@@ -1409,9 +1409,8 @@ export const Charts = {
 
     /**
      * Render the metric selector buttons
-     * @param {Array} categoryData - Data for the current category
      */
-    renderMetricSelector(categoryData) {
+    renderMetricSelector() {
         const controls = document.getElementById('chartControls');
         if (!controls) return;
 
@@ -1426,7 +1425,7 @@ export const Charts = {
 
         controls.querySelectorAll('.metric-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.switchMetric(e.target.dataset.metric, categoryData);
+                this.switchMetric(e.target.dataset.metric);
             });
         });
     },
@@ -1434,9 +1433,8 @@ export const Charts = {
     /**
      * Switch the active metric for charts
      * @param {string} metric - Selected metric key
-     * @param {Array} categoryData - Data for the current category
      */
-    switchMetric(metric, categoryData) {
+    switchMetric(metric) {
         this.selectedMetric = metric;
         localStorage.setItem('selectedMetric', metric);
 
@@ -1445,8 +1443,10 @@ export const Charts = {
             btn.classList.toggle('active', btn.dataset.metric === metric);
         });
 
-        // Re-render chart
-        this.renderCategoryChart(this.currentCategory, categoryData);
+        // Re-render chart for current category
+        const category = this.currentCategory;
+        const data = this.allExercisesData.filter(d => (d.exercise.equipmentType || 'other') === category);
+        this.renderCategoryChart(category, data);
     },
 
     /**

@@ -289,15 +289,9 @@ export const Charts = {
         const monthStart = new Date(year, month, 1);
         const monthStartStr = monthStart.getFullYear() + '-' + String(monthStart.getMonth() + 1).padStart(2, '0') + '-01';
 
-        // Week start (Monday)
-        const dayOfWeek = now.getDay();
-        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        const weekStart = new Date(now);
-        weekStart.setDate(now.getDate() + diffToMonday);
-        weekStart.setHours(0, 0, 0, 0);
-        const weekStartStr = weekStart.getFullYear() + '-' +
-            String(weekStart.getMonth() + 1).padStart(2, '0') + '-' +
-            String(weekStart.getDate()).padStart(2, '0');
+        // Week start (Monday) using helper
+        const weekStart = this.getCurrentMonday();
+        const weekStartStr = weekStart.toISOString().split('T')[0];
 
         // All workouts
         const allWorkouts = dataWithWorkouts.flatMap(d =>
@@ -642,6 +636,30 @@ export const Charts = {
     },
 
     /**
+     * Capitalize first letter of a string
+     * @param {string} s - String to capitalize
+     * @returns {string} Capitalized string
+     */
+    capitalize(s) {
+        if (typeof s !== 'string') return '';
+        return s.charAt(0).toUpperCase() + s.slice(1).replace('-', ' ');
+    },
+
+    /**
+     * Get the date of the current week's Monday
+     * @returns {Date} Monday at 00:00:00
+     */
+    getCurrentMonday() {
+        const today = new Date();
+        const dayOfWeek = today.getDay();
+        const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(today);
+        monday.setDate(today.getDate() + diffToMonday);
+        monday.setHours(0, 0, 0, 0);
+        return monday;
+    },
+
+    /**
      * Render the achievements/milestones list
      * @param {Array} dataWithWorkouts - Exercises with their workouts
      */
@@ -660,10 +678,10 @@ export const Charts = {
         milestonesSection.style.display = 'block';
         milestonesList.innerHTML = milestones.map(m => `
             <div class="milestone-item">
-                <span class="milestone-date">${this.formatDate(m.date)}</span>
+                <span class="milestone-date">${this.formatDate(m.date).split(',')[0]}</span>
                 <span class="milestone-text">${m.text}</span>
-                <span class="milestone-badge">
-                    <i data-lucide="${m.type === 'BEST' ? 'star' : (m.type === 'STREAK' ? 'flame' : 'trending-up')}" class="icon-xs"></i>
+                <span class="milestone-badge" style="background: ${m.color || '#fff8e1'}; color: ${m.textColor || '#ff8f00'};">
+                    <i data-lucide="${m.icon || 'star'}" class="icon-xs"></i>
                     ${m.type}
                 </span>
             </div>
@@ -673,134 +691,160 @@ export const Charts = {
     },
 
     /**
-     * Calculate significant milestones from history
+     * Calculate significant milestones from history focused on muscle groups
      * @param {Array} dataWithWorkouts - Exercises with their workouts
      */
     getRecentMilestones(dataWithWorkouts) {
         let milestones = [];
-        const today = new Date();
+        const currentMonday = this.getCurrentMonday();
 
-        // Find current week's Monday for streak calculation
-        const currentMonday = new Date(today);
-        const currentDay = today.getDay();
-        const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
-        currentMonday.setDate(today.getDate() + diffToMonday);
-        currentMonday.setHours(0, 0, 0, 0);
+        // 1. Group all workouts by muscle group
+        const allWorkouts = dataWithWorkouts.flatMap(d =>
+            d.workouts.map(w => ({
+                ...w,
+                exerciseId: d.exercise.id,
+                exerciseName: d.exercise.name,
+                muscle: d.exercise.muscle || 'other',
+                requiresWeight: d.exercise.requiresWeight
+            }))
+        );
 
+        if (allWorkouts.length === 0) return [];
+
+        // 2. Aggregate data by week across all workouts
+        const weeklyStats = aggregateByWeek(allWorkouts);
+        if (weeklyStats.length < 2) return [];
+
+        const sortedWeeks = [...weeklyStats].reverse(); // Latest week first
+
+        // 3. Get unique muscle groups seen in the data
+        const muscles = [...new Set(allWorkouts.map(w => w.muscle))];
+
+        muscles.forEach(muscle => {
+            // Consistency Streak (Consecutive weeks hitting this muscle)
+            let consistencyStreak = 0;
+            for (let i = 0; i < sortedWeeks.length; i++) {
+                const week = sortedWeeks[i];
+                const hasMuscle = week.muscleGroupSessions && week.muscleGroupSessions[muscle] > 0;
+
+                // Check for gap
+                if (i > 0) {
+                    const prevWeekStart = new Date(sortedWeeks[i - 1].weekStart);
+                    const curWeekStart = new Date(week.weekStart);
+                    const gap = Math.round((prevWeekStart - curWeekStart) / (1000 * 60 * 60 * 24));
+                    if (gap !== 7) break; // Not consecutive
+                }
+
+                if (hasMuscle) {
+                    consistencyStreak++;
+                } else if (i === 0) {
+                    // It's fine if the CURRENT week hasn't been hit yet if it just started,
+                    // but usually streaks are shown for active ones.
+                    // We'll only count if the latest week is hit OR the previous week was hit and current is under way.
+                } else {
+                    break;
+                }
+            }
+
+            // Recency check: Must have trained this muscle this week or last week to show streak
+            const isActive = (sortedWeeks[0].muscleGroupSessions[muscle] > 0) ||
+                (sortedWeeks.length > 1 && sortedWeeks[1].muscleGroupSessions[muscle] > 0);
+
+            if (consistencyStreak >= 3 && isActive) {
+                milestones.push({
+                    date: sortedWeeks[0].muscleGroupSessions[muscle] > 0 ? sortedWeeks[0].weekStart : sortedWeeks[1].weekStart,
+                    text: `<strong>${this.capitalize(muscle)}</strong>: ${consistencyStreak} week consistency streak!`,
+                    type: 'STREAK',
+                    icon: 'flame',
+                    color: '#fff1f1',
+                    textColor: '#e53935',
+                    priority: 10 + consistencyStreak,
+                    timestamp: new Date(sortedWeeks[0].weekStart).getTime()
+                });
+            }
+
+            // Volume Trend (Consecutive weeks increasing volume)
+            let volumeStreak = 1;
+            for (let i = 0; i < sortedWeeks.length - 1; i++) {
+                const curVol = sortedWeeks[i].muscleGroupVolume[muscle] || 0;
+                const prevVol = sortedWeeks[i + 1].muscleGroupVolume[muscle] || 0;
+
+                // Check for gap
+                const curM = new Date(sortedWeeks[i].weekStart);
+                const preM = new Date(sortedWeeks[i + 1].weekStart);
+                if (Math.round((curM - preM) / (1000 * 60 * 60 * 24)) !== 7) break;
+
+                if (curVol > prevVol && prevVol > 0) {
+                    volumeStreak++;
+                } else {
+                    break;
+                }
+            }
+
+            if (volumeStreak >= 2 && sortedWeeks[0].muscleGroupVolume[muscle] > 0) {
+                milestones.push({
+                    date: sortedWeeks[0].weekStart,
+                    text: `<strong>${this.capitalize(muscle)}</strong>: Volume increasing for ${volumeStreak} weeks!`,
+                    type: 'TREND',
+                    icon: 'trending-up',
+                    color: '#e8f5e9',
+                    textColor: '#2e7d32',
+                    priority: 20 + volumeStreak,
+                    timestamp: new Date(sortedWeeks[0].weekStart).getTime()
+                });
+            }
+        });
+
+        // 4. Also check for significant Personal Bests in any exercise (always nice to see)
         dataWithWorkouts.forEach(d => {
-            const exerciseWorkouts = d.workouts;
-            if (exerciseWorkouts.length === 0) return;
-
-            // 1. Check for recent PRs (Personal Best) - Fallback for no streaks
-            const records = findPersonalRecords(exerciseWorkouts);
-            const sixtyDaysAgo = new Date();
-            sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+            const records = findPersonalRecords(d.workouts);
+            const thirtyDaysAgo = new Date();
+            thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
             records.forEach(r => {
-                if (new Date(r.date) >= sixtyDaysAgo) {
+                if (new Date(r.date) >= thirtyDaysAgo) {
+                    let type = '';
                     let text = '';
-                    if (r.type.includes('weight')) text = `<strong>${d.exercise.name}</strong>: New heavy set at ${r.weight}kg!`;
-                    else if (r.type.includes('volume')) text = `<strong>${d.exercise.name}</strong>: New Personal Record!`;
+                    if (r.type.includes('weight')) {
+                        text = `<strong>${d.exercise.name}</strong>: New heavy set! ${r.weight}kg`;
+                        type = 'POWER';
+                    } else if (r.type.includes('volume')) {
+                        text = `<strong>${d.exercise.name}</strong>: New volume PR!`;
+                        type = 'BEST';
+                    }
 
                     if (text) {
                         milestones.push({
                             date: r.date,
                             text: text,
-                            type: 'BEST',
-                            timestamp: new Date(r.date).getTime(),
-                            priority: 5
+                            type: type,
+                            icon: type === 'POWER' ? 'zap' : 'star',
+                            color: '#e3f2fd',
+                            textColor: '#1565c0',
+                            priority: 5,
+                            timestamp: new Date(r.date).getTime()
                         });
                     }
                 }
             });
-
-            // 2. Check for Streaks
-            if (exerciseWorkouts.length < 3) return;
-
-            const weeklyStats = aggregateByWeek(exerciseWorkouts);
-            if (weeklyStats.length < 2) return;
-
-            const sortedWeeks = [...weeklyStats].reverse();
-
-            // Recency check for streaks (90 days for better visibility with dev data)
-            const latestWeekStart = new Date(sortedWeeks[0].weekStart);
-            const daysSinceLatest = Math.floor((currentMonday - latestWeekStart) / (1000 * 60 * 60 * 24));
-            if (daysSinceLatest > 90) return;
-
-            // Consistency Streak
-            let consistencyStreak = 1;
-            let currentStreakMonday = latestWeekStart;
-            for (let i = 1; i < sortedWeeks.length; i++) {
-                const prevWeekMonday = new Date(sortedWeeks[i].weekStart);
-                const gap = Math.round((currentStreakMonday - prevWeekMonday) / (1000 * 60 * 60 * 24));
-                if (gap === 7) {
-                    consistencyStreak++;
-                    currentStreakMonday = prevWeekMonday;
-                } else break;
-            }
-
-            if (consistencyStreak >= 3) {
-                milestones.push({
-                    date: sortedWeeks[0].weekStart,
-                    text: `<strong>${d.exercise.name}</strong>: ${consistencyStreak} week streak!`,
-                    type: 'STREAK',
-                    timestamp: latestWeekStart.getTime(),
-                    priority: 10 + consistencyStreak
-                });
-            }
-
-            // Volume/Strength Streaks
-            let volumeStreak = 1;
-            let weightStreak = 1;
-            for (let i = 0; i < sortedWeeks.length - 1; i++) {
-                const curM = new Date(sortedWeeks[i].weekStart);
-                const preM = new Date(sortedWeeks[i + 1].weekStart);
-                const gap = Math.round((curM - preM) / (1000 * 60 * 60 * 24));
-                if (gap !== 7) break;
-
-                if (sortedWeeks[i].totalVolume > sortedWeeks[i + 1].totalVolume) volumeStreak++;
-                else volumeStreak = 0;
-
-                if (d.exercise.requiresWeight && sortedWeeks[i].avgWeight > sortedWeeks[i + 1].avgWeight) weightStreak++;
-                else weightStreak = 0;
-            }
-
-            if (volumeStreak >= 3) {
-                milestones.push({
-                    date: sortedWeeks[0].weekStart,
-                    text: `<strong>${d.exercise.name}</strong>: Performance growing for ${volumeStreak} weeks!`,
-                    type: 'PROGRESS',
-                    timestamp: latestWeekStart.getTime(),
-                    priority: 20 + volumeStreak
-                });
-            }
-
-            if (weightStreak >= 3) {
-                milestones.push({
-                    date: sortedWeeks[0].weekStart,
-                    text: `<strong>${d.exercise.name}</strong>: Weight increasing for ${weightStreak} weeks!`,
-                    type: 'POWER',
-                    timestamp: latestWeekStart.getTime(),
-                    priority: 30 + weightStreak
-                });
-            }
         });
 
-        // Deduplicate: If multiple milestones for same exercise, take highest priority
-        const exerciseGroups = {};
-        milestones.forEach(m => {
-            const match = m.text.match(/<strong>(.*?)<\/strong>/);
-            if (match) {
-                const name = match[1];
-                if (!exerciseGroups[name] || m.priority > exerciseGroups[name].priority) {
-                    exerciseGroups[name] = m;
-                }
-            }
-        });
+        // Deduplicate and filter: If multiple milestones for same muscle/exercise, take highest priority
+        const uniqueMilestones = [];
+        const seenTexts = new Set();
 
-        return Object.values(exerciseGroups)
+        milestones
             .sort((a, b) => b.priority - a.priority || b.timestamp - a.timestamp)
-            .slice(0, 5);
+            .forEach(m => {
+                // Simplified deduplication based on type and muscle/exercise
+                const key = m.text;
+                if (!seenTexts.has(key)) {
+                    seenTexts.add(key);
+                    uniqueMilestones.push(m);
+                }
+            });
+
+        return uniqueMilestones.slice(0, 5);
     },
 
     /**

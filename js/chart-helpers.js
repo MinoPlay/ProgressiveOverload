@@ -103,7 +103,8 @@ export function aggregateByWeek(workouts) {
                 workoutDates: new Set(),
                 uniqueExerciseNames: new Set(),
                 muscleGroupCounts: {}, // { muscleName: Set(exerciseNames) }
-                muscleGroupSessions: {} // { muscleName: Set(dates) }
+                muscleGroupSessions: {}, // { muscleName: Set(dates) }
+                muscleGroupVolume: {} // { muscleName: number }
             });
         }
 
@@ -122,6 +123,7 @@ export function aggregateByWeek(workouts) {
                 if (!weekData.muscleGroupCounts[workout.muscle]) {
                     weekData.muscleGroupCounts[workout.muscle] = new Set();
                     weekData.muscleGroupSessions[workout.muscle] = new Set();
+                    weekData.muscleGroupVolume[workout.muscle] = 0;
                 }
                 // Track unique exercises (different movements)
                 weekData.muscleGroupCounts[workout.muscle].add(exerciseKey);
@@ -129,6 +131,8 @@ export function aggregateByWeek(workouts) {
                 if (workout.date) {
                     weekData.muscleGroupSessions[workout.muscle].add(workout.date);
                 }
+                // Track total volume for this muscle
+                weekData.muscleGroupVolume[workout.muscle] += volume;
             }
         }
     }
@@ -138,10 +142,12 @@ export function aggregateByWeek(workouts) {
         .map(week => {
             const muscles = {};
             const muscleSessions = {};
+            const muscleVolume = {};
 
             Object.keys(week.muscleGroupCounts).forEach(m => {
                 muscles[m] = week.muscleGroupCounts[m].size;
                 muscleSessions[m] = week.muscleGroupSessions[m].size;
+                muscleVolume[m] = Math.round(week.muscleGroupVolume[m] * 10) / 10;
             });
 
             return {
@@ -152,6 +158,7 @@ export function aggregateByWeek(workouts) {
                 uniqueExercisesCount: week.uniqueExerciseNames.size,
                 muscleGroupCounts: muscles,
                 muscleGroupSessions: muscleSessions,
+                muscleGroupVolume: muscleVolume,
                 avgWeight: week.totalWeight > 0 ? Math.round((week.totalWeight / week.frequency) * 10) / 10 : 0
             };
         })

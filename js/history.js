@@ -706,12 +706,12 @@ export const History = {
                     if (!muscleStats.has(muscle)) {
                         muscleStats.set(muscle, new Set());
                     }
-                    muscleStats.get(muscle).add(exercise.name);
+                    muscleStats.get(muscle).add(`${workout.date}_${workout.exerciseId}`);
                 }
 
                 const stats = new Map();
-                for (const [muscle, exercises] of muscleStats.entries()) {
-                    stats.set(muscle, exercises.size);
+                for (const [muscle, instances] of muscleStats.entries()) {
+                    stats.set(muscle, instances.size);
                 }
                 weekMuscleStats.set(weekStartStr, stats);
             }
@@ -793,7 +793,7 @@ export const History = {
                         <thead>
                             <tr>
                                 <th>Muscle Group</th>
-                                <th style="text-align: right;">Unique Ex.</th>
+                                <th style="text-align: right;">Total Ex.</th>
                             </tr>
                         </thead>
                         <tbody>

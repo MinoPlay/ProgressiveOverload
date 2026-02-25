@@ -695,6 +695,27 @@ export const History = {
                 workoutsByWeek.get(weekStartStr).push(workout);
             }
 
+            // Pre-calculate muscle stats for ALL weeks to enable comparisons
+            const weekMuscleStats = new Map(); // weekStartStr -> Map(muscle -> count)
+            for (const [weekStartStr, workouts] of workoutsByWeek.entries()) {
+                const muscleStats = new Map();
+                for (const workout of workouts) {
+                    const exercise = Storage.getExerciseById(workout.exerciseId);
+                    if (!exercise) continue;
+                    const muscle = exercise.muscle || 'other';
+                    if (!muscleStats.has(muscle)) {
+                        muscleStats.set(muscle, new Set());
+                    }
+                    muscleStats.get(muscle).add(exercise.name);
+                }
+
+                const stats = new Map();
+                for (const [muscle, exercises] of muscleStats.entries()) {
+                    stats.set(muscle, exercises.size);
+                }
+                weekMuscleStats.set(weekStartStr, stats);
+            }
+
             // Sort weeks descending (newest first)
             const sortedWeekStarts = Array.from(workoutsByWeek.keys()).sort((a, b) => b.localeCompare(a));
 
@@ -707,10 +728,16 @@ export const History = {
             const currentWeekStart = formatDate(getWeekStart(new Date()));
 
             for (const weekStartStr of sortedWeekStarts) {
-                const workouts = workoutsByWeek.get(weekStartStr);
+                const currentStats = weekMuscleStats.get(weekStartStr);
                 const weekStart = parseDate(weekStartStr);
                 const weekEnd = new Date(weekStart);
                 weekEnd.setDate(weekEnd.getDate() + 6);
+
+                // Find previous week's stats for comparison
+                const prevWeekStart = new Date(weekStart);
+                prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+                const prevWeekStartStr = formatDate(prevWeekStart);
+                const prevStats = weekMuscleStats.get(prevWeekStartStr);
 
                 const fromStr = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 const toStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -757,21 +784,7 @@ export const History = {
                 const content = document.createElement('div');
                 content.className = 'weekly-group-content';
 
-                // Aggregate by muscle group
-                const muscleStats = new Map(); // muscle -> set of names
-
-                for (const workout of workouts) {
-                    const exercise = Storage.getExerciseById(workout.exerciseId);
-                    if (!exercise) continue;
-
-                    const muscle = exercise.muscle || 'other';
-                    if (!muscleStats.has(muscle)) {
-                        muscleStats.set(muscle, new Set());
-                    }
-                    muscleStats.get(muscle).add(exercise.name);
-                }
-
-                if (muscleStats.size === 0) {
+                if (!currentStats || currentStats.size === 0) {
                     content.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-light); text-align: center; margin: 0;">No exercises logged.</p>';
                 } else {
                     const table = document.createElement('table');
@@ -790,14 +803,28 @@ export const History = {
                     const tbody = table.querySelector('tbody');
 
                     // Sort muscles by count descending, then name
-                    const sortedMuscles = Array.from(muscleStats.entries())
-                        .sort((a, b) => b[1].size - a[1].size || a[0].localeCompare(b[0]));
+                    const sortedMuscles = Array.from(currentStats.entries())
+                        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
 
-                    for (const [muscle, exercises] of sortedMuscles) {
+                    for (const [muscle, count] of sortedMuscles) {
                         const tr = document.createElement('tr');
+
+                        // Calculate trend
+                        let trendHtml = '';
+                        if (prevStats) {
+                            const prevCount = prevStats.get(muscle) || 0;
+                            const diff = count - prevCount;
+
+                            if (diff > 0) {
+                                trendHtml = `<span class="trend-indicator trend-up"><i data-lucide="trending-up" style="width: 12px; height: 12px;"></i> ${diff}</span>`;
+                            } else if (diff < 0) {
+                                trendHtml = `<span class="trend-indicator trend-down"><i data-lucide="trending-down" style="width: 12px; height: 12px;"></i> ${Math.abs(diff)}</span>`;
+                            }
+                        }
+
                         tr.innerHTML = `
                             <td class="muscle-name">${muscle}</td>
-                            <td class="exercise-count-val">${exercises.size}</td>
+                            <td class="exercise-count-val">${count}${trendHtml}</td>
                         `;
                         tbody.appendChild(tr);
                     }
@@ -808,6 +835,7 @@ export const History = {
                 weekGroup.appendChild(content);
                 sidebar.appendChild(weekGroup);
             }
+
 
             if (window.lucide) {
                 window.lucide.createIcons();

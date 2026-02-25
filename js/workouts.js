@@ -12,13 +12,16 @@ export const Workouts = {
      */
     init() {
         this.bindEvents();
+        this.populateMuscleDropdown();
         this.populateExerciseDropdown();
         this.setDefaultDate();
         this.updateDateTooltip();
 
         // Listen for exercise updates
         window.addEventListener('exercisesUpdated', () => {
-            this.populateExerciseDropdown();
+            this.populateMuscleDropdown();
+            const muscleSelect = document.getElementById('workoutMuscle');
+            this.populateExerciseDropdown(muscleSelect ? muscleSelect.value : '');
         });
 
 
@@ -29,10 +32,18 @@ export const Workouts = {
      */
     bindEvents() {
         const form = document.getElementById('workoutFormElement');
+        const muscleSelect = document.getElementById('workoutMuscle');
         const exerciseSelect = document.getElementById('workoutExercise');
         const clearBtn = document.getElementById('clearWorkoutBtn');
 
         form.addEventListener('submit', (e) => this.handleSubmit(e));
+
+        // Filter exercises based on muscle selection
+        muscleSelect.addEventListener('change', () => {
+            this.populateExerciseDropdown(muscleSelect.value);
+            // Trigger exercise selection logic
+            this.updateWeightField();
+        });
 
         // Show/hide weight field and clear reps/weight based on exercise selection
         exerciseSelect.addEventListener('change', () => {
@@ -58,11 +69,47 @@ export const Workouts = {
     },
 
     /**
-     * Populate exercise dropdown
+     * Populate muscle dropdown
      */
-    populateExerciseDropdown() {
-        const select = document.getElementById('workoutExercise');
+    populateMuscleDropdown() {
+        const select = document.getElementById('workoutMuscle');
+        if (!select) return;
+
         const exercises = Storage.getExercises();
+        const muscles = [...new Set(exercises.map(ex => ex.muscle).filter(Boolean))];
+
+        // Keep first option
+        const currentValue = select.value;
+        select.innerHTML = '<option value="">All Muscles</option>';
+
+        // Sort muscles alphabetically
+        muscles.sort((a, b) => a.localeCompare(b));
+
+        muscles.forEach(muscle => {
+            const option = document.createElement('option');
+            option.value = muscle;
+            option.textContent = muscle.charAt(0).toUpperCase() + muscle.slice(1);
+            select.appendChild(option);
+        });
+
+        // Restore value if it still exists
+        if (muscles.includes(currentValue)) {
+            select.value = currentValue;
+        }
+    },
+
+    /**
+     * Populate exercise dropdown
+     * @param {string} muscleFilter - Optional muscle to filter by
+     */
+    populateExerciseDropdown(muscleFilter = '') {
+        const select = document.getElementById('workoutExercise');
+        let exercises = Storage.getExercises();
+
+        // Apply filter if provided
+        if (muscleFilter) {
+            exercises = exercises.filter(ex => ex.muscle === muscleFilter);
+        }
 
         // Keep first option (placeholder)
         select.innerHTML = '<option value="">Select Exercise...</option>';
@@ -493,6 +540,11 @@ export const Workouts = {
      * Clear form fields except date
      */
     clearForm() {
+        const muscleSelect = document.getElementById('workoutMuscle');
+        if (muscleSelect) muscleSelect.value = '';
+
+        this.populateExerciseDropdown();
+
         document.getElementById('workoutExercise').value = '';
         document.getElementById('workoutReps').value = '';
         document.getElementById('workoutWeight').value = '';

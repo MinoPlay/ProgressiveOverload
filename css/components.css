@@ -683,27 +683,23 @@
 }
 
 /* Compact Workout Form Styles */
-.compact-workout-form .form-row {
+.compact-workout-form {
     display: flex;
+    flex-direction: column;
     gap: var(--spacing-sm);
-    align-items: flex-start;
-    flex-wrap: wrap;
 }
 
 .compact-workout-form .form-group {
-    flex: 1;
-    min-width: 120px;
+    margin-bottom: 0;
 }
 
 .compact-workout-form .form-group-row {
     display: flex;
     gap: var(--spacing-sm);
-    flex: 2;
-    min-width: 200px;
 }
 
 .compact-workout-form .form-group-row .form-group {
-    margin-bottom: 0;
+    flex: 1;
 }
 
 .compact-workout-form input,

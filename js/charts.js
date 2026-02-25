@@ -584,10 +584,23 @@ export const Charts = {
                     },
                     tooltip: {
                         callbacks: {
+                            label: (context) => {
+                                let label = context.dataset.label || '';
+                                if (label) label += ': ';
+                                if (context.parsed.y !== undefined) {
+                                    if (context.dataset.yAxisID === 'y1') {
+                                        label += context.parsed.y + ' unique exercises';
+                                    } else {
+                                        label += context.parsed.y + ' training days';
+                                    }
+                                }
+                                return label;
+                            },
                             afterBody: (context) => {
                                 const index = context[0].dataIndex;
                                 const item = displayData[index];
                                 return [
+                                    `Total Monthly Workouts: ${item.frequency}`,
                                     `Weekly Volume: ${Math.round(item.totalVolume)}kg`,
                                     `Total Reps: ${item.totalReps}`
                                 ];
@@ -609,7 +622,7 @@ export const Charts = {
                         type: 'linear',
                         display: true,
                         position: 'right',
-                        title: { display: true, text: 'Exercises' },
+                        title: { display: true, text: 'Different Exercises' },
                         beginAtZero: true,
                         grid: { drawOnChartArea: false },
                         ticks: { stepSize: 1 }

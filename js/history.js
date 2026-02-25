@@ -173,7 +173,7 @@ export const History = {
         const exercise = Storage.getExerciseById(exerciseId);
 
         const item = document.createElement('div');
-        item.className = 'history-exercise-group';
+        item.className = 'history-exercise-group collapsed';
         item.dataset.date = date;
         item.dataset.exerciseId = exerciseId;
         item.draggable = true;
@@ -184,21 +184,30 @@ export const History = {
         item.addEventListener('drop', (e) => this.handleExerciseGroupDrop(e, exerciseId, date));
         item.addEventListener('dragend', () => this.handleExerciseGroupDragEnd());
 
-        // Sequence badge removed - was blocking reps/weights info on mobile
-        // if (displayOrder) {
-        //     const badge = document.createElement('span');
-        //     badge.className = 'sequence-badge';
-        //     badge.textContent = `#${displayOrder}`;
-        //     item.appendChild(badge);
-        // }
-
         // Exercise header with inline sets
         const header = document.createElement('div');
         header.className = 'exercise-group-header';
+        header.onclick = (e) => {
+            // Don't toggle if clicking on buttons
+            if (e.target.closest('button')) return;
+            item.classList.toggle('collapsed');
+        };
+
+        const titleContainer = document.createElement('div');
+        titleContainer.style.display = 'flex';
+        titleContainer.style.alignItems = 'center';
+        titleContainer.style.gap = 'var(--spacing-xs)';
+
+        const chevron = document.createElement('span');
+        chevron.className = 'chevron';
+        chevron.textContent = '▼';
+        titleContainer.appendChild(chevron);
 
         const title = document.createElement('h4');
         title.textContent = exercise ? exercise.name : 'Unknown Exercise';
-        header.appendChild(title);
+        titleContainer.appendChild(title);
+
+        header.appendChild(titleContainer);
 
         const setCount = document.createElement('span');
         setCount.className = 'set-count';

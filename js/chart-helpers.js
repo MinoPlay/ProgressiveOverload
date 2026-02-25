@@ -102,7 +102,8 @@ export function aggregateByWeek(workouts) {
                 totalWeight: 0,
                 workoutDates: new Set(),
                 uniqueExerciseNames: new Set(),
-                muscleGroupCounts: {} // { muscleName: Set(exerciseNames) }
+                muscleGroupCounts: {}, // { muscleName: Set(exerciseNames) }
+                muscleGroupSessions: {} // { muscleName: Set(dates) }
             });
         }
 
@@ -113,14 +114,21 @@ export function aggregateByWeek(workouts) {
         weekData.totalWeight += (workout.weight || 0);
         weekData.workoutDates.add(workout.date);
 
-        if (workout.exerciseName) {
-            weekData.uniqueExerciseNames.add(workout.exerciseName);
+        if (workout.exerciseName || workout.exerciseId) {
+            const exerciseKey = workout.exerciseId || workout.exerciseName;
+            weekData.uniqueExerciseNames.add(exerciseKey);
 
             if (workout.muscle) {
                 if (!weekData.muscleGroupCounts[workout.muscle]) {
                     weekData.muscleGroupCounts[workout.muscle] = new Set();
+                    weekData.muscleGroupSessions[workout.muscle] = new Set();
                 }
-                weekData.muscleGroupCounts[workout.muscle].add(workout.exerciseName);
+                // Track unique exercises (different movements)
+                weekData.muscleGroupCounts[workout.muscle].add(exerciseKey);
+                // Track unique training days (sessions) for this muscle
+                if (workout.date) {
+                    weekData.muscleGroupSessions[workout.muscle].add(workout.date);
+                }
             }
         }
     }
@@ -129,8 +137,11 @@ export function aggregateByWeek(workouts) {
     return Array.from(weekMap.values())
         .map(week => {
             const muscles = {};
+            const muscleSessions = {};
+
             Object.keys(week.muscleGroupCounts).forEach(m => {
                 muscles[m] = week.muscleGroupCounts[m].size;
+                muscleSessions[m] = week.muscleGroupSessions[m].size;
             });
 
             return {
@@ -140,6 +151,7 @@ export function aggregateByWeek(workouts) {
                 frequency: week.workoutDates.size,
                 uniqueExercisesCount: week.uniqueExerciseNames.size,
                 muscleGroupCounts: muscles,
+                muscleGroupSessions: muscleSessions,
                 avgWeight: week.totalWeight > 0 ? Math.round((week.totalWeight / week.frequency) * 10) / 10 : 0
             };
         })

@@ -4,180 +4,210 @@
       "id": "1769598356908_flvdqzdhf",
       "name": "Bench Press",
       "equipmentType": "barbell",
+      "muscle": "chest",
       "requiresWeight": true
     },
     {
       "id": "1769598356908_63m870ao9",
       "name": "Back Squats",
       "equipmentType": "barbell",
+      "muscle": "legs",
       "requiresWeight": true
     },
     {
       "id": "1769598356909_frontsquat",
       "name": "Front Squats",
       "equipmentType": "barbell",
+      "muscle": "legs",
       "requiresWeight": true
     },
     {
       "id": "1769598356908_a2079ga75",
       "name": "Deadlift",
       "equipmentType": "barbell",
+      "muscle": "legs",
       "requiresWeight": true
     },
     {
       "id": "1769598356908_audtljs1j",
       "name": "Pull-ups",
       "equipmentType": "bodyweight",
+      "muscle": "back",
       "requiresWeight": false
     },
     {
       "id": "1769598356910_assistpullup",
       "name": "Assisted Pull-ups",
       "equipmentType": "machines",
+      "muscle": "back",
       "requiresWeight": true
     },
     {
       "id": "1769598356908_zy0w3s09g",
       "name": "Overhead Press",
       "equipmentType": "barbell",
+      "muscle": "shoulders",
       "requiresWeight": true
     },
     {
       "id": "1769598356911_barbshldpress",
       "name": "Barbell Shoulder Press",
       "equipmentType": "barbell",
+      "muscle": "shoulders",
       "requiresWeight": true
     },
     {
       "id": "1769598356908_6t3ss20am",
       "name": "Barbell Rows",
       "equipmentType": "barbell",
+      "muscle": "back",
       "requiresWeight": true
     },
     {
       "id": "1769598356912_bentoverrows",
       "name": "Bent Over Rows",
       "equipmentType": "barbell",
+      "muscle": "back",
       "requiresWeight": true
     },
     {
       "id": "1769598356908_xjkjvzp40",
       "name": "Dips",
       "equipmentType": "bodyweight",
+      "muscle": "chest",
       "requiresWeight": false
     },
     {
       "id": "1769598356908_vaei2f8dr",
       "name": "Bicep Curls",
       "equipmentType": "dumbbell",
+      "muscle": "arms",
       "requiresWeight": true
     },
     {
       "id": "1769598356913_dumbbellpress",
       "name": "Dumbbell Press",
       "equipmentType": "dumbbell",
+      "muscle": "chest",
       "requiresWeight": true
     },
     {
       "id": "1769598356914_inclinedumbpress",
       "name": "Inclined Dumbbell Press",
       "equipmentType": "dumbbell",
+      "muscle": "chest",
       "requiresWeight": true
     },
     {
       "id": "1769598356915_declinedumbpress",
       "name": "Declined Dumbbell Press",
       "equipmentType": "dumbbell",
+      "muscle": "chest",
       "requiresWeight": true
     },
     {
       "id": "1769598356916_dumbbellflies",
       "name": "Dumbbell Flies",
       "equipmentType": "dumbbell",
+      "muscle": "chest",
       "requiresWeight": true
     },
     {
       "id": "1769598356917_inclinedumbflies",
       "name": "Inclined Dumbbell Flies",
       "equipmentType": "dumbbell",
+      "muscle": "chest",
       "requiresWeight": true
     },
     {
       "id": "1769598356918_seatedumbpress",
       "name": "Seated Dumbbell Press",
       "equipmentType": "dumbbell",
+      "muscle": "shoulders",
       "requiresWeight": true
     },
     {
       "id": "1769598356919_lateralraise",
       "name": "Lateral Raise",
       "equipmentType": "dumbbell",
+      "muscle": "shoulders",
       "requiresWeight": true
     },
     {
       "id": "1769598356920_hipthrust",
       "name": "Hip Thrust",
       "equipmentType": "barbell",
+      "muscle": "legs",
       "requiresWeight": true
     },
     {
       "id": "1769598356921_facepulls",
       "name": "Face Pulls",
       "equipmentType": "machines",
+      "muscle": "shoulders",
       "requiresWeight": true
     },
     {
       "id": "1769598356922_pulldowns",
       "name": "Pulldowns",
       "equipmentType": "machines",
+      "muscle": "back",
       "requiresWeight": true
     },
     {
       "id": "1769598356923_neckturns",
       "name": "Neck Turns",
       "equipmentType": "bodyweight",
+      "muscle": "neck",
       "requiresWeight": false
     },
     {
       "id": "1769748047444_cfopuwtws",
       "name": "Chest-Supported Dumbbell Rows",
       "equipmentType": "dumbbell",
+      "muscle": "back",
       "requiresWeight": true
     },
     {
       "id": "1769748072765_qu8ca2o2p",
       "name": "Seated Cable Rows",
       "equipmentType": "machines",
+      "muscle": "back",
       "requiresWeight": true
     },
     {
       "id": "1769759085099_6xqb1io2v",
       "name": "Neck Harness",
       "equipmentType": "bodyweight+",
+      "muscle": "neck",
       "requiresWeight": true
     },
     {
       "id": "1770010228345_o1qup7585",
       "name": "Pushups",
       "equipmentType": "bodyweight",
+      "muscle": "chest",
       "requiresWeight": false
     },
     {
       "id": "1770010828876_iomixwb3f",
       "name": "Leg press",
       "equipmentType": "machines",
+      "muscle": "legs",
       "requiresWeight": true
     },
     {
       "id": "1770011336623_x5imb6ehs",
       "name": "Rotating dumbbell shoulder press",
       "equipmentType": "dumbbell",
+      "muscle": "shoulders",
       "requiresWeight": true
     },
     {
       "id": "1770012654787_hjl6qszi3",
       "name": "Cable flies",
       "equipmentType": "machines",
+      "muscle": "chest",
       "requiresWeight": true
     }
   ],

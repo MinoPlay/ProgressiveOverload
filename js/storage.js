@@ -85,6 +85,7 @@ export const Storage = {
             id: generateId(),
             name: ex.name,
             equipmentType: ex.equipmentType,
+            muscle: ex.muscle,
             requiresWeight: CONFIG.equipmentTypes[ex.equipmentType].requiresWeight
         }));
 
@@ -154,6 +155,7 @@ export const Storage = {
             id: generateId(),
             name: trimmedName,
             equipmentType: exercise.equipmentType,
+            muscle: exercise.muscle,
             requiresWeight
         };
 

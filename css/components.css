@@ -249,48 +249,7 @@
     border-left: 3px solid var(--primary-color);
 }
 
-.workout-item-quick {
-    border-left: 3px solid var(--primary-color);
-    box-shadow: var(--shadow-md);
-    padding: var(--spacing-sm);
-    flex: 1 1 140px;
-    max-width: 220px;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
 
-.workout-item-quick h4 {
-    font-size: 0.9rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.workout-item-quick .workout-details {
-    margin-top: var(--spacing-xs);
-    gap: var(--spacing-md);
-}
-
-.workout-item-quick .workout-detail-label {
-    font-size: 0.65rem;
-}
-
-.workout-item-quick .workout-detail-value {
-    font-size: 1rem;
-}
-
-.workout-item-quick .workout-repeat-btn {
-    width: 100%;
-    justify-content: center;
-    padding: var(--spacing-xs) var(--spacing-md);
-    min-height: 36px;
-    font-size: 0.85rem;
-}
-
-.workout-item-quick .btn-container {
-    margin-top: var(--spacing-sm) !important;
-}
 
 .workout-item-header {
     display: flex;
@@ -711,17 +670,7 @@
         font-size: 1.25rem;
     }
 
-    .workout-item-quick {
-        padding: 6px 10px !important;
-    }
 
-    .workout-item-quick h4 {
-        font-size: 1rem !important;
-    }
-
-    .workout-item-quick .workout-detail-value {
-        font-size: 0.95rem !important;
-    }
 
     /* Stat cards with better readability */
     .stat-card {

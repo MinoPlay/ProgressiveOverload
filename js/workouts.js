@@ -14,17 +14,13 @@ export const Workouts = {
         this.bindEvents();
         this.populateExerciseDropdown();
         this.setDefaultDate();
-        this.renderRecentWorkouts();
 
         // Listen for exercise updates
         window.addEventListener('exercisesUpdated', () => {
             this.populateExerciseDropdown();
         });
 
-        // Listen for workout updates
-        window.addEventListener('workoutsUpdated', () => {
-            this.renderRecentWorkouts();
-        });
+
     },
 
     /**
@@ -464,7 +460,7 @@ export const Workouts = {
             showToast(`Workout logged: ${exercise.name}`, 'success');
 
             // Don't reset form - keep fields for quick re-logging
-            this.renderRecentWorkouts();
+
 
             // Refresh UI and show last workout info
             this.updateWeightField();
@@ -485,187 +481,7 @@ export const Workouts = {
         showToast('Form cleared', 'info');
     },
 
-    /**
-     * Render recent workouts list
-     */
-    renderRecentWorkouts() {
-        const container = document.getElementById('recentWorkoutsList');
-        const workouts = Storage.getRecentWorkouts();
 
-        if (workouts.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <p>No workouts logged yet. Start tracking your progress!</p>
-                </div>
-            `;
-            return;
-        }
-
-        // Clear and rebuild with safe DOM methods
-        container.innerHTML = '';
-
-        // Show all workouts with repeat functionality
-        workouts.forEach(workout => {
-            const item = this.createWorkoutItemWithRepeat(workout);
-            container.appendChild(item);
-        });
-
-        if (window.lucide) {
-            window.lucide.createIcons();
-        }
-    },
-
-    /**
-     * Create workout item element with Repeat button (XSS-safe)
-     * @param {object} workout - Workout object
-     * @returns {HTMLElement} Workout item element
-     */
-    createWorkoutItemWithRepeat(workout) {
-        const exercise = Storage.getExerciseById(workout.exerciseId);
-
-        const item = document.createElement('div');
-        item.className = 'workout-item fade-in workout-item-quick';
-
-        const header = document.createElement('div');
-        header.className = 'workout-item-header';
-
-        const titleContainer = document.createElement('div');
-
-        const title = document.createElement('h4');
-        title.textContent = exercise ? exercise.name : 'Unknown Exercise';
-
-        titleContainer.appendChild(title);
-        header.appendChild(titleContainer);
-        item.appendChild(header);
-
-        const details = document.createElement('div');
-        details.className = 'workout-details';
-
-        // Add reps
-        const repsDetail = this.createWorkoutDetail('Reps', workout.reps);
-        details.appendChild(repsDetail);
-
-        // Add weight if present
-        if (workout.weight) {
-            const weightDetail = this.createWorkoutDetail('Weight', `${workout.weight} kg`);
-            details.appendChild(weightDetail);
-
-            // Removed Volume detail as per user request
-        }
-
-        item.appendChild(details);
-
-        // Add Repeat button
-        const repeatBtn = document.createElement('button');
-        repeatBtn.className = 'btn btn-secondary btn-small workout-repeat-btn';
-        repeatBtn.innerHTML = '<i data-lucide="rotate-cw" style="width: 14px; height: 14px;"></i> Repeat';
-        repeatBtn.setAttribute('aria-label', `Repeat workout: ${exercise ? exercise.name : 'Unknown'}`);
-        repeatBtn.addEventListener('click', () => this.repeatWorkout(workout));
-
-        const btnContainer = document.createElement('div');
-        btnContainer.className = 'btn-container';
-        btnContainer.appendChild(repeatBtn);
-        item.appendChild(btnContainer);
-
-        return item;
-    },
-
-    /**
-     * Repeat a workout by pre-filling the form
-     * @param {object} workout - Workout object to repeat
-     */
-    repeatWorkout(workout) {
-        // Scroll to form
-        document.getElementById('workoutFormElement').scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-        // Pre-fill form
-        document.getElementById('workoutExercise').value = workout.exerciseId;
-        document.getElementById('workoutReps').value = workout.reps;
-
-        // Update weight field visibility and value
-        this.updateWeightField();
-        if (workout.weight) {
-            document.getElementById('workoutWeight').value = workout.weight;
-        }
-
-        // Set today's date by default
-        this.setDefaultDate();
-
-        // Focus on reps field for quick adjustment
-        document.getElementById('workoutReps').focus();
-
-        const exercise = Storage.getExerciseById(workout.exerciseId);
-        showToast(`Ready to log: ${exercise ? exercise.name : 'workout'}`, 'info');
-    },
-
-    /**
-     * Create workout item element (XSS-safe)
-     * @param {object} workout - Workout object
-     * @returns {HTMLElement} Workout item element
-     */
-    createWorkoutItem(workout) {
-        const exercise = Storage.getExerciseById(workout.exerciseId);
-
-        const item = document.createElement('div');
-        item.className = 'workout-item fade-in';
-
-        const header = document.createElement('div');
-        header.className = 'workout-item-header';
-
-        const title = document.createElement('h4');
-        title.textContent = exercise ? exercise.name : 'Unknown Exercise';
-
-        const dateSpan = document.createElement('span');
-        dateSpan.className = 'workout-date';
-        dateSpan.textContent = workout.date;
-
-        header.appendChild(title);
-        header.appendChild(dateSpan);
-        item.appendChild(header);
-
-        const details = document.createElement('div');
-        details.className = 'workout-details';
-
-        // Add reps
-        const repsDetail = this.createWorkoutDetail('Reps', workout.reps);
-        details.appendChild(repsDetail);
-
-        // Add weight if present
-        if (workout.weight) {
-            const weightDetail = this.createWorkoutDetail('Weight', `${workout.weight} kg`);
-            details.appendChild(weightDetail);
-
-            // Removed Volume detail as per user request
-        }
-
-        item.appendChild(details);
-
-        return item;
-    },
-
-    /**
-     * Create workout detail element
-     * @param {string} label - Detail label
-     * @param {string|number} value - Detail value
-     * @returns {HTMLElement} Detail element
-     */
-    createWorkoutDetail(label, value) {
-        const detail = document.createElement('div');
-        detail.className = 'workout-detail';
-
-        const labelSpan = document.createElement('span');
-        labelSpan.className = 'workout-detail-label';
-        labelSpan.textContent = label;
-
-        const valueSpan = document.createElement('span');
-        valueSpan.className = 'workout-detail-value';
-        valueSpan.textContent = value;
-
-        detail.appendChild(labelSpan);
-        detail.appendChild(valueSpan);
-
-        return detail;
-    }
 };
 
 // Remove deprecated methods

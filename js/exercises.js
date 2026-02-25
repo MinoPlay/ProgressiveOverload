@@ -38,6 +38,7 @@ export const Exercises = {
         const idInput = document.getElementById('exerciseId');
         const nameInput = document.getElementById('exerciseName');
         const equipmentSelect = document.getElementById('equipmentType');
+        const muscleSelect = document.getElementById('muscle');
 
         if (exercise) {
             // Edit mode
@@ -45,12 +46,14 @@ export const Exercises = {
             idInput.value = exercise.id;
             nameInput.value = exercise.name;
             equipmentSelect.value = exercise.equipmentType;
+            muscleSelect.value = exercise.muscle || '';
         } else {
             // Add mode
             title.textContent = 'Add New Exercise';
             idInput.value = '';
             nameInput.value = '';
             equipmentSelect.value = '';
+            muscleSelect.value = '';
         }
 
         form.style.display = 'block';
@@ -76,6 +79,7 @@ export const Exercises = {
         const id = document.getElementById('exerciseId').value;
         const name = document.getElementById('exerciseName').value.trim();
         const equipmentType = document.getElementById('equipmentType').value;
+        const muscle = document.getElementById('muscle').value;
 
         // Validate inputs
         const nameValidation = validateExerciseName(name, CONFIG.limits.maxExerciseNameLength);
@@ -94,11 +98,11 @@ export const Exercises = {
         try {
             if (id) {
                 // Update existing
-                await Storage.updateExercise(id, { name, equipmentType });
+                await Storage.updateExercise(id, { name, equipmentType, muscle });
                 showToast('Exercise updated successfully', 'success');
             } else {
                 // Add new
-                await Storage.addExercise({ name, equipmentType });
+                await Storage.addExercise({ name, equipmentType, muscle });
                 showToast('Exercise added successfully', 'success');
             }
 
@@ -269,8 +273,19 @@ export const Exercises = {
         badge.className = `equipment-badge ${exercise.equipmentType}`;
         badge.textContent = formatEquipmentType(exercise.equipmentType);
 
+        const muscleBadge = document.createElement('span');
+        muscleBadge.className = 'muscle-badge';
+        muscleBadge.textContent = exercise.muscle ? exercise.muscle.charAt(0).toUpperCase() + exercise.muscle.slice(1) : 'Unknown';
+        muscleBadge.style.marginLeft = '8px';
+        muscleBadge.style.fontSize = '0.8em';
+        muscleBadge.style.padding = '2px 8px';
+        muscleBadge.style.borderRadius = '12px';
+        muscleBadge.style.background = '#e2e8f0';
+        muscleBadge.style.color = '#4a5568';
+
         info.appendChild(title);
         info.appendChild(badge);
+        info.appendChild(muscleBadge);
 
         const actions = document.createElement('div');
         actions.className = 'exercise-card-actions';

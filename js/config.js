@@ -64,14 +64,14 @@ export const CONFIG = {
 
     // Default Exercises
     defaultExercises: [
-        { name: 'Bench Press', equipmentType: 'barbell' },
-        { name: 'Squat', equipmentType: 'barbell' },
-        { name: 'Deadlift', equipmentType: 'barbell' },
-        { name: 'Pull-ups', equipmentType: 'bodyweight' },
-        { name: 'Overhead Press', equipmentType: 'barbell' },
-        { name: 'Barbell Rows', equipmentType: 'barbell' },
-        { name: 'Dips', equipmentType: 'bodyweight' },
-        { name: 'Bicep Curls', equipmentType: 'dumbbell' }
+        { name: 'Bench Press', equipmentType: 'barbell', muscle: 'chest' },
+        { name: 'Squat', equipmentType: 'barbell', muscle: 'legs' },
+        { name: 'Deadlift', equipmentType: 'barbell', muscle: 'legs' },
+        { name: 'Pull-ups', equipmentType: 'bodyweight', muscle: 'back' },
+        { name: 'Overhead Press', equipmentType: 'barbell', muscle: 'shoulders' },
+        { name: 'Barbell Rows', equipmentType: 'barbell', muscle: 'back' },
+        { name: 'Dips', equipmentType: 'bodyweight', muscle: 'chest' },
+        { name: 'Bicep Curls', equipmentType: 'dumbbell', muscle: 'arms' }
     ],
 
     // Equipment Types

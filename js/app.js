@@ -95,7 +95,7 @@ const App = {
      * Initialize navigation between sections
      */
     initNavigation() {
-        const navElements = document.querySelectorAll('.nav-btn[data-section], .dropdown-item[data-section], #navAddExercise');
+        const navElements = document.querySelectorAll('.nav-btn[data-section], .dropdown-item[data-section]');
 
         // Section label map for the trigger button
         const sectionLabels = {
@@ -106,6 +106,15 @@ const App = {
         };
 
         const activeNavLabel = document.getElementById('activeNavLabel');
+        const dropdownTrigger = document.getElementById('mainNavTrigger');
+        const dropdownContent = document.getElementById('mainNavContent');
+
+        const closeDropdown = () => {
+            if (dropdownTrigger && dropdownContent) {
+                dropdownTrigger.setAttribute('aria-expanded', 'false');
+                dropdownContent.style.display = 'none';
+            }
+        };
 
         const switchSection = (targetSection) => {
             if (!targetSection) return;
@@ -115,7 +124,7 @@ const App = {
                 activeNavLabel.textContent = sectionLabels[targetSection];
             }
 
-            // Update active state for all navigation elements
+            // Update active state for dropdown items
             navElements.forEach(el => {
                 if (el.dataset.section === targetSection) {
                     el.classList.add('active');
@@ -126,58 +135,29 @@ const App = {
                 }
             });
 
-            // Also mark the trigger button active when it represents the active section
-            const trigger = document.querySelector('.main-nav-trigger');
-            if (trigger) trigger.classList.add('active');
-
             // Update active section visibility
             const sections = document.querySelectorAll('.content-section');
             sections.forEach(section => {
-                if (section.id === `${targetSection}Section`) {
-                    section.classList.add('active');
-                } else {
-                    section.classList.remove('active');
-                }
+                section.classList.toggle('active', section.id === `${targetSection}Section`);
             });
 
             // Save to localStorage for persistence
             localStorage.setItem('activeSection', targetSection);
         };
 
-        const closeDropdown = () => {
-            const trigger = document.querySelector('.dropdown-trigger');
-            const content = document.querySelector('.dropdown-content');
-            if (trigger && content) {
-                trigger.setAttribute('aria-expanded', 'false');
-                content.style.display = 'none';
-            }
-        };
-
+        // Nav item clicks — switch section and close dropdown
         navElements.forEach(el => {
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const targetSection = el.dataset.section;
-
-                if (el.id === 'navAddExercise') {
-                    switchSection('exercises');
-                    closeDropdown();
-                    if (window.Exercises) {
-                        window.Exercises.showForm();
-                    }
-                    return;
-                }
-
                 if (targetSection) {
                     switchSection(targetSection);
+                    closeDropdown();
                 }
-
-                closeDropdown();
             });
         });
 
-        // Toggle dropdown on click
-        const dropdownTrigger = document.querySelector('.dropdown-trigger');
-        const dropdownContent = document.querySelector('.dropdown-content');
+        // Toggle dropdown on trigger click
         if (dropdownTrigger && dropdownContent) {
             dropdownTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
@@ -186,32 +166,18 @@ const App = {
                 dropdownContent.style.display = isExpanded ? 'none' : 'block';
             });
 
+            // Keep dropdown open when clicking inside the config area
+            dropdownContent.addEventListener('click', (e) => {
+                // Only stop propagation for config interactions (not nav items — those close it)
+                if (!e.target.closest('.nav-btn[data-section]') && !e.target.closest('.dropdown-item[data-section]')) {
+                    e.stopPropagation();
+                }
+            });
+
             // Close dropdown when clicking outside
             document.addEventListener('click', () => {
                 closeDropdown();
             });
-        }
-
-        // Config gear dropdown toggle
-        const configTrigger = document.getElementById('configDropdownTrigger');
-        const configContent = document.getElementById('configDropdownContent');
-        if (configTrigger && configContent) {
-            configTrigger.addEventListener('click', (e) => {
-                e.stopPropagation();
-                // Close the main nav dropdown if open
-                closeDropdown();
-                const isExpanded = configTrigger.getAttribute('aria-expanded') === 'true';
-                configTrigger.setAttribute('aria-expanded', String(!isExpanded));
-                configContent.style.display = isExpanded ? 'none' : 'block';
-            });
-
-            document.addEventListener('click', () => {
-                configTrigger.setAttribute('aria-expanded', 'false');
-                configContent.style.display = 'none';
-            });
-
-            // Prevent clicks inside the config panel from closing it
-            configContent.addEventListener('click', (e) => e.stopPropagation());
         }
 
         // Restore saved section on load

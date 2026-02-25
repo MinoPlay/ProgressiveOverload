@@ -27,14 +27,29 @@
                 </h1>
 
                 <nav class="header-nav" role="navigation" aria-label="Main navigation">
-                    <!-- Config dropdown -->
-                    <div class="nav-dropdown config-nav-dropdown">
-                        <button class="nav-btn config-dropdown-trigger" id="configDropdownTrigger" aria-haspopup="true"
-                            aria-expanded="false" aria-label="Configuration">
-                            <i data-lucide="settings" class="nav-icon"></i>
+                    <div class="nav-dropdown main-nav-dropdown">
+                        <button class="nav-btn dropdown-trigger main-nav-trigger" id="mainNavTrigger"
+                            aria-haspopup="true" aria-expanded="false" aria-label="Open navigation menu">
+                            <i data-lucide="menu" class="nav-icon"></i>
+                            <span id="activeNavLabel">Log Workout</span>
                             <i data-lucide="chevron-down" class="chevron-icon"></i>
                         </button>
-                        <div class="dropdown-content config-dropdown-content" id="configDropdownContent">
+                        <div class="dropdown-content main-nav-content" id="mainNavContent">
+                            <!-- Navigation items -->
+                            <button class="nav-btn dropdown-item" data-section="workout">
+                                <i data-lucide="plus-circle" class="nav-icon"></i> Log Workout
+                            </button>
+                            <button class="nav-btn dropdown-item" data-section="history">
+                                <i data-lucide="calendar" class="nav-icon"></i> History
+                            </button>
+                            <button class="nav-btn dropdown-item" data-section="statistics">
+                                <i data-lucide="line-chart" class="nav-icon"></i> Statistics
+                            </button>
+                            <button class="nav-btn dropdown-item" data-section="exercises">
+                                <i data-lucide="list" class="nav-icon"></i> Manage
+                            </button>
+                            <!-- Config section -->
+                            <div class="dropdown-divider"></div>
                             <div class="config-dropdown-body">
                                 <div class="mode-toggle">
                                     <button onclick="setMode('local')" class="mode-btn" id="mode-local">
@@ -57,7 +72,7 @@
                                     <button onclick="generateDummyData()" class="btn-generate">
                                         <i data-lucide="dice-5"></i> Sample Data
                                     </button>
-                                    <button onclick="clearLocalData()" class="btn-clear text-error">
+                                    <button onclick="clearLocalData()" class="btn-clear">
                                         <i data-lucide="trash-2"></i> Clear Data
                                     </button>
                                 </div>
@@ -69,38 +84,6 @@
                                     Local mode stores data in your browser's localStorage.
                                 </p>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Main nav dropdown -->
-                    <div class="nav-dropdown main-nav-dropdown">
-                        <button class="nav-btn dropdown-trigger main-nav-trigger" aria-haspopup="true"
-                            aria-expanded="false" aria-label="Open navigation menu">
-                            <i data-lucide="menu" class="nav-icon"></i>
-                            <span id="activeNavLabel">Log Workout</span>
-                            <i data-lucide="chevron-down" class="chevron-icon"></i>
-                        </button>
-                        <div class="dropdown-content main-nav-content">
-                            <button class="nav-btn dropdown-item" data-section="workout"
-                                aria-label="Navigate to Log Workout section">
-                                <i data-lucide="plus-circle" class="nav-icon"></i> Log Workout
-                            </button>
-                            <button class="nav-btn dropdown-item" data-section="history"
-                                aria-label="Navigate to History section">
-                                <i data-lucide="calendar" class="nav-icon"></i> History
-                            </button>
-                            <button class="nav-btn dropdown-item" data-section="statistics"
-                                aria-label="Navigate to Statistics section">
-                                <i data-lucide="line-chart" class="nav-icon"></i> Statistics
-                            </button>
-                            <div class="dropdown-divider"></div>
-                            <button class="nav-btn dropdown-item" data-section="exercises"
-                                aria-label="Navigate to Manage Exercises section">
-                                <i data-lucide="list" class="nav-icon"></i> Manage
-                            </button>
-                            <button class="dropdown-item" id="navAddExercise">
-                                <i data-lucide="plus" class="nav-icon"></i> Add New Exercise
-                            </button>
                         </div>
                     </div>
                 </nav>
@@ -116,6 +99,7 @@
 
         <!-- Main Content -->
         <main class="app-content">
+
 
 
             <!-- Exercises Section -->

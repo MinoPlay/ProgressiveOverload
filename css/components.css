@@ -2227,9 +2227,8 @@
     animation: fadeIn var(--transition-fast);
 }
 
-.nav-dropdown:hover .dropdown-content {
-    display: block;
-}
+
+
 
 .dropdown-item {
     width: 100%;

@@ -286,7 +286,7 @@ export const Charts = {
 
         // Month start
         const monthStart = new Date(year, month, 1);
-        const monthStartStr = monthStart.toISOString().split('T')[0];
+        const monthStartStr = monthStart.getFullYear() + '-' + String(monthStart.getMonth() + 1).padStart(2, '0') + '-01';
 
         // Week start (Monday)
         const dayOfWeek = now.getDay();
@@ -294,12 +294,15 @@ export const Charts = {
         const weekStart = new Date(now);
         weekStart.setDate(now.getDate() + diffToMonday);
         weekStart.setHours(0, 0, 0, 0);
-        const weekStartStr = weekStart.toISOString().split('T')[0];
+        const weekStartStr = weekStart.getFullYear() + '-' +
+            String(weekStart.getMonth() + 1).padStart(2, '0') + '-' +
+            String(weekStart.getDate()).padStart(2, '0');
 
         // All workouts
         const allWorkouts = dataWithWorkouts.flatMap(d =>
             d.workouts.map(w => ({
                 ...w,
+                exerciseId: d.exercise.id,
                 muscle: d.exercise.muscle
             }))
         );
@@ -319,19 +322,20 @@ export const Charts = {
         ).size;
 
         // Muscle groups trained this week
-        const muscleDates = {};
+        const muscleSessions = {}; // Count unique dates (sessions) per muscle
         const weekWorkouts = allWorkouts.filter(w => w.date >= weekStartStr);
 
         weekWorkouts.forEach(w => {
             if (w.muscle) {
-                if (!muscleDates[w.muscle]) muscleDates[w.muscle] = new Set();
-                muscleDates[w.muscle].add(w.date);
+                if (!muscleSessions[w.muscle]) muscleSessions[w.muscle] = new Set();
+                // Treat each unique training day as 1 "session" for that muscle group
+                muscleSessions[w.muscle].add(w.date);
             }
         });
 
         // Convert to array and sort by frequency
-        const sortedMuscles = Object.entries(muscleDates)
-            .map(([muscle, dates]) => ({ name: muscle, count: dates.size }))
+        const sortedMuscles = Object.entries(muscleSessions)
+            .map(([muscle, sessions]) => ({ name: muscle, count: sessions.size }))
             .sort((a, b) => b.count - a.count);
 
         const muscleFocusHTML = sortedMuscles.length > 0
@@ -365,13 +369,13 @@ export const Charts = {
             <div class="kpi-card" style="display: flex; flex-direction: column;">
                 <div class="kpi-icon-row">
                     <i data-lucide="biceps-flexed" class="kpi-icon text-success"></i>
-                    <span class="kpi-label" title="Frequency of training for each muscle group this week">Muscle Training Frequency</span>
+                    <span class="kpi-label" title="How many unique training days each muscle group has been targeted this week">Muscle Training Sessions</span>
                 </div>
                 <div class="muscle-focus-list" style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start; margin-top: 5px;">
                     ${muscleFocusHTML}
                 </div>
                 <span class="kpi-trend trend-neutral" style="margin-top: 10px;">
-                    Unique groups: ${sortedMuscles.length}
+                    Sessions: ${sortedMuscles.reduce((sum, m) => sum + m.count, 0)} total
                 </span>
             </div>
         `;

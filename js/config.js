@@ -70,8 +70,8 @@ export const CONFIG = {
         { name: 'Pull-ups', equipmentType: 'bodyweight', muscle: 'back' },
         { name: 'Overhead Press', equipmentType: 'barbell', muscle: 'shoulders' },
         { name: 'Barbell Rows', equipmentType: 'barbell', muscle: 'back' },
-        { name: 'Dips', equipmentType: 'bodyweight', muscle: 'chest' },
-        { name: 'Bicep Curls', equipmentType: 'dumbbell', muscle: 'arms' }
+        { name: 'Dips', equipmentType: 'bodyweight', muscle: 'triceps' },
+        { name: 'Bicep Curls', equipmentType: 'dumbbell', muscle: 'biceps' }
     ],
 
     // Equipment Types

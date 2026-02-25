@@ -101,7 +101,8 @@ export function aggregateByWeek(workouts) {
                 frequency: 0,
                 totalWeight: 0,
                 workoutDates: new Set(),
-                uniqueExerciseNames: new Set()
+                uniqueExerciseNames: new Set(),
+                muscleGroupCounts: {} // { muscleName: Set(exerciseNames) }
             });
         }
 
@@ -111,21 +112,37 @@ export function aggregateByWeek(workouts) {
         weekData.totalReps += workout.reps;
         weekData.totalWeight += (workout.weight || 0);
         weekData.workoutDates.add(workout.date);
+
         if (workout.exerciseName) {
             weekData.uniqueExerciseNames.add(workout.exerciseName);
+
+            if (workout.muscle) {
+                if (!weekData.muscleGroupCounts[workout.muscle]) {
+                    weekData.muscleGroupCounts[workout.muscle] = new Set();
+                }
+                weekData.muscleGroupCounts[workout.muscle].add(workout.exerciseName);
+            }
         }
     }
 
     // Convert to array and calculate averages
     return Array.from(weekMap.values())
-        .map(week => ({
-            weekStart: week.weekStart,
-            totalVolume: Math.round(week.totalVolume * 10) / 10,
-            totalReps: week.totalReps,
-            frequency: week.workoutDates.size,
-            uniqueExercisesCount: week.uniqueExerciseNames.size,
-            avgWeight: week.totalWeight > 0 ? Math.round((week.totalWeight / week.frequency) * 10) / 10 : 0
-        }))
+        .map(week => {
+            const muscles = {};
+            Object.keys(week.muscleGroupCounts).forEach(m => {
+                muscles[m] = week.muscleGroupCounts[m].size;
+            });
+
+            return {
+                weekStart: week.weekStart,
+                totalVolume: Math.round(week.totalVolume * 10) / 10,
+                totalReps: week.totalReps,
+                frequency: week.workoutDates.size,
+                uniqueExercisesCount: week.uniqueExerciseNames.size,
+                muscleGroupCounts: muscles,
+                avgWeight: week.totalWeight > 0 ? Math.round((week.totalWeight / week.frequency) * 10) / 10 : 0
+            };
+        })
         .sort((a, b) => new Date(a.weekStart) - new Date(b.weekStart));
 }
 

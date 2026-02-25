@@ -146,7 +146,11 @@ export const Charts = {
      */
     renderDashboard(dataWithWorkouts) {
         const allWorkouts = dataWithWorkouts.flatMap(d =>
-            d.workouts.map(w => ({ ...w, exerciseName: d.exercise.name }))
+            d.workouts.map(w => ({
+                ...w,
+                exerciseName: d.exercise.name,
+                muscle: d.exercise.muscle
+            }))
         );
         this.renderKPICards(dataWithWorkouts);
         this.renderHeatmap(dataWithWorkouts); // Passed dataWithWorkouts for the frequency matrix
@@ -387,6 +391,49 @@ export const Charts = {
         // Only show last 12 weeks for the dashboard
         const displayData = weeklyData.slice(-12);
 
+        // Get unique muscle groups from displayData
+        const muscleGroups = new Set();
+        displayData.forEach(week => {
+            Object.keys(week.muscleGroupCounts || {}).forEach(m => muscleGroups.add(m));
+        });
+
+        const muscleColors = {
+            'chest': '#ff5252',
+            'back': '#448aff',
+            'shoulders': '#ffab40',
+            'legs': '#7c4dff',
+            'arms': '#40c4ff',
+            'core': '#69f0ae',
+            'neck': '#bdbdbd',
+            'full-body': '#ffd740'
+        };
+
+        const datasets = [
+            {
+                label: 'Training Days',
+                data: displayData.map(d => d.frequency),
+                backgroundColor: 'rgba(76, 175, 80, 0.4)',
+                borderColor: '#4caf50',
+                borderWidth: 1,
+                yAxisID: 'y'
+            }
+        ];
+
+        // Add a line dataset for each muscle group
+        Array.from(muscleGroups).sort().forEach(muscle => {
+            datasets.push({
+                label: muscle.charAt(0).toUpperCase() + muscle.slice(1).replace('-', ' '),
+                data: displayData.map(d => (d.muscleGroupCounts && d.muscleGroupCounts[muscle]) || 0),
+                type: 'line',
+                borderColor: muscleColors[muscle] || '#667eea',
+                backgroundColor: muscleColors[muscle] || '#667eea',
+                borderWidth: 2,
+                pointRadius: 3,
+                yAxisID: 'y1',
+                tension: 0.3
+            });
+        });
+
         const ctx = canvas.getContext('2d');
 
         // Destroy existing chart if it exists
@@ -397,27 +444,7 @@ export const Charts = {
             type: 'bar',
             data: {
                 labels: displayData.map(d => `Week of ${this.formatDate(d.weekStart).split(',')[0]}`),
-                datasets: [
-                    {
-                        label: 'Training Days',
-                        data: displayData.map(d => d.frequency),
-                        backgroundColor: 'rgba(76, 175, 80, 0.6)',
-                        borderColor: '#4caf50',
-                        borderWidth: 1,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'Different Exercises',
-                        data: displayData.map(d => d.uniqueExercisesCount),
-                        type: 'line',
-                        borderColor: '#667eea',
-                        backgroundColor: '#667eea',
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        yAxisID: 'y1',
-                        tension: 0.3
-                    }
-                ]
+                datasets: datasets
             },
             options: {
                 responsive: true,
@@ -425,6 +452,11 @@ export const Charts = {
                 plugins: {
                     legend: {
                         position: 'top',
+                        labels: {
+                            boxWidth: 12,
+                            padding: 10,
+                            font: { size: 10 }
+                        }
                     },
                     tooltip: {
                         callbacks: {
@@ -453,7 +485,7 @@ export const Charts = {
                         type: 'linear',
                         display: true,
                         position: 'right',
-                        title: { display: true, text: 'Unique Exercises' },
+                        title: { display: true, text: 'Exercises' },
                         beginAtZero: true,
                         grid: { drawOnChartArea: false },
                         ticks: { stepSize: 1 }

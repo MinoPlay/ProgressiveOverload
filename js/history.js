@@ -3,7 +3,7 @@
 
 import { Storage } from './storage.js';
 import { showToast, showLoading } from './app.js';
-import { formatDate } from './utils.js';
+import { formatDate, parseDate, getWeekStart } from './utils.js';
 
 export const History = {
     draggedWorkout: null,
@@ -14,10 +14,12 @@ export const History = {
      */
     init() {
         this.renderDailyHistory();
+        this.renderWeeklyOverview();
 
         // Listen for workout updates
         window.addEventListener('workoutsUpdated', () => {
             this.renderDailyHistory();
+            this.renderWeeklyOverview();
         });
     },
 
@@ -655,5 +657,163 @@ export const History = {
 
         // Don't clear draggedExerciseId and draggedDate here
         // They are cleared in handleExerciseGroupDrop after the drop completes
+    },
+
+    /**
+     * Render the weekly overview sidebar
+     */
+    async renderWeeklyOverview() {
+        const sidebar = document.getElementById('weeklyOverview');
+        if (!sidebar) return;
+
+        try {
+            // Load all workouts from the last 180 days for the overview
+            const endDate = new Date();
+            const startDate = new Date();
+            startDate.setDate(startDate.getDate() - 180);
+
+            const allWorkouts = await Storage.getWorkoutsInRange(startDate, endDate);
+
+            if (allWorkouts.length === 0) {
+                sidebar.innerHTML = '';
+                return;
+            }
+
+            // Group workouts by week
+            const workoutsByWeek = new Map(); // Key: Week start date string (Monday)
+
+            for (const workout of allWorkouts) {
+                const date = parseDate(workout.date);
+                if (!date) continue;
+
+                const weekStart = getWeekStart(date);
+                const weekStartStr = formatDate(weekStart);
+
+                if (!workoutsByWeek.has(weekStartStr)) {
+                    workoutsByWeek.set(weekStartStr, []);
+                }
+                workoutsByWeek.get(weekStartStr).push(workout);
+            }
+
+            // Sort weeks descending (newest first)
+            const sortedWeekStarts = Array.from(workoutsByWeek.keys()).sort((a, b) => b.localeCompare(a));
+
+            sidebar.innerHTML = `
+                <h3 style="margin-bottom: var(--spacing-lg); font-size: 1.25rem; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
+                    <i data-lucide="bar-chart-2" style="color: var(--primary-color);"></i> Weekly Exercise Count
+                </h3>
+            `;
+
+            const currentWeekStart = formatDate(getWeekStart(new Date()));
+
+            for (const weekStartStr of sortedWeekStarts) {
+                const workouts = workoutsByWeek.get(weekStartStr);
+                const weekStart = parseDate(weekStartStr);
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+
+                const fromStr = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const toStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const weekLabel = `${fromStr} - ${toStr}`;
+
+                const weekGroup = document.createElement('div');
+                weekGroup.className = 'weekly-group';
+                if (weekStartStr !== currentWeekStart) {
+                    weekGroup.classList.add('collapsed');
+                }
+
+                // Header
+                const header = document.createElement('div');
+                header.className = 'weekly-group-header';
+                header.onclick = () => weekGroup.classList.toggle('collapsed');
+
+                const title = document.createElement('h4');
+                title.style.display = 'flex';
+                title.style.alignItems = 'center';
+                title.style.gap = '8px';
+                title.textContent = weekLabel;
+
+                if (weekStartStr === currentWeekStart) {
+                    const badge = document.createElement('span');
+                    badge.style.fontSize = '0.65rem';
+                    badge.style.background = 'var(--primary-color)';
+                    badge.style.color = 'white';
+                    badge.style.padding = '2px 8px';
+                    badge.style.borderRadius = '10px';
+                    badge.style.fontWeight = 'bold';
+                    badge.textContent = 'CURRENT';
+                    title.appendChild(badge);
+                }
+
+                const chevron = document.createElement('span');
+                chevron.className = 'chevron';
+                chevron.textContent = '▼';
+
+                header.appendChild(title);
+                header.appendChild(chevron);
+                weekGroup.appendChild(header);
+
+                // Content (Table)
+                const content = document.createElement('div');
+                content.className = 'weekly-group-content';
+
+                // Aggregate by muscle group
+                const muscleStats = new Map(); // muscle -> set of names
+
+                for (const workout of workouts) {
+                    const exercise = Storage.getExerciseById(workout.exerciseId);
+                    if (!exercise) continue;
+
+                    const muscle = exercise.muscle || 'other';
+                    if (!muscleStats.has(muscle)) {
+                        muscleStats.set(muscle, new Set());
+                    }
+                    muscleStats.get(muscle).add(exercise.name);
+                }
+
+                if (muscleStats.size === 0) {
+                    content.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-light); text-align: center; margin: 0;">No exercises logged.</p>';
+                } else {
+                    const table = document.createElement('table');
+                    table.className = 'weekly-stats-table';
+                    table.innerHTML = `
+                        <thead>
+                            <tr>
+                                <th>Muscle Group</th>
+                                <th style="text-align: right;">Unique Ex.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    `;
+
+                    const tbody = table.querySelector('tbody');
+
+                    // Sort muscles by count descending, then name
+                    const sortedMuscles = Array.from(muscleStats.entries())
+                        .sort((a, b) => b[1].size - a[1].size || a[0].localeCompare(b[0]));
+
+                    for (const [muscle, exercises] of sortedMuscles) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td class="muscle-name">${muscle}</td>
+                            <td class="exercise-count-val">${exercises.size}</td>
+                        `;
+                        tbody.appendChild(tr);
+                    }
+
+                    content.appendChild(table);
+                }
+
+                weekGroup.appendChild(content);
+                sidebar.appendChild(weekGroup);
+            }
+
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        } catch (error) {
+            console.error('Error rendering weekly overview:', error);
+        }
     }
 };

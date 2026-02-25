@@ -2396,3 +2396,112 @@
         grid-template-columns: 1fr;
     }
 }
+
+/* History Weekly Overview Sidebar */
+.history-layout {
+    display: flex;
+    gap: var(--spacing-xl);
+    align-items: flex-start;
+}
+
+.history-container {
+    flex: 1;
+}
+
+.weekly-overview {
+    width: 320px;
+    position: sticky;
+    top: var(--spacing-md);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-md);
+}
+
+.weekly-group {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+    overflow: hidden;
+    transition: all var(--transition-base);
+}
+
+.weekly-group-header {
+    padding: var(--spacing-md);
+    background: var(--bg-secondary);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.weekly-group-header h4 {
+    font-size: 0.95rem;
+    margin: 0;
+    font-weight: 600;
+}
+
+.weekly-group-header .chevron {
+    font-size: 0.75rem;
+    transition: transform 0.3s ease;
+}
+
+.weekly-group.collapsed .weekly-group-content {
+    display: none;
+}
+
+.weekly-group.collapsed .chevron {
+    transform: rotate(-90deg);
+}
+
+.weekly-group-content {
+    padding: var(--spacing-md);
+}
+
+.weekly-stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.weekly-stats-table th {
+    text-align: left;
+    padding: var(--spacing-xs) var(--spacing-sm);
+    color: var(--text-light);
+    font-weight: 500;
+    border-bottom: 1px solid var(--border-light);
+    text-transform: uppercase;
+    font-size: 0.75rem;
+}
+
+.weekly-stats-table td {
+    padding: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-light);
+}
+
+.weekly-stats-table tr:last-child td {
+    border-bottom: none;
+}
+
+.muscle-name {
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.exercise-count-val {
+    text-align: right;
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+@media (max-width: 1024px) {
+    .history-layout {
+        flex-direction: column;
+    }
+
+    .weekly-overview {
+        width: 100%;
+        position: static;
+        order: -1;
+    }
+}

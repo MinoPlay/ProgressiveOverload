@@ -40,6 +40,7 @@ export const Charts = {
 
         // Set up collapsible summary
         this.setupCollapsibleSummary();
+        this.setupCollapsibleHeatmap();
     },
 
     /**
@@ -399,7 +400,7 @@ export const Charts = {
             });
         }
 
-        const weeksToShow = 12;
+        const weeksToShow = 4;
         const today = new Date();
 
         // Find current week's Monday
@@ -456,7 +457,7 @@ export const Charts = {
         }
 
         if (activeExercises.length === 0) {
-            matrixContainer.innerHTML = '<p class="empty-state">No exercise data for the last 12 weeks.</p>';
+            matrixContainer.innerHTML = `<p class="empty-state">No exercise data for the last ${weeksToShow} weeks.</p>`;
             return;
         }
 
@@ -1520,6 +1521,37 @@ export const Charts = {
 
             // Save state to localStorage
             localStorage.setItem('summaryCollapsed', !isHidden);
+        });
+    },
+
+    /**
+     * Set up collapsible heatmap (Exercise Breakdown)
+     */
+    setupCollapsibleHeatmap() {
+        const toggle = document.getElementById('heatmapToggle');
+        const content = document.getElementById('heatmapContent');
+        const chevron = document.getElementById('heatmapChevron');
+
+        if (!toggle || !content) return;
+
+        // Restore saved state or default to expanded
+        const savedState = localStorage.getItem('heatmapCollapsed');
+        const isCollapsed = savedState === 'true';
+
+        // Apply saved state
+        content.style.display = isCollapsed ? 'none' : 'block';
+        if (chevron) {
+            chevron.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
+        }
+
+        toggle.addEventListener('click', () => {
+            const isHidden = content.style.display === 'none';
+            content.style.display = isHidden ? 'block' : 'none';
+            if (chevron) {
+                chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+            }
+            // Save state to localStorage
+            localStorage.setItem('heatmapCollapsed', !isHidden);
         });
     },
 

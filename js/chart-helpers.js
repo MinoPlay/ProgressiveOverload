@@ -86,12 +86,18 @@ export function aggregateByWeek(workouts) {
     const weekMap = new Map();
 
     for (const workout of workouts) {
-        const date = new Date(workout.date);
-        // Get Monday of the week
+        // Safe local parsing of YYYY-MM-DD to avoid UTC shift issues
+        const dateParts = workout.date.split('-');
+        const y = parseInt(dateParts[0], 10);
+        const m = parseInt(dateParts[1], 10) - 1;
+        const d = parseInt(dateParts[2], 10);
+        const date = new Date(y, m, d);
+
+        // Get Monday of the week in local time
         const dayOfWeek = date.getDay();
-        const diff = date.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
-        const monday = new Date(date.setDate(diff));
-        const weekKey = monday.toISOString().split('T')[0];
+        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(y, m, d + diff);
+        const weekKey = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
 
         if (!weekMap.has(weekKey)) {
             weekMap.set(weekKey, {

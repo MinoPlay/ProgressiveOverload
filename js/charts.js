@@ -593,7 +593,10 @@ export const Charts = {
         new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: displayData.map(d => `Week of ${this.formatDate(d.weekStart).split(',')[0]}`),
+                labels: displayData.map(d => {
+                    const info = this.getWeekNumber(d.weekStart);
+                    return `Week ${String(info.week).padStart(2, '0')}, ${info.year}`;
+                }),
                 datasets: datasets
             },
             options: {
@@ -625,8 +628,23 @@ export const Charts = {
                             afterBody: (context) => {
                                 const index = context[0].dataIndex;
                                 const item = displayData[index];
+
+                                // Calculate week range for tooltip
+                                const parts = item.weekStart.split('-');
+                                const y = parseInt(parts[0], 10);
+                                const m = parseInt(parts[1], 10) - 1;
+                                const d = parseInt(parts[2], 10);
+                                const monday = new Date(y, m, d);
+                                const sunday = new Date(y, m, d + 6);
+
+                                const formatDateShort = (date) => {
+                                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                };
+
                                 return [
-                                    `Total Monthly Workouts: ${item.frequency}`,
+                                    `${formatDateShort(monday)} – ${formatDateShort(sunday)}, ${sunday.getFullYear()}`,
+                                    '',
+                                    `Workouts this week: ${item.frequency}`,
                                     `Weekly Volume: ${Math.round(item.totalVolume)}kg`,
                                     `Total Reps: ${item.totalReps}`
                                 ];
@@ -656,8 +674,7 @@ export const Charts = {
                     x: {
                         ticks: {
                             callback: function (val, index) {
-                                const label = this.getLabelForValue(val);
-                                return label.replace('Week of ', '');
+                                return this.getLabelForValue(val);
                             }
                         }
                     }
@@ -1810,5 +1827,35 @@ export const Charts = {
             month: 'short',
             day: 'numeric'
         });
+    },
+
+    /**
+     * Get the week number (ISO-8601) for a date
+     * @param {string|Date} dateInput - Date string (YYYY-MM-DD) or Date object
+     * @returns {Object} { week: number, year: number }
+     */
+    getWeekNumber(dateInput) {
+        let y, m, d;
+        if (typeof dateInput === 'string') {
+            const parts = dateInput.split('-');
+            y = parseInt(parts[0], 10);
+            m = parseInt(parts[1], 10) - 1;
+            d = parseInt(parts[2], 10);
+        } else {
+            y = dateInput.getFullYear();
+            m = dateInput.getMonth();
+            d = dateInput.getDate();
+        }
+
+        const date = new Date(Date.UTC(y, m, d));
+        // ISO week date helper: Thursday in current week decides the year.
+        const dayNum = date.getUTCDay() || 7;
+        date.setUTCDate(date.getUTCDate() + 4 - dayNum);
+        const yearStart = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+        const weekNo = Math.ceil((((date - yearStart) / 86400000) + 1) / 7);
+        return {
+            week: weekNo,
+            year: date.getUTCFullYear()
+        };
     }
 };

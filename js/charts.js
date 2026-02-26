@@ -314,39 +314,48 @@ export const Charts = {
                 .map(w => w.date)
         ).size;
 
-        // Muscle groups trained this week
-        const muscleSessions = {}; // Count unique dates (sessions) per muscle
-        const muscleExercises = {}; // Count unique exercises per session
-        const muscleExercisesTracking = {}; // Track [exerciseId, date] combinations
+        const buildMuscleSessionSummary = (workouts) => {
+            const muscleSessions = {}; // Count unique dates (sessions) per muscle
+            const muscleExercises = {}; // Count unique exercises per session
+            const muscleExercisesTracking = {}; // Track [exerciseId, date] combinations
+
+            workouts.forEach(w => {
+                if (w.muscle) {
+                    if (!muscleSessions[w.muscle]) {
+                        muscleSessions[w.muscle] = new Set();
+                        muscleExercises[w.muscle] = 0;
+                        muscleExercisesTracking[w.muscle] = new Set();
+                    }
+                    // Treat each unique training day as 1 "session" for that muscle group
+                    muscleSessions[w.muscle].add(w.date);
+
+                    // Track unique exercise instances (not sets)
+                    const exerciseKey = `${w.exerciseId}_${w.date}`;
+                    if (!muscleExercisesTracking[w.muscle].has(exerciseKey)) {
+                        muscleExercisesTracking[w.muscle].add(exerciseKey);
+                        muscleExercises[w.muscle]++;
+                    }
+                }
+            });
+
+            const sortedMuscles = Object.entries(muscleSessions)
+                .map(([muscle, sessions]) => ({
+                    name: muscle,
+                    count: sessions.size,
+                    exCount: muscleExercises[muscle]
+                }))
+                .sort((a, b) => b.count - a.count);
+
+            return {
+                sortedMuscles,
+                totalSessions: sortedMuscles.reduce((sum, m) => sum + m.count, 0)
+            };
+        };
+
+        const monthWorkouts = allWorkouts.filter(w => w.date >= monthStartStr);
         const weekWorkouts = allWorkouts.filter(w => w.date >= weekStartStr);
-
-        weekWorkouts.forEach(w => {
-            if (w.muscle) {
-                if (!muscleSessions[w.muscle]) {
-                    muscleSessions[w.muscle] = new Set();
-                    muscleExercises[w.muscle] = 0;
-                    muscleExercisesTracking[w.muscle] = new Set();
-                }
-                // Treat each unique training day as 1 "session" for that muscle group
-                muscleSessions[w.muscle].add(w.date);
-
-                // Track unique exercise instances (not sets)
-                const exerciseKey = `${w.exerciseId}_${w.date}`;
-                if (!muscleExercisesTracking[w.muscle].has(exerciseKey)) {
-                    muscleExercisesTracking[w.muscle].add(exerciseKey);
-                    muscleExercises[w.muscle]++;
-                }
-            }
-        });
-
-        // Convert to array and sort by frequency
-        const sortedMuscles = Object.entries(muscleSessions)
-            .map(([muscle, sessions]) => ({
-                name: muscle,
-                count: sessions.size,
-                exCount: muscleExercises[muscle]
-            }))
-            .sort((a, b) => b.count - a.count);
+        const monthMuscleSummary = buildMuscleSessionSummary(monthWorkouts);
+        const weekMuscleSummary = buildMuscleSessionSummary(weekWorkouts);
 
         const headerHTML = `
             <div style="display: grid; grid-template-columns: 1fr auto auto; align-items: center; width: 100%; border-bottom: 2px solid var(--border-light); padding: 2px 0; font-size: 0.65rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
@@ -359,7 +368,7 @@ export const Charts = {
                 </span>
             </div>`;
 
-        const muscleFocusHTML = sortedMuscles.length > 0
+        const buildMuscleFocusHTML = (sortedMuscles) => sortedMuscles.length > 0
             ? headerHTML + sortedMuscles.map(m => `
                 <div style="display: grid; grid-template-columns: 1fr auto auto; align-items: center; width: 100%; border-bottom: 1px solid var(--border-light); padding: 4px 0;">
                     <span style="text-transform: capitalize; font-weight: 500;">${m.name.replace('-', ' ')}</span>
@@ -369,35 +378,54 @@ export const Charts = {
             `).join('')
             : '<div style="color: var(--text-light); font-style: italic; margin-top: 10px;">No sessions logged yet</div>';
 
+        const monthMuscleFocusHTML = buildMuscleFocusHTML(monthMuscleSummary.sortedMuscles);
+        const weekMuscleFocusHTML = buildMuscleFocusHTML(weekMuscleSummary.sortedMuscles);
+
         kpiGrid.innerHTML = `
             <div class="kpi-card">
                 <div class="kpi-icon-row">
                     <i data-lucide="calendar-check" class="kpi-icon text-primary"></i>
-                    <span class="kpi-label" title="Total unique training days this calendar month">Workouts This Month</span>
+                    <span class="kpi-label" title="Unique workout days this month and week">Workouts</span>
+                    <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">Month</span>
                 </div>
                 <div class="kpi-value">${workoutsThisMonth}</div>
                 <span class="kpi-trend trend-neutral">In ${now.toLocaleString('default', { month: 'long' })}</span>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-icon-row">
-                    <i data-lucide="calendar-days" class="kpi-icon text-warning"></i>
-                    <span class="kpi-label" title="Total unique training days this calendar week (Mon-Sun)">Workouts This Week</span>
+                <div style="border-top: 1px solid var(--border-light); margin-top: 10px; padding-top: 10px;">
+                    <div class="kpi-icon-row">
+                        <i data-lucide="calendar-days" class="kpi-icon text-warning"></i>
+                        <span class="kpi-label" title="Total unique training days this calendar week (Mon-Sun)">Workouts</span>
+                        <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">Week</span>
+                    </div>
+                    <div class="kpi-value" style="font-size: 2rem; margin-top: 6px;">${workoutsThisWeek}</div>
+                    <span class="kpi-trend ${workoutsThisWeek >= 3 ? 'trend-up' : 'trend-neutral'}">
+                        Current week progress
+                    </span>
                 </div>
-                <div class="kpi-value">${workoutsThisWeek}</div>
-                <span class="kpi-trend ${workoutsThisWeek >= 3 ? 'trend-up' : 'trend-neutral'}">
-                    Current week progress
+            </div>
+            <div class="kpi-card" style="display: flex; flex-direction: column;">
+                <div class="kpi-icon-row">
+                    <i data-lucide="biceps-flexed" class="kpi-icon text-success"></i>
+                    <span class="kpi-label" title="Training frequency and variety per muscle group this calendar month (Sessions | Exercises)">Muscle Training Sessions</span>
+                    <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">Month</span>
+                </div>
+                <div class="muscle-focus-list" style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start; margin-top: 5px;">
+                    ${monthMuscleFocusHTML}
+                </div>
+                <span class="kpi-trend trend-neutral" style="margin-top: 10px;">
+                    Sessions: ${monthMuscleSummary.totalSessions} total
                 </span>
             </div>
             <div class="kpi-card" style="display: flex; flex-direction: column;">
                 <div class="kpi-icon-row">
                     <i data-lucide="biceps-flexed" class="kpi-icon text-success"></i>
                     <span class="kpi-label" title="Training frequency and variety per muscle group this week (Sessions | Exercises)">Muscle Training Sessions</span>
+                    <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">Week</span>
                 </div>
                 <div class="muscle-focus-list" style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start; margin-top: 5px;">
-                    ${muscleFocusHTML}
+                    ${weekMuscleFocusHTML}
                 </div>
                 <span class="kpi-trend trend-neutral" style="margin-top: 10px;">
-                    Sessions: ${sortedMuscles.reduce((sum, m) => sum + m.count, 0)} total
+                    Sessions: ${weekMuscleSummary.totalSessions} total
                 </span>
             </div>
         `;

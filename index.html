@@ -258,14 +258,22 @@
                         </div>
                     </div>
 
-                    <!-- Weekly Performance Chart (Main Dashboard Focus) -->
-                    <div class="dashboard-main-chart">
+                    <!-- Weekly Performance Charts -->
+                    <div class="dashboard-main-chart" style="display: grid; grid-template-columns: 1fr; gap: 20px;">
                         <div class="section-card">
                             <h4 style="display: flex; align-items: center; gap: 8px;">
-                                <i data-lucide="bar-chart-3"></i> Weekly Activity by Muscle Group
+                                <i data-lucide="calendar-days"></i> Weekly Training Frequency
                             </h4>
-                            <div class="chart-wrapper" style="height: 250px;">
-                                <canvas id="weeklyVolumeChart"></canvas>
+                            <div class="chart-wrapper" style="height: 200px;">
+                                <canvas id="weeklyFrequencyChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="section-card">
+                            <h4 style="display: flex; align-items: center; gap: 8px;">
+                                <i data-lucide="bar-chart-3"></i> Weekly Muscle Group Activity
+                            </h4>
+                            <div class="chart-wrapper" style="height: 300px;">
+                                <canvas id="weeklyMuscleChart"></canvas>
                             </div>
                         </div>
                     </div>
@@ -287,7 +295,7 @@
                     <h3 id="summaryToggle"
                         style="cursor: pointer; user-select: none; padding: 10px; background: #f5f5f5; border-radius: 4px; display: flex; align-items: center; gap: 8px;">
                         <span class="chevron" style="display: inline-block; transition: transform 0.3s ease;">▼</span>
-                        <i data-lucide="table"></i> Exercise Summary
+                        <i data-lucide="table"></i> Muscle Group Performance Summary
                     </h3>
                     <div id="statsTableContent">
                         <!-- Summary table grouped by category -->
@@ -324,6 +332,24 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     <script
         src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+
+    <!-- Milestone Details Modal -->
+    <div id="milestoneModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                    <h2 id="milestoneModalTitle">Milestone Details</h2>
+                    <button id="closeMilestoneModal" class="btn-icon btn-secondary"
+                        style="width: 32px; height: 32px; font-size: 1rem;">
+                        <i data-lucide="x"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="modal-body" id="milestoneModalBody">
+                <!-- Details will be injected here -->
+            </div>
+        </div>
+    </div>
 
     <!-- Application Scripts -->
     <script type="module" src="js/app.js"></script>

@@ -10,10 +10,8 @@ import { calculateLinearRegression, calculateProgressPercentage, estimate1RM, fi
 // The zoom and annotation plugins will be available as Chart.Zoom and Chart.Annotation
 
 export const Charts = {
-    selectedExerciseIds: JSON.parse(localStorage.getItem('selectedExerciseIds') || '[]'),
-    categorySelections: JSON.parse(localStorage.getItem('categorySelections') || '{}'), // Per-category selections
-    currentCategory: localStorage.getItem('currentCategory') || null,
-    selectedMetric: localStorage.getItem('selectedMetric') || 'relative', // 'relative', 'volume', '1rm', 'weight'
+    selectedMuscleGroups: JSON.parse(localStorage.getItem('selectedMuscleGroups') || '[]'),
+    selectedMetric: localStorage.getItem('selectedMetric') || 'relative', // 'relative', 'weight', 'reps'
     allExercisesData: [], // Store all exercise data
 
     /**
@@ -39,6 +37,9 @@ export const Charts = {
 
         // Set up collapsible summary
         this.setupCollapsibleSummary();
+
+        // Set up milestone modal
+        this.setupMilestoneModal();
     },
 
     /**
@@ -111,20 +112,23 @@ export const Charts = {
                 return;
             }
 
-            // Group exercises by equipment type
-            const groupedExercises = this.groupExercisesByCategory(dataWithWorkouts);
+            // Group exercises by muscle group
+            const groupedByMuscle = this.groupExercisesByMuscle(dataWithWorkouts);
 
-            // Apply default selections from latest workout
-            this.applyLatestWorkoutDefaults(dataWithWorkouts);
+            // Apply default selections (select all muscle groups if none selected)
+            if (this.selectedMuscleGroups.length === 0) {
+                this.selectedMuscleGroups = Object.keys(groupedByMuscle);
+                localStorage.setItem('selectedMuscleGroups', JSON.stringify(this.selectedMuscleGroups));
+            }
 
             // Render Statistics Dashboard (KPIs, Muscle Breakdown, etc.)
             this.renderDashboard(dataWithWorkouts);
 
-            // Render Exercise Summary Table (grouped by category)
-            this.renderSummaryTable(groupedExercises);
+            // Render Muscle Group Summary Table
+            this.renderSummaryTable(groupedByMuscle);
 
-            // Render Category Tabs and Content
-            this.renderCategoryTabs(groupedExercises);
+            // Render Muscle Group Progress Section (Metric selector, Muscle checkboxes, and Chart)
+            this.renderMuscleGroupView(groupedByMuscle);
 
         } catch (error) {
             console.error('Error loading chart data:', error);
@@ -407,18 +411,83 @@ export const Charts = {
 
 
     /**
-     * Render the weekly aggregate statistics chart
+     * Render the weekly aggregate statistics charts
      * @param {Array} allWorkouts - Flat array of all workouts
      */
     renderWeeklyStats(allWorkouts) {
-        const canvas = document.getElementById('weeklyVolumeChart');
-        if (!canvas) return;
+        const freqCanvas = document.getElementById('weeklyFrequencyChart');
+        const muscleCanvas = document.getElementById('weeklyMuscleChart');
+        if (!freqCanvas || !muscleCanvas) return;
 
         const weeklyData = aggregateByWeek(allWorkouts);
         // Only show last 12 weeks for the dashboard
         const displayData = weeklyData.slice(-12);
 
-        // Get unique muscle groups from displayData
+        const labels = displayData.map(d => {
+            const info = this.getWeekNumber(d.weekStart);
+            return `W${String(info.week).padStart(2, '0')}`;
+        });
+
+        // 1. Render Training Frequency Chart
+        this.renderFrequencyChart(freqCanvas, displayData, labels);
+
+        // 2. Render Muscle Group Activity Chart
+        this.renderMuscleActivityChart(muscleCanvas, displayData, labels);
+    },
+
+    /**
+     * Render the training frequency bar chart
+     */
+    renderFrequencyChart(canvas, displayData, labels) {
+        const ctx = canvas.getContext('2d');
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
+
+        new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Training Days',
+                    data: displayData.map(d => d.frequency),
+                    backgroundColor: 'rgba(76, 175, 80, 0.4)',
+                    borderColor: '#4caf50',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            afterBody: (context) => {
+                                const item = displayData[context[0].dataIndex];
+                                return [
+                                    `Total Volume: ${Math.round(item.totalVolume)}kg`,
+                                    `Total Reps: ${item.totalReps}`
+                                ];
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 7,
+                        ticks: { stepSize: 1 },
+                        title: { display: true, text: 'Days/Week' }
+                    }
+                }
+            }
+        });
+    },
+
+    /**
+     * Render the muscle group activity line chart
+     */
+    renderMuscleActivityChart(canvas, displayData, labels) {
         const muscleGroups = new Set();
         displayData.forEach(week => {
             Object.keys(week.muscleGroupCounts || {}).forEach(m => muscleGroups.add(m));
@@ -437,45 +506,25 @@ export const Charts = {
             'full-body': '#ffd740'
         };
 
-        const datasets = [
-            {
-                label: 'Training Days',
-                data: displayData.map(d => d.frequency),
-                backgroundColor: 'rgba(76, 175, 80, 0.4)',
-                borderColor: '#4caf50',
-                borderWidth: 1,
-                yAxisID: 'y'
-            }
-        ];
-
-        // Add a line dataset for each muscle group
-        Array.from(muscleGroups).sort().forEach(muscle => {
-            datasets.push({
-                label: muscle.charAt(0).toUpperCase() + muscle.slice(1).replace('-', ' '),
-                data: displayData.map(d => (d.muscleGroupCounts && d.muscleGroupCounts[muscle]) || 0),
-                type: 'line',
-                borderColor: muscleColors[muscle] || '#667eea',
-                backgroundColor: muscleColors[muscle] || '#667eea',
-                borderWidth: 2,
-                pointRadius: 3,
-                yAxisID: 'y1',
-                tension: 0.3
-            });
-        });
+        const datasets = Array.from(muscleGroups).sort().map(muscle => ({
+            label: muscle.charAt(0).toUpperCase() + muscle.slice(1).replace('-', ' '),
+            data: displayData.map(d => (d.muscleGroupCounts && d.muscleGroupCounts[muscle]) || 0),
+            borderColor: muscleColors[muscle] || '#667eea',
+            backgroundColor: muscleColors[muscle] || '#667eea',
+            borderWidth: 2,
+            pointRadius: 3,
+            tension: 0.3,
+            fill: false
+        }));
 
         const ctx = canvas.getContext('2d');
-
-        // Destroy existing chart if it exists
         const existingChart = Chart.getChart(canvas);
         if (existingChart) existingChart.destroy();
 
         new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
-                labels: displayData.map(d => {
-                    const info = this.getWeekNumber(d.weekStart);
-                    return `Week ${String(info.week).padStart(2, '0')}, ${info.year}`;
-                }),
+                labels: labels,
                 datasets: datasets
             },
             options: {
@@ -484,78 +533,21 @@ export const Charts = {
                 plugins: {
                     legend: {
                         position: 'top',
-                        labels: {
-                            boxWidth: 12,
-                            padding: 10,
-                            font: { size: 10 }
-                        }
+                        labels: { boxWidth: 10, font: { size: 10 } }
                     },
                     tooltip: {
+                        mode: 'index',
+                        intersect: false,
                         callbacks: {
-                            label: (context) => {
-                                let label = context.dataset.label || '';
-                                if (label) label += ': ';
-                                if (context.parsed.y !== undefined) {
-                                    if (context.dataset.yAxisID === 'y1') {
-                                        label += context.parsed.y + ' unique exercises';
-                                    } else {
-                                        label += context.parsed.y + ' training days';
-                                    }
-                                }
-                                return label;
-                            },
-                            afterBody: (context) => {
-                                const index = context[0].dataIndex;
-                                const item = displayData[index];
-
-                                // Calculate week range for tooltip
-                                const parts = item.weekStart.split('-');
-                                const y = parseInt(parts[0], 10);
-                                const m = parseInt(parts[1], 10) - 1;
-                                const d = parseInt(parts[2], 10);
-                                const monday = new Date(y, m, d);
-                                const sunday = new Date(y, m, d + 6);
-
-                                const formatDateShort = (date) => {
-                                    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                                };
-
-                                return [
-                                    `${formatDateShort(monday)} – ${formatDateShort(sunday)}, ${sunday.getFullYear()}`,
-                                    '',
-                                    `Workouts this week: ${item.frequency}`,
-                                    `Weekly Volume: ${Math.round(item.totalVolume)}kg`,
-                                    `Total Reps: ${item.totalReps}`
-                                ];
-                            }
+                            label: (context) => `${context.dataset.label}: ${context.parsed.y} exercises`
                         }
                     }
                 },
                 scales: {
                     y: {
-                        type: 'linear',
-                        display: true,
-                        position: 'left',
-                        title: { display: true, text: 'Sessions (Days)' },
-                        min: 0,
-                        max: 7,
-                        ticks: { stepSize: 1 }
-                    },
-                    y1: {
-                        type: 'linear',
-                        display: true,
-                        position: 'right',
-                        title: { display: true, text: 'Different Exercises' },
                         beginAtZero: true,
-                        grid: { drawOnChartArea: false },
-                        ticks: { stepSize: 1 }
-                    },
-                    x: {
-                        ticks: {
-                            callback: function (val, index) {
-                                return this.getLabelForValue(val);
-                            }
-                        }
+                        ticks: { stepSize: 1 },
+                        title: { display: true, text: 'Unique Exercises' }
                     }
                 }
             }
@@ -603,18 +595,93 @@ export const Charts = {
         }
 
         milestonesSection.style.display = 'block';
-        milestonesList.innerHTML = milestones.map(m => `
-            <div class="milestone-item">
+        milestonesList.innerHTML = '';
+
+        milestones.forEach((m, index) => {
+            const milestoneEl = document.createElement('div');
+            milestoneEl.className = 'milestone-item';
+            milestoneEl.title = 'Click to see details';
+            milestoneEl.innerHTML = `
                 <span class="milestone-date">${this.formatDate(m.date).split(',')[0]}</span>
                 <span class="milestone-text">${m.text}</span>
                 <span class="milestone-badge" style="background: ${m.color || '#fff8e1'}; color: ${m.textColor || '#ff8f00'};">
                     <i data-lucide="${m.icon || 'star'}" class="icon-xs"></i>
                     ${m.type}
                 </span>
-            </div>
-        `).join('');
+            `;
+            milestoneEl.addEventListener('click', () => this.showMilestoneDetails(m));
+            milestonesList.appendChild(milestoneEl);
+        });
 
         if (window.lucide) window.lucide.createIcons();
+    },
+
+    /**
+     * Show detailed data for a milestone in a modal
+     * @param {Object} milestone - Milestone object with details
+     */
+    showMilestoneDetails(milestone) {
+        const modal = document.getElementById('milestoneModal');
+        const title = document.getElementById('milestoneModalTitle');
+        const body = document.getElementById('milestoneModalBody');
+
+        if (!modal || !body || !milestone.details) return;
+
+        title.textContent = milestone.details.title || 'Milestone Details';
+
+        let html = '';
+        if (milestone.details.subtitle) {
+            html += `<p style="margin-bottom: 20px; color: var(--text-secondary);">${milestone.details.subtitle}</p>`;
+        }
+
+        html += `
+            <table class="milestone-detail-table">
+                <thead>
+                    <tr>
+                        ${milestone.details.headers.map(h => `<th>${h}</th>`).join('')}
+                    </tr>
+                </thead>
+                <tbody>
+                    ${milestone.details.rows.map((row, i) => `
+                        <tr class="milestone-detail-row ${i === 0 ? 'highlight' : ''}">
+                            ${row.map(cell => `<td>${cell}</td>`).join('')}
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+        `;
+
+        body.innerHTML = html;
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden'; // Prevent scrolling
+    },
+
+    /**
+     * Setup milestone modal close listeners
+     */
+    setupMilestoneModal() {
+        const modal = document.getElementById('milestoneModal');
+        const closeBtn = document.getElementById('closeMilestoneModal');
+        if (!modal || !closeBtn) return;
+
+        const closeModal = () => {
+            modal.style.display = 'none';
+            document.body.style.overflow = '';
+        };
+
+        closeBtn.onclick = closeModal;
+
+        // Close on outside click
+        modal.onclick = (e) => {
+            if (e.target === modal) closeModal();
+        };
+
+        // Close on Escape key
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal.style.display === 'flex') {
+                closeModal();
+            }
+        });
     },
 
     /**
@@ -650,6 +717,7 @@ export const Charts = {
         muscles.forEach(muscle => {
             // Consistency Streak (Consecutive weeks hitting this muscle)
             let consistencyStreak = 0;
+            let streakDetails = [];
             for (let i = 0; i < sortedWeeks.length; i++) {
                 const week = sortedWeeks[i];
                 const hasMuscle = week.muscleGroupSessions && week.muscleGroupSessions[muscle] > 0;
@@ -664,10 +732,13 @@ export const Charts = {
 
                 if (hasMuscle) {
                     consistencyStreak++;
+                    streakDetails.push({
+                        week: week.weekStart,
+                        count: week.muscleGroupSessions[muscle],
+                        label: 'Sessions'
+                    });
                 } else if (i === 0) {
-                    // It's fine if the CURRENT week hasn't been hit yet if it just started,
-                    // but usually streaks are shown for active ones.
-                    // We'll only count if the latest week is hit OR the previous week was hit and current is under way.
+                    // It's fine if current week isn't hit yet
                 } else {
                     break;
                 }
@@ -686,12 +757,26 @@ export const Charts = {
                     color: '#fff1f1',
                     textColor: '#e53935',
                     priority: 10 + consistencyStreak,
-                    timestamp: new Date(sortedWeeks[0].weekStart).getTime()
+                    timestamp: new Date(sortedWeeks[0].weekStart).getTime(),
+                    details: {
+                        title: `${this.capitalize(muscle)} Consistency`,
+                        subtitle: `Active streak since ${this.formatDate(streakDetails[streakDetails.length - 1].week).split(',')[0]}`,
+                        headers: ['Week Starting', 'Sessions'],
+                        rows: streakDetails.map(d => [this.formatDate(d.week).split(',')[0], d.count])
+                    }
                 });
             }
 
             // Volume Trend (Consecutive weeks increasing volume)
             let volumeStreak = 1;
+            let trendDetails = [];
+            if (sortedWeeks.length > 0 && sortedWeeks[0].muscleGroupVolume[muscle] > 0) {
+                trendDetails.push({
+                    week: sortedWeeks[0].weekStart,
+                    volume: sortedWeeks[0].muscleGroupVolume[muscle]
+                });
+            }
+
             for (let i = 0; i < sortedWeeks.length - 1; i++) {
                 const curVol = sortedWeeks[i].muscleGroupVolume[muscle] || 0;
                 const prevVol = sortedWeeks[i + 1].muscleGroupVolume[muscle] || 0;
@@ -703,6 +788,10 @@ export const Charts = {
 
                 if (curVol > prevVol && prevVol > 0) {
                     volumeStreak++;
+                    trendDetails.push({
+                        week: sortedWeeks[i + 1].weekStart,
+                        volume: sortedWeeks[i + 1].muscleGroupVolume[muscle]
+                    });
                 } else {
                     break;
                 }
@@ -717,7 +806,13 @@ export const Charts = {
                     color: '#e8f5e9',
                     textColor: '#2e7d32',
                     priority: 20 + volumeStreak,
-                    timestamp: new Date(sortedWeeks[0].weekStart).getTime()
+                    timestamp: new Date(sortedWeeks[0].weekStart).getTime(),
+                    details: {
+                        title: `${this.capitalize(muscle)} Volume Trend`,
+                        subtitle: `${volumeStreak} weeks of progressive overload`,
+                        headers: ['Week Starting', 'Total Volume (kg)'],
+                        rows: trendDetails.map(d => [this.formatDate(d.week).split(',')[0], `${Math.round(d.volume)}kg`])
+                    }
                 });
             }
         });
@@ -729,15 +824,36 @@ export const Charts = {
             thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
             records.forEach(r => {
-                if (new Date(r.date) >= thirtyDaysAgo) {
+                if (r.date >= thirtyDaysAgo.toISOString().split('T')[0]) {
                     let type = '';
                     let text = '';
+                    let details = null;
+
                     if (r.type.includes('weight')) {
                         text = `<strong>${d.exercise.name}</strong>: New heavy set! ${r.weight}kg`;
                         type = 'POWER';
+                        details = {
+                            title: `New Personal Record: ${d.exercise.name}`,
+                            subtitle: `Achieved on ${this.formatDate(r.date).split(',')[0]}`,
+                            headers: ['Metric', 'Value'],
+                            rows: [
+                                ['Weight', `${r.weight}kg`],
+                                ['Reps', r.reps],
+                                ['Est. 1RM', `${Math.round(estimate1RM(r.weight, r.reps))}kg`]
+                            ]
+                        };
                     } else if (r.type.includes('volume')) {
                         text = `<strong>${d.exercise.name}</strong>: New volume PR!`;
                         type = 'BEST';
+                        details = {
+                            title: `Volume PR: ${d.exercise.name}`,
+                            subtitle: `Achieved on ${this.formatDate(r.date).split(',')[0]}`,
+                            headers: ['Metric', 'Value'],
+                            rows: [
+                                ['Daily Volume', `${Math.round(r.volume)}kg`],
+                                ['Max Weight (Day)', `${r.maxWeight}kg`]
+                            ]
+                        };
                     }
 
                     if (text) {
@@ -749,7 +865,8 @@ export const Charts = {
                             color: '#e3f2fd',
                             textColor: '#1565c0',
                             priority: 5,
-                            timestamp: new Date(r.date).getTime()
+                            timestamp: new Date(r.date).getTime(),
+                            details: details
                         });
                     }
                 }
@@ -775,167 +892,130 @@ export const Charts = {
     },
 
     /**
-     * Group exercises by equipment type (category)
+     * Group exercises by muscle group
      * @param {Array} exercisesData - Array of {exercise, workouts} objects
-     * @returns {Object} Exercises grouped by equipment type
+     * @returns {Object} Exercises grouped by muscle
      */
-    groupExercisesByCategory(exercisesData) {
+    groupExercisesByMuscle(exercisesData) {
         const grouped = {};
 
         exercisesData.forEach(data => {
-            const category = data.exercise.equipmentType || 'other';
-            if (!grouped[category]) {
-                grouped[category] = [];
+            const muscle = data.exercise.muscle || 'other';
+            if (!grouped[muscle]) {
+                grouped[muscle] = [];
             }
-            grouped[category].push(data);
+            grouped[muscle].push(data);
         });
 
-        // Sort exercises within each category alphabetically
-        Object.keys(grouped).forEach(category => {
-            grouped[category].sort((a, b) =>
+        // Sort muscle groups alphabetically
+        const sortedGrouped = {};
+        Object.keys(grouped).sort().forEach(muscle => {
+            sortedGrouped[muscle] = grouped[muscle];
+            // Sort exercises within each muscle group alphabetically
+            sortedGrouped[muscle].sort((a, b) =>
                 a.exercise.name.localeCompare(b.exercise.name)
             );
         });
 
-        return grouped;
+        return sortedGrouped;
     },
 
-    /**
-     * Apply default selections from the latest workout if it's a new workout date
-     * or if no selections are set for a category.
-     * @param {Array} dataWithWorkouts - Exercises with their workout data
-     */
-    applyLatestWorkoutDefaults(dataWithWorkouts) {
-        if (!dataWithWorkouts || dataWithWorkouts.length === 0) return;
-
-        // Find the latest workout date across all exercises
-        let latestDate = '';
-        dataWithWorkouts.forEach(d => {
-            d.workouts.forEach(w => {
-                if (w.date > latestDate) latestDate = w.date;
-            });
-        });
-
-        if (!latestDate) return;
-
-        const lastProcessed = localStorage.getItem('lastProcessedLatestWorkoutDate');
-        const isNewDate = lastProcessed !== latestDate;
-
-        // Get all exercise IDs from the latest workout
-        const latestExerciseIds = dataWithWorkouts
-            .filter(d => d.workouts.some(w => w.date === latestDate))
-            .map(d => d.exercise.id);
-
-        // Group them by category
-        const latestByCategory = {};
-        dataWithWorkouts.forEach(d => {
-            if (latestExerciseIds.includes(d.exercise.id)) {
-                const category = d.exercise.equipmentType || 'other';
-                if (!latestByCategory[category]) {
-                    latestByCategory[category] = [];
-                }
-                latestByCategory[category].push(d.exercise.id);
-            }
-        });
-
-        let changed = false;
-
-        // Identify all unique categories present in the data
-        const categories = [...new Set(dataWithWorkouts.map(d => d.exercise.equipmentType || 'other'))];
-
-        categories.forEach(category => {
-            // Update if it's a new date AND this category was in the latest workout
-            // OR if this category has no selection yet (even if it wasn't in the latest workout)
-            if ((isNewDate && latestByCategory[category]) || this.categorySelections[category] === undefined) {
-                // If it was in the latest workout, select those exercises
-                if (latestByCategory[category]) {
-                    this.categorySelections[category] = latestByCategory[category];
-                    changed = true;
-                }
-                // If it's a brand new category (no selection yet) but not in latest workout, 
-                // just initialize to empty (safety)
-                else if (this.categorySelections[category] === undefined) {
-                    this.categorySelections[category] = [];
-                    changed = true;
-                }
-            }
-        });
-
-        if (changed || isNewDate) {
-            localStorage.setItem('categorySelections', JSON.stringify(this.categorySelections));
-            localStorage.setItem('lastProcessedLatestWorkoutDate', latestDate);
-        }
-    },
 
     /**
-     * Render summary table grouped by category
-     * @param {Object} groupedExercises - Exercises grouped by category
+     * Render summary table grouped by muscle group
+     * @param {Object} groupedByMuscle - Exercises grouped by muscle
      */
-    renderSummaryTable(groupedExercises) {
+    renderSummaryTable(groupedByMuscle) {
         const statsTableContent = document.getElementById('statsTableContent');
         if (!statsTableContent) return;
 
-        const categories = Object.keys(groupedExercises).sort();
-        const hasWeightedExercises = this.allExercisesData.some(d => d.exercise.requiresWeight);
+        const muscleGroups = Object.keys(groupedByMuscle).sort();
 
         let tableHTML = '<div class="stats-table-container">';
         tableHTML += `
             <table class="stats-summary-table">
                 <thead>
                     <tr>
-                        <th class="sortable" data-sort="name">Exercise <span class="sort-indicator"></span></th>
-                        <th>vs Prev</th>
-                        <th>Progress</th>
-                        <th class="sortable" data-sort="avgReps">Avg Reps <span class="sort-indicator"></span></th>
-                        ${hasWeightedExercises ? '<th class="sortable" data-sort="avgWeight">Avg Weight <span class="sort-indicator"></span></th>' : ''}
-                        <th class="sortable" data-sort="pr">PR <span class="sort-indicator"></span></th>
+                        <th class="sortable" data-sort="name">Muscle Group <span class="sort-indicator"></span></th>
+                        <th>Avg Progress</th>
+                        <th>Trend (vs Prev)</th>
+                        <th>Total Volume</th>
+                        <th>Exercises</th>
                     </tr>
                 </thead>
                 <tbody>
         `;
 
-        categories.forEach(category => {
-            // Add category header row
-            tableHTML += `
-                <tr class="category-header-row">
-                    <td colspan="${hasWeightedExercises ? 6 : 5}" style="padding: var(--spacing-md);">
-                        ${this.formatEquipmentType(category)}
-                    </td>
-                </tr>
-            `;
+        muscleGroups.forEach(muscle => {
+            // Aggregate stats for the muscle group
+            let totalTrend = 0;
+            let trendCount = 0;
+            let totalVolume = 0;
+            let totalProgress = 0;
+            let progressCount = 0;
 
-            // Add exercise rows for this category
-            groupedExercises[category].forEach(({ exercise, workouts }) => {
+            // For the sparkline, we'll aggregate daily volumes for this muscle group
+            const muscleWorkouts = groupedByMuscle[muscle].flatMap(d => d.workouts);
+            const dailyData = this.groupByDate(muscleWorkouts, true); // Treat all as contributing to volume
+
+            groupedByMuscle[muscle].forEach(({ exercise, workouts }) => {
                 const stats = this.calculateExerciseStats(workouts, exercise.requiresWeight);
                 if (!stats) return;
 
-                const prValue = exercise.requiresWeight && stats.prReps && stats.prWeight
-                    ? `${stats.prReps}x${stats.prWeight.toFixed(1)}`
-                    : `${stats.maxReps} reps`;
+                if (stats.trend !== 0) {
+                    totalTrend += stats.trend;
+                    trendCount++;
+                }
 
-                const trendClass = stats.trend > 0 ? 'trend-up' : (stats.trend < 0 ? 'trend-down' : 'trend-neutral');
-                const trendIcon = stats.trend > 0 ? '↑' : (stats.trend < 0 ? '↓' : '→');
-                const trendText = stats.trend !== 0 ? `${Math.abs(stats.trend).toFixed(1)}%` : '-';
+                const baselineCount = Math.min(3, stats.volumes.length);
+                const baseline = stats.volumes.slice(0, baselineCount).reduce((sum, v) => sum + v, 0) / baselineCount;
+                if (baseline > 0) {
+                    const current = stats.volumes[stats.volumes.length - 1];
+                    totalProgress += (current / baseline) * 100;
+                    progressCount++;
+                }
 
-                tableHTML += `
-                    <tr>
-                        <td class="exercise-name-cell">
-                            <strong>${exercise.name}</strong>
-                        </td>
-                        <td>
-                            <span class="kpi-trend ${trendClass}" style="margin: 0; white-space: nowrap;">
-                                ${trendIcon} ${trendText}
-                            </span>
-                        </td>
-                        <td style="min-width: 90px;">
-                            ${this.renderSparkline(stats.maxWeights)}
-                        </td>
-                        <td>${stats.avgReps.toFixed(1)}</td>
-                        ${hasWeightedExercises ? `<td>${exercise.requiresWeight && stats.avgWeight > 0 ? stats.avgWeight.toFixed(1) + ' kg' : '-'}</td>` : ''}
-                        <td><strong>${prValue}</strong></td>
-                    </tr>
-                `;
+                totalVolume += stats.volumes.reduce((sum, v) => sum + v, 0);
             });
+
+            const avgProgress = progressCount > 0 ? (totalProgress / progressCount) : 100;
+            const avgTrend = trendCount > 0 ? (totalTrend / trendCount) : 0;
+            const trendClass = avgTrend > 0 ? 'trend-up' : (avgTrend < 0 ? 'trend-down' : 'trend-neutral');
+            const trendIcon = avgTrend > 0 ? '↑' : (avgTrend < 0 ? '↓' : '→');
+
+            tableHTML += `
+                <tr class="muscle-summary-row">
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <i data-lucide="${this.getMuscleIcon(muscle)}" class="icon-sm"></i>
+                            <strong>${this.capitalize(muscle)}</strong>
+                        </div>
+                    </td>
+                    <td>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span class="value-large ${avgProgress > 100 ? 'trend-up' : (avgProgress < 100 ? 'trend-down' : '')}">
+                                ${avgProgress.toFixed(1)}%
+                            </span>
+                        </div>
+                    </td>
+                    <td>
+                        <span class="kpi-trend ${trendClass}" style="margin: 0;">
+                            ${trendIcon} ${Math.abs(avgTrend).toFixed(1)}%
+                        </span>
+                    </td>
+                    <td>${Math.round(totalVolume).toLocaleString()} kg</td>
+                    <td>
+                        <div class="exercise-count-badges">
+                            ${groupedByMuscle[muscle].length} <span class="text-light" style="font-size: 0.75rem;">exercises</span>
+                        </div>
+                    </td>
+                </tr>
+                <tr class="muscle-detail-row-mini">
+                    <td colspan="5" style="padding: 0 15px 15px 15px;">
+                        ${this.renderSparkline(dailyData.values)}
+                    </td>
+                </tr>
+            `;
         });
 
         tableHTML += `
@@ -945,6 +1025,26 @@ export const Charts = {
         tableHTML += '</div>';
         statsTableContent.innerHTML = tableHTML;
         if (window.lucide) window.lucide.createIcons();
+    },
+
+    /**
+     * Get icon name for a muscle group
+     */
+    getMuscleIcon(muscle) {
+        const muscleIcons = {
+            'chest': 'dumbbell',
+            'back': 'align-center',
+            'shoulders': 'arrow-up-circle',
+            'legs': 'footprints',
+            'biceps': 'biceps-flexed',
+            'triceps': 'biceps-flexed',
+            'arms': 'biceps-flexed',
+            'core': 'target',
+            'neck': 'circle',
+            'full-body': 'user',
+            'other': 'help-circle'
+        };
+        return muscleIcons[muscle] || 'activity';
     },
 
     /**
@@ -977,120 +1077,89 @@ export const Charts = {
     },
 
     /**
-     * Render category tabs and their content
-     * @param {Object} groupedExercises - Exercises grouped by category
+     * Render the Muscle Group view section
+     * @param {Object} groupedByMuscle - Exercises grouped by muscle
      */
-    renderCategoryTabs(groupedExercises) {
+    renderMuscleGroupView(groupedByMuscle) {
         const categoryTabsContainer = document.getElementById('categoryTabsContainer');
         const categoryTabs = document.getElementById('categoryTabs');
         const categoryTabContent = document.getElementById('categoryTabContent');
 
         if (!categoryTabs || !categoryTabContent) return;
 
-        // Clear existing content
-        categoryTabs.innerHTML = '';
+        // Hide old tabs and repurposed them for a single "Overview" layout
+        categoryTabs.style.display = 'none';
         categoryTabContent.innerHTML = '';
-
-        const categories = Object.keys(groupedExercises).sort();
-
-        // Set default category if not set
-        if (!this.currentCategory || !categories.includes(this.currentCategory)) {
-            this.currentCategory = categories[0];
-        }
 
         // Create metric selector
         this.renderMetricSelector();
 
-        // Create tab buttons
-        categories.forEach(category => {
-            const tabBtn = document.createElement('button');
-            tabBtn.className = 'category-tab-btn';
-            if (category === this.currentCategory) {
-                tabBtn.classList.add('active');
-            }
-            tabBtn.textContent = this.formatEquipmentType(category);
-            tabBtn.dataset.category = category;
-            tabBtn.addEventListener('click', () => this.switchCategory(category, groupedExercises[category]));
-            categoryTabs.appendChild(tabBtn);
-        });
+        // Create main pane
+        const pane = document.createElement('div');
+        pane.className = 'category-tab-pane active';
 
-        // Create tab content panes
-        categories.forEach(category => {
-            const pane = document.createElement('div');
-            pane.className = 'category-tab-pane';
-            pane.id = `category-pane-${category}`;
-            if (category === this.currentCategory) {
-                pane.classList.add('active');
-            }
+        // Create muscle group selector
+        const selector = this.createMuscleGroupSelector(groupedByMuscle);
+        pane.appendChild(selector);
 
-            // Create exercise selector for this category
-            const selector = this.createCategoryExerciseSelector(category, groupedExercises[category]);
-            pane.appendChild(selector);
+        // Create chart container
+        const chartContainer = document.createElement('div');
+        chartContainer.className = 'category-chart-container';
+        chartContainer.innerHTML = `
+            <div class="chart-container" style="height: 450px;">
+                <canvas id="muscleGroupChart"></canvas>
+            </div>
+        `;
+        pane.appendChild(chartContainer);
 
-            // Create chart container for this category
-            const chartContainer = document.createElement('div');
-            chartContainer.className = 'category-chart-container';
-            chartContainer.innerHTML = `
-                <div class="chart-container">
-                    <canvas id="chart-${category}"></canvas>
-                </div>
-            `;
-            pane.appendChild(chartContainer);
-
-            categoryTabContent.appendChild(pane);
-        });
+        categoryTabContent.appendChild(pane);
 
         // Show the container
         categoryTabsContainer.style.display = 'block';
 
-        // Render chart for current category
-        this.renderCategoryChart(this.currentCategory, groupedExercises[this.currentCategory]);
+        // Render chart
+        this.renderMuscleGroupChart(groupedByMuscle);
     },
 
     /**
-     * Create exercise selector for a category
-     * @param {string} category - Category name
-     * @param {Array} exercisesData - Exercises in this category
-     * @returns {HTMLElement} Selector element
+     * Create muscle group checkbox selector
      */
-    createCategoryExerciseSelector(category, exercisesData) {
+    createMuscleGroupSelector(groupedByMuscle) {
         const container = document.createElement('div');
         container.className = 'category-exercise-selector';
-
-        // Get saved selections for this category
-        if (!this.categorySelections[category]) {
-            this.categorySelections[category] = [];
-        }
 
         const header = document.createElement('div');
         header.className = 'category-selector-header';
         header.innerHTML = `
             <h4>
                 <span class="chevron" style="display: inline-block; transition: transform 0.3s ease;">▼</span>
-                Select Exercises to View
+                Select Muscle Groups to View
             </h4>
-            <button class="btn btn-small btn-secondary toggle-all-btn" data-category="${category}">Select All</button>
+            <div class="selector-actions">
+                <button class="btn btn-small btn-secondary toggle-all-btn">Select All</button>
+            </div>
         `;
 
         const checkboxContainer = document.createElement('div');
         checkboxContainer.className = 'category-checkboxes';
+        checkboxContainer.style.display = 'grid';
+        checkboxContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(140px, 1fr))';
 
-        exercisesData.forEach(({ exercise }) => {
+        Object.keys(groupedByMuscle).forEach(muscle => {
             const label = document.createElement('label');
             label.className = 'category-checkbox-label';
 
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
-            checkbox.value = exercise.id;
-            checkbox.checked = this.categorySelections[category].includes(exercise.id);
-            checkbox.className = 'exercise-checkbox';
-            checkbox.dataset.category = category;
+            checkbox.value = muscle;
+            checkbox.checked = this.selectedMuscleGroups.includes(muscle);
+            checkbox.className = 'muscle-checkbox';
             checkbox.addEventListener('change', (e) => {
-                this.handleCategoryCheckboxChange(category, exercise.id, e.target.checked, exercisesData);
+                this.handleMuscleCheckboxChange(muscle, e.target.checked, groupedByMuscle);
             });
 
             label.appendChild(checkbox);
-            label.appendChild(document.createTextNode(' ' + exercise.name));
+            label.appendChild(document.createTextNode(' ' + this.capitalize(muscle)));
             checkboxContainer.appendChild(label);
         });
 
@@ -1100,7 +1169,17 @@ export const Charts = {
         // Set up toggle all button
         const toggleBtn = header.querySelector('.toggle-all-btn');
         toggleBtn.addEventListener('click', () => {
-            this.toggleAllCategoryExercises(category, exercisesData);
+            const allChecked = this.selectedMuscleGroups.length === Object.keys(groupedByMuscle).length;
+            if (allChecked) {
+                this.selectedMuscleGroups = [];
+            } else {
+                this.selectedMuscleGroups = Object.keys(groupedByMuscle);
+            }
+            localStorage.setItem('selectedMuscleGroups', JSON.stringify(this.selectedMuscleGroups));
+
+            // Update UI
+            container.querySelectorAll('.muscle-checkbox').forEach(cb => cb.checked = !allChecked);
+            this.renderMuscleGroupChart(groupedByMuscle);
         });
 
         // Set up collapsible functionality
@@ -1117,195 +1196,119 @@ export const Charts = {
     },
 
     /**
-     * Handle checkbox change in category
-     * @param {string} category - Category name
-     * @param {string} exerciseId - Exercise ID
-     * @param {boolean} checked - Checked state
-     * @param {Array} exercisesData - Exercises in this category
+     * Handle muscle checkbox change
      */
-    handleCategoryCheckboxChange(category, exerciseId, checked, exercisesData) {
-        if (!this.categorySelections[category]) {
-            this.categorySelections[category] = [];
-        }
-
+    handleMuscleCheckboxChange(muscle, checked, groupedByMuscle) {
         if (checked) {
-            if (!this.categorySelections[category].includes(exerciseId)) {
-                this.categorySelections[category].push(exerciseId);
+            if (!this.selectedMuscleGroups.includes(muscle)) {
+                this.selectedMuscleGroups.push(muscle);
             }
         } else {
-            this.categorySelections[category] = this.categorySelections[category].filter(id => id !== exerciseId);
+            this.selectedMuscleGroups = this.selectedMuscleGroups.filter(m => m !== muscle);
         }
 
-        // Save to localStorage
-        localStorage.setItem('categorySelections', JSON.stringify(this.categorySelections));
-
-        // Re-render chart for this category
-        this.renderCategoryChart(category, exercisesData);
+        localStorage.setItem('selectedMuscleGroups', JSON.stringify(this.selectedMuscleGroups));
+        this.renderMuscleGroupChart(groupedByMuscle);
     },
 
     /**
-     * Toggle all exercises in a category
-     * @param {string} category - Category name
-     * @param {Array} exercisesData - Exercises in this category
+     * Render the muscle group progress chart
      */
-    toggleAllCategoryExercises(category, exercisesData) {
-        const pane = document.getElementById(`category-pane-${category}`);
-        if (!pane) return;
+    renderMuscleGroupChart(groupedByMuscle) {
+        const canvas = document.getElementById('muscleGroupChart');
+        if (!canvas) return;
 
-        const checkboxes = pane.querySelectorAll('.exercise-checkbox');
-        const allChecked = Array.from(checkboxes).every(cb => cb.checked);
-
-        checkboxes.forEach(checkbox => {
-            checkbox.checked = !allChecked;
-        });
-
-        // Update selections
-        if (allChecked) {
-            this.categorySelections[category] = [];
-        } else {
-            this.categorySelections[category] = exercisesData.map(d => d.exercise.id);
-        }
-
-        // Save to localStorage
-        localStorage.setItem('categorySelections', JSON.stringify(this.categorySelections));
-
-        // Re-render chart
-        this.renderCategoryChart(category, exercisesData);
-    },
-
-    /**
-     * Render chart for a specific category
-     * @param {string} category - Category name
-     * @param {Array} exercisesData - Exercises in this category
-     */
-    renderCategoryChart(category, exercisesData) {
-        const pane = document.getElementById(`category-pane-${category}`);
-        if (!pane) return;
-
-        const container = pane.querySelector('.chart-container');
-        if (!container) return;
-
-        // Get selected exercises for this category
-        const selectedIds = this.categorySelections[category] || [];
-
-        if (selectedIds.length === 0) {
-            container.innerHTML = '<p class="empty-state">Select exercises from the checkboxes above to view.</p>';
+        if (this.selectedMuscleGroups.length === 0) {
+            canvas.parentElement.innerHTML = '<p class="empty-state">Select muscle groups from the list above to view progress.</p>';
             return;
         }
 
-        // Filter to selected exercises
-        const selectedData = exercisesData.filter(d => selectedIds.includes(d.exercise.id));
+        const ctx = canvas.getContext('2d');
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
 
-        if (selectedData.length === 0) {
-            container.innerHTML = '<p class="empty-state">No data available for selected exercises.</p>';
-            return;
-        }
+        // Color palette for muscle groups
+        const colors = {
+            'chest': '#ff5252',
+            'back': '#448aff',
+            'shoulders': '#ffab40',
+            'legs': '#7c4dff',
+            'biceps': '#00bcd4',
+            'triceps': '#667eea',
+            'arms': '#40c4ff',
+            'core': '#69f0ae',
+            'neck': '#bdbdbd',
+            'other': '#607d8b'
+        };
 
-        // Recreate canvas
-        container.innerHTML = `<canvas id="chart-${category}"></canvas>`;
-        const newCanvas = document.getElementById(`chart-${category}`);
-
-        // Color palettes
-        const barColors = ['#667eea', '#4caf50', '#ff9800', '#e91e63', '#00bcd4'];
-        const trendColors = ['#2196f3', '#ff5722', '#9c27b0', '#00bcd4', '#4caf50'];
-        const datasets = [];
-
-        // Get all unique dates across all exercises
+        // Get all unique dates
         const allDates = new Set();
-        selectedData.forEach(data => {
-            const dailyData = this.groupByDate(data.workouts, data.exercise.requiresWeight);
-            dailyData.labels.forEach(label => allDates.add(label));
+        this.selectedMuscleGroups.forEach(muscle => {
+            const workouts = (groupedByMuscle[muscle] || []).flatMap(d => d.workouts);
+            workouts.forEach(w => allDates.add(w.date));
         });
         const sortedDates = Array.from(allDates).sort();
 
-        selectedData.forEach((data, idx) => {
-            let metricValues = [];
-            let yAxisLabel = '';
-            let titleSuffix = '';
+        const datasets = this.selectedMuscleGroups.map(muscle => {
+            const exercisesInMuscle = groupedByMuscle[muscle] || [];
 
-            // Group by date to get the raw data for this exercise
-            const dailyRaw = this.groupByDate(data.workouts, data.exercise.requiresWeight);
-
-            if (this.selectedMetric === 'relative') {
-                const progressPercentages = this.calculateProgressPercentage(dailyRaw.values);
-                metricValues = progressPercentages;
-                yAxisLabel = 'Progress (% of Baseline)';
-                titleSuffix = '(% Improvement vs Baseline)';
-            } else if (this.selectedMetric === 'weight') {
-                metricValues = dailyRaw.maxWeights;
-                yAxisLabel = data.exercise.requiresWeight ? 'Weight (kg)' : 'Max Reps';
-                titleSuffix = '(Personal Record)';
-            } else if (this.selectedMetric === 'reps') {
-                metricValues = dailyRaw.labels.map(date => {
-                    const daySets = dailyRaw.setsMap[date];
-                    return daySets.reduce((sum, s) => sum + s.reps, 0);
-                });
-                yAxisLabel = 'Total Reps';
-                titleSuffix = '(Total Repetitions)';
-            }
-
+            // Calculate monthly aggregation for each date
             const alignedValues = sortedDates.map(date => {
-                const dataIdx = dailyRaw.labels.indexOf(date);
-                return dataIdx !== -1 ? metricValues[dataIdx] : null;
+                const dayWorkouts = exercisesInMuscle.flatMap(ex => ex.workouts.filter(w => w.date === date));
+                if (dayWorkouts.length === 0) return null;
+
+                if (this.selectedMetric === 'relative') {
+                    // Complexity: For each exercise active on this day, calculate its progress percentage vs baseline
+                    let totalProgress = 0;
+                    let count = 0;
+                    exercisesInMuscle.forEach(({ exercise, workouts }) => {
+                        const daySets = workouts.filter(w => w.date === date);
+                        if (daySets.length > 0) {
+                            // Find baseline (avg of first 3 unique dates for this exercise)
+                            // For simplicity, we'll use a pre-calculated baseline or just the first workout
+                            const dailyRaw = this.groupByDate(workouts, exercise.requiresWeight);
+                            const baselineCount = Math.min(3, dailyRaw.values.length);
+                            const baseline = dailyRaw.values.slice(0, baselineCount).reduce((sum, v) => sum + v, 0) / baselineCount;
+
+                            if (baseline > 0) {
+                                const dayValue = dailyRaw.values[dailyRaw.labels.indexOf(date)];
+                                totalProgress += (dayValue / baseline) * 100;
+                                count++;
+                            }
+                        }
+                    });
+                    return count > 0 ? totalProgress / count : null;
+                } else if (this.selectedMetric === 'weight') {
+                    // Total Volume for the muscle group
+                    return dayWorkouts.reduce((sum, w) => sum + (w.weight ? w.reps * w.weight : w.reps), 0);
+                } else if (this.selectedMetric === 'reps') {
+                    // Total Reps for the muscle group
+                    return dayWorkouts.reduce((sum, w) => sum + w.reps, 0);
+                }
+                return null;
             });
 
-            const barColor = barColors[idx % barColors.length];
-            const trendColor = trendColors[idx % trendColors.length];
-
-            // Align original sets to the dates
-            const alignedSets = sortedDates.map(date => {
-                return dailyRaw.setsMap[date] || null;
-            });
-
-            // Add bar chart for progress percentage
-            datasets.push({
-                label: data.exercise.name,
+            return {
+                label: this.capitalize(muscle),
                 data: alignedValues,
-                originalSets: alignedSets, // Store for tooltip
-                exercise: data.exercise,   // Store for tooltip
-                type: 'bar',
-                backgroundColor: barColor.replace(')', ', 0.6)').replace('rgb', 'rgba'),
-                borderColor: barColor,
-                borderWidth: 1,
-                order: 2 // Bars render behind lines
-            });
-
-            // Add trend line (dotted)
-            const validPoints = alignedValues
-                .map((val, idx) => ({ x: idx, y: val }))
-                .filter(p => p.y !== null);
-
-            if (validPoints.length >= 2) {
-                const regression = calculateLinearRegression(validPoints);
-                const trendLine = sortedDates.map((_, idx) => regression.predict(idx));
-
-                datasets.push({
-                    label: `${data.exercise.name} Trend`,
-                    data: trendLine,
-                    type: 'line',
-                    borderColor: trendColor,
-                    borderWidth: 2,
-                    borderDash: [8, 4], // Dotted line
-                    pointRadius: 0,
-                    fill: false,
-                    tension: 0,
-                    order: 1 // Lines render in front
-                });
-            }
+                borderColor: colors[muscle] || '#667eea',
+                backgroundColor: colors[muscle] || '#667eea',
+                borderWidth: 3,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                tension: 0.3,
+                spanGaps: true,
+                fill: false
+            };
         });
 
-        // Use the suffix of the last exercise for the entire chart title
-        const firstData = selectedData[0];
-        let mainTitleSuffix = '';
-        let yAxisLabel = 'Value';
-        if (this.selectedMetric === 'relative') { mainTitleSuffix = '(% Improvement vs Baseline)'; yAxisLabel = 'Progress (% of Baseline)'; }
-        else if (this.selectedMetric === 'weight') { mainTitleSuffix = '(Personal Record)'; yAxisLabel = 'Weight (kg)'; }
-        else if (this.selectedMetric === 'reps') { mainTitleSuffix = '(Total Repetitions)'; yAxisLabel = 'Total Reps'; }
+        let yAxisLabel = '';
+        if (this.selectedMetric === 'relative') yAxisLabel = 'Progress (% of Baseline)';
+        else if (this.selectedMetric === 'weight') yAxisLabel = 'Total Volume (kg)';
+        else if (this.selectedMetric === 'reps') yAxisLabel = 'Total Reps';
 
-        // Create mixed chart (bars + lines)
-        const ctx = newCanvas.getContext('2d');
         new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: sortedDates,
                 datasets: datasets
@@ -1313,94 +1316,38 @@ export const Charts = {
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                interaction: {
-                    mode: 'index',
-                    intersect: false
-                },
                 plugins: {
-                    legend: {
-                        display: true,
-                        position: 'top'
-                    },
-                    zoom: {
-                        pan: {
-                            enabled: true,
-                            mode: 'x'
-                        },
-                        zoom: {
-                            wheel: {
-                                enabled: true
-                            },
-                            pinch: {
-                                enabled: true
-                            },
-                            mode: 'x'
+                    legend: { position: 'top' },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        callbacks: {
+                            label: (context) => {
+                                let val = context.parsed.y;
+                                if (val === null) return null;
+                                let suffix = this.selectedMetric === 'relative' ? '%' : (this.selectedMetric === 'weight' ? ' kg' : ' reps');
+                                return `${context.dataset.label}: ${val.toFixed(1)}${suffix}`;
+                            }
                         }
                     },
                     title: {
                         display: true,
-                        text: `${this.formatEquipmentType(category)} - Workout Progress Tracking ${mainTitleSuffix}`
-                    },
-                    tooltip: {
-                        callbacks: {
-                            title: (tooltipItems) => {
-                                return tooltipItems[0].label;
-                            },
-                            label: (context) => {
-                                const label = context.dataset.label || '';
-                                const value = context.parsed.y;
-                                if (value === null || context.dataset.type === 'line') {
-                                    return `${label}: ${value?.toFixed(1)}${this.selectedMetric === 'relative' ? '%' : ''}`;
-                                }
-
-                                if (this.selectedMetric === 'relative') {
-                                    const changeFromBaseline = value - 100;
-                                    const changeText = changeFromBaseline >= 0
-                                        ? `+${changeFromBaseline.toFixed(1)}%`
-                                        : `${changeFromBaseline.toFixed(1)}%`;
-                                    return `${label}: ${value.toFixed(1)}% (${changeText})`;
-                                }
-
-                                return `${label}: ${value.toFixed(1)}${this.selectedMetric === 'weight' ? (context.dataset.exercise?.requiresWeight ? 'kg' : ' reps') : (this.selectedMetric === 'reps' ? ' reps' : '')}`;
-                            },
-                            afterLabel: (context) => {
-                                const sets = context.dataset.originalSets?.[context.dataIndex];
-                                if (!sets || sets.length === 0) return '';
-
-                                const setStrings = sets.map(s => {
-                                    return s.weight ? `${s.reps}x${s.weight}` : `${s.reps} reps`;
-                                });
-
-                                return 'Sets: ' + setStrings.join(', ');
-                            }
-                        }
+                        text: `Muscle Group Progress Trend - ${this.capitalize(this.selectedMetric)}`
                     }
                 },
                 scales: {
                     y: {
                         beginAtZero: false,
-                        title: {
-                            display: true,
-                            text: yAxisLabel
-                        },
-                        ticks: {
-                            callback: (value) => {
-                                if (this.selectedMetric === 'relative') return value.toFixed(0) + '%';
-                                if (this.selectedMetric === 'reps') return value.toFixed(0) + ' reps';
-                                return value.toFixed(0) + 'kg';
-                            }
-                        }
+                        title: { display: true, text: yAxisLabel }
                     },
                     x: {
-                        title: {
-                            display: true,
-                            text: 'Date'
-                        }
+                        title: { display: true, text: 'Workout Session' }
                     }
                 }
             }
         });
     },
+
 
     /**
      * Render the metric selector buttons
@@ -1438,42 +1385,9 @@ export const Charts = {
             btn.classList.toggle('active', btn.dataset.metric === metric);
         });
 
-        // Re-render chart for current category
-        const category = this.currentCategory;
-        const data = this.allExercisesData.filter(d => (d.exercise.equipmentType || 'other') === category);
-        this.renderCategoryChart(category, data);
-    },
-
-    /**
-     * Switch to a different category tab
-     * @param {string} category - Category name
-     * @param {Array} categoryData - Optional data for the category
-     */
-    switchCategory(category, categoryData = null) {
-        this.currentCategory = category;
-        localStorage.setItem('currentCategory', category);
-
-        // Update tab buttons
-        document.querySelectorAll('.category-tab-btn').forEach(btn => {
-            if (btn.dataset.category === category) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
-            }
-        });
-
-        // Update tab panes
-        document.querySelectorAll('.category-tab-pane').forEach(pane => {
-            if (pane.id === `category-pane-${category}`) {
-                pane.classList.add('active');
-            } else {
-                pane.classList.remove('active');
-            }
-        });
-
-        // Ensure chart is rendered for the new category
-        const data = categoryData || this.allExercisesData.filter(d => (d.exercise.equipmentType || 'other') === category);
-        this.renderCategoryChart(category, data);
+        // Re-render chart
+        const groupedByMuscle = this.groupExercisesByMuscle(this.allExercisesData);
+        this.renderMuscleGroupChart(groupedByMuscle);
     },
 
     /**

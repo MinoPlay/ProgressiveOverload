@@ -2466,3 +2466,90 @@
     font-weight: 600;
     color: var(--primary-color);
 }
+
+/* Milestone Clickability */
+.milestone-item {
+    cursor: pointer;
+    transition: transform 0.2s ease, background-color 0.2s ease;
+    border: 1px solid transparent;
+}
+
+.milestone-item:hover {
+    background-color: var(--bg-secondary);
+    transform: translateX(4px);
+    border-color: var(--border-light);
+}
+
+/* Modal Table Styles */
+.milestone-detail-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: var(--spacing-md);
+}
+
+.milestone-detail-table th {
+    text-align: left;
+    padding: var(--spacing-sm);
+    border-bottom: 2px solid var(--border-light);
+    color: var(--text-light);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+}
+
+.milestone-detail-table td {
+    padding: var(--spacing-md) var(--spacing-sm);
+    border-bottom: 1px solid var(--border-light);
+    font-size: 0.95rem;
+}
+
+.milestone-detail-row.highlight {
+    background-color: rgba(102, 126, 234, 0.05);
+    font-weight: 600;
+}
+
+/* Muscle Group View Styles */
+.muscle-summary-row td {
+    padding: var(--spacing-lg) var(--spacing-md) var(--spacing-xs) var(--spacing-md) !important;
+    border-bottom: none !important;
+}
+
+.muscle-detail-row-mini td {
+    padding: 0 var(--spacing-md) var(--spacing-lg) var(--spacing-md) !important;
+}
+
+.value-large {
+    font-size: 1.25rem;
+    font-weight: 800;
+}
+
+.exercise-count-badges {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    font-weight: 600;
+    color: var(--primary-color);
+}
+
+.selector-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.muscle-checkbox {
+    width: 18px !important;
+    height: 18px !important;
+    min-height: unset !important;
+}
+
+.muscle-summary-row:hover {
+    background: var(--bg-secondary);
+}
+
+.muscle-detail-row-mini:hover {
+    background: var(--bg-secondary);
+}
+
+.category-tab-pane.active {
+    display: block;
+    animation: fadeIn var(--transition-base);
+}

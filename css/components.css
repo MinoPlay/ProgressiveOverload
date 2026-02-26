@@ -1554,41 +1554,87 @@
     gap: var(--spacing-xs);
 }
 
+.last-workout-summary .summary-table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+}
+
+.last-workout-summary .summary-table th,
+.last-workout-summary .summary-table td {
+    padding: 10px 8px;
+    text-align: left;
+    vertical-align: top;
+}
+
+.last-workout-summary .summary-table thead th {
+    font-size: 0.72rem;
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border-light);
+}
+
 .last-workout-summary .summary-item {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--spacing-sm);
+    border-bottom: 1px solid var(--border-light);
     font-size: 0.9rem;
+}
+
+.last-workout-summary .summary-item:last-child {
+    border-bottom: none;
 }
 
 .last-workout-summary .summary-exercise {
     font-weight: 600;
     color: var(--text-primary);
-    min-width: 120px;
+    width: 38%;
 }
 
 .last-workout-summary .summary-sets {
     color: var(--text-secondary);
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
     font-size: 0.85rem;
+    word-break: break-word;
+}
+
+.last-workout-summary .summary-set-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.last-workout-summary .summary-set-chip {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    color: var(--text-primary);
+    border-radius: var(--radius-sm);
+    padding: 2px 8px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    line-height: 1.35;
+}
+
+.last-workout-summary .summary-set-empty {
+    color: var(--text-secondary);
+    font-size: 0.8rem;
 }
 
 @media (max-width: 480px) {
-    .last-workout-summary .summary-item {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 2px;
-        padding-bottom: var(--spacing-xs);
-        border-bottom: 1px solid rgba(0, 0, 0, 0.03);
+    .last-workout-summary .summary-table th,
+    .last-workout-summary .summary-table td {
+        padding: 8px 4px;
     }
 
-    .last-workout-summary .summary-item:last-child {
-        border-bottom: none;
+    .last-workout-summary .summary-table thead th {
+        font-size: 0.68rem;
+    }
+
+    .last-workout-summary .summary-item {
+        font-size: 0.85rem;
     }
 
     .last-workout-summary .summary-exercise {
-        min-width: unset;
+        width: 42%;
     }
 }
 

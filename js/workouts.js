@@ -584,23 +584,39 @@ export const Workouts = {
                     <span class="summary-title"><i data-lucide="history" class="icon-xs"></i> Last Workout: ${dateFormatted}</span>
                 </div>
                 <div class="summary-content">
+                    <table class="summary-table" role="table" aria-label="Last workout exercises">
+                        <thead>
+                            <tr>
+                                <th scope="col">Exercise</th>
+                                <th scope="col">Sets</th>
+                            </tr>
+                        </thead>
+                        <tbody>
             `;
 
             lastSession.exercises.forEach(ex => {
-                const setsFormatted = ex.sets.map(s => {
-                    const weightPart = s.weight !== null ? `x${s.weight}` : '';
-                    return `(${s.reps})${weightPart}`;
-                }).join(' | ');
+                const setChips = ex.sets.map((s, index) => {
+                    const reps = s.reps ?? '-';
+                    const hasWeight = s.weight !== null && s.weight !== undefined && s.weight !== '';
+                    const label = hasWeight ? `${reps} × ${s.weight}` : `${reps}`;
+                    return `<span class="summary-set-chip">${label}</span>`;
+                }).join('');
 
                 html += `
-                    <div class="summary-item">
-                        <span class="summary-exercise">${ex.name}</span>
-                        <span class="summary-sets">${setsFormatted}</span>
-                    </div>
+                    <tr class="summary-item">
+                        <td class="summary-exercise">${ex.name}</td>
+                        <td class="summary-sets">
+                            <div class="summary-set-chips">${setChips || '<span class="summary-set-empty">-</span>'}</div>
+                        </td>
+                    </tr>
                 `;
             });
 
-            html += `</div>`;
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
             container.innerHTML = html;
 
             if (window.lucide) {

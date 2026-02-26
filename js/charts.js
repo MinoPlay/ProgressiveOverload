@@ -12,6 +12,8 @@ import { calculateLinearRegression, calculateProgressPercentage, estimate1RM, fi
 export const Charts = {
     selectedMuscleGroups: JSON.parse(localStorage.getItem('selectedMuscleGroups') || '[]'),
     selectedMetric: localStorage.getItem('selectedMetric') || 'relative', // 'relative', 'weight', 'reps'
+    chartType: localStorage.getItem('chartType') || 'line', // 'line', 'bar'
+    showPoints: localStorage.getItem('showPoints') !== 'false', // default true
     allExercisesData: [], // Store all exercise data
 
     /**
@@ -24,6 +26,9 @@ export const Charts = {
             localStorage.setItem('selectedMetric', 'weight');
         }
 
+        // Cleanup removed summary feature state
+        localStorage.removeItem('summaryCollapsed');
+
         this.renderCombinedChart();
         // Listen for exercise updates
         window.addEventListener('exercisesUpdated', () => {
@@ -35,9 +40,6 @@ export const Charts = {
             this.renderCombinedChart();
         });
 
-        // Set up collapsible summary
-        this.setupCollapsibleSummary();
-
         // Set up milestone modal
         this.setupMilestoneModal();
     },
@@ -46,16 +48,14 @@ export const Charts = {
      * Render combined chart with all exercises and overview table
      */
     async renderCombinedChart() {
-        const statsTableContent = document.getElementById('statsTableContent');
         const noStatsMessage = document.getElementById('noStatsMessage');
         const categoryTabsContainer = document.getElementById('categoryTabsContainer');
 
-        if (!statsTableContent || !categoryTabsContainer) return;
+        if (!categoryTabsContainer) return;
 
         // Hide/show elements during loading
         if (categoryTabsContainer) categoryTabsContainer.style.display = 'none';
         if (noStatsMessage) noStatsMessage.style.display = 'none';
-        statsTableContent.innerHTML = '';
 
         const exercises = Storage.getExercises();
 
@@ -123,9 +123,6 @@ export const Charts = {
 
             // Render Statistics Dashboard (KPIs, Muscle Breakdown, etc.)
             this.renderDashboard(dataWithWorkouts);
-
-            // Render Muscle Group Summary Table
-            this.renderSummaryTable(groupedByMuscle);
 
             // Render Muscle Group Progress Section (Metric selector, Muscle checkboxes, and Chart)
             this.renderMuscleGroupView(groupedByMuscle);
@@ -922,161 +919,6 @@ export const Charts = {
 
 
     /**
-     * Render summary table grouped by muscle group
-     * @param {Object} groupedByMuscle - Exercises grouped by muscle
-     */
-    renderSummaryTable(groupedByMuscle) {
-        const statsTableContent = document.getElementById('statsTableContent');
-        if (!statsTableContent) return;
-
-        const muscleGroups = Object.keys(groupedByMuscle).sort();
-
-        let tableHTML = '<div class="stats-table-container">';
-        tableHTML += `
-            <table class="stats-summary-table">
-                <thead>
-                    <tr>
-                        <th class="sortable" data-sort="name">Muscle Group <span class="sort-indicator"></span></th>
-                        <th>Avg Progress</th>
-                        <th>Trend (vs Prev)</th>
-                        <th>Total Volume</th>
-                        <th>Exercises</th>
-                    </tr>
-                </thead>
-                <tbody>
-        `;
-
-        muscleGroups.forEach(muscle => {
-            // Aggregate stats for the muscle group
-            let totalTrend = 0;
-            let trendCount = 0;
-            let totalVolume = 0;
-            let totalProgress = 0;
-            let progressCount = 0;
-
-            // For the sparkline, we'll aggregate daily volumes for this muscle group
-            const muscleWorkouts = groupedByMuscle[muscle].flatMap(d => d.workouts);
-            const dailyData = this.groupByDate(muscleWorkouts, true); // Treat all as contributing to volume
-
-            groupedByMuscle[muscle].forEach(({ exercise, workouts }) => {
-                const stats = this.calculateExerciseStats(workouts, exercise.requiresWeight);
-                if (!stats) return;
-
-                if (stats.trend !== 0) {
-                    totalTrend += stats.trend;
-                    trendCount++;
-                }
-
-                const baselineCount = Math.min(3, stats.volumes.length);
-                const baseline = stats.volumes.slice(0, baselineCount).reduce((sum, v) => sum + v, 0) / baselineCount;
-                if (baseline > 0) {
-                    const current = stats.volumes[stats.volumes.length - 1];
-                    totalProgress += (current / baseline) * 100;
-                    progressCount++;
-                }
-
-                totalVolume += stats.volumes.reduce((sum, v) => sum + v, 0);
-            });
-
-            const avgProgress = progressCount > 0 ? (totalProgress / progressCount) : 100;
-            const avgTrend = trendCount > 0 ? (totalTrend / trendCount) : 0;
-            const trendClass = avgTrend > 0 ? 'trend-up' : (avgTrend < 0 ? 'trend-down' : 'trend-neutral');
-            const trendIcon = avgTrend > 0 ? '↑' : (avgTrend < 0 ? '↓' : '→');
-
-            tableHTML += `
-                <tr class="muscle-summary-row">
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <i data-lucide="${this.getMuscleIcon(muscle)}" class="icon-sm"></i>
-                            <strong>${this.capitalize(muscle)}</strong>
-                        </div>
-                    </td>
-                    <td>
-                        <div style="display: flex; align-items: center; gap: 8px;">
-                            <span class="value-large ${avgProgress > 100 ? 'trend-up' : (avgProgress < 100 ? 'trend-down' : '')}">
-                                ${avgProgress.toFixed(1)}%
-                            </span>
-                        </div>
-                    </td>
-                    <td>
-                        <span class="kpi-trend ${trendClass}" style="margin: 0;">
-                            ${trendIcon} ${Math.abs(avgTrend).toFixed(1)}%
-                        </span>
-                    </td>
-                    <td>${Math.round(totalVolume).toLocaleString()} kg</td>
-                    <td>
-                        <div class="exercise-count-badges">
-                            ${groupedByMuscle[muscle].length} <span class="text-light" style="font-size: 0.75rem;">exercises</span>
-                        </div>
-                    </td>
-                </tr>
-                <tr class="muscle-detail-row-mini">
-                    <td colspan="5" style="padding: 0 15px 15px 15px;">
-                        ${this.renderSparkline(dailyData.values)}
-                    </td>
-                </tr>
-            `;
-        });
-
-        tableHTML += `
-                </tbody>
-            </table>
-        `;
-        tableHTML += '</div>';
-        statsTableContent.innerHTML = tableHTML;
-        if (window.lucide) window.lucide.createIcons();
-    },
-
-    /**
-     * Get icon name for a muscle group
-     */
-    getMuscleIcon(muscle) {
-        const muscleIcons = {
-            'chest': 'dumbbell',
-            'back': 'align-center',
-            'shoulders': 'arrow-up-circle',
-            'legs': 'footprints',
-            'biceps': 'biceps-flexed',
-            'triceps': 'biceps-flexed',
-            'arms': 'biceps-flexed',
-            'core': 'target',
-            'neck': 'circle',
-            'full-body': 'user',
-            'other': 'help-circle'
-        };
-        return muscleIcons[muscle] || 'activity';
-    },
-
-    /**
-     * Generate a simple SVG sparkline
-     * @param {Array} values - Array of numeric values
-     * @returns {string} SVG HTML string
-     */
-    renderSparkline(values) {
-        if (!values || values.length < 2) return '<span class="text-light">-</span>';
-
-        const width = 80;
-        const height = 24;
-        const padding = 2;
-
-        const min = Math.min(...values);
-        const max = Math.max(...values);
-        const range = max - min || 1;
-
-        const points = values.map((v, i) => {
-            const x = (i / (values.length - 1)) * (width - 2 * padding) + padding;
-            const y = height - ((v - min) / range) * (height - 2 * padding) - padding;
-            return `${x},${y}`;
-        }).join(' ');
-
-        return `
-            <svg width="${width}" height="${height}" class="sparkline" style="display: block;">
-                <polyline points="${points}" fill="none" stroke="var(--primary-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-            </svg>
-        `;
-    },
-
-    /**
      * Render the Muscle Group view section
      * @param {Object} groupedByMuscle - Exercises grouped by muscle
      */
@@ -1087,9 +929,12 @@ export const Charts = {
 
         if (!categoryTabs || !categoryTabContent) return;
 
-        // Hide old tabs and repurposed them for a single "Overview" layout
+        // Hide old tabs and repurpose them for a single "Overview" layout
         categoryTabs.style.display = 'none';
         categoryTabContent.innerHTML = '';
+
+        // Always select all muscle groups
+        this.selectedMuscleGroups = Object.keys(groupedByMuscle);
 
         // Create metric selector
         this.renderMetricSelector();
@@ -1098,11 +943,7 @@ export const Charts = {
         const pane = document.createElement('div');
         pane.className = 'category-tab-pane active';
 
-        // Create muscle group selector
-        const selector = this.createMuscleGroupSelector(groupedByMuscle);
-        pane.appendChild(selector);
-
-        // Create chart container
+        // Create chart container (no muscle selector UI)
         const chartContainer = document.createElement('div');
         chartContainer.className = 'category-chart-container';
         chartContainer.innerHTML = `
@@ -1168,6 +1009,14 @@ export const Charts = {
 
         // Set up toggle all button
         const toggleBtn = header.querySelector('.toggle-all-btn');
+        const updateToggleBtnText = () => {
+            const allChecked = this.selectedMuscleGroups.length === Object.keys(groupedByMuscle).length;
+            toggleBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
+        };
+
+        // Initial text
+        updateToggleBtnText();
+
         toggleBtn.addEventListener('click', () => {
             const allChecked = this.selectedMuscleGroups.length === Object.keys(groupedByMuscle).length;
             if (allChecked) {
@@ -1179,6 +1028,7 @@ export const Charts = {
 
             // Update UI
             container.querySelectorAll('.muscle-checkbox').forEach(cb => cb.checked = !allChecked);
+            updateToggleBtnText();
             this.renderMuscleGroupChart(groupedByMuscle);
         });
 
@@ -1208,6 +1058,14 @@ export const Charts = {
         }
 
         localStorage.setItem('selectedMuscleGroups', JSON.stringify(this.selectedMuscleGroups));
+
+        // Update Select All button text if it exists
+        const toggleBtn = document.querySelector('.toggle-all-btn');
+        if (toggleBtn) {
+            const allChecked = this.selectedMuscleGroups.length === Object.keys(groupedByMuscle).length;
+            toggleBtn.textContent = allChecked ? 'Deselect All' : 'Select All';
+        }
+
         this.renderMuscleGroupChart(groupedByMuscle);
     },
 
@@ -1215,12 +1073,19 @@ export const Charts = {
      * Render the muscle group progress chart
      */
     renderMuscleGroupChart(groupedByMuscle) {
-        const canvas = document.getElementById('muscleGroupChart');
-        if (!canvas) return;
+        const chartContainer = document.querySelector('.category-chart-container .chart-container');
+        if (!chartContainer) return;
 
         if (this.selectedMuscleGroups.length === 0) {
-            canvas.parentElement.innerHTML = '<p class="empty-state">Select muscle groups from the list above to view progress.</p>';
+            chartContainer.innerHTML = '<p class="empty-state">Select muscle groups from the list above to view progress.</p>';
             return;
+        }
+
+        // Ensure canvas exists (it might have been replaced by the empty-state message)
+        let canvas = document.getElementById('muscleGroupChart');
+        if (!canvas || chartContainer.querySelector('.empty-state')) {
+            chartContainer.innerHTML = '<canvas id="muscleGroupChart"></canvas>';
+            canvas = document.getElementById('muscleGroupChart');
         }
 
         const ctx = canvas.getContext('2d');
@@ -1241,7 +1106,18 @@ export const Charts = {
             'other': '#607d8b'
         };
 
-        // Get all unique dates
+        // Helper: get ISO week number and year from a date string
+        const getISOWeekKey = (dateStr) => {
+            const d = new Date(dateStr + 'T00:00:00');
+            const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay(); // Mon=1 … Sun=7
+            const thursday = new Date(d);
+            thursday.setDate(d.getDate() + (4 - dayOfWeek));
+            const yearStart = new Date(thursday.getFullYear(), 0, 1);
+            const week = Math.ceil(((thursday - yearStart) / 86400000 + 1) / 7);
+            return { year: thursday.getFullYear(), week, key: `${thursday.getFullYear()}-W${String(week).padStart(2, '0')}` };
+        };
+
+        // Collect all dates and group them into ISO weeks
         const allDates = new Set();
         this.selectedMuscleGroups.forEach(muscle => {
             const workouts = (groupedByMuscle[muscle] || []).flatMap(d => d.workouts);
@@ -1249,53 +1125,63 @@ export const Charts = {
         });
         const sortedDates = Array.from(allDates).sort();
 
+        // Build sorted list of unique week keys
+        const weekKeySet = new Set();
+        const weekKeyInfo = {}; // key -> { year, week }
+        sortedDates.forEach(date => {
+            const info = getISOWeekKey(date);
+            weekKeySet.add(info.key);
+            weekKeyInfo[info.key] = info;
+        });
+        const sortedWeekKeys = Array.from(weekKeySet).sort();
+        const weekLabels = sortedWeekKeys.map(k => `W${weekKeyInfo[k].week}`);
+
         const datasets = this.selectedMuscleGroups.map(muscle => {
             const exercisesInMuscle = groupedByMuscle[muscle] || [];
 
-            // Calculate monthly aggregation for each date
-            const alignedValues = sortedDates.map(date => {
-                const dayWorkouts = exercisesInMuscle.flatMap(ex => ex.workouts.filter(w => w.date === date));
-                if (dayWorkouts.length === 0) return null;
+            // Aggregate values per ISO week
+            const weekValues = sortedWeekKeys.map(weekKey => {
+                // Find all dates belonging to this week for this muscle
+                const weekDates = sortedDates.filter(date => getISOWeekKey(date).key === weekKey);
+                const weekWorkouts = exercisesInMuscle.flatMap(ex =>
+                    ex.workouts.filter(w => weekDates.includes(w.date))
+                );
+                if (weekWorkouts.length === 0) return null;
 
                 if (this.selectedMetric === 'relative') {
-                    // Complexity: For each exercise active on this day, calculate its progress percentage vs baseline
                     let totalProgress = 0;
                     let count = 0;
                     exercisesInMuscle.forEach(({ exercise, workouts }) => {
-                        const daySets = workouts.filter(w => w.date === date);
-                        if (daySets.length > 0) {
-                            // Find baseline (avg of first 3 unique dates for this exercise)
-                            // For simplicity, we'll use a pre-calculated baseline or just the first workout
+                        const weekSets = workouts.filter(w => weekDates.includes(w.date));
+                        if (weekSets.length > 0) {
                             const dailyRaw = this.groupByDate(workouts, exercise.requiresWeight);
                             const baselineCount = Math.min(3, dailyRaw.values.length);
                             const baseline = dailyRaw.values.slice(0, baselineCount).reduce((sum, v) => sum + v, 0) / baselineCount;
-
                             if (baseline > 0) {
-                                const dayValue = dailyRaw.values[dailyRaw.labels.indexOf(date)];
-                                totalProgress += (dayValue / baseline) * 100;
+                                const weekVol = weekSets.reduce((sum, w) =>
+                                    sum + (exercise.requiresWeight && w.weight ? w.reps * w.weight : w.reps), 0);
+                                totalProgress += (weekVol / baseline) * 100;
                                 count++;
                             }
                         }
                     });
                     return count > 0 ? totalProgress / count : null;
                 } else if (this.selectedMetric === 'weight') {
-                    // Total Volume for the muscle group
-                    return dayWorkouts.reduce((sum, w) => sum + (w.weight ? w.reps * w.weight : w.reps), 0);
+                    return weekWorkouts.reduce((sum, w) => sum + (w.weight ? w.reps * w.weight : w.reps), 0);
                 } else if (this.selectedMetric === 'reps') {
-                    // Total Reps for the muscle group
-                    return dayWorkouts.reduce((sum, w) => sum + w.reps, 0);
+                    return weekWorkouts.reduce((sum, w) => sum + w.reps, 0);
                 }
                 return null;
             });
 
             return {
                 label: this.capitalize(muscle),
-                data: alignedValues,
+                data: weekValues,
                 borderColor: colors[muscle] || '#667eea',
-                backgroundColor: colors[muscle] || '#667eea',
-                borderWidth: 3,
-                pointRadius: 4,
-                pointHoverRadius: 6,
+                backgroundColor: this.chartType === 'bar' ? (colors[muscle] || '#667eea') + '80' : colors[muscle] || '#667eea',
+                borderWidth: this.chartType === 'line' ? 3 : 1,
+                pointRadius: (this.chartType === 'line' && this.showPoints) ? 4 : 0,
+                pointHoverRadius: (this.chartType === 'line' && this.showPoints) ? 6 : (this.chartType === 'line' ? 0 : 6),
                 tension: 0.3,
                 spanGaps: true,
                 fill: false
@@ -1308,9 +1194,9 @@ export const Charts = {
         else if (this.selectedMetric === 'reps') yAxisLabel = 'Total Reps';
 
         new Chart(ctx, {
-            type: 'line',
+            type: this.chartType,
             data: {
-                labels: sortedDates,
+                labels: weekLabels,
                 datasets: datasets
             },
             options: {
@@ -1322,6 +1208,12 @@ export const Charts = {
                         mode: 'index',
                         intersect: false,
                         callbacks: {
+                            title: (contexts) => {
+                                if (!contexts.length) return '';
+                                const idx = contexts[0].dataIndex;
+                                const wk = weekKeyInfo[sortedWeekKeys[idx]];
+                                return `Week ${wk.week}, ${wk.year}`;
+                            },
                             label: (context) => {
                                 let val = context.parsed.y;
                                 if (val === null) return null;
@@ -1341,7 +1233,7 @@ export const Charts = {
                         title: { display: true, text: yAxisLabel }
                     },
                     x: {
-                        title: { display: true, text: 'Workout Session' }
+                        title: { display: true, text: 'Week' }
                     }
                 }
             }
@@ -1350,26 +1242,59 @@ export const Charts = {
 
 
     /**
-     * Render the metric selector buttons
+     * Render the metric selector and chart display settings (combined into one row)
      */
     renderMetricSelector() {
         const controls = document.getElementById('chartControls');
         if (!controls) return;
 
         controls.innerHTML = `
-            <label>View Metric:</label>
-            <div class="metric-btns">
-                <button class="metric-btn ${this.selectedMetric === 'relative' ? 'active' : ''}" data-metric="relative" title="Progress relative to your first workouts">Relative %</button>
-                <button class="metric-btn ${this.selectedMetric === 'weight' ? 'active' : ''}" data-metric="weight" title="Heaviest weight lifted (PR)">Weight (PR)</button>
-                <button class="metric-btn ${this.selectedMetric === 'reps' ? 'active' : ''}" data-metric="reps" title="Total repetitions performed">Reps</button>
+            <div style="display: flex; align-items: center; gap: var(--spacing-md); flex-wrap: wrap; width: 100%;">
+                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">View Metric:</label>
+                <div class="metric-btns">
+                    <button class="metric-btn ${this.selectedMetric === 'relative' ? 'active' : ''}" data-metric="relative" title="Progress relative to your first workouts">Relative %</button>
+                    <button class="metric-btn ${this.selectedMetric === 'weight' ? 'active' : ''}" data-metric="weight" title="Heaviest weight lifted (PR)">Weight (PR)</button>
+                    <button class="metric-btn ${this.selectedMetric === 'reps' ? 'active' : ''}" data-metric="reps" title="Total repetitions performed">Reps</button>
+                </div>
+
+                <div style="width: 1px; height: 20px; background: var(--border-color); margin: 0 4px;"></div>
+
+                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">Display As:</label>
+                <div class="toggle-switch">
+                    <button class="toggle-btn ${this.chartType === 'line' ? 'active' : ''}" data-type="line">Curves</button>
+                    <button class="toggle-btn ${this.chartType === 'bar' ? 'active' : ''}" data-type="bar">Bars</button>
+                </div>
+
+                <div class="chart-setting" id="pointsSetting" style="display: ${this.chartType === 'line' ? 'flex' : 'none'}; align-items: center;">
+                    <label class="checkbox-setting">
+                        <input type="checkbox" id="showPointsToggle" ${this.showPoints ? 'checked' : ''}>
+                        Show Points
+                    </label>
+                </div>
             </div>
         `;
 
+        // Metric handlers
         controls.querySelectorAll('.metric-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.switchMetric(e.target.dataset.metric);
             });
         });
+
+        // Chart type handlers
+        controls.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                this.switchChartType(e.target.dataset.type);
+            });
+        });
+
+        // Points toggle handler
+        const pointsToggle = document.getElementById('showPointsToggle');
+        if (pointsToggle) {
+            pointsToggle.addEventListener('change', (e) => {
+                this.togglePoints(e.target.checked);
+            });
+        }
     },
 
     /**
@@ -1391,6 +1316,40 @@ export const Charts = {
     },
 
     /**
+     * Switch the active chart type
+     * @param {string} type - 'line' or 'bar'
+     */
+    switchChartType(type) {
+        this.chartType = type;
+        localStorage.setItem('chartType', type);
+
+        // Update UI
+        document.querySelectorAll('.toggle-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.type === type);
+        });
+
+        const pointsSetting = document.getElementById('pointsSetting');
+        if (pointsSetting) {
+            pointsSetting.style.display = type === 'line' ? 'flex' : 'none';
+        }
+
+        const groupedByMuscle = this.groupExercisesByMuscle(this.allExercisesData);
+        this.renderMuscleGroupChart(groupedByMuscle);
+    },
+
+    /**
+     * Toggle visibility of points on line charts
+     * @param {boolean} show - Whether to show points
+     */
+    togglePoints(show) {
+        this.showPoints = show;
+        localStorage.setItem('showPoints', show);
+
+        const groupedByMuscle = this.groupExercisesByMuscle(this.allExercisesData);
+        this.renderMuscleGroupChart(groupedByMuscle);
+    },
+
+    /**
      * Get date range for loading all workout data
      * @returns {{startDate: Date, endDate: Date}}
      */
@@ -1400,39 +1359,6 @@ export const Charts = {
         startDate.setFullYear(startDate.getFullYear() - 10); // 10 years back for all data
         return { startDate, endDate };
     },
-
-    /**
-     * Set up collapsible summary table
-     */
-    setupCollapsibleSummary() {
-        const toggle = document.getElementById('summaryToggle');
-        const summaryContent = document.getElementById('statsTableContent');
-
-        if (!toggle || !summaryContent) return;
-
-        // Restore saved state or default to expanded
-        const savedState = localStorage.getItem('summaryCollapsed');
-        const isCollapsed = savedState === 'true';
-
-        // Apply saved state
-        summaryContent.style.display = isCollapsed ? 'none' : 'block';
-        const chevron = toggle.querySelector('.chevron');
-        if (chevron) {
-            chevron.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
-        }
-
-        toggle.addEventListener('click', () => {
-            const chevron = toggle.querySelector('.chevron');
-            const isHidden = summaryContent.style.display === 'none';
-
-            summaryContent.style.display = isHidden ? 'block' : 'none';
-            chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
-
-            // Save state to localStorage
-            localStorage.setItem('summaryCollapsed', !isHidden);
-        });
-    },
-
 
     /**
      * Calculate progress percentage relative to baseline

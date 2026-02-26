@@ -2508,27 +2508,6 @@
 }
 
 /* Muscle Group View Styles */
-.muscle-summary-row td {
-    padding: var(--spacing-lg) var(--spacing-md) var(--spacing-xs) var(--spacing-md) !important;
-    border-bottom: none !important;
-}
-
-.muscle-detail-row-mini td {
-    padding: 0 var(--spacing-md) var(--spacing-lg) var(--spacing-md) !important;
-}
-
-.value-large {
-    font-size: 1.25rem;
-    font-weight: 800;
-}
-
-.exercise-count-badges {
-    display: inline-flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    font-weight: 600;
-    color: var(--primary-color);
-}
 
 .selector-actions {
     display: flex;
@@ -2541,15 +2520,71 @@
     min-height: unset !important;
 }
 
-.muscle-summary-row:hover {
-    background: var(--bg-secondary);
-}
-
-.muscle-detail-row-mini:hover {
-    background: var(--bg-secondary);
-}
 
 .category-tab-pane.active {
     display: block;
     animation: fadeIn var(--transition-base);
+}
+
+.chart-settings-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-md);
+    align-items: center;
+    padding: var(--spacing-sm) 0;
+    border-top: 1px solid var(--border-light);
+    margin-top: var(--spacing-sm);
+}
+
+.chart-setting {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.chart-setting label {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.toggle-switch {
+    display: flex;
+    background: var(--bg-secondary);
+    border-radius: var(--border-radius-pill);
+    padding: 2px;
+}
+
+.toggle-btn {
+    padding: 4px 12px;
+    border-radius: var(--border-radius-pill);
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-base);
+}
+
+.toggle-btn.active {
+    background: var(--primary-color);
+    color: white;
+    box-shadow: var(--shadow-sm);
+}
+
+.checkbox-setting {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-xs);
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.checkbox-setting input {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
 }

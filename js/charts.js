@@ -318,7 +318,8 @@ export const Charts = {
 
         // Muscle groups trained this week
         const muscleSessions = {}; // Count unique dates (sessions) per muscle
-        const muscleExercises = {}; // Count total exercises per muscle
+        const muscleExercises = {}; // Count unique exercises per session
+        const muscleExercisesTracking = {}; // Track [exerciseId, date] combinations
         const weekWorkouts = allWorkouts.filter(w => w.date >= weekStartStr);
 
         weekWorkouts.forEach(w => {
@@ -326,11 +327,17 @@ export const Charts = {
                 if (!muscleSessions[w.muscle]) {
                     muscleSessions[w.muscle] = new Set();
                     muscleExercises[w.muscle] = 0;
+                    muscleExercisesTracking[w.muscle] = new Set();
                 }
                 // Treat each unique training day as 1 "session" for that muscle group
                 muscleSessions[w.muscle].add(w.date);
-                // Total exercises count (not unique)
-                muscleExercises[w.muscle]++;
+
+                // Track unique exercise instances (not sets)
+                const exerciseKey = `${w.exerciseId}_${w.date}`;
+                if (!muscleExercisesTracking[w.muscle].has(exerciseKey)) {
+                    muscleExercisesTracking[w.muscle].add(exerciseKey);
+                    muscleExercises[w.muscle]++;
+                }
             }
         });
 
@@ -343,11 +350,23 @@ export const Charts = {
             }))
             .sort((a, b) => b.count - a.count);
 
+        const headerHTML = `
+            <div style="display: grid; grid-template-columns: 1fr auto auto; align-items: center; width: 100%; border-bottom: 2px solid var(--border-light); padding: 2px 0; font-size: 0.65rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
+                <span>Muscle Group</span>
+                <span style="padding: 0 10px; min-width: 45px; text-align: center; display: flex; justify-content: center;" title="Sessions (Days)">
+                    <i data-lucide="calendar" style="width: 12px; height: 12px;"></i>
+                </span>
+                <span style="padding: 0 10px; min-width: 45px; text-align: center; display: flex; justify-content: center;" title="Exercises Done">
+                    <i data-lucide="dumbbell" style="width: 12px; height: 12px;"></i>
+                </span>
+            </div>`;
+
         const muscleFocusHTML = sortedMuscles.length > 0
-            ? sortedMuscles.map(m => `
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%; border-bottom: 1px solid var(--border-light); padding: 4px 0;">
+            ? headerHTML + sortedMuscles.map(m => `
+                <div style="display: grid; grid-template-columns: 1fr auto auto; align-items: center; width: 100%; border-bottom: 1px solid var(--border-light); padding: 4px 0;">
                     <span style="text-transform: capitalize; font-weight: 500;">${m.name.replace('-', ' ')}</span>
-                    <span style="font-weight: 800; color: var(--primary-color);">${m.count} ses | ${m.exCount} ex</span>
+                    <span style="font-weight: 800; color: var(--text-light); border-left: 1px solid var(--border-light); padding: 0 10px; min-width: 45px; text-align: center;" title="Sessions (Days)">${m.count}</span>
+                    <span style="font-weight: 800; color: var(--primary-color); border-left: 1px solid var(--border-light); padding: 0 10px; min-width: 45px; text-align: center;" title="Exercises Done">${m.exCount}</span>
                 </div>
             `).join('')
             : '<div style="color: var(--text-light); font-style: italic; margin-top: 10px;">No sessions logged yet</div>';
@@ -374,7 +393,7 @@ export const Charts = {
             <div class="kpi-card" style="display: flex; flex-direction: column;">
                 <div class="kpi-icon-row">
                     <i data-lucide="biceps-flexed" class="kpi-icon text-success"></i>
-                    <span class="kpi-label" title="How many unique training days each muscle group has been targeted this week (s) and total exercises performed (e)">Muscle Training Sessions</span>
+                    <span class="kpi-label" title="Training frequency and variety per muscle group this week (Sessions | Exercises)">Muscle Training Sessions</span>
                 </div>
                 <div class="muscle-focus-list" style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start; margin-top: 5px;">
                     ${muscleFocusHTML}

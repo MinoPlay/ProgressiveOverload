@@ -13,21 +13,20 @@ export const History = {
      * Initialize history module
      */
     init() {
-        this.renderDailyHistory();
-        this.renderWeeklyOverview();
+        this.renderHistory();
 
         // Listen for workout updates
         window.addEventListener('workoutsUpdated', () => {
-            this.renderDailyHistory();
-            this.renderWeeklyOverview();
+            this.renderHistory();
         });
     },
 
     /**
-     * Render daily workout history grouped by date
+     * Render unified history grouped by week
      */
-    async renderDailyHistory() {
+    async renderHistory() {
         const container = document.getElementById('historyContent');
+        if (!container) return;
 
         try {
             showLoading(true);
@@ -49,29 +48,67 @@ export const History = {
                 return;
             }
 
-            // Group workouts by date
-            const workoutsByDate = new Map();
+            // Group workouts by week
+            const workoutsByWeek = new Map(); // Key: Week start date string (Monday)
+            const currentWeekStart = formatDate(getWeekStart(new Date()));
+
             for (const workout of allWorkouts) {
-                if (!workoutsByDate.has(workout.date)) {
-                    workoutsByDate.set(workout.date, []);
+                const date = parseDate(workout.date);
+                if (!date) continue;
+
+                const weekStart = getWeekStart(date);
+                const weekStartStr = formatDate(weekStart);
+
+                if (!workoutsByWeek.has(weekStartStr)) {
+                    workoutsByWeek.set(weekStartStr, {
+                        workouts: [],
+                        dates: new Map()
+                    });
                 }
-                workoutsByDate.get(workout.date).push(workout);
+                const weekData = workoutsByWeek.get(weekStartStr);
+                weekData.workouts.push(workout);
+
+                if (!weekData.dates.has(workout.date)) {
+                    weekData.dates.set(workout.date, []);
+                }
+                weekData.dates.get(workout.date).push(workout);
             }
 
-            // Sort dates descending (newest first)
-            const sortedDates = Array.from(workoutsByDate.keys()).sort((a, b) => b.localeCompare(a));
+            // Pre-calculate muscle stats for ALL weeks
+            const weekMuscleStats = new Map();
+            for (const [weekStartStr, weekData] of workoutsByWeek.entries()) {
+                const muscleStats = new Map();
+                for (const workout of weekData.workouts) {
+                    const exercise = Storage.getExerciseById(workout.exerciseId);
+                    if (!exercise) continue;
+                    const muscle = exercise.muscle || 'other';
+                    if (!muscleStats.has(muscle)) {
+                        muscleStats.set(muscle, new Set());
+                    }
+                    muscleStats.get(muscle).add(`${workout.date}_${workout.exerciseId}`);
+                }
+
+                const stats = new Map();
+                for (const [muscle, instances] of muscleStats.entries()) {
+                    stats.set(muscle, instances.size);
+                }
+                weekMuscleStats.set(weekStartStr, stats);
+            }
+
+            // Sort weeks descending (newest first)
+            const sortedWeekStarts = Array.from(workoutsByWeek.keys()).sort((a, b) => b.localeCompare(a));
 
             // Clear container
             container.innerHTML = '';
 
-            // Create date groups
-            for (const date of sortedDates) {
-                const workouts = workoutsByDate.get(date);
-                // Sort workouts by sequence
-                workouts.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+            // Create week groups
+            for (const weekStartStr of sortedWeekStarts) {
+                const weekData = workoutsByWeek.get(weekStartStr);
+                const currentStats = weekMuscleStats.get(weekStartStr);
+                const isCurrentWeek = weekStartStr === currentWeekStart;
 
-                const dateGroup = this.createDateGroup(date, workouts);
-                container.appendChild(dateGroup);
+                const weekGroup = this.createWeekGroup(weekStartStr, weekData, currentStats, isCurrentWeek);
+                container.appendChild(weekGroup);
             }
 
             // Initialize icons
@@ -88,6 +125,139 @@ export const History = {
     },
 
     /**
+     * Create a weekly group element
+     */
+    createWeekGroup(weekStartStr, weekData, currentStats, isCurrentWeek) {
+        const weekStart = parseDate(weekStartStr);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+
+        const fromStr = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const toStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const weekLabel = `${fromStr} – ${toStr}`;
+
+        const group = document.createElement('div');
+        group.className = 'history-week-group';
+        if (!isCurrentWeek) {
+            group.classList.add('collapsed');
+        }
+
+        const header = document.createElement('div');
+        header.className = 'history-week-header';
+        header.onclick = () => group.classList.toggle('collapsed');
+
+        const title = document.createElement('h3');
+        title.innerHTML = `<i data-lucide="calendar" class="icon-xs"></i> ${weekLabel}`;
+
+        if (isCurrentWeek) {
+            const badge = document.createElement('span');
+            badge.className = 'current-week-badge';
+            badge.textContent = 'Current';
+            title.appendChild(badge);
+        }
+
+        const chevron = document.createElement('span');
+        chevron.className = 'chevron';
+        chevron.textContent = '▼';
+
+        header.appendChild(title);
+        header.appendChild(chevron);
+        group.appendChild(header);
+
+        const content = document.createElement('div');
+        content.className = 'history-week-content';
+
+        // 1. Summary Section
+        const summarySection = this.createSummarySection(currentStats, isCurrentWeek);
+        content.appendChild(summarySection);
+
+        // 2. Daily History Section
+        const dailySection = document.createElement('div');
+        dailySection.className = 'history-daily-section collapsed';
+
+        const dailyHeader = document.createElement('div');
+        dailyHeader.className = 'history-section-sub-header';
+        dailyHeader.onclick = (e) => {
+            e.stopPropagation();
+            dailySection.classList.toggle('collapsed');
+        };
+        dailyHeader.innerHTML = `<span><i data-lucide="history" class="icon-xs"></i> Daily History</span><span class="chevron">▼</span>`;
+        dailySection.appendChild(dailyHeader);
+
+        const dailyList = document.createElement('div');
+        dailyList.className = 'history-daily-list';
+
+        const sortedDates = Array.from(weekData.dates.keys()).sort((a, b) => b.localeCompare(a));
+        for (const date of sortedDates) {
+            const workouts = weekData.dates.get(date);
+            workouts.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+            const dateGroup = this.createDateGroup(date, workouts);
+            dailyList.appendChild(dateGroup);
+        }
+        dailySection.appendChild(dailyList);
+        content.appendChild(dailySection);
+
+        group.appendChild(content);
+        return group;
+    },
+
+    /**
+     * Create summary section for a week
+     */
+    createSummarySection(currentStats, isCurrentWeek) {
+        const section = document.createElement('div');
+        section.className = 'history-summary-section';
+        if (!isCurrentWeek) {
+            section.classList.add('collapsed');
+        }
+
+        const header = document.createElement('div');
+        header.className = 'history-section-sub-header';
+        header.onclick = (e) => {
+            e.stopPropagation();
+            section.classList.toggle('collapsed');
+        };
+        header.innerHTML = `<span><i data-lucide="bar-chart-2" class="icon-xs"></i> Weekly Summary</span><span class="chevron">▼</span>`;
+        section.appendChild(header);
+
+        const tableContainer = document.createElement('div');
+        tableContainer.className = 'history-summary-table-container';
+
+        if (!currentStats || currentStats.size === 0) {
+            tableContainer.innerHTML = '<p class="empty-summary">No exercises logged.</p>';
+        } else {
+            const table = document.createElement('table');
+            table.className = 'weekly-stats-table';
+            table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Muscle Group</th>
+                        <th style="text-align: right;">Total Ex.</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            `;
+            const tbody = table.querySelector('tbody');
+
+            const sortedMuscles = Array.from(currentStats.entries())
+                .sort((a, b) => b[1] - a[1]);
+
+            for (const [muscle, count] of sortedMuscles) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="muscle-name">${muscle}</td>
+                    <td class="exercise-count-val">${count}</td>
+                `;
+                tbody.appendChild(tr);
+            }
+            tableContainer.appendChild(table);
+        }
+
+        section.appendChild(tableContainer);
+        return section;
+    },
+
+    /**
      * Create date group element with workouts
      * @param {string} date - Date string (YYYY-MM-DD)
      * @param {array} workouts - Array of workout objects
@@ -95,11 +265,7 @@ export const History = {
      */
     createDateGroup(date, workouts) {
         const group = document.createElement('div');
-        group.className = 'history-date-group';
-        const isToday = this.formatDateHeader(date) === 'Today';
-        if (!isToday) {
-            group.classList.add('collapsed');
-        }
+        group.className = 'history-date-group collapsed';
 
         // Date header
         const header = document.createElement('div');
@@ -311,7 +477,7 @@ export const History = {
             // Dispatch event to update other components
             window.dispatchEvent(new CustomEvent('workoutsUpdated'));
 
-            await this.renderDailyHistory();
+            await this.renderHistory();
             showToast('Workout updated successfully', 'success');
         } catch (error) {
             console.error('Error updating workout:', error);
@@ -337,7 +503,7 @@ export const History = {
             // Dispatch event to update other components (like Statistics)
             window.dispatchEvent(new CustomEvent('workoutsUpdated'));
 
-            await this.renderDailyHistory();
+            await this.renderHistory();
             showToast('Workout deleted successfully', 'success');
         } catch (error) {
             console.error('Error deleting workout:', error);
@@ -425,7 +591,11 @@ export const History = {
         } else if (date.getTime() === yesterday.getTime()) {
             return 'Yesterday';
         } else {
-            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const options = { weekday: 'short', month: 'short', day: 'numeric' };
+            const currentYear = new Date().getFullYear();
+            if (date.getFullYear() !== currentYear) {
+                options.year = 'numeric';
+            }
             return date.toLocaleDateString('en-US', options);
         }
     },
@@ -500,7 +670,7 @@ export const History = {
             await Storage.updateWorkoutSequences(targetWorkout.date, currentOrder);
 
             // Re-render the history
-            await this.renderDailyHistory();
+            await this.renderHistory();
 
             showToast('Workout order updated', 'success');
             showLoading(false);
@@ -631,7 +801,7 @@ export const History = {
             await Storage.updateWorkoutSequences(date, workoutIds);
 
             // Re-render the history
-            await this.renderDailyHistory();
+            await this.renderHistory();
 
             showToast('Exercise order updated', 'success');
             showLoading(false);
@@ -654,194 +824,5 @@ export const History = {
         document.querySelectorAll('.history-exercise-group').forEach(item => {
             item.classList.remove('dragging', 'drag-over');
         });
-
-        // Don't clear draggedExerciseId and draggedDate here
-        // They are cleared in handleExerciseGroupDrop after the drop completes
-    },
-
-    /**
-     * Render the weekly overview sidebar
-     */
-    async renderWeeklyOverview() {
-        const sidebar = document.getElementById('weeklyOverview');
-        if (!sidebar) return;
-
-        try {
-            // Load all workouts from the last 180 days for the overview
-            const endDate = new Date();
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - 180);
-
-            const allWorkouts = await Storage.getWorkoutsInRange(startDate, endDate);
-
-            if (allWorkouts.length === 0) {
-                sidebar.innerHTML = '';
-                return;
-            }
-
-            // Group workouts by week
-            const workoutsByWeek = new Map(); // Key: Week start date string (Monday)
-
-            for (const workout of allWorkouts) {
-                const date = parseDate(workout.date);
-                if (!date) continue;
-
-                const weekStart = getWeekStart(date);
-                const weekStartStr = formatDate(weekStart);
-
-                if (!workoutsByWeek.has(weekStartStr)) {
-                    workoutsByWeek.set(weekStartStr, []);
-                }
-                workoutsByWeek.get(weekStartStr).push(workout);
-            }
-
-            // Pre-calculate muscle stats for ALL weeks to enable comparisons
-            const weekMuscleStats = new Map(); // weekStartStr -> Map(muscle -> count)
-            for (const [weekStartStr, workouts] of workoutsByWeek.entries()) {
-                const muscleStats = new Map();
-                for (const workout of workouts) {
-                    const exercise = Storage.getExerciseById(workout.exerciseId);
-                    if (!exercise) continue;
-                    const muscle = exercise.muscle || 'other';
-                    if (!muscleStats.has(muscle)) {
-                        muscleStats.set(muscle, new Set());
-                    }
-                    muscleStats.get(muscle).add(`${workout.date}_${workout.exerciseId}`);
-                }
-
-                const stats = new Map();
-                for (const [muscle, instances] of muscleStats.entries()) {
-                    stats.set(muscle, instances.size);
-                }
-                weekMuscleStats.set(weekStartStr, stats);
-            }
-
-            // Sort weeks descending (newest first)
-            const sortedWeekStarts = Array.from(workoutsByWeek.keys()).sort((a, b) => b.localeCompare(a));
-
-            sidebar.innerHTML = `
-                <h3 style="margin-bottom: var(--spacing-lg); font-size: 1.25rem; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
-                    <i data-lucide="bar-chart-2" style="color: var(--primary-color);"></i> Weekly Exercise Count
-                </h3>
-            `;
-
-            const currentWeekStart = formatDate(getWeekStart(new Date()));
-
-            for (const weekStartStr of sortedWeekStarts) {
-                const currentStats = weekMuscleStats.get(weekStartStr);
-                const weekStart = parseDate(weekStartStr);
-                const weekEnd = new Date(weekStart);
-                weekEnd.setDate(weekEnd.getDate() + 6);
-
-                // Find previous week's stats for comparison
-                const prevWeekStart = new Date(weekStart);
-                prevWeekStart.setDate(prevWeekStart.getDate() - 7);
-                const prevWeekStartStr = formatDate(prevWeekStart);
-                const prevStats = weekMuscleStats.get(prevWeekStartStr);
-
-                const fromStr = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                const toStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                const weekLabel = `${fromStr} - ${toStr}`;
-
-                const weekGroup = document.createElement('div');
-                weekGroup.className = 'weekly-group';
-                if (weekStartStr !== currentWeekStart) {
-                    weekGroup.classList.add('collapsed');
-                }
-
-                // Header
-                const header = document.createElement('div');
-                header.className = 'weekly-group-header';
-                header.onclick = () => weekGroup.classList.toggle('collapsed');
-
-                const title = document.createElement('h4');
-                title.style.display = 'flex';
-                title.style.alignItems = 'center';
-                title.style.gap = '8px';
-                title.textContent = weekLabel;
-
-                if (weekStartStr === currentWeekStart) {
-                    const badge = document.createElement('span');
-                    badge.style.fontSize = '0.65rem';
-                    badge.style.background = 'var(--primary-color)';
-                    badge.style.color = 'white';
-                    badge.style.padding = '2px 8px';
-                    badge.style.borderRadius = '10px';
-                    badge.style.fontWeight = 'bold';
-                    badge.textContent = 'CURRENT';
-                    title.appendChild(badge);
-                }
-
-                const chevron = document.createElement('span');
-                chevron.className = 'chevron';
-                chevron.textContent = '▼';
-
-                header.appendChild(title);
-                header.appendChild(chevron);
-                weekGroup.appendChild(header);
-
-                // Content (Table)
-                const content = document.createElement('div');
-                content.className = 'weekly-group-content';
-
-                if (!currentStats || currentStats.size === 0) {
-                    content.innerHTML = '<p style="font-size: 0.85rem; color: var(--text-light); text-align: center; margin: 0;">No exercises logged.</p>';
-                } else {
-                    const table = document.createElement('table');
-                    table.className = 'weekly-stats-table';
-                    table.innerHTML = `
-                        <thead>
-                            <tr>
-                                <th>Muscle Group</th>
-                                <th style="text-align: right;">Total Ex.</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    `;
-
-                    const tbody = table.querySelector('tbody');
-
-                    // Sort muscles by count descending, then name
-                    const sortedMuscles = Array.from(currentStats.entries())
-                        .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
-
-                    for (const [muscle, count] of sortedMuscles) {
-                        const tr = document.createElement('tr');
-
-                        // Calculate trend
-                        let trendHtml = '';
-                        if (prevStats) {
-                            const prevCount = prevStats.get(muscle) || 0;
-                            const diff = count - prevCount;
-
-                            if (diff > 0) {
-                                trendHtml = `<span class="trend-indicator trend-up"><i data-lucide="trending-up" style="width: 12px; height: 12px;"></i> ${diff}</span>`;
-                            } else if (diff < 0) {
-                                trendHtml = `<span class="trend-indicator trend-down"><i data-lucide="trending-down" style="width: 12px; height: 12px;"></i> ${Math.abs(diff)}</span>`;
-                            }
-                        }
-
-                        tr.innerHTML = `
-                            <td class="muscle-name">${muscle}</td>
-                            <td class="exercise-count-val">${count}${trendHtml}</td>
-                        `;
-                        tbody.appendChild(tr);
-                    }
-
-                    content.appendChild(table);
-                }
-
-                weekGroup.appendChild(content);
-                sidebar.appendChild(weekGroup);
-            }
-
-
-            if (window.lucide) {
-                window.lucide.createIcons();
-            }
-        } catch (error) {
-            console.error('Error rendering weekly overview:', error);
-        }
     }
 };

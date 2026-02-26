@@ -3,7 +3,7 @@
 
 import { Storage } from './storage.js';
 import { showToast, showLoading } from './app.js';
-import { formatDate, parseDate, getWeekStart } from './utils.js';
+import { formatDate, parseDate, getWeekStart, getWeekNumber } from './utils.js';
 
 export const History = {
     draggedWorkout: null,
@@ -134,7 +134,8 @@ export const History = {
 
         const fromStr = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
         const toStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const weekLabel = `${fromStr} – ${toStr}`;
+        const weekNum = getWeekNumber(weekStart);
+        const weekLabel = `Week ${String(weekNum).padStart(2, '0')} (${fromStr} – ${toStr}, ${weekEnd.getFullYear()})`;
 
         const group = document.createElement('div');
         group.className = 'history-week-group';

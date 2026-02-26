@@ -14,7 +14,6 @@ export const Charts = {
     categorySelections: JSON.parse(localStorage.getItem('categorySelections') || '{}'), // Per-category selections
     currentCategory: localStorage.getItem('currentCategory') || null,
     selectedMetric: localStorage.getItem('selectedMetric') || 'relative', // 'relative', 'volume', '1rm', 'weight'
-    heatmapSort: localStorage.getItem('heatmapSort') || 'frequency', // 'frequency' or 'alphabetical'
     allExercisesData: [], // Store all exercise data
 
     /**
@@ -40,7 +39,6 @@ export const Charts = {
 
         // Set up collapsible summary
         this.setupCollapsibleSummary();
-        this.setupCollapsibleHeatmap();
     },
 
     /**
@@ -119,7 +117,7 @@ export const Charts = {
             // Apply default selections from latest workout
             this.applyLatestWorkoutDefaults(dataWithWorkouts);
 
-            // Render Statistics Dashboard (KPIs and Heatmap)
+            // Render Statistics Dashboard (KPIs, Muscle Breakdown, etc.)
             this.renderDashboard(dataWithWorkouts);
 
             // Render Exercise Summary Table (grouped by category)
@@ -155,7 +153,6 @@ export const Charts = {
         );
         this.renderKPICards(dataWithWorkouts);
         this.renderMuscleBreakdown(dataWithWorkouts);
-        this.renderHeatmap(dataWithWorkouts); // Passed dataWithWorkouts for the frequency matrix
         this.renderMilestones(dataWithWorkouts);
         this.renderWeeklyStats(allWorkouts);
     },
@@ -408,124 +405,6 @@ export const Charts = {
     },
 
 
-    /**
-     * Render the GitHub-style training heatmap
-     * @param {Array} dataWithWorkouts - Flat array of all workouts
-     */
-    renderHeatmap(dataWithWorkouts) {
-        const matrixContainer = document.getElementById('exerciseMatrix');
-        const controlsContainer = document.getElementById('heatmapControls');
-        if (!matrixContainer) return;
-
-        // Render controls if they exist
-        if (controlsContainer) {
-            controlsContainer.innerHTML = `
-                <label>Sort By:</label>
-                <div class="heatmap-sort-btns">
-                    <button class="metric-btn ${this.heatmapSort === 'frequency' ? 'active' : ''}" 
-                        data-sort="frequency" title="Sort by most active exercises">Frequency</button>
-                    <button class="metric-btn ${this.heatmapSort === 'alphabetical' ? 'active' : ''}" 
-                        data-sort="alphabetical" title="Sort alphabetically by name">A-Z</button>
-                </div>
-            `;
-
-            controlsContainer.querySelectorAll('.metric-btn').forEach(btn => {
-                btn.addEventListener('click', () => this.switchHeatmapSort(btn.dataset.sort));
-            });
-        }
-
-        const weeksToShow = 12;
-        const today = new Date();
-
-        // Find current week's Monday
-        const startOfCurrentWeek = new Date(today);
-        const currentDay = today.getDay();
-        const diffToMonday = currentDay === 0 ? -6 : 1 - currentDay;
-        startOfCurrentWeek.setDate(today.getDate() + diffToMonday);
-
-        // Go back 11 full weeks
-        const startDate = new Date(startOfCurrentWeek);
-        startDate.setDate(startOfCurrentWeek.getDate() - (weeksToShow - 1) * 7);
-
-        // Define week boundaries
-        const weekRanges = [];
-        for (let i = 0; i < weeksToShow; i++) {
-            const wStart = new Date(startDate);
-            wStart.setDate(startDate.getDate() + (i * 7));
-            const wEnd = new Date(wStart);
-            wEnd.setDate(wStart.getDate() + 6);
-            weekRanges.push({ start: wStart, end: wEnd });
-        }
-
-        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-
-        // Start building HTML
-        let html = '<div class="matrix-header">';
-        html += '<span>Exercise</span>';
-        weekRanges.forEach(range => {
-            html += `<span>${months[range.start.getMonth()]} ${range.start.getDate()}</span>`;
-        });
-        html += '</div>';
-
-        // Filter exercises to those done in the last 12 weeks
-        const minDateStr = startDate.toISOString().split('T')[0];
-        let activeExercises = dataWithWorkouts.filter(d =>
-            d.workouts.some(w => w.date >= minDateStr)
-        );
-
-        // Calculate total sessions for each exercise for frequency sorting
-        activeExercises.forEach(d => {
-            const sessionsInPeriod = new Set(
-                d.workouts
-                    .filter(w => w.date >= minDateStr)
-                    .map(w => w.date)
-            );
-            d.recentFrequency = sessionsInPeriod.size;
-        });
-
-        // Sort based on current preference
-        if (this.heatmapSort === 'frequency') {
-            activeExercises.sort((a, b) => b.recentFrequency - a.recentFrequency || a.exercise.name.localeCompare(b.exercise.name));
-        } else {
-            activeExercises.sort((a, b) => a.exercise.name.localeCompare(b.exercise.name));
-        }
-
-        if (activeExercises.length === 0) {
-            matrixContainer.innerHTML = `<p class="empty-state">No exercise data for the last ${weeksToShow} weeks.</p>`;
-            return;
-        }
-
-        activeExercises.forEach(d => {
-            html += `<div class="matrix-row">`;
-            html += `<div class="matrix-label" title="${d.exercise.name}">${d.exercise.name}</div>`;
-
-            // For each week, count SESSIONS (distinct days) this exercise was done
-            weekRanges.forEach(range => {
-                const sStr = range.start.toISOString().split('T')[0];
-                const eStr = range.end.toISOString().split('T')[0];
-
-                const sessionDates = new Set(
-                    d.workouts
-                        .filter(w => w.date >= sStr && w.date <= eStr)
-                        .map(w => w.date)
-                );
-
-                const count = sessionDates.size;
-                let level = 0;
-                if (count > 0) level = 1;      // Once a week
-                if (count > 1) level = 2;      // Twice a week
-                if (count > 2) level = 3;      // 3+ times a week
-
-                const levelClass = level > 0 ? ` level-${level}` : '';
-                const title = `${d.exercise.name}\nWeek of ${this.formatDate(sStr).split(',')[0]}\nSessions: ${count}`;
-                html += `<div class="matrix-cell${levelClass}" title="${title}"></div>`;
-            });
-
-            html += `</div>`;
-        });
-
-        matrixContainer.innerHTML = html;
-    },
 
     /**
      * Render the weekly aggregate statistics chart
@@ -1640,46 +1519,6 @@ export const Charts = {
         });
     },
 
-    /**
-     * Set up collapsible heatmap (Exercise Breakdown)
-     */
-    setupCollapsibleHeatmap() {
-        const toggle = document.getElementById('heatmapToggle');
-        const content = document.getElementById('heatmapContent');
-        const chevron = document.getElementById('heatmapChevron');
-
-        if (!toggle || !content) return;
-
-        // Restore saved state or default to expanded
-        const savedState = localStorage.getItem('heatmapCollapsed');
-        const isCollapsed = savedState === 'true';
-
-        // Apply saved state
-        content.style.display = isCollapsed ? 'none' : 'block';
-        if (chevron) {
-            chevron.style.transform = isCollapsed ? 'rotate(-90deg)' : 'rotate(0deg)';
-        }
-
-        toggle.addEventListener('click', () => {
-            const isHidden = content.style.display === 'none';
-            content.style.display = isHidden ? 'block' : 'none';
-            if (chevron) {
-                chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
-            }
-            // Save state to localStorage
-            localStorage.setItem('heatmapCollapsed', !isHidden);
-        });
-    },
-
-    /**
-     * Switch heatmap sort preference
-     * @param {string} sort - 'frequency' or 'alphabetical'
-     */
-    switchHeatmapSort(sort) {
-        this.heatmapSort = sort;
-        localStorage.setItem('heatmapSort', sort);
-        this.renderHeatmap(this.allExercisesData);
-    },
 
     /**
      * Calculate progress percentage relative to baseline

@@ -452,6 +452,91 @@ export const Storage = {
     },
 
     /**
+     * Get the most recent full workout session (all exercises from the last day a workout was logged)
+     * @returns {Promise<object|null>} Object with {date, exercises: {name, sets: []}} or null
+     */
+    async getLastWorkoutSession() {
+        let workouts = [];
+        let newestDate = null;
+
+        // 1. Check current month first
+        if (this.currentMonthWorkouts.length > 0) {
+            // Find newest date
+            const dates = [...new Set(this.currentMonthWorkouts.map(w => w.date))];
+            if (dates.length > 0) {
+                dates.sort((a, b) => new Date(b) - new Date(a));
+                newestDate = dates[0];
+                workouts = this.currentMonthWorkouts.filter(w => w.date === newestDate);
+            }
+        }
+
+        // 2. If no workouts in current month, check previous months
+        if (workouts.length === 0) {
+            try {
+                const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/')) || 'data';
+                const files = await GitHubAPI.listFiles(dataPath);
+
+                const prefix = CONFIG.paths.workoutsPrefix.split('/').pop();
+                const workoutFiles = files
+                    .filter(file => file.name.startsWith(prefix) && file.name.endsWith('.json'))
+                    .map(file => file.name)
+                    .sort((a, b) => b.localeCompare(a)); // Sort descending (newest first)
+
+                const currentMonthFile = GitHubAPI.getWorkoutFilePath(new Date()).split('/').pop();
+                const olderFiles = workoutFiles.filter(f => f !== currentMonthFile);
+
+                const regex = new RegExp(`${prefix}(\\d{4})-(\\d{2})\\.json`);
+
+                for (let i = 0; i < Math.min(olderFiles.length, 12); i++) {
+                    const filename = olderFiles[i];
+                    const match = filename.match(regex);
+                    if (!match) continue;
+
+                    const date = new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1);
+                    const monthData = await GitHubAPI.getWorkouts(date);
+
+                    if (monthData.workouts.length > 0) {
+                        const dates = [...new Set(monthData.workouts.map(w => w.date))];
+                        if (dates.length > 0) {
+                            dates.sort((a, b) => new Date(b) - new Date(a));
+                            newestDate = dates[0];
+                            workouts = monthData.workouts.filter(w => w.date === newestDate);
+                            break;
+                        }
+                    }
+                }
+            } catch (error) {
+                console.warn('Error fetching last workout session:', error);
+            }
+        }
+
+        if (workouts.length === 0) return null;
+
+        // Group by exercise and sort by sequence
+        const grouped = {};
+        workouts.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+
+        workouts.forEach(w => {
+            const exercise = this.getExerciseById(w.exerciseId);
+            if (!exercise) return;
+
+            if (!grouped[w.exerciseId]) {
+                grouped[w.exerciseId] = {
+                    name: exercise.name,
+                    sets: []
+                };
+            }
+            grouped[w.exerciseId].sets.push(w);
+        });
+
+        return {
+            date: newestDate,
+            exercises: Object.values(grouped)
+        };
+    },
+
+
+    /**
      * Update workout sequences after drag-and-drop reordering
      * @param {string} date - Date of workouts to update
      * @param {array} workoutIds - Array of workout IDs in new order

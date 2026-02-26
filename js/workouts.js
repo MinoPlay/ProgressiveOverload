@@ -16,6 +16,7 @@ export const Workouts = {
         this.populateExerciseDropdown();
         this.setDefaultDate();
         this.updateDateTooltip();
+        this.renderLastWorkoutSummary();
 
         // Listen for exercise updates
         window.addEventListener('exercisesUpdated', () => {
@@ -531,6 +532,7 @@ export const Workouts = {
 
             // Refresh UI and show last workout info
             this.updateWeightField();
+            this.renderLastWorkoutSummary();
         } catch (error) {
             showToast(error.message, 'error');
         }
@@ -553,8 +555,66 @@ export const Workouts = {
         showToast('Form cleared', 'info');
     },
 
+    /**
+     * Render a concise summary of the last workout session at the bottom
+     */
+    async renderLastWorkoutSummary() {
+        const container = document.getElementById('lastWorkoutSummary');
+        if (!container) return;
+
+        try {
+            const lastSession = await Storage.getLastWorkoutSession();
+
+            if (!lastSession || !lastSession.exercises || lastSession.exercises.length === 0) {
+                container.style.display = 'none';
+                return;
+            }
+
+            container.style.display = 'block';
+
+            const dateObj = new Date(lastSession.date);
+            const dateFormatted = dateObj.toLocaleDateString(undefined, {
+                weekday: 'short',
+                month: 'short',
+                day: 'numeric'
+            });
+
+            let html = `
+                <div class="summary-header">
+                    <span class="summary-title"><i data-lucide="history" class="icon-xs"></i> Last Workout: ${dateFormatted}</span>
+                </div>
+                <div class="summary-content">
+            `;
+
+            lastSession.exercises.forEach(ex => {
+                const setsFormatted = ex.sets.map(s => {
+                    const weightPart = s.weight !== null ? `x${s.weight}` : '';
+                    return `(${s.reps})${weightPart}`;
+                }).join(' | ');
+
+                html += `
+                    <div class="summary-item">
+                        <span class="summary-exercise">${ex.name}</span>
+                        <span class="summary-sets">${setsFormatted}</span>
+                    </div>
+                `;
+            });
+
+            html += `</div>`;
+            container.innerHTML = html;
+
+            if (window.lucide) {
+                window.lucide.createIcons();
+            }
+        } catch (error) {
+            console.error('Error rendering last workout summary:', error);
+            container.style.display = 'none';
+        }
+    }
+
 
 };
+
 
 // Remove deprecated methods
 // isValidDate is now imported from utils.js

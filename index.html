@@ -225,6 +225,12 @@
                     </form>
                 </div>
 
+                <!-- Last Workout Summary -->
+                <div id="lastWorkoutSummary" class="last-workout-summary" style="display: none;">
+                    <!-- Content will be injected by JavaScript -->
+                </div>
+
+
 
             </section>
 
@@ -299,40 +305,6 @@
 
                     <div class="category-tab-content" id="categoryTabContent">
                         <!-- Tab content will be dynamically populated -->
-                    </div>
-                </div>
-
-                <!-- Consistency Tracker (Secondary) -->
-                <div id="consistencyTracker" class="consistency-tracker" style="margin-top: 30px;">
-                    <div class="matrix-container section-card" id="heatmapContainer">
-                        <div class="matrix-header-line" id="heatmapToggle" style="cursor: pointer; user-select: none;">
-                            <h4 style="display: flex; align-items: center; gap: 8px; margin: 0;">
-                                <span class="chevron" id="heatmapChevron"
-                                    style="display: inline-block; transition: transform 0.3s ease;">▼</span>
-                                <i data-lucide="layout-grid"></i> Exercise Breakdown (Sessions per Week)
-                            </h4>
-                            <div id="heatmapControls" class="matrix-controls" onclick="event.stopPropagation()">
-                                <!-- Sort buttons will be injected here -->
-                            </div>
-                        </div>
-                        <div id="heatmapContent">
-                            <div class="matrix-wrapper">
-                                <div id="exerciseMatrix" class="exercise-matrix">
-                                    <!-- Matrix will be injected here -->
-                                </div>
-                            </div>
-                            <div class="matrix-legend">
-                                <span>Frequency:</span>
-                                <div class="matrix-level level-0" title="0 sessions"></div>
-                                <span>0</span>
-                                <div class="matrix-level level-1" title="1 session"></div>
-                                <span>1</span>
-                                <div class="matrix-level level-2" title="2 sessions"></div>
-                                <span>2</span>
-                                <div class="matrix-level level-3" title="3+ sessions"></div>
-                                <span>3+</span>
-                            </div>
-                        </div>
                     </div>
                 </div>
 

@@ -102,12 +102,15 @@ export const History = {
             container.innerHTML = '';
 
             // Create week groups
-            for (const weekStartStr of sortedWeekStarts) {
+            for (let i = 0; i < sortedWeekStarts.length; i++) {
+                const weekStartStr = sortedWeekStarts[i];
                 const weekData = workoutsByWeek.get(weekStartStr);
                 const currentStats = weekMuscleStats.get(weekStartStr);
+                const previousWeekStartStr = sortedWeekStarts[i + 1];
+                const previousStats = previousWeekStartStr ? weekMuscleStats.get(previousWeekStartStr) : null;
                 const isCurrentWeek = weekStartStr === currentWeekStart;
 
-                const weekGroup = this.createWeekGroup(weekStartStr, weekData, currentStats, isCurrentWeek);
+                const weekGroup = this.createWeekGroup(weekStartStr, weekData, currentStats, previousStats, isCurrentWeek);
                 container.appendChild(weekGroup);
             }
 
@@ -127,7 +130,7 @@ export const History = {
     /**
      * Create a weekly group element
      */
-    createWeekGroup(weekStartStr, weekData, currentStats, isCurrentWeek) {
+    createWeekGroup(weekStartStr, weekData, currentStats, previousStats, isCurrentWeek) {
         const weekStart = parseDate(weekStartStr);
         const weekEnd = new Date(weekStart);
         weekEnd.setDate(weekEnd.getDate() + 6);
@@ -169,7 +172,7 @@ export const History = {
         content.className = 'history-week-content';
 
         // 1. Summary Section
-        const summarySection = this.createSummarySection(currentStats, isCurrentWeek);
+        const summarySection = this.createSummarySection(currentStats, previousStats, isCurrentWeek);
         content.appendChild(summarySection);
 
         // 2. Daily History Section
@@ -205,7 +208,7 @@ export const History = {
     /**
      * Create summary section for a week
      */
-    createSummarySection(currentStats, isCurrentWeek) {
+    createSummarySection(currentStats, previousStats, isCurrentWeek) {
         const section = document.createElement('div');
         section.className = 'history-summary-section';
         if (!isCurrentWeek) {
@@ -244,10 +247,11 @@ export const History = {
                 .sort((a, b) => b[1] - a[1]);
 
             for (const [muscle, count] of sortedMuscles) {
+                const trendInfo = this.getWeeklyTrendInfo(count, previousStats?.get(muscle));
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="muscle-name">${muscle}</td>
-                    <td class="exercise-count-val">${count}</td>
+                    <td class="exercise-count-val">${count}<span class="weekly-trend-indicator ${trendInfo.className}" title="${trendInfo.tooltip}"><span class="weekly-trend-arrow">${trendInfo.arrow}</span>${trendInfo.delta ? `<span class="weekly-trend-delta">${trendInfo.delta}</span>` : ''}</span></td>
                 `;
                 tbody.appendChild(tr);
             }
@@ -256,6 +260,44 @@ export const History = {
 
         section.appendChild(tableContainer);
         return section;
+    },
+
+    getWeeklyTrendInfo(currentCount, previousCount) {
+        if (previousCount == null) {
+            return {
+                arrow: '—',
+                delta: '',
+                className: 'trend-none',
+                tooltip: 'No previous week data'
+            };
+        }
+
+        const delta = currentCount - previousCount;
+
+        if (currentCount > previousCount) {
+            return {
+                arrow: '▲',
+                delta: `+${delta}`,
+                className: 'trend-up',
+                tooltip: `More than previous week (${previousCount})`
+            };
+        }
+
+        if (currentCount < previousCount) {
+            return {
+                arrow: '▼',
+                delta: `${delta}`,
+                className: 'trend-down',
+                tooltip: `Less than previous week (${previousCount})`
+            };
+        }
+
+        return {
+            arrow: '▶',
+            delta: '0',
+            className: 'trend-flat',
+            tooltip: `Same as previous week (${previousCount})`
+        };
     },
 
     /**

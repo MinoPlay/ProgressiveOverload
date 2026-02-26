@@ -279,17 +279,55 @@ export const Charts = {
         const kpiGrid = document.getElementById('kpiGrid');
         if (!kpiGrid) return;
 
+        const toDateString = (date) => date.toISOString().split('T')[0];
+
+        const getTrendMeta = (current, previous) => {
+            const delta = current - previous;
+
+            if (delta > 0) {
+                return {
+                    arrow: '▲',
+                    deltaText: `+${delta}`,
+                    trendClass: 'trend-up'
+                };
+            }
+
+            if (delta < 0) {
+                return {
+                    arrow: '▼',
+                    deltaText: `${delta}`,
+                    trendClass: 'trend-down'
+                };
+            }
+
+            return {
+                arrow: '▶',
+                deltaText: '0',
+                trendClass: 'trend-neutral'
+            };
+        };
+
         const now = new Date();
         const year = now.getFullYear();
         const month = now.getMonth();
 
         // Month start
         const monthStart = new Date(year, month, 1);
-        const monthStartStr = monthStart.getFullYear() + '-' + String(monthStart.getMonth() + 1).padStart(2, '0') + '-01';
+        const monthStartStr = toDateString(monthStart);
+        const prevMonthStart = new Date(year, month - 1, 1);
+        const prevMonthStartStr = toDateString(prevMonthStart);
+        const prevMonthEnd = new Date(year, month, 0);
+        const prevMonthEndStr = toDateString(prevMonthEnd);
 
         // Week start (Monday) using helper
         const weekStart = this.getCurrentMonday();
-        const weekStartStr = weekStart.toISOString().split('T')[0];
+        const weekStartStr = toDateString(weekStart);
+        const prevWeekStart = new Date(weekStart);
+        prevWeekStart.setDate(prevWeekStart.getDate() - 7);
+        const prevWeekStartStr = toDateString(prevWeekStart);
+        const prevWeekEnd = new Date(weekStart);
+        prevWeekEnd.setDate(prevWeekEnd.getDate() - 1);
+        const prevWeekEndStr = toDateString(prevWeekEnd);
 
         // All workouts
         const allWorkouts = dataWithWorkouts.flatMap(d =>
@@ -307,12 +345,27 @@ export const Charts = {
                 .map(w => w.date)
         ).size;
 
+        const workoutsPrevMonth = new Set(
+            allWorkouts
+                .filter(w => w.date >= prevMonthStartStr && w.date <= prevMonthEndStr)
+                .map(w => w.date)
+        ).size;
+
         // Workouts this week (unique dates)
         const workoutsThisWeek = new Set(
             allWorkouts
                 .filter(w => w.date >= weekStartStr)
                 .map(w => w.date)
         ).size;
+
+        const workoutsPrevWeek = new Set(
+            allWorkouts
+                .filter(w => w.date >= prevWeekStartStr && w.date <= prevWeekEndStr)
+                .map(w => w.date)
+        ).size;
+
+        const monthTrend = getTrendMeta(workoutsThisMonth, workoutsPrevMonth);
+        const weekTrend = getTrendMeta(workoutsThisWeek, workoutsPrevWeek);
 
         const buildMuscleSessionSummary = (workouts) => {
             const muscleSessions = {}; // Count unique dates (sessions) per muscle
@@ -346,40 +399,61 @@ export const Charts = {
                 }))
                 .sort((a, b) => b.count - a.count);
 
+            const summaryByMuscle = {};
+            sortedMuscles.forEach(m => {
+                summaryByMuscle[m.name] = {
+                    count: m.count,
+                    exCount: m.exCount
+                };
+            });
+
             return {
                 sortedMuscles,
-                totalSessions: sortedMuscles.reduce((sum, m) => sum + m.count, 0)
+                totalSessions: sortedMuscles.reduce((sum, m) => sum + m.count, 0),
+                summaryByMuscle
             };
         };
 
         const monthWorkouts = allWorkouts.filter(w => w.date >= monthStartStr);
         const weekWorkouts = allWorkouts.filter(w => w.date >= weekStartStr);
+        const prevMonthWorkouts = allWorkouts.filter(w => w.date >= prevMonthStartStr && w.date <= prevMonthEndStr);
+        const prevWeekWorkouts = allWorkouts.filter(w => w.date >= prevWeekStartStr && w.date <= prevWeekEndStr);
         const monthMuscleSummary = buildMuscleSessionSummary(monthWorkouts);
         const weekMuscleSummary = buildMuscleSessionSummary(weekWorkouts);
+        const prevMonthMuscleSummary = buildMuscleSessionSummary(prevMonthWorkouts);
+        const prevWeekMuscleSummary = buildMuscleSessionSummary(prevWeekWorkouts);
 
         const headerHTML = `
-            <div style="display: grid; grid-template-columns: 1fr auto auto; align-items: center; width: 100%; border-bottom: 2px solid var(--border-light); padding: 2px 0; font-size: 0.65rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
+            <div style="display: grid; grid-template-columns: minmax(0, 1fr) 72px 72px; align-items: center; width: 100%; border-bottom: 2px solid var(--border-light); padding: 2px 0; font-size: 0.65rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
                 <span>Muscle Group</span>
-                <span style="padding: 0 10px; min-width: 45px; text-align: center; display: flex; justify-content: center;" title="Sessions (Days)">
+                <span style="padding: 0 10px; width: 72px; text-align: center; display: flex; justify-content: center; box-sizing: border-box;" title="Sessions (Days)">
                     <i data-lucide="calendar" style="width: 12px; height: 12px;"></i>
                 </span>
-                <span style="padding: 0 10px; min-width: 45px; text-align: center; display: flex; justify-content: center;" title="Exercises Done">
+                <span style="padding: 0 10px; width: 72px; text-align: center; display: flex; justify-content: center; box-sizing: border-box;" title="Exercises Done">
                     <i data-lucide="dumbbell" style="width: 12px; height: 12px;"></i>
                 </span>
             </div>`;
 
-        const buildMuscleFocusHTML = (sortedMuscles) => sortedMuscles.length > 0
+        const buildMuscleFocusHTML = (sortedMuscles, prevSummaryByMuscle = {}) => sortedMuscles.length > 0
             ? headerHTML + sortedMuscles.map(m => `
-                <div style="display: grid; grid-template-columns: 1fr auto auto; align-items: center; width: 100%; border-bottom: 1px solid var(--border-light); padding: 4px 0;">
+                ${(() => {
+                    const prevCount = prevSummaryByMuscle[m.name]?.count ?? 0;
+                    const prevExCount = prevSummaryByMuscle[m.name]?.exCount ?? 0;
+                    const sessionTrendInfo = getTrendMeta(m.count, prevCount);
+                    const exerciseTrendInfo = getTrendMeta(m.exCount, prevExCount);
+                    return `
+                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 72px 72px; align-items: center; width: 100%; border-bottom: 1px solid var(--border-light); padding: 4px 0;">
                     <span style="text-transform: capitalize; font-weight: 500;">${m.name.replace('-', ' ')}</span>
-                    <span style="font-weight: 800; color: var(--text-light); border-left: 1px solid var(--border-light); padding: 0 10px; min-width: 45px; text-align: center;" title="Sessions (Days)">${m.count}</span>
-                    <span style="font-weight: 800; color: var(--primary-color); border-left: 1px solid var(--border-light); padding: 0 10px; min-width: 45px; text-align: center;" title="Exercises Done">${m.exCount}</span>
+                    <span style="font-weight: 800; color: var(--text-light); border-left: 1px solid var(--border-light); padding: 0 10px; width: 72px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums;" title="Sessions (Days)">${m.count}<span class="kpi-entry-trend ${sessionTrendInfo.trendClass}" title="vs previous period (${prevCount})">${sessionTrendInfo.arrow}</span></span>
+                    <span style="font-weight: 800; color: var(--primary-color); border-left: 1px solid var(--border-light); padding: 0 10px; width: 72px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums;" title="Exercises Done">${m.exCount}<span class="kpi-entry-trend ${exerciseTrendInfo.trendClass}" title="vs previous period (${prevExCount})">${exerciseTrendInfo.arrow}</span></span>
                 </div>
+            `;
+                })()}
             `).join('')
             : '<div style="color: var(--text-light); font-style: italic; margin-top: 10px;">No sessions logged yet</div>';
 
-        const monthMuscleFocusHTML = buildMuscleFocusHTML(monthMuscleSummary.sortedMuscles);
-        const weekMuscleFocusHTML = buildMuscleFocusHTML(weekMuscleSummary.sortedMuscles);
+        const monthMuscleFocusHTML = buildMuscleFocusHTML(monthMuscleSummary.sortedMuscles, prevMonthMuscleSummary.summaryByMuscle);
+        const weekMuscleFocusHTML = buildMuscleFocusHTML(weekMuscleSummary.sortedMuscles, prevWeekMuscleSummary.summaryByMuscle);
 
         kpiGrid.innerHTML = `
             <div class="kpi-card">
@@ -389,7 +463,7 @@ export const Charts = {
                     <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">Month</span>
                 </div>
                 <div class="kpi-value">${workoutsThisMonth}</div>
-                <span class="kpi-trend trend-neutral">In ${now.toLocaleString('default', { month: 'long' })}</span>
+                <span class="kpi-trend ${monthTrend.trendClass}"><span class="kpi-trend-comparison"><span class="kpi-trend-arrow">${monthTrend.arrow}</span><span class="kpi-trend-delta">${monthTrend.deltaText}</span></span>vs prev month (${workoutsPrevMonth})</span>
                 <div style="border-top: 1px solid var(--border-light); margin-top: 10px; padding-top: 10px;">
                     <div class="kpi-icon-row">
                         <i data-lucide="calendar-days" class="kpi-icon text-warning"></i>
@@ -397,9 +471,7 @@ export const Charts = {
                         <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">Week</span>
                     </div>
                     <div class="kpi-value" style="font-size: 2rem; margin-top: 6px;">${workoutsThisWeek}</div>
-                    <span class="kpi-trend ${workoutsThisWeek >= 3 ? 'trend-up' : 'trend-neutral'}">
-                        Current week progress
-                    </span>
+                    <span class="kpi-trend ${weekTrend.trendClass}"><span class="kpi-trend-comparison"><span class="kpi-trend-arrow">${weekTrend.arrow}</span><span class="kpi-trend-delta">${weekTrend.deltaText}</span></span>vs prev week (${workoutsPrevWeek})</span>
                 </div>
             </div>
             <div class="kpi-card" style="display: flex; flex-direction: column;">

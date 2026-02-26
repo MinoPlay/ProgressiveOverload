@@ -1802,6 +1802,35 @@
     font-weight: 600;
 }
 
+.kpi-trend-comparison {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    margin-right: 4px;
+}
+
+.kpi-trend-arrow {
+    font-size: 1rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.kpi-trend-delta {
+    font-size: 0.78rem;
+    font-weight: 700;
+    opacity: 0.85;
+    line-height: 1;
+}
+
+.kpi-entry-trend {
+    display: inline-block;
+    margin-left: 3px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    line-height: 1;
+    vertical-align: middle;
+}
+
 .trend-up {
     color: #4caf50;
 }
@@ -2511,6 +2540,39 @@
     text-align: right;
     font-weight: 600;
     color: var(--primary-color);
+}
+
+.weekly-trend-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
+    margin-left: var(--spacing-xs);
+}
+
+.weekly-trend-arrow {
+    font-size: 0.95rem;
+    font-weight: 900;
+    line-height: 1;
+}
+
+.weekly-trend-delta {
+    font-size: 0.72rem;
+    font-weight: 600;
+    opacity: 0.85;
+    line-height: 1;
+}
+
+.weekly-trend-indicator.trend-up {
+    color: var(--success-color);
+}
+
+.weekly-trend-indicator.trend-down {
+    color: var(--error-color);
+}
+
+.weekly-trend-indicator.trend-flat,
+.weekly-trend-indicator.trend-none {
+    color: var(--text-light);
 }
 
 /* Milestone Clickability */

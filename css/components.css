@@ -2090,6 +2090,7 @@
 
 .stats-period-tab-nav {
     display: flex;
+    flex-wrap: wrap;
     gap: 0.5rem;
     margin-bottom: var(--spacing-lg);
     padding-bottom: var(--spacing-sm);
@@ -2109,6 +2110,7 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+    white-space: nowrap;
 }
 
 .stats-period-tab-btn svg {
@@ -2202,6 +2204,23 @@
     align-items: start;
 }
 
+.kpi-icon-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    min-width: 0;
+}
+
+.kpi-icon-row .kpi-label {
+    flex: 1;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    text-align: left;
+    margin-bottom: 0;
+}
+
 .kpi-card {
     background: var(--bg-primary);
     padding: var(--spacing-xl);
@@ -2210,6 +2229,8 @@
     text-align: center;
     border-bottom: 4px solid var(--primary-color);
     transition: transform var(--transition-base);
+    min-width: 0;
+    overflow: hidden;
 }
 
 .kpi-card:hover {
@@ -2303,6 +2324,19 @@
         margin-bottom: var(--spacing-xl);
     }
 
+    .stats-period-tab-btn {
+        padding: var(--spacing-sm) var(--spacing-md);
+        font-size: 0.82rem;
+        gap: 4px;
+        flex: 1;
+        justify-content: center;
+    }
+
+    .stats-period-tab-btn svg {
+        width: 13px;
+        height: 13px;
+    }
+
     .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: var(--spacing-sm);
@@ -2312,12 +2346,22 @@
         transform: none !important;
     }
 
+    .kpi-card--compact {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
     .kpi-value {
         font-size: 1.9rem;
     }
 
     .kpi-label {
         letter-spacing: 0.5px;
+    }
+
+    .kpi-trend {
+        font-size: 0.78rem;
+        word-break: break-word;
+        overflow-wrap: break-word;
     }
 
     /* Muscle training session cards go full-width so the list isn't squished */
@@ -2355,9 +2399,24 @@
         gap: var(--spacing-sm);
     }
 
+    .stats-period-tab-btn {
+        padding: 6px 10px;
+        font-size: 0.78rem;
+        gap: 3px;
+    }
+
+    .stats-period-tab-btn svg {
+        width: 12px;
+        height: 12px;
+    }
+
     .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: var(--spacing-xs);
+    }
+
+    .kpi-card--compact {
+        padding: 8px 10px;
     }
 
     .kpi-value {
@@ -2372,7 +2431,9 @@
     }
 
     .kpi-trend {
-        font-size: 0.78rem;
+        font-size: 0.72rem;
+        word-break: break-word;
+        overflow-wrap: break-word;
     }
 
     .section-card {

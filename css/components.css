@@ -2069,6 +2069,71 @@
     border-top: 2px solid var(--border-light);
 }
 
+/* Muscle Group Radar Grid */
+.radar-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-md);
+}
+
+@media (max-width: 600px) {
+    .radar-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Statistics Period Tabs (Weekly / Monthly) */
+.stats-period-tabs {
+    display: flex;
+    flex-direction: column;
+}
+
+.stats-period-tab-nav {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: var(--spacing-lg);
+    padding-bottom: var(--spacing-sm);
+    border-bottom: 2px solid var(--border-light);
+}
+
+.stats-period-tab-btn {
+    background: var(--bg-primary);
+    border: 2px solid var(--border-light);
+    padding: var(--spacing-sm) var(--spacing-xl);
+    font-size: 0.9rem;
+    cursor: pointer;
+    border-radius: var(--radius-md);
+    color: var(--text-secondary);
+    transition: all var(--transition-base);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.stats-period-tab-btn svg {
+    width: 15px;
+    height: 15px;
+}
+
+.stats-period-tab-btn:hover {
+    color: var(--primary-color);
+    border-color: var(--primary-color);
+    background: rgba(102, 126, 234, 0.05);
+}
+
+.stats-period-tab-btn.active {
+    border-color: var(--primary-color);
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
+    font-weight: 600;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.stats-period-panel.inactive {
+    display: none;
+}
+
 /* Statistics Dashboard */
 .stats-dashboard {
     display: flex;

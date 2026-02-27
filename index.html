@@ -299,61 +299,92 @@
                         <!-- KPI Cards will be injected here -->
                     </div>
 
-                    <!-- Muscle Group Breakdown (NEW) -->
-                    <div id="muscleBreakdownSection" class="muscle-breakdown-section" style="margin-bottom: 30px;">
-                        <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: 15px;">
-                            <i data-lucide="biceps-flexed"></i> Muscle Group Performance
-                        </h4>
-                        <div class="muscle-grid" id="muscleGrid">
-                            <!-- Muscle Group Cards will be injected here -->
+                    <!-- Period Tabs: Weekly / Monthly / Overall -->
+                    <div class="stats-period-tabs" id="statsPeriodTabs">
+                        <div class="stats-period-tab-nav">
+                            <button class="stats-period-tab-btn active" data-period="weekly">
+                                <i data-lucide="calendar-days"></i> Weekly
+                            </button>
+                            <button class="stats-period-tab-btn" data-period="monthly">
+                                <i data-lucide="calendar"></i> Monthly
+                            </button>
+                            <button class="stats-period-tab-btn" data-period="overall">
+                                <i data-lucide="trending-up"></i> Overall
+                            </button>
                         </div>
-                    </div>
 
-                    <!-- Weekly Performance Charts -->
-                    <div class="dashboard-main-chart" style="display: grid; grid-template-columns: 1fr; gap: 20px;">
-                        <div class="section-card">
-                            <h4 style="display: flex; align-items: center; gap: 8px;">
-                                <i data-lucide="calendar-days"></i> Weekly Training Frequency
-                            </h4>
-                            <div class="chart-wrapper" style="height: 200px;">
-                                <canvas id="weeklyFrequencyChart"></canvas>
+                        <!-- Weekly Panel -->
+                        <div class="stats-period-panel" id="statsPanelWeekly">
+                            <!-- Muscle Training Sessions (Week) injected by JS -->
+                            <div id="muscleSessionsWeek"></div>
+
+                            <div class="section-card" style="margin-top: var(--spacing-md);">
+                                <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <i data-lucide="radar"></i> Muscle Balance · Week
+                                </h4>
+                                <div class="chart-wrapper" style="height: 260px;">
+                                    <canvas id="muscleRadarWeekChart"></canvas>
+                                </div>
                             </div>
                         </div>
-                        <div class="section-card">
-                            <h4 style="display: flex; align-items: center; gap: 8px;">
-                                <i data-lucide="bar-chart-3"></i> Weekly Muscle Group Activity
-                            </h4>
-                            <div class="chart-wrapper" style="height: 300px;">
-                                <canvas id="weeklyMuscleChart"></canvas>
+
+                        <!-- Monthly Panel -->
+                        <div class="stats-period-panel inactive" id="statsPanelMonthly">
+                            <!-- Muscle Training Sessions (Month) injected by JS -->
+                            <div id="muscleSessionsMonth"></div>
+
+                            <div class="section-card" style="margin-top: var(--spacing-md);">
+                                <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                    <i data-lucide="radar"></i> Muscle Balance · Month
+                                </h4>
+                                <div class="chart-wrapper" style="height: 260px;">
+                                    <canvas id="muscleRadarMonthChart"></canvas>
+                                </div>
                             </div>
+
+
                         </div>
-                    </div>
-                </div>
+
+                        <!-- Overall Panel -->
+                        <div class="stats-period-panel inactive" id="statsPanelOverall">
+                            <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                                <div class="section-card">
+                                    <h4 style="display: flex; align-items: center; gap: 8px;">
+                                        <i data-lucide="calendar-days"></i> Training Frequency History
+                                    </h4>
+                                    <div class="chart-wrapper" style="height: 200px;">
+                                        <canvas id="weeklyFrequencyChart"></canvas>
+                                    </div>
+                                </div>
+                                <div class="section-card">
+                                    <h4 style="display: flex; align-items: center; gap: 8px;">
+                                        <i data-lucide="bar-chart-3"></i> Muscle Group Activity History
+                                    </h4>
+                                    <div class="chart-wrapper" style="height: 300px;">
+                                        <canvas id="weeklyMuscleChart"></canvas>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="section-card" style="margin-top: var(--spacing-md);">
+                                <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: var(--spacing-md);">
+                                    <i data-lucide="trending-up"></i> Muscle Group Progress Trend
+                                </h4>
+                                <div id="chartControls" class="chart-controls">
+                                    <!-- Metric selector will be injected here -->
+                                </div>
+                                <div id="categoryTabsContainer">
+                                    <div class="category-tabs" id="categoryTabs">
+                                        <!-- Tabs will be dynamically populated -->
+                                    </div>
+                                    <div class="category-tab-content" id="categoryTabContent">
+                                        <!-- Tab content will be dynamically populated -->
+                                    </div>
+                                </div>
+                            </div>
 
 
-                <!-- Exercise Summary Table (Grouped by Category) -->
-
-                <!-- Category Tabs -->
-                <div id="categoryTabsContainer">
-                    <div id="chartControls" class="chart-controls">
-                        <!-- Metric selector will be injected here -->
-                    </div>
-                    <div class="category-tabs" id="categoryTabs">
-                        <!-- Tabs will be dynamically populated -->
-                    </div>
-
-                    <div class="category-tab-content" id="categoryTabContent">
-                        <!-- Tab content will be dynamically populated -->
-                    </div>
-                </div>
-
-                <!-- Progress Milestones -->
-                <div id="statsMilestones" class="stats-milestones" style="display: none;">
-                    <h4 style="display: flex; align-items: center; gap: 8px;">
-                        <i data-lucide="trophy" class="text-warning"></i> Progress & Consistency Milestones
-                    </h4>
-                    <div id="milestonesList" class="milestones-list">
-                        <!-- Milestones will be injected here -->
+                        </div>
                     </div>
                 </div>
 
@@ -373,24 +404,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
     <script
         src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-
-    <!-- Milestone Details Modal -->
-    <div id="milestoneModal" class="modal" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-                    <h2 id="milestoneModalTitle">Milestone Details</h2>
-                    <button id="closeMilestoneModal" class="btn-icon btn-secondary"
-                        style="width: 32px; height: 32px; font-size: 1rem;">
-                        <i data-lucide="x"></i>
-                    </button>
-                </div>
-            </div>
-            <div class="modal-body" id="milestoneModalBody">
-                <!-- Details will be injected here -->
-            </div>
-        </div>
-    </div>
 
     <!-- Application Scripts -->
     <script type="module" src="js/app.js"></script>

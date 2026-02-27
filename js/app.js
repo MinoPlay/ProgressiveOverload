@@ -57,6 +57,10 @@ const App = {
             // Show loading
             showLoading(true);
 
+            // Initialize navigation early so config menu stays usable
+            // even if GitHub initialization fails (e.g., expired token)
+            this.initNavigation();
+
             console.log('Initializing storage...');
 
             // In dev mode, replace Storage methods with DevStorage
@@ -70,7 +74,6 @@ const App = {
 
             console.log('Initializing UI modules...');
             // Initialize all modules
-            this.initNavigation();
             Exercises.init();
             Workouts.init();
             History.init();

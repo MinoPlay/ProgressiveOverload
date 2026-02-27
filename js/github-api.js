@@ -76,6 +76,10 @@ export const GitHubAPI = {
                 return null;
             }
 
+            if (response.status === 401 || response.status === 403) {
+                throw new Error('GitHub authentication failed. Your PAT may be expired or missing required repo access. Open Configuration in the menu and save a new token.');
+            }
+
             if (!response.ok) {
                 throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
             }
@@ -129,6 +133,9 @@ export const GitHubAPI = {
             );
 
             if (!response.ok) {
+                if (response.status === 401 || response.status === 403) {
+                    throw new Error('GitHub authentication failed. Your PAT may be expired or missing required repo access. Open Configuration in the menu and save a new token.');
+                }
                 if (response.status === 409) {
                     throw new Error('File has been modified. Please refresh and try again.');
                 }

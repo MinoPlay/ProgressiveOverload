@@ -817,6 +817,70 @@
     color: var(--text-secondary);
 }
 
+.planned-entry-top {
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: var(--spacing-sm);
+    align-items: center;
+}
+
+.planned-entry-top select {
+    width: 100%;
+    padding: 0 var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    height: 40px;
+}
+
+.planner-sets-grid {
+    margin-top: var(--spacing-sm);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--spacing-sm);
+}
+
+.planner-set-card {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: var(--spacing-xs);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.planner-set-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.planner-set-fields {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--spacing-xs);
+}
+
+.planner-set-fields input {
+    width: 100%;
+    padding: 0 var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    font-size: 0.9rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    height: 36px;
+}
+
+.planner-set-actions {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-start;
+}
+
 .planned-row-grid {
     display: grid;
     grid-template-columns: 1fr 110px 120px auto;
@@ -844,7 +908,7 @@
 .superset-exercise-row {
     display: flex;
     gap: var(--spacing-xs);
-    align-items: center;
+    align-items: flex-start;
 }
 
 .superset-label {
@@ -859,6 +923,10 @@
 }
 
 .superset-exercise-row .planned-row-grid {
+    flex: 1;
+}
+
+.superset-exercise-content {
     flex: 1;
 }
 
@@ -1258,8 +1326,16 @@
         grid-template-columns: 1fr;
     }
 
-    .planned-row-grid {
-        grid-template-columns: 1fr 90px 100px auto;
+    .planner-sets-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .planner-set-fields {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .planned-entry-top {
+        grid-template-columns: 1fr;
     }
 
     .form-actions-inline {

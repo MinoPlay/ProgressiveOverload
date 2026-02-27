@@ -16,6 +16,7 @@ export const Charts = {
     showPoints: localStorage.getItem('showPoints') !== 'false', // default true
     allExercisesData: [], // Store all exercise data
     weekNavOffset: 0, // 0 = current week, -1 = one week back, etc.
+    monthNavOffset: 0, // 0 = current month, -1 = one month back, etc.
     _cachedDataWithWorkouts: null, // Cached for week navigation re-render
     _cachedAllWorkouts: null, // Cached flat workouts for radar re-render
 
@@ -160,12 +161,11 @@ export const Charts = {
         this.renderKPICards(dataWithWorkouts);
         this.renderWeeklyStats(allWorkouts);
 
-        // Radar charts — filter by this week (with nav offset) and this month
-        const now = new Date();
-        const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
+        // Radar charts — filter by navigated week and navigated month
         const { weekStartStr, weekEndStr } = this._getNavWeekBounds();
+        const { monthStartStr: radarMonthStart, monthEndStr: radarMonthEnd } = this._getNavMonthBounds();
         this.renderMuscleRadarChart('muscleRadarWeekChart', allWorkouts.filter(w => w.date >= weekStartStr && w.date <= weekEndStr));
-        this.renderMuscleRadarChart('muscleRadarMonthChart', allWorkouts.filter(w => w.date >= monthStart));
+        this.renderMuscleRadarChart('muscleRadarMonthChart', allWorkouts.filter(w => w.date >= radarMonthStart && w.date <= radarMonthEnd));
 
         // Period tab switching (Weekly / Monthly / Overall)
         const tabsEl = document.getElementById('statsPeriodTabs');
@@ -200,6 +200,8 @@ export const Charts = {
 
         this._setupWeekNavigation();
         this._updateWeekNavLabel();
+        this._setupMonthNavigation();
+        this._updateMonthNavLabel();
     },
 
     /**
@@ -242,12 +244,12 @@ export const Charts = {
         const year = now.getFullYear();
         const month = now.getMonth();
 
-        // Month start
-        const monthStart = new Date(year, month, 1);
-        const monthStartStr = toDateString(monthStart);
-        const prevMonthStart = new Date(year, month - 1, 1);
+        // Month bounds with nav offset
+        const { monthStartStr, monthEndStr } = this._getNavMonthBounds();
+        const navMonthDate = new Date(year, month + this.monthNavOffset, 1);
+        const prevMonthStart = new Date(navMonthDate.getFullYear(), navMonthDate.getMonth() - 1, 1);
         const prevMonthStartStr = toDateString(prevMonthStart);
-        const prevMonthEnd = new Date(year, month, 0);
+        const prevMonthEnd = new Date(navMonthDate.getFullYear(), navMonthDate.getMonth(), 0);
         const prevMonthEndStr = toDateString(prevMonthEnd);
 
         // Week start (Monday) using helper + nav offset
@@ -273,10 +275,10 @@ export const Charts = {
             }))
         );
 
-        // Workouts this month (unique dates)
+        // Workouts this month (unique dates, bounded to the navigated month)
         const workoutsThisMonth = new Set(
             allWorkouts
-                .filter(w => w.date >= monthStartStr)
+                .filter(w => w.date >= monthStartStr && w.date <= monthEndStr)
                 .map(w => w.date)
         ).size;
 
@@ -349,7 +351,7 @@ export const Charts = {
             };
         };
 
-        const monthWorkouts = allWorkouts.filter(w => w.date >= monthStartStr);
+        const monthWorkouts = allWorkouts.filter(w => w.date >= monthStartStr && w.date <= monthEndStr);
         const weekWorkouts = allWorkouts.filter(w => w.date >= weekStartStr && w.date <= weekEndStr);
         const prevMonthWorkouts = allWorkouts.filter(w => w.date >= prevMonthStartStr && w.date <= prevMonthEndStr);
         const prevWeekWorkouts = allWorkouts.filter(w => w.date >= prevWeekStartStr && w.date <= prevWeekEndStr);
@@ -451,6 +453,63 @@ export const Charts = {
     },
 
 
+
+    /**
+     * Get the first–last day bounds for the currently navigated month
+     */
+    _getNavMonthBounds() {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth() + this.monthNavOffset, 1);
+        const end = new Date(start.getFullYear(), start.getMonth() + 1, 0);
+        const toStr = (d) => d.toISOString().split('T')[0];
+        return { monthStartStr: toStr(start), monthEndStr: toStr(end) };
+    },
+
+    /**
+     * Set up previous/next month navigation buttons in the Monthly panel
+     */
+    _setupMonthNavigation() {
+        const prevBtn = document.getElementById('monthNavPrev');
+        const nextBtn = document.getElementById('monthNavNext');
+        if (!prevBtn || prevBtn._monthNavInit) return;
+        prevBtn._monthNavInit = true;
+
+        const navigate = (offset) => {
+            this.monthNavOffset = offset;
+            this._updateMonthNavLabel();
+            if (this._cachedDataWithWorkouts && this._cachedAllWorkouts) {
+                this.renderKPICards(this._cachedDataWithWorkouts);
+                const { monthStartStr, monthEndStr } = this._getNavMonthBounds();
+                this.renderMuscleRadarChart('muscleRadarMonthChart',
+                    this._cachedAllWorkouts.filter(w => w.date >= monthStartStr && w.date <= monthEndStr));
+            }
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        prevBtn.addEventListener('click', () => navigate(this.monthNavOffset - 1));
+        nextBtn.addEventListener('click', () => {
+            if (this.monthNavOffset < 0) navigate(this.monthNavOffset + 1);
+        });
+    },
+
+    /**
+     * Update the month navigation label and next-button disabled state
+     */
+    _updateMonthNavLabel() {
+        const labelEl = document.getElementById('monthNavLabel');
+        const nextBtn = document.getElementById('monthNavNext');
+        if (!labelEl) return;
+
+        if (this.monthNavOffset === 0) {
+            labelEl.textContent = 'Current Month';
+        } else {
+            const now = new Date();
+            const navDate = new Date(now.getFullYear(), now.getMonth() + this.monthNavOffset, 1);
+            labelEl.textContent = navDate.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+        }
+
+        if (nextBtn) nextBtn.disabled = this.monthNavOffset >= 0;
+    },
 
     /**
      * Get the Mon–Sun date bounds for the currently navigated week

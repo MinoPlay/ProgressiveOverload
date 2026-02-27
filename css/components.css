@@ -2170,14 +2170,101 @@
 
 
 @media (max-width: 768px) {
+    .stats-dashboard {
+        gap: var(--spacing-md);
+        margin-bottom: var(--spacing-xl);
+    }
+
     .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    .kpi-card {
+        padding: var(--spacing-md);
+        transform: none !important;
+    }
+
+    .kpi-card:hover {
+        transform: none !important;
+    }
+
+    .kpi-value {
+        font-size: 1.9rem;
+    }
+
+    .kpi-label {
+        letter-spacing: 0.5px;
+    }
+
+    .muscle-breakdown-section {
+        margin-bottom: var(--spacing-lg) !important;
+    }
+
+    .muscle-breakdown-section h4 {
+        margin-bottom: var(--spacing-sm) !important;
+        font-size: 1rem;
+    }
+
+    .section-card {
+        padding: var(--spacing-md);
+    }
+
+    .section-card h4 {
+        font-size: 1rem;
+        margin-bottom: var(--spacing-md);
+    }
+
+    .stats-milestones {
+        padding: var(--spacing-md);
+        margin-bottom: var(--spacing-lg);
     }
 }
 
 @media (max-width: 480px) {
+    .stats-dashboard {
+        gap: var(--spacing-sm);
+    }
+
     .kpi-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-xs);
+    }
+
+    .kpi-card {
+        padding: var(--spacing-sm) var(--spacing-md);
+        border-bottom-width: 3px;
+    }
+
+    .kpi-value {
+        font-size: 1.5rem;
+        line-height: 1.1;
+    }
+
+    .kpi-label {
+        font-size: 0.7rem;
+        letter-spacing: 0;
+        margin-bottom: 4px;
+    }
+
+    .kpi-trend {
+        font-size: 0.78rem;
+    }
+
+    .section-card {
+        padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .dashboard-main-chart {
+        gap: var(--spacing-sm) !important;
+    }
+
+    .chart-wrapper[style*="height: 300px"] {
+        height: 180px !important;
+    }
+
+    .chart-wrapper[style*="height: 200px"] {
+        height: 150px !important;
     }
 }
 
@@ -2625,12 +2712,39 @@
 @media (max-width: 600px) {
     .muscle-grid {
         grid-template-columns: repeat(2, 1fr);
+        gap: var(--spacing-sm);
+    }
+
+    .muscle-card {
+        padding: var(--spacing-sm);
+        gap: var(--spacing-xs);
+    }
+
+    .muscle-card-header {
+        margin-bottom: 0;
+    }
+
+    .muscle-card-header h5 {
+        font-size: 0.85rem;
+    }
+
+    .muscle-card-stat .value {
+        font-size: 0.9rem;
+    }
+
+    .muscle-card-stat .label {
+        font-size: 0.7rem;
+    }
+
+    .muscle-card-footer {
+        font-size: 0.65rem;
+        padding-top: var(--spacing-xs);
     }
 }
 
 @media (max-width: 400px) {
     .muscle-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 

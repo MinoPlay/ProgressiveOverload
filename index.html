@@ -176,6 +176,19 @@
             <!-- Workout Section -->
             <section id="workoutSection" class="content-section active" role="region" aria-label="Log Workout">
 
+                <div class="workout-view-tabs" role="tablist" aria-label="Workout views">
+                    <button type="button" id="workoutLogTabBtn" class="btn btn-secondary workout-view-tab active"
+                        data-view="log" role="tab" aria-selected="true" aria-controls="workoutLogView">
+                        Log Workout
+                    </button>
+                    <button type="button" id="workoutPlanTabBtn" class="btn btn-secondary workout-view-tab"
+                        data-view="plan" role="tab" aria-selected="false" aria-controls="workoutPlanView">
+                        Plan Session
+                    </button>
+                </div>
+
+                <div id="workoutLogView" class="workout-view active" role="tabpanel" aria-labelledby="workoutLogTabBtn">
+
                 <div class="form-container">
                     <form id="workoutFormElement" class="compact-workout-form">
                         <!-- Row 1: Muscle -->
@@ -225,29 +238,42 @@
                     </form>
                 </div>
 
+                </div>
+
+                <div id="workoutPlanView" class="workout-view" role="tabpanel" aria-labelledby="workoutPlanTabBtn">
+
                 <div class="form-container planner-container">
                     <div class="planner-header">
-                        <h4>Plan Session (Batch Log)</h4>
-                        <button type="button" id="plannerToggleBtn" class="btn btn-secondary planner-toggle-btn"
-                            aria-expanded="true" aria-controls="plannerContent">Hide</button>
+                        <h4>Plan Session</h4>
                     </div>
 
                     <div id="plannerContent" class="planner-content">
                         <div class="planner-controls">
-                            <select id="plannerExerciseSelect" aria-label="Exercise to add to planned session">
-                                <option value="">Select Exercise...</option>
-                            </select>
-                            <button type="button" id="plannerAddExerciseBtn" class="btn btn-secondary">Add Exercise</button>
-                            <button type="button" id="plannerAddSupersetBtn" class="btn btn-secondary">Add Superset Block</button>
+                            <button type="button" id="plannerAddExerciseBtn" class="btn-icon btn-secondary btn-small planner-add-btn"
+                                title="Add exercise" aria-label="Add exercise">
+                                <i data-lucide="plus"></i>
+                            </button>
+                            <button type="button" id="plannerAddSupersetBtn" class="btn-icon btn-secondary btn-small planner-add-btn"
+                                title="Add superset block" aria-label="Add superset block">
+                                <i data-lucide="link-2"></i>
+                            </button>
                         </div>
 
                         <div id="plannedSessionList" class="planned-session-list" aria-live="polite"></div>
 
-                        <div class="planner-actions">
-                            <button type="button" id="plannerSubmitBtn" class="btn btn-primary">Submit Planned Session</button>
-                            <button type="button" id="plannerClearBtn" class="btn btn-secondary">Clear Plan</button>
+                        <div class="form-actions-inline planner-actions-inline">
+                            <button type="button" id="plannerSubmitBtn" class="btn-icon btn-primary" title="Submit planned session"
+                                aria-label="Submit planned session">
+                                <i data-lucide="check"></i>
+                            </button>
+                            <button type="button" id="plannerClearBtn" class="btn-icon btn-secondary" title="Clear plan"
+                                aria-label="Clear plan">
+                                <i data-lucide="x"></i>
+                            </button>
                         </div>
                     </div>
+                </div>
+
                 </div>
 
                 <!-- Last Workout Summary -->

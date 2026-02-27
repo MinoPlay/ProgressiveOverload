@@ -8,9 +8,10 @@ import { isValidDate, validateNumber, formatDate } from './utils.js';
 
 const PLANNER_DRAFT_KEY = 'plannedSessionDraft';
 const DEFAULT_PLANNER_SET_COUNT = 3;
+const WORKOUT_VIEW_KEY = 'workoutActiveView';
 
 export const Workouts = {
-    plannerExpanded: true,
+    activeWorkoutView: 'log',
     plannedSession: null,
 
     /**
@@ -23,6 +24,7 @@ export const Workouts = {
         this.populatePlannerExerciseDropdown();
         this.setDefaultDate();
         this.initializePlanner();
+        this.initializeWorkoutViewTabs();
         this.updateDateTooltip();
         this.renderLastWorkoutSummary();
 
@@ -47,7 +49,6 @@ export const Workouts = {
         const exerciseSelect = document.getElementById('workoutExercise');
         const clearBtn = document.getElementById('clearWorkoutBtn');
         const dateInput = document.getElementById('workoutDate');
-        const plannerToggleBtn = document.getElementById('plannerToggleBtn');
         const plannerAddExerciseBtn = document.getElementById('plannerAddExerciseBtn');
         const plannerAddSupersetBtn = document.getElementById('plannerAddSupersetBtn');
         const plannerSubmitBtn = document.getElementById('plannerSubmitBtn');
@@ -87,10 +88,6 @@ export const Workouts = {
             });
         }
 
-        if (plannerToggleBtn) {
-            plannerToggleBtn.addEventListener('click', () => this.togglePlanner());
-        }
-
         if (plannerAddExerciseBtn) {
             plannerAddExerciseBtn.addEventListener('click', () => this.addPlannedExercise());
         }
@@ -111,6 +108,75 @@ export const Workouts = {
             plannedSessionList.addEventListener('change', (event) => this.handlePlannerFieldChange(event));
             plannedSessionList.addEventListener('click', (event) => this.handlePlannerAction(event));
         }
+    },
+
+    getPlannerTarget(rowId, itemId = null) {
+        const row = this.plannedSession?.rows?.find(entry => entry.id === rowId);
+        if (!row) return null;
+
+        if (row.type === 'superset') {
+            if (!itemId) return null;
+            return row.exercises.find(entry => entry.id === itemId) || null;
+        }
+
+        return row;
+    },
+
+    ensurePlannerActiveSet(target, sets) {
+        if (!target || !Array.isArray(sets) || sets.length === 0) return null;
+        const hasValidActiveSet = sets.some(setEntry => setEntry.id === target.activeSetId);
+        if (!hasValidActiveSet) {
+            target.activeSetId = sets[0].id;
+        }
+        return target.activeSetId;
+    },
+
+    setPlannerActiveSet(rowId, itemId, setId) {
+        const target = this.getPlannerTarget(rowId, itemId);
+        if (!target || !Array.isArray(target.sets)) return;
+        if (!target.sets.some(setEntry => setEntry.id === setId)) return;
+        if (target.activeSetId === setId) return;
+
+        target.activeSetId = setId;
+        this.persistPlannerDraft();
+        this.renderPlannedSession();
+    },
+
+    initializeWorkoutViewTabs() {
+        const tabButtons = document.querySelectorAll('.workout-view-tab[data-view]');
+        const savedView = localStorage.getItem(WORKOUT_VIEW_KEY);
+        const defaultView = savedView === 'plan' ? 'plan' : 'log';
+
+        this.setWorkoutView(defaultView);
+
+        tabButtons.forEach(button => {
+            button.addEventListener('click', () => this.setWorkoutView(button.dataset.view));
+        });
+    },
+
+    setWorkoutView(view) {
+        const normalizedView = view === 'plan' ? 'plan' : 'log';
+        this.activeWorkoutView = normalizedView;
+
+        const logView = document.getElementById('workoutLogView');
+        const planView = document.getElementById('workoutPlanView');
+        const logTab = document.getElementById('workoutLogTabBtn');
+        const planTab = document.getElementById('workoutPlanTabBtn');
+
+        if (logView) logView.classList.toggle('active', normalizedView === 'log');
+        if (planView) planView.classList.toggle('active', normalizedView === 'plan');
+
+        if (logTab) {
+            logTab.classList.toggle('active', normalizedView === 'log');
+            logTab.setAttribute('aria-selected', String(normalizedView === 'log'));
+        }
+
+        if (planTab) {
+            planTab.classList.toggle('active', normalizedView === 'plan');
+            planTab.setAttribute('aria-selected', String(normalizedView === 'plan'));
+        }
+
+        localStorage.setItem(WORKOUT_VIEW_KEY, normalizedView);
     },
 
     /**
@@ -213,18 +279,6 @@ export const Workouts = {
         this.renderPlannedSession();
     },
 
-    togglePlanner() {
-        this.plannerExpanded = !this.plannerExpanded;
-
-        const content = document.getElementById('plannerContent');
-        const toggleBtn = document.getElementById('plannerToggleBtn');
-        if (!content || !toggleBtn) return;
-
-        content.classList.toggle('collapsed', !this.plannerExpanded);
-        toggleBtn.textContent = this.plannerExpanded ? 'Hide' : 'Show';
-        toggleBtn.setAttribute('aria-expanded', String(this.plannerExpanded));
-    },
-
     syncPlannerDate() {
         if (!this.plannedSession) return;
         const dateInput = document.getElementById('workoutDate');
@@ -235,16 +289,18 @@ export const Workouts = {
     },
 
     addPlannedExercise() {
-        const select = document.getElementById('plannerExerciseSelect');
-        if (!select) return;
-
         const rowId = `row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+        this.collapseAllPlannedRowsExcept(rowId);
 
         this.plannedSession.rows.push({
             id: rowId,
             type: 'single',
-            exerciseId: select.value || '',
-            sets: this.createDefaultPlannerSets(rowId)
+            exerciseId: '',
+            sets: this.createDefaultPlannerSets(rowId),
+            copyCursor: 1,
+            activeSetId: `${rowId}-set-1`,
+            expanded: true
         });
 
         this.persistPlannerDraft();
@@ -256,20 +312,27 @@ export const Workouts = {
         const firstExerciseId = `${blockId}-a`;
         const secondExerciseId = `${blockId}-b`;
 
+        this.collapseAllPlannedRowsExcept(blockId);
+
         this.plannedSession.rows.push({
             id: blockId,
             type: 'superset',
             label: 'Superset',
+            expanded: true,
             exercises: [
                 {
                     id: firstExerciseId,
                     exerciseId: '',
-                    sets: this.createDefaultPlannerSets(firstExerciseId)
+                    sets: this.createDefaultPlannerSets(firstExerciseId),
+                    copyCursor: 1,
+                    activeSetId: `${firstExerciseId}-set-1`
                 },
                 {
                     id: secondExerciseId,
                     exerciseId: '',
-                    sets: this.createDefaultPlannerSets(secondExerciseId)
+                    sets: this.createDefaultPlannerSets(secondExerciseId),
+                    copyCursor: 1,
+                    activeSetId: `${secondExerciseId}-set-1`
                 }
             ]
         });
@@ -286,39 +349,97 @@ export const Workouts = {
 
         if (action === 'remove-row') {
             this.plannedSession.rows = this.plannedSession.rows.filter(row => row.id !== rowId);
+            this.ensureOnePlannerRowExpanded();
         }
 
-        if (action === 'add-superset-exercise') {
-            const row = this.plannedSession.rows.find(entry => entry.id === rowId && entry.type === 'superset');
-            if (row) {
-                const entryId = `${rowId}-${Math.random().toString(36).slice(2, 8)}`;
-                row.exercises.push({
-                    id: entryId,
-                    exerciseId: '',
-                    sets: this.createDefaultPlannerSets(entryId)
-                });
-            }
+        if (action === 'toggle-row') {
+            this.togglePlannerRow(rowId);
         }
 
-        if (action === 'remove-superset-exercise') {
-            const row = this.plannedSession.rows.find(entry => entry.id === rowId && entry.type === 'superset');
-            if (row) {
-                row.exercises = row.exercises.filter(item => item.id !== itemId);
-                if (row.exercises.length === 0) {
-                    this.plannedSession.rows = this.plannedSession.rows.filter(entry => entry.id !== rowId);
-                }
-            }
+        if (action === 'clear-row-fields') {
+            this.clearPlannerRowFields(rowId, itemId || null);
         }
 
-        if (action === 'copy-first-set') {
-            this.copyFirstSetToRemaining(rowId, itemId || null);
+        if (action === 'copy-next-set') {
+            this.copyPlannerSetForward(rowId, itemId || null);
+        }
+
+        if (action === 'toggle-set') {
+            const { setId } = button.dataset;
+            this.setPlannerActiveSet(rowId, itemId || null, setId);
+            return;
         }
 
         this.persistPlannerDraft();
         this.renderPlannedSession();
     },
 
-    copyFirstSetToRemaining(rowId, itemId = null) {
+    collapseAllPlannedRowsExcept(rowId) {
+        if (!this.plannedSession || !Array.isArray(this.plannedSession.rows)) return;
+        this.plannedSession.rows.forEach(row => {
+            row.expanded = row.id === rowId;
+        });
+    },
+
+    togglePlannerRow(rowId) {
+        const row = this.plannedSession.rows.find(entry => entry.id === rowId);
+        if (!row) return;
+        row.expanded = !row.expanded;
+    },
+
+    ensureOnePlannerRowExpanded() {
+        if (!this.plannedSession || !Array.isArray(this.plannedSession.rows) || this.plannedSession.rows.length === 0) return;
+        const hasExpanded = this.plannedSession.rows.some(row => row.expanded !== false);
+        if (!hasExpanded) {
+            this.plannedSession.rows[0].expanded = true;
+        }
+    },
+
+    clearPlannerRowFields(rowId, itemId = null) {
+        const row = this.plannedSession.rows.find(entry => entry.id === rowId);
+        if (!row) return;
+
+        if (row.type === 'superset' && !itemId) {
+            row.exercises.forEach(exerciseEntry => {
+                exerciseEntry.exerciseId = '';
+                exerciseEntry.copyCursor = 1;
+                if (!Array.isArray(exerciseEntry.sets)) {
+                    exerciseEntry.sets = this.createDefaultPlannerSets(exerciseEntry.id);
+                    exerciseEntry.activeSetId = exerciseEntry.sets[0]?.id || null;
+                    return;
+                }
+                exerciseEntry.sets.forEach(setEntry => {
+                    setEntry.reps = '';
+                    setEntry.weight = '';
+                });
+                exerciseEntry.activeSetId = exerciseEntry.sets[0]?.id || null;
+            });
+            return;
+        }
+
+        const target = row.type === 'superset'
+            ? row.exercises.find(entry => entry.id === itemId)
+            : row;
+
+        if (!target) return;
+
+        target.exerciseId = '';
+        target.copyCursor = 1;
+
+        if (!Array.isArray(target.sets)) {
+            target.sets = this.createDefaultPlannerSets(target.id || rowId);
+            target.activeSetId = target.sets[0]?.id || null;
+            return;
+        }
+
+        target.sets.forEach(setEntry => {
+            setEntry.reps = '';
+            setEntry.weight = '';
+        });
+        target.activeSetId = target.sets[0]?.id || null;
+    },
+
+    copyPlannerSetForward(rowId, itemId = null) {
         const row = this.plannedSession.rows.find(entry => entry.id === rowId);
         if (!row) return;
 
@@ -328,11 +449,21 @@ export const Workouts = {
 
         if (!target || !Array.isArray(target.sets) || target.sets.length < 2) return;
 
-        const firstSet = target.sets[0];
-        for (let index = 1; index < target.sets.length; index += 1) {
-            target.sets[index].reps = firstSet.reps;
-            target.sets[index].weight = firstSet.weight;
+        let nextIndex = Number.isInteger(target.copyCursor) ? target.copyCursor : 1;
+        if (nextIndex >= target.sets.length) {
+            nextIndex = 1;
         }
+
+        const sourceIndex = nextIndex - 1;
+        const sourceSet = target.sets[sourceIndex];
+        const destinationSet = target.sets[nextIndex];
+
+        if (!sourceSet || !destinationSet) return;
+
+        destinationSet.reps = sourceSet.reps;
+        destinationSet.weight = sourceSet.weight;
+        target.copyCursor = nextIndex + 1 >= target.sets.length ? 1 : nextIndex + 1;
+        target.activeSetId = destinationSet.id;
     },
 
     handlePlannerFieldChange(event) {
@@ -351,6 +482,7 @@ export const Workouts = {
                 const setEntry = (row.sets || []).find(entry => entry.id === field.dataset.setId);
                 if (!setEntry) return;
                 setEntry[fieldName] = field.value;
+                row.activeSetId = field.dataset.setId;
             }
         } else {
             const item = row.exercises.find(entry => entry.id === field.dataset.itemId);
@@ -362,6 +494,7 @@ export const Workouts = {
                 const setEntry = (item.sets || []).find(entry => entry.id === field.dataset.setId);
                 if (!setEntry) return;
                 setEntry[fieldName] = field.value;
+                item.activeSetId = field.dataset.setId;
             }
         }
 
@@ -398,66 +531,116 @@ export const Workouts = {
     createSinglePlannedRow(row, index) {
         const wrapper = document.createElement('div');
         wrapper.className = 'planned-row';
+        wrapper.classList.toggle('collapsed', row.expanded === false);
 
         const header = document.createElement('div');
         header.className = 'planned-row-header';
+        header.addEventListener('click', (event) => {
+            if (event.target.closest('button')) return;
+            this.togglePlannerRow(row.id);
+            this.persistPlannerDraft();
+            this.renderPlannedSession();
+        });
 
         const title = document.createElement('span');
         title.className = 'planned-row-title';
         title.textContent = `Exercise ${index + 1}`;
 
+        const headerActions = document.createElement('div');
+        headerActions.className = 'planner-row-actions';
+
+        const collapseBtn = document.createElement('button');
+        collapseBtn.type = 'button';
+        collapseBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-collapse-btn';
+        collapseBtn.dataset.action = 'toggle-row';
+        collapseBtn.dataset.rowId = row.id;
+        collapseBtn.innerHTML = '<i data-lucide="chevron-down"></i>';
+        collapseBtn.title = row.expanded === false ? 'Expand row' : 'Collapse row';
+
+        const clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn';
+        clearBtn.dataset.action = 'clear-row-fields';
+        clearBtn.dataset.rowId = row.id;
+        clearBtn.innerHTML = '<i data-lucide="eraser"></i>';
+        clearBtn.title = 'Clear fields';
+
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
-        removeBtn.className = 'btn-icon btn-secondary btn-small';
+        removeBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn';
         removeBtn.dataset.action = 'remove-row';
         removeBtn.dataset.rowId = row.id;
         removeBtn.innerHTML = '<i data-lucide="trash-2"></i>';
         removeBtn.title = 'Remove row';
 
+        headerActions.appendChild(collapseBtn);
+        headerActions.appendChild(clearBtn);
+        headerActions.appendChild(removeBtn);
+
         header.appendChild(title);
+        header.appendChild(headerActions);
 
         const topRow = document.createElement('div');
         topRow.className = 'planned-entry-top';
         topRow.appendChild(this.createExerciseSelect(row.id, null, row.exerciseId));
-        topRow.appendChild(removeBtn);
+
+        const body = document.createElement('div');
+        body.className = 'planner-row-body';
+        body.appendChild(topRow);
+        body.appendChild(this.createPlannerSetsGrid(row.id, null, row.sets));
 
         wrapper.appendChild(header);
-        wrapper.appendChild(topRow);
-        wrapper.appendChild(this.createPlannerSetsGrid(row.id, null, row.sets));
+        wrapper.appendChild(body);
         return wrapper;
     },
 
     createSupersetRow(row, index) {
         const wrapper = document.createElement('div');
         wrapper.className = 'superset-block';
+        wrapper.classList.toggle('collapsed', row.expanded === false);
 
         const header = document.createElement('div');
         header.className = 'superset-header';
+        header.addEventListener('click', (event) => {
+            if (event.target.closest('button')) return;
+            this.togglePlannerRow(row.id);
+            this.persistPlannerDraft();
+            this.renderPlannedSession();
+        });
 
         const title = document.createElement('span');
         title.className = 'superset-title';
         title.textContent = `${row.label} ${index + 1}`;
 
         const headerActions = document.createElement('div');
-        headerActions.className = 'set-actions';
+        headerActions.className = 'planner-row-actions';
 
-        const addBtn = document.createElement('button');
-        addBtn.type = 'button';
-        addBtn.className = 'btn-icon btn-secondary btn-small';
-        addBtn.dataset.action = 'add-superset-exercise';
-        addBtn.dataset.rowId = row.id;
-        addBtn.innerHTML = '<i data-lucide="plus"></i>';
-        addBtn.title = 'Add exercise to superset';
+        const collapseBtn = document.createElement('button');
+        collapseBtn.type = 'button';
+        collapseBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-collapse-btn';
+        collapseBtn.dataset.action = 'toggle-row';
+        collapseBtn.dataset.rowId = row.id;
+        collapseBtn.innerHTML = '<i data-lucide="chevron-down"></i>';
+        collapseBtn.title = row.expanded === false ? 'Expand superset' : 'Collapse superset';
+
+        const clearBtn = document.createElement('button');
+        clearBtn.type = 'button';
+        clearBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn';
+        clearBtn.dataset.action = 'clear-row-fields';
+        clearBtn.dataset.rowId = row.id;
+        clearBtn.innerHTML = '<i data-lucide="eraser"></i>';
+        clearBtn.title = 'Clear superset fields';
 
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
-        removeBtn.className = 'btn-icon btn-secondary btn-small';
+        removeBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn';
         removeBtn.dataset.action = 'remove-row';
         removeBtn.dataset.rowId = row.id;
         removeBtn.innerHTML = '<i data-lucide="trash-2"></i>';
         removeBtn.title = 'Remove superset block';
 
-        headerActions.appendChild(addBtn);
+        headerActions.appendChild(collapseBtn);
+        headerActions.appendChild(clearBtn);
         headerActions.appendChild(removeBtn);
         header.appendChild(title);
         header.appendChild(headerActions);
@@ -480,16 +663,6 @@ export const Workouts = {
             topRow.className = 'planned-entry-top';
             topRow.appendChild(this.createExerciseSelect(row.id, exerciseEntry.id, exerciseEntry.exerciseId));
 
-            const removeSubBtn = document.createElement('button');
-            removeSubBtn.type = 'button';
-            removeSubBtn.className = 'btn-icon btn-secondary btn-small';
-            removeSubBtn.dataset.action = 'remove-superset-exercise';
-            removeSubBtn.dataset.rowId = row.id;
-            removeSubBtn.dataset.itemId = exerciseEntry.id;
-            removeSubBtn.innerHTML = '<i data-lucide="x"></i>';
-            removeSubBtn.title = 'Remove exercise';
-            topRow.appendChild(removeSubBtn);
-
             rowContainer.appendChild(label);
             content.appendChild(topRow);
             content.appendChild(this.createPlannerSetsGrid(row.id, exerciseEntry.id, exerciseEntry.sets));
@@ -497,8 +670,12 @@ export const Workouts = {
             exercisesContainer.appendChild(rowContainer);
         });
 
+        const body = document.createElement('div');
+        body.className = 'planner-row-body';
+        body.appendChild(exercisesContainer);
+
         wrapper.appendChild(header);
-        wrapper.appendChild(exercisesContainer);
+        wrapper.appendChild(body);
         return wrapper;
     },
 
@@ -532,21 +709,52 @@ export const Workouts = {
         container.className = 'planner-sets-grid';
 
         const normalizedSets = Array.isArray(sets) ? sets : this.createDefaultPlannerSets(itemId || rowId);
+        const target = this.getPlannerTarget(rowId, itemId || null);
+        const activeSetId = this.ensurePlannerActiveSet(target, normalizedSets);
 
         normalizedSets.forEach((setEntry, index) => {
             const card = document.createElement('div');
             card.className = 'planner-set-card';
+            card.classList.toggle('collapsed', setEntry.id !== activeSetId);
+
+            const header = document.createElement('div');
+            header.className = 'planner-set-header';
+
+            const toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'planner-set-toggle';
+            toggleBtn.dataset.action = 'toggle-set';
+            toggleBtn.dataset.rowId = rowId;
+            toggleBtn.dataset.setId = setEntry.id;
+            if (itemId) {
+                toggleBtn.dataset.itemId = itemId;
+            }
 
             const title = document.createElement('span');
             title.className = 'planner-set-title';
             title.textContent = `Set ${index + 1}`;
+
+            const summary = document.createElement('span');
+            summary.className = 'planner-set-summary';
+            const repsText = setEntry.reps !== '' && setEntry.reps !== null && setEntry.reps !== undefined
+                ? setEntry.reps
+                : '-';
+            const weightText = setEntry.weight !== '' && setEntry.weight !== null && setEntry.weight !== undefined
+                ? setEntry.weight
+                : '-';
+            summary.textContent = `${repsText} / ${weightText}`;
+
+            toggleBtn.appendChild(title);
+            toggleBtn.appendChild(summary);
+
+            header.appendChild(toggleBtn);
 
             const fields = document.createElement('div');
             fields.className = 'planner-set-fields';
             fields.appendChild(this.createPlannerInput('number', 'reps', rowId, itemId, setEntry.id, setEntry.reps, 'Reps', 1, 999));
             fields.appendChild(this.createPlannerInput('number', 'weight', rowId, itemId, setEntry.id, setEntry.weight, 'Weight', 0, null, 'any'));
 
-            card.appendChild(title);
+            card.appendChild(header);
             card.appendChild(fields);
             container.appendChild(card);
         });
@@ -556,13 +764,15 @@ export const Workouts = {
 
         const copyBtn = document.createElement('button');
         copyBtn.type = 'button';
-        copyBtn.className = 'btn btn-secondary btn-small';
-        copyBtn.dataset.action = 'copy-first-set';
+        copyBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn';
+        copyBtn.dataset.action = 'copy-next-set';
         copyBtn.dataset.rowId = rowId;
         if (itemId) {
             copyBtn.dataset.itemId = itemId;
         }
-        copyBtn.textContent = 'Copy Set 1 → Set 2/3';
+        copyBtn.innerHTML = '<i data-lucide="copy"></i>';
+        copyBtn.title = 'Copy previous set to next set';
+        copyBtn.setAttribute('aria-label', 'Copy previous set to next set');
 
         actionRow.appendChild(copyBtn);
         container.appendChild(actionRow);
@@ -667,19 +877,20 @@ export const Workouts = {
         const rowId = row?.id || `row-${Date.now()}-${index}`;
 
         if (row?.type === 'superset') {
-            const rawExercises = Array.isArray(row.exercises) && row.exercises.length
-                ? row.exercises
-                : [
-                    { id: `${rowId}-a`, exerciseId: '' },
-                    { id: `${rowId}-b`, exerciseId: '' }
-                ];
+            const candidates = Array.isArray(row.exercises) ? row.exercises.slice(0, 2) : [];
+            while (candidates.length < 2) {
+                const suffix = candidates.length === 0 ? 'a' : 'b';
+                candidates.push({ id: `${rowId}-${suffix}`, exerciseId: '' });
+            }
 
-            const exercises = rawExercises.map((exerciseEntry, exerciseIndex) => {
+            const exercises = candidates.map((exerciseEntry, exerciseIndex) => {
                 const entryId = exerciseEntry?.id || `${rowId}-${exerciseIndex + 1}`;
                 return {
                     id: entryId,
                     exerciseId: exerciseEntry?.exerciseId || '',
-                    sets: this.normalizePlannerSets(exerciseEntry?.sets, entryId, exerciseEntry?.reps, exerciseEntry?.weight)
+                    sets: this.normalizePlannerSets(exerciseEntry?.sets, entryId, exerciseEntry?.reps, exerciseEntry?.weight),
+                    copyCursor: Number.isInteger(exerciseEntry?.copyCursor) ? exerciseEntry.copyCursor : 1,
+                    activeSetId: exerciseEntry?.activeSetId || `${entryId}-set-1`
                 };
             });
 
@@ -687,6 +898,7 @@ export const Workouts = {
                 id: rowId,
                 type: 'superset',
                 label: row?.label || 'Superset',
+                expanded: row?.expanded !== false,
                 exercises
             };
         }
@@ -695,7 +907,10 @@ export const Workouts = {
             id: rowId,
             type: 'single',
             exerciseId: row?.exerciseId || '',
-            sets: this.normalizePlannerSets(row?.sets, rowId, row?.reps, row?.weight)
+            sets: this.normalizePlannerSets(row?.sets, rowId, row?.reps, row?.weight),
+            copyCursor: Number.isInteger(row?.copyCursor) ? row.copyCursor : 1,
+            activeSetId: row?.activeSetId || `${rowId}-set-1`,
+            expanded: row?.expanded !== false
         };
     },
 

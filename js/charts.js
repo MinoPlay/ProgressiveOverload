@@ -15,6 +15,9 @@ export const Charts = {
     chartType: localStorage.getItem('chartType') || 'line', // 'line', 'bar'
     showPoints: localStorage.getItem('showPoints') !== 'false', // default true
     allExercisesData: [], // Store all exercise data
+    weekNavOffset: 0, // 0 = current week, -1 = one week back, etc.
+    _cachedDataWithWorkouts: null, // Cached for week navigation re-render
+    _cachedAllWorkouts: null, // Cached flat workouts for radar re-render
 
     /**
      * Initialize charts UI
@@ -150,20 +153,18 @@ export const Charts = {
                 muscle: d.exercise.muscle
             }))
         );
+        // Cache for week navigation
+        this._cachedDataWithWorkouts = dataWithWorkouts;
+        this._cachedAllWorkouts = allWorkouts;
+
         this.renderKPICards(dataWithWorkouts);
         this.renderWeeklyStats(allWorkouts);
 
-        // Radar charts — filter by this week and this month
+        // Radar charts — filter by this week (with nav offset) and this month
         const now = new Date();
         const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0];
-        const weekStart = (() => {
-            const d = new Date(now);
-            const day = d.getDay() === 0 ? 7 : d.getDay();
-            d.setDate(d.getDate() - (day - 1));
-            d.setHours(0, 0, 0, 0);
-            return d.toISOString().split('T')[0];
-        })();
-        this.renderMuscleRadarChart('muscleRadarWeekChart', allWorkouts.filter(w => w.date >= weekStart));
+        const { weekStartStr, weekEndStr } = this._getNavWeekBounds();
+        this.renderMuscleRadarChart('muscleRadarWeekChart', allWorkouts.filter(w => w.date >= weekStartStr && w.date <= weekEndStr));
         this.renderMuscleRadarChart('muscleRadarMonthChart', allWorkouts.filter(w => w.date >= monthStart));
 
         // Period tab switching (Weekly / Monthly / Overall)
@@ -196,6 +197,9 @@ export const Charts = {
                 activatePeriod(period);
             });
         }
+
+        this._setupWeekNavigation();
+        this._updateWeekNavLabel();
     },
 
     /**
@@ -246,9 +250,13 @@ export const Charts = {
         const prevMonthEnd = new Date(year, month, 0);
         const prevMonthEndStr = toDateString(prevMonthEnd);
 
-        // Week start (Monday) using helper
+        // Week start (Monday) using helper + nav offset
         const weekStart = this.getCurrentMonday();
+        weekStart.setDate(weekStart.getDate() + this.weekNavOffset * 7);
         const weekStartStr = toDateString(weekStart);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        const weekEndStr = toDateString(weekEnd);
         const prevWeekStart = new Date(weekStart);
         prevWeekStart.setDate(prevWeekStart.getDate() - 7);
         const prevWeekStartStr = toDateString(prevWeekStart);
@@ -342,7 +350,7 @@ export const Charts = {
         };
 
         const monthWorkouts = allWorkouts.filter(w => w.date >= monthStartStr);
-        const weekWorkouts = allWorkouts.filter(w => w.date >= weekStartStr);
+        const weekWorkouts = allWorkouts.filter(w => w.date >= weekStartStr && w.date <= weekEndStr);
         const prevMonthWorkouts = allWorkouts.filter(w => w.date >= prevMonthStartStr && w.date <= prevMonthEndStr);
         const prevWeekWorkouts = allWorkouts.filter(w => w.date >= prevWeekStartStr && w.date <= prevWeekEndStr);
         const monthMuscleSummary = buildMuscleSessionSummary(monthWorkouts);
@@ -443,6 +451,68 @@ export const Charts = {
     },
 
 
+
+    /**
+     * Get the Mon–Sun date bounds for the currently navigated week
+     */
+    _getNavWeekBounds() {
+        const weekStart = this.getCurrentMonday();
+        weekStart.setDate(weekStart.getDate() + this.weekNavOffset * 7);
+        const weekEnd = new Date(weekStart);
+        weekEnd.setDate(weekEnd.getDate() + 6);
+        const toStr = (d) => d.toISOString().split('T')[0];
+        return { weekStartStr: toStr(weekStart), weekEndStr: toStr(weekEnd) };
+    },
+
+    /**
+     * Set up previous/next week navigation buttons in the Weekly panel
+     */
+    _setupWeekNavigation() {
+        const prevBtn = document.getElementById('weekNavPrev');
+        const nextBtn = document.getElementById('weekNavNext');
+        if (!prevBtn || prevBtn._weekNavInit) return;
+        prevBtn._weekNavInit = true;
+
+        const navigate = (offset) => {
+            this.weekNavOffset = offset;
+            this._updateWeekNavLabel();
+            if (this._cachedDataWithWorkouts && this._cachedAllWorkouts) {
+                this.renderKPICards(this._cachedDataWithWorkouts);
+                const { weekStartStr, weekEndStr } = this._getNavWeekBounds();
+                this.renderMuscleRadarChart('muscleRadarWeekChart',
+                    this._cachedAllWorkouts.filter(w => w.date >= weekStartStr && w.date <= weekEndStr));
+            }
+            if (window.lucide) window.lucide.createIcons();
+        };
+
+        prevBtn.addEventListener('click', () => navigate(this.weekNavOffset - 1));
+        nextBtn.addEventListener('click', () => {
+            if (this.weekNavOffset < 0) navigate(this.weekNavOffset + 1);
+        });
+    },
+
+    /**
+     * Update the week navigation label and next-button disabled state
+     */
+    _updateWeekNavLabel() {
+        const labelEl = document.getElementById('weekNavLabel');
+        const nextBtn = document.getElementById('weekNavNext');
+        if (!labelEl) return;
+
+        if (this.weekNavOffset === 0) {
+            labelEl.textContent = 'Current Week';
+        } else {
+            const weekStart = this.getCurrentMonday();
+            weekStart.setDate(weekStart.getDate() + this.weekNavOffset * 7);
+            const weekEnd = new Date(weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            const fmt = (d) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const year = weekEnd.getFullYear();
+            labelEl.textContent = `${fmt(weekStart)} – ${fmt(weekEnd)}, ${year}`;
+        }
+
+        if (nextBtn) nextBtn.disabled = this.weekNavOffset >= 0;
+    },
 
     /**
      * Render a muscle group radar (spider) chart for a given time-filtered workout set

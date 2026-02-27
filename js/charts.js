@@ -443,7 +443,7 @@ export const Charts = {
                     const exerciseTrendInfo = getTrendMeta(m.exCount, prevExCount);
                     return `
                 <div style="display: grid; grid-template-columns: minmax(0, 1fr) 72px 72px; align-items: center; width: 100%; border-bottom: 1px solid var(--border-light); padding: 4px 0;">
-                    <span style="text-transform: capitalize; font-weight: 500;">${m.name.replace('-', ' ')}</span>
+                    <span style="text-transform: capitalize; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;">${m.name.replace('-', ' ')}</span>
                     <span style="font-weight: 800; color: var(--text-light); border-left: 1px solid var(--border-light); padding: 0 10px; width: 72px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums;" title="Sessions (Days)">${m.count}<span class="kpi-entry-trend ${sessionTrendInfo.trendClass}" title="vs previous period (${prevCount})">${sessionTrendInfo.arrow}</span></span>
                     <span style="font-weight: 800; color: var(--primary-color); border-left: 1px solid var(--border-light); padding: 0 10px; width: 72px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums;" title="Exercises Done">${m.exCount}<span class="kpi-entry-trend ${exerciseTrendInfo.trendClass}" title="vs previous period (${prevExCount})">${exerciseTrendInfo.arrow}</span></span>
                 </div>
@@ -456,25 +456,25 @@ export const Charts = {
         const weekMuscleFocusHTML = buildMuscleFocusHTML(weekMuscleSummary.sortedMuscles, prevWeekMuscleSummary.summaryByMuscle);
 
         kpiGrid.innerHTML = `
-            <div class="kpi-card">
+            <div class="kpi-card kpi-card--compact">
                 <div class="kpi-icon-row">
                     <i data-lucide="calendar-check" class="kpi-icon text-primary"></i>
-                    <span class="kpi-label" title="Unique workout days this month and week">Workouts</span>
+                    <span class="kpi-label" title="Unique workout days this month">Workouts</span>
                     <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">Month</span>
                 </div>
                 <div class="kpi-value">${workoutsThisMonth}</div>
                 <span class="kpi-trend ${monthTrend.trendClass}"><span class="kpi-trend-comparison"><span class="kpi-trend-arrow">${monthTrend.arrow}</span><span class="kpi-trend-delta">${monthTrend.deltaText}</span></span>vs prev month (${workoutsPrevMonth})</span>
-                <div style="border-top: 1px solid var(--border-light); margin-top: 10px; padding-top: 10px;">
-                    <div class="kpi-icon-row">
-                        <i data-lucide="calendar-days" class="kpi-icon text-warning"></i>
-                        <span class="kpi-label" title="Total unique training days this calendar week (Mon-Sun)">Workouts</span>
-                        <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">Week</span>
-                    </div>
-                    <div class="kpi-value" style="font-size: 2rem; margin-top: 6px;">${workoutsThisWeek}</div>
-                    <span class="kpi-trend ${weekTrend.trendClass}"><span class="kpi-trend-comparison"><span class="kpi-trend-arrow">${weekTrend.arrow}</span><span class="kpi-trend-delta">${weekTrend.deltaText}</span></span>vs prev week (${workoutsPrevWeek})</span>
-                </div>
             </div>
-            <div class="kpi-card" style="display: flex; flex-direction: column;">
+            <div class="kpi-card kpi-card--compact">
+                <div class="kpi-icon-row">
+                    <i data-lucide="calendar-days" class="kpi-icon text-warning"></i>
+                    <span class="kpi-label" title="Total unique training days this calendar week (Mon-Sun)">Workouts</span>
+                    <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">Week</span>
+                </div>
+                <div class="kpi-value">${workoutsThisWeek}</div>
+                <span class="kpi-trend ${weekTrend.trendClass}"><span class="kpi-trend-comparison"><span class="kpi-trend-arrow">${weekTrend.arrow}</span><span class="kpi-trend-delta">${weekTrend.deltaText}</span></span>vs prev week (${workoutsPrevWeek})</span>
+            </div>
+            <div class="kpi-card kpi-card--muscle" style="display: flex; flex-direction: column;">
                 <div class="kpi-icon-row">
                     <i data-lucide="biceps-flexed" class="kpi-icon text-success"></i>
                     <span class="kpi-label" title="Training frequency and variety per muscle group this calendar month (Sessions | Exercises)">Muscle Training Sessions</span>
@@ -487,7 +487,7 @@ export const Charts = {
                     Sessions: ${monthMuscleSummary.totalSessions} total
                 </span>
             </div>
-            <div class="kpi-card" style="display: flex; flex-direction: column;">
+            <div class="kpi-card kpi-card--muscle" style="display: flex; flex-direction: column;">
                 <div class="kpi-icon-row">
                     <i data-lucide="biceps-flexed" class="kpi-icon text-success"></i>
                     <span class="kpi-label" title="Training frequency and variety per muscle group this week (Sessions | Exercises)">Muscle Training Sessions</span>
@@ -1278,11 +1278,11 @@ export const Charts = {
                 label: this.capitalize(muscle),
                 data: weekValues,
                 borderColor: colors[muscle] || '#667eea',
-                backgroundColor: this.chartType === 'bar' ? (colors[muscle] || '#667eea') + '80' : colors[muscle] || '#667eea',
-                borderWidth: this.chartType === 'line' ? 3 : 1,
-                pointRadius: (this.chartType === 'line' && this.showPoints) ? 4 : 0,
-                pointHoverRadius: (this.chartType === 'line' && this.showPoints) ? 6 : (this.chartType === 'line' ? 0 : 6),
-                tension: 0.3,
+                backgroundColor: colors[muscle] || '#667eea',
+                borderWidth: 3,
+                pointRadius: 0,
+                pointHoverRadius: 4,
+                tension: 0.4,
                 spanGaps: true,
                 fill: false
             };
@@ -1294,7 +1294,7 @@ export const Charts = {
         else if (this.selectedMetric === 'reps') yAxisLabel = 'Total Reps';
 
         new Chart(ctx, {
-            type: this.chartType,
+            type: 'line',
             data: {
                 labels: weekLabels,
                 datasets: datasets
@@ -1356,21 +1356,6 @@ export const Charts = {
                     <button class="metric-btn ${this.selectedMetric === 'weight' ? 'active' : ''}" data-metric="weight" title="Heaviest weight lifted (PR)">Weight (PR)</button>
                     <button class="metric-btn ${this.selectedMetric === 'reps' ? 'active' : ''}" data-metric="reps" title="Total repetitions performed">Reps</button>
                 </div>
-
-                <div style="width: 1px; height: 20px; background: var(--border-color); margin: 0 4px;"></div>
-
-                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">Display As:</label>
-                <div class="toggle-switch">
-                    <button class="toggle-btn ${this.chartType === 'line' ? 'active' : ''}" data-type="line">Curves</button>
-                    <button class="toggle-btn ${this.chartType === 'bar' ? 'active' : ''}" data-type="bar">Bars</button>
-                </div>
-
-                <div class="chart-setting" id="pointsSetting" style="display: ${this.chartType === 'line' ? 'flex' : 'none'}; align-items: center;">
-                    <label class="checkbox-setting">
-                        <input type="checkbox" id="showPointsToggle" ${this.showPoints ? 'checked' : ''}>
-                        Show Points
-                    </label>
-                </div>
             </div>
         `;
 
@@ -1380,21 +1365,6 @@ export const Charts = {
                 this.switchMetric(e.target.dataset.metric);
             });
         });
-
-        // Chart type handlers
-        controls.querySelectorAll('.toggle-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                this.switchChartType(e.target.dataset.type);
-            });
-        });
-
-        // Points toggle handler
-        const pointsToggle = document.getElementById('showPointsToggle');
-        if (pointsToggle) {
-            pointsToggle.addEventListener('change', (e) => {
-                this.togglePoints(e.target.checked);
-            });
-        }
     },
 
     /**

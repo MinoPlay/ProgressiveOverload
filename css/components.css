@@ -2081,6 +2081,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
     gap: var(--spacing-lg);
+    align-items: start;
 }
 
 .kpi-card {
@@ -2149,6 +2150,15 @@
     vertical-align: middle;
 }
 
+/* Compact variant for simple count cards (e.g. Workouts Month / Week) */
+.kpi-card--compact {
+    padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.kpi-card--compact .kpi-value {
+    font-size: 2rem;
+}
+
 .trend-up {
     color: #4caf50;
 }
@@ -2180,11 +2190,6 @@
         gap: var(--spacing-sm);
     }
 
-    .kpi-card {
-        padding: var(--spacing-md);
-        transform: none !important;
-    }
-
     .kpi-card:hover {
         transform: none !important;
     }
@@ -2195,6 +2200,11 @@
 
     .kpi-label {
         letter-spacing: 0.5px;
+    }
+
+    /* Muscle training session cards go full-width so the list isn't squished */
+    .kpi-card--muscle {
+        grid-column: span 2;
     }
 
     .muscle-breakdown-section {
@@ -2217,7 +2227,8 @@
 
     .stats-milestones {
         padding: var(--spacing-md);
-        margin-bottom: var(--spacing-lg);
+        margin-top: var(--spacing-xl);
+        margin-bottom: var(--spacing-md);
     }
 }
 
@@ -2229,11 +2240,6 @@
     .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
         gap: var(--spacing-xs);
-    }
-
-    .kpi-card {
-        padding: var(--spacing-sm) var(--spacing-md);
-        border-bottom-width: 3px;
     }
 
     .kpi-value {
@@ -2354,7 +2360,8 @@
 
 /* Milestones */
 .stats-milestones {
-    margin-bottom: var(--spacing-xxl);
+    margin-top: var(--spacing-xxl);
+    margin-bottom: var(--spacing-lg);
     background: var(--bg-primary);
     padding: var(--spacing-lg);
     border-radius: var(--radius-lg);

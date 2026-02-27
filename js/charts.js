@@ -607,11 +607,8 @@ export const Charts = {
             label: muscle.charAt(0).toUpperCase() + muscle.slice(1).replace('-', ' '),
             data: displayData.map(d => (d.muscleGroupCounts && d.muscleGroupCounts[muscle]) || 0),
             borderColor: muscleColors[muscle] || '#667eea',
-            backgroundColor: muscleColors[muscle] || '#667eea',
-            borderWidth: 2,
-            pointRadius: 3,
-            tension: 0.3,
-            fill: false
+            backgroundColor: (muscleColors[muscle] || '#667eea') + '99',
+            borderWidth: 1
         }));
 
         const ctx = canvas.getContext('2d');
@@ -619,7 +616,7 @@ export const Charts = {
         if (existingChart) existingChart.destroy();
 
         new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: labels,
                 datasets: datasets
@@ -641,7 +638,9 @@ export const Charts = {
                     }
                 },
                 scales: {
+                    x: { stacked: true },
                     y: {
+                        stacked: true,
                         beginAtZero: true,
                         ticks: { stepSize: 1 },
                         title: { display: true, text: 'Unique Exercises' }
@@ -1278,13 +1277,9 @@ export const Charts = {
                 label: this.capitalize(muscle),
                 data: weekValues,
                 borderColor: colors[muscle] || '#667eea',
-                backgroundColor: colors[muscle] || '#667eea',
-                borderWidth: 3,
-                pointRadius: 0,
-                pointHoverRadius: 4,
-                tension: 0.4,
-                spanGaps: true,
-                fill: false
+                backgroundColor: (colors[muscle] || '#667eea') + '99',
+                borderWidth: 1,
+                spanGaps: true
             };
         });
 
@@ -1294,7 +1289,7 @@ export const Charts = {
         else if (this.selectedMetric === 'reps') yAxisLabel = 'Total Reps';
 
         new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: {
                 labels: weekLabels,
                 datasets: datasets

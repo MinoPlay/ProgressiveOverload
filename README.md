@@ -8,6 +8,8 @@ A premium, modern web application designed to help you track your strength train
 
 ### 📝 Effortless Workout Logging
 - **Quick Entry**: Log your sets, reps, and weight in seconds.
+- **Planned Sessions**: Preload a full session and submit all planned sets in one go.
+- **Superset Blocks**: Plan supersets (A/B/C exercises in sequence) and log them as one batch.
 - **Muscle-First Filtering**: Quickly find exercises by targeting specific muscle groups.
 - **Smart Suggestions**: Get real-time suggestions based on your previous performance to ensure you're always progressing.
 - **Dynamic Equipment Support**: Tailored fields for Barbell, Dumbbell, Kettlebell, Machines, and Bodyweight exercises.

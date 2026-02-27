@@ -156,6 +156,10 @@ export const DevStorage = {
     async addWorkout(workout) {
         console.log('🧪 DEV MODE: Adding workout');
 
+        if (!workout.id) {
+            workout.id = `dev-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        }
+
         // Add sequence number if not present
         if (!workout.sequence) {
             const sameDay = this.currentMonthWorkouts.filter(w => w.date === workout.date);
@@ -165,6 +169,39 @@ export const DevStorage = {
         this.currentMonthWorkouts.push(workout);
         await this.saveToFile();
         return workout;
+    },
+
+    /**
+     * Add multiple workouts in one save operation
+     * @param {Array<Object>} workouts
+     * @returns {Promise<Array<Object>>}
+     */
+    async addWorkoutsBatch(workouts) {
+        if (!Array.isArray(workouts) || workouts.length === 0) {
+            throw new Error('No workouts to save');
+        }
+
+        const targetDate = workouts[0].date;
+        if (!targetDate || workouts.some(entry => entry.date !== targetDate)) {
+            throw new Error('Batch submit requires a single date');
+        }
+
+        const sameDay = this.currentMonthWorkouts.filter(w => w.date === targetDate);
+        const startSequence = sameDay.length + 1;
+
+        const newWorkouts = workouts.map((entry, index) => ({
+            ...entry,
+            id: `dev-${Date.now()}-${index}-${Math.random().toString(36).slice(2, 8)}`,
+            reps: parseInt(entry.reps, 10),
+            weight: entry.weight !== null && entry.weight !== undefined && entry.weight !== ''
+                ? parseFloat(entry.weight)
+                : null,
+            sequence: startSequence + index
+        }));
+
+        this.currentMonthWorkouts.push(...newWorkouts);
+        await this.saveToFile();
+        return newWorkouts;
     },
 
     /**

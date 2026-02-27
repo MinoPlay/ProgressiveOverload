@@ -225,6 +225,31 @@
                     </form>
                 </div>
 
+                <div class="form-container planner-container">
+                    <div class="planner-header">
+                        <h4>Plan Session (Batch Log)</h4>
+                        <button type="button" id="plannerToggleBtn" class="btn btn-secondary planner-toggle-btn"
+                            aria-expanded="true" aria-controls="plannerContent">Hide</button>
+                    </div>
+
+                    <div id="plannerContent" class="planner-content">
+                        <div class="planner-controls">
+                            <select id="plannerExerciseSelect" aria-label="Exercise to add to planned session">
+                                <option value="">Select Exercise...</option>
+                            </select>
+                            <button type="button" id="plannerAddExerciseBtn" class="btn btn-secondary">Add Exercise</button>
+                            <button type="button" id="plannerAddSupersetBtn" class="btn btn-secondary">Add Superset Block</button>
+                        </div>
+
+                        <div id="plannedSessionList" class="planned-session-list" aria-live="polite"></div>
+
+                        <div class="planner-actions">
+                            <button type="button" id="plannerSubmitBtn" class="btn btn-primary">Submit Planned Session</button>
+                            <button type="button" id="plannerClearBtn" class="btn btn-secondary">Clear Plan</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Last Workout Summary -->
                 <div id="lastWorkoutSummary" class="last-workout-summary" style="display: none;">
                     <!-- Content will be injected by JavaScript -->

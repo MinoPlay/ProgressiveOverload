@@ -249,14 +249,7 @@ export const Storage = {
             const sameDateWorkouts = this.currentMonthWorkouts.filter(w => w.date === workout.date);
             const sequence = sameDateWorkouts.length + 1;
 
-            const newWorkout = {
-                id: generateId(),
-                exerciseId: workout.exerciseId,
-                date: workout.date,
-                reps: parseInt(workout.reps, 10),
-                weight: workout.weight ? parseFloat(workout.weight) : null,
-                sequence: sequence
-            };
+            const newWorkout = this.buildWorkoutRecord(workout, sequence);
 
             this.currentMonthWorkouts.push(newWorkout);
 
@@ -273,20 +266,95 @@ export const Storage = {
             const sameDateWorkouts = monthData.workouts.filter(w => w.date === workout.date);
             const sequence = sameDateWorkouts.length + 1;
 
-            const newWorkout = {
-                id: generateId(),
-                exerciseId: workout.exerciseId,
-                date: workout.date,
-                reps: parseInt(workout.reps, 10),
-                weight: workout.weight ? parseFloat(workout.weight) : null,
-                sequence: sequence
-            };
+            const newWorkout = this.buildWorkoutRecord(workout, sequence);
 
             monthData.workouts.push(newWorkout);
             await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
 
             return newWorkout;
         }
+    },
+
+    /**
+     * Add multiple workouts in a single submit flow
+     * @param {array} workouts - Workout entries to persist
+     * @returns {Promise<array>} Added workouts
+     */
+    async addWorkoutsBatch(workouts) {
+        if (!Array.isArray(workouts) || workouts.length === 0) {
+            throw new Error('No workouts to save');
+        }
+
+        const targetDate = workouts[0].date;
+        if (!targetDate) {
+            throw new Error('Invalid workout date');
+        }
+
+        const differentDate = workouts.some(entry => entry.date !== targetDate);
+        if (differentDate) {
+            throw new Error('Batch submit requires a single date');
+        }
+
+        const workoutDate = parseDate(targetDate);
+        if (!workoutDate) {
+            throw new Error('Invalid workout date');
+        }
+
+        const now = new Date();
+        const isSameMonth = workoutDate.getMonth() === now.getMonth() &&
+            workoutDate.getFullYear() === now.getFullYear();
+
+        if (isSameMonth) {
+            const sameDateWorkouts = this.currentMonthWorkouts.filter(w => w.date === targetDate);
+            const startSequence = sameDateWorkouts.length + 1;
+            const newWorkouts = workouts.map((entry, index) => this.buildWorkoutRecord(entry, startSequence + index));
+
+            this.currentMonthWorkouts.push(...newWorkouts);
+
+            const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha);
+            this.currentMonthSha = result.content.sha;
+            return newWorkouts;
+        }
+
+        const monthData = await GitHubAPI.getWorkouts(workoutDate);
+        const sameDateWorkouts = monthData.workouts.filter(w => w.date === targetDate);
+        const startSequence = sameDateWorkouts.length + 1;
+        const newWorkouts = workouts.map((entry, index) => this.buildWorkoutRecord(entry, startSequence + index));
+
+        monthData.workouts.push(...newWorkouts);
+        await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
+
+        return newWorkouts;
+    },
+
+    /**
+     * Build persisted workout record with optional metadata fields
+     * @param {object} workout - Workout input
+     * @param {number} sequence - Sequence number for date ordering
+     * @returns {object}
+     */
+    buildWorkoutRecord(workout, sequence) {
+        const weightValue = workout.weight !== null && workout.weight !== undefined && workout.weight !== ''
+            ? parseFloat(workout.weight)
+            : null;
+
+        const record = {
+            id: generateId(),
+            exerciseId: workout.exerciseId,
+            date: workout.date,
+            reps: parseInt(workout.reps, 10),
+            weight: Number.isFinite(weightValue) ? weightValue : null,
+            sequence
+        };
+
+        const optionalFields = ['sessionId', 'plannedSetId', 'supersetGroupId', 'supersetRound', 'source'];
+        optionalFields.forEach(field => {
+            if (workout[field] !== undefined && workout[field] !== null && workout[field] !== '') {
+                record[field] = workout[field];
+            }
+        });
+
+        return record;
     },
 
     /**

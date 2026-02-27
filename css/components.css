@@ -731,6 +731,142 @@
     gap: var(--spacing-sm);
 }
 
+.planner-container {
+    margin-top: var(--spacing-md);
+}
+
+.planner-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+.planner-header h4 {
+    margin: 0;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.planner-toggle-btn {
+    min-height: 36px;
+    padding: 0 var(--spacing-md);
+}
+
+.planner-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.planner-content.collapsed {
+    display: none;
+}
+
+.planner-controls {
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    gap: var(--spacing-sm);
+}
+
+.planner-controls select {
+    width: 100%;
+    padding: 0 var(--spacing-md);
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    height: 44px;
+}
+
+.planned-session-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.planned-empty {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-md);
+}
+
+.planned-row,
+.superset-block {
+    background: var(--bg-secondary);
+    border-radius: var(--radius-md);
+    padding: var(--spacing-sm);
+    border: 1px solid var(--border-light);
+}
+
+.planned-row-header,
+.superset-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-xs);
+}
+
+.planned-row-title,
+.superset-title {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.planned-row-grid {
+    display: grid;
+    grid-template-columns: 1fr 110px 120px auto;
+    gap: var(--spacing-sm);
+}
+
+.planned-row-grid input,
+.planned-row-grid select {
+    width: 100%;
+    padding: 0 var(--spacing-sm);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    font-size: 0.95rem;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    height: 40px;
+}
+
+.superset-exercises {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-xs);
+}
+
+.superset-exercise-row {
+    display: flex;
+    gap: var(--spacing-xs);
+    align-items: center;
+}
+
+.superset-label {
+    min-width: 26px;
+    text-align: center;
+    background: var(--primary-light);
+    color: var(--primary-color);
+    border-radius: var(--radius-sm);
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 0.2rem 0.4rem;
+}
+
+.superset-exercise-row .planned-row-grid {
+    flex: 1;
+}
+
+.planner-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
 /* Icon Buttons */
 .btn-icon {
     width: 48px;
@@ -1116,6 +1252,14 @@
 
     .compact-workout-form .form-group-row .form-group {
         flex: 1;
+    }
+
+    .planner-controls {
+        grid-template-columns: 1fr;
+    }
+
+    .planned-row-grid {
+        grid-template-columns: 1fr 90px 100px auto;
     }
 
     .form-actions-inline {

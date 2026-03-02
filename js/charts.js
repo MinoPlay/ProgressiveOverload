@@ -608,14 +608,28 @@ export const Charts = {
         const labels = muscles.map(m => m.charAt(0).toUpperCase() + m.slice(1).replace('-', ' '));
         const values = muscles.map(m => sessionsByMuscle[m].size);
 
+        // Restore canvas if it was hidden by a previous empty-state render
+        canvas.style.display = '';
+        const existingMsg = canvas.parentElement.querySelector('.no-sessions-msg');
+        if (existingMsg) existingMsg.style.display = 'none';
+
+        if (muscles.length === 0) {
+            canvas.style.display = 'none';
+            let msgEl = canvas.parentElement.querySelector('.no-sessions-msg');
+            if (!msgEl) {
+                msgEl = document.createElement('p');
+                msgEl.className = 'no-sessions-msg';
+                msgEl.style.cssText = 'text-align:center; color: var(--text-light); font-style: italic; padding: 40px 0;';
+                canvas.parentElement.appendChild(msgEl);
+            }
+            msgEl.style.display = '';
+            msgEl.textContent = 'No sessions this period';
+            return;
+        }
+
         const ctx = canvas.getContext('2d');
         const existingChart = Chart.getChart(canvas);
         if (existingChart) existingChart.destroy();
-
-        if (muscles.length === 0) {
-            canvas.parentElement.innerHTML = '<p style="text-align:center; color: var(--text-light); font-style: italic; padding: 40px 0;">No sessions this period</p>';
-            return;
-        }
 
         const primaryColor = '#667eea';
         const pointColors = muscles.map(m => muscleColors[m] || primaryColor);

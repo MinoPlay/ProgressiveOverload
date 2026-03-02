@@ -838,6 +838,7 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: var(--spacing-xs);
+    user-select: none;
 }
 
 .planned-row-title,
@@ -1078,12 +1079,18 @@
     flex-shrink: 0;
 }
 
+.btn-icon:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    pointer-events: none;
+}
+
 .btn-icon.btn-primary {
     background: var(--primary-gradient);
     color: var(--text-inverse);
 }
 
-.btn-icon.btn-primary:hover {
+.btn-icon.btn-primary:hover:not(:disabled) {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
@@ -1093,7 +1100,7 @@
     color: var(--text-primary);
 }
 
-.btn-icon.btn-secondary:hover {
+.btn-icon.btn-secondary:hover:not(:disabled) {
     background: var(--secondary-dark);
 }
 

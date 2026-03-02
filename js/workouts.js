@@ -108,6 +108,8 @@ export const Workouts = {
 
         if (plannedSessionList) {
             plannedSessionList.addEventListener('change', (event) => this.handlePlannerFieldChange(event));
+            // Re-evaluate submit button on every keystroke (input fires before blur/change)
+            plannedSessionList.addEventListener('input', (event) => this.handlePlannerFieldInput(event));
             plannedSessionList.addEventListener('click', (event) => this.handlePlannerAction(event));
         }
     },
@@ -503,6 +505,35 @@ export const Workouts = {
         }
 
         this.persistPlannerDraft();
+        this.updatePlannerSubmitBtn();
+    },
+
+    /**
+     * Sync number/text input values into the model on every keystroke so
+     * isPlannerSessionComplete always sees the current value, then re-check the button.
+     * Does NOT persist to localStorage (that happens on the 'change' event).
+     */
+    handlePlannerFieldInput(event) {
+        const field = event.target;
+        if (!field?.dataset?.field) return;
+        const fieldName = field.dataset.field;
+        if (fieldName === 'exerciseId') return; // selects handled by 'change'
+
+        const row = this.plannedSession?.rows?.find(entry => entry.id === field.dataset.rowId);
+        if (!row) return;
+
+        if (row.type === 'single') {
+            const setEntry = (row.sets || []).find(entry => entry.id === field.dataset.setId);
+            if (setEntry) setEntry[fieldName] = field.value;
+        } else {
+            const item = row.exercises?.find(entry => entry.id === field.dataset.itemId);
+            if (item) {
+                const setEntry = (item.sets || []).find(entry => entry.id === field.dataset.setId);
+                if (setEntry) setEntry[fieldName] = field.value;
+            }
+        }
+
+        this.updatePlannerSubmitBtn();
     },
 
     renderPlannedSession() {
@@ -516,6 +547,7 @@ export const Workouts = {
             empty.className = 'planned-empty';
             empty.textContent = 'No planned entries yet. Add exercises or a superset block.';
             container.appendChild(empty);
+            this.updatePlannerSubmitBtn();
             return;
         }
 
@@ -545,6 +577,8 @@ export const Workouts = {
         if (window.lucide) {
             window.lucide.createIcons();
         }
+
+        this.updatePlannerSubmitBtn();
     },
 
     createSinglePlannedRow(row, index) {
@@ -648,14 +682,6 @@ export const Workouts = {
         collapseBtn.innerHTML = '<i data-lucide="chevron-down"></i>';
         collapseBtn.title = row.expanded === false ? 'Expand superset' : 'Collapse superset';
 
-        const clearBtn = document.createElement('button');
-        clearBtn.type = 'button';
-        clearBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn';
-        clearBtn.dataset.action = 'clear-row-fields';
-        clearBtn.dataset.rowId = row.id;
-        clearBtn.innerHTML = '<i data-lucide="eraser"></i>';
-        clearBtn.title = 'Clear superset fields';
-
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn';
@@ -665,7 +691,6 @@ export const Workouts = {
         removeBtn.title = 'Remove superset block';
 
         headerActions.appendChild(collapseBtn);
-        headerActions.appendChild(clearBtn);
         headerActions.appendChild(removeBtn);
         header.appendChild(title);
         header.appendChild(headerActions);
@@ -956,6 +981,42 @@ export const Workouts = {
         const repsEmpty = repsValue === '' || repsValue === null || repsValue === undefined;
         const weightEmpty = weightValue === '' || weightValue === null || weightValue === undefined;
         return repsEmpty && weightEmpty;
+    },
+
+    /**
+     * Returns true when every exercise/superset entry has an exercise selected
+     * and at least one set with reps filled in.
+     */
+    isPlannerSetHasReps(setEntry) {
+        const v = setEntry?.reps;
+        return v !== '' && v !== null && v !== undefined;
+    },
+
+    isPlannerSessionComplete() {
+        if (!this.plannedSession || !this.plannedSession.rows.length) return false;
+
+        for (const row of this.plannedSession.rows) {
+            if (row.type === 'single') {
+                if (!row.exerciseId) return false;
+                if (!Array.isArray(row.sets) || row.sets.length === 0) return false;
+                if (!row.sets.every(s => this.isPlannerSetHasReps(s))) return false;
+            } else {
+                for (const item of row.exercises) {
+                    if (!item.exerciseId) return false;
+                    if (!Array.isArray(item.sets) || item.sets.length === 0) return false;
+                    if (!item.sets.every(s => this.isPlannerSetHasReps(s))) return false;
+                }
+            }
+        }
+        return true;
+    },
+
+    updatePlannerSubmitBtn() {
+        const btn = document.getElementById('plannerSubmitBtn');
+        if (!btn) return;
+        const ready = this.isPlannerSessionComplete();
+        btn.disabled = !ready;
+        btn.title = ready ? 'Submit planned session' : 'Fill in exercise and at least one set for every entry before submitting';
     },
 
     clearPlannedSession(showMessage = false) {

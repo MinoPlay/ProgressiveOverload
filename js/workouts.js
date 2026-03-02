@@ -820,14 +820,14 @@ export const Workouts = {
             const parsed = JSON.parse(rawDraft);
             if (!parsed || !Array.isArray(parsed.rows)) return;
 
+            // Always use today's date — never restore a stale date from the draft
             const dateInput = document.getElementById('workoutDate');
-            if (dateInput && parsed.date) {
-                dateInput.value = parsed.date;
-            }
+            const today = formatDate(new Date());
+            const currentDate = (dateInput && dateInput.value) ? dateInput.value : today;
 
             this.plannedSession = {
                 id: parsed.id || `session-${Date.now()}`,
-                date: parsed.date || (dateInput ? dateInput.value : formatDate(new Date())),
+                date: currentDate,
                 rows: parsed.rows.map((row, index) => this.normalizePlannedRow(row, index))
             };
         } catch (error) {

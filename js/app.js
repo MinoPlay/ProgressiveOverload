@@ -7,6 +7,7 @@ import { Exercises } from './exercises.js';
 import { Workouts } from './workouts.js';
 import { Charts } from './charts.js';
 import { History } from './history.js';
+import { Templates } from './templates.js';
 import { CONFIG, loadConfig } from './config.js';
 
 /**
@@ -78,6 +79,7 @@ const App = {
             Workouts.init();
             History.init();
             Charts.init();
+            Templates.init();
 
             // Hide loading
             showLoading(false);

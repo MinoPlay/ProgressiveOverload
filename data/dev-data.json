@@ -3922,5 +3922,252 @@
       "reps": 8,
       "weight": 37.5
     }
+  ],
+  "templates": [
+    {
+      "id": "tpl_push_a",
+      "name": "Push Day A",
+      "createdAt": "2026-01-06T08:00:00.000Z",
+      "rows": [
+        {
+          "id": "tpl-row-push-bench",
+          "type": "single",
+          "exerciseId": "1769598356908_flvdqzdhf",
+          "sets": [
+            { "id": "tpl-row-push-bench-set-1", "reps": "10", "weight": "95" },
+            { "id": "tpl-row-push-bench-set-2", "reps": "8",  "weight": "100" },
+            { "id": "tpl-row-push-bench-set-3", "reps": "6",  "weight": "105" }
+          ]
+        },
+        {
+          "id": "tpl-row-push-ohp",
+          "type": "single",
+          "exerciseId": "1769598356908_zy0w3s09g",
+          "sets": [
+            { "id": "tpl-row-push-ohp-set-1", "reps": "10", "weight": "57.5" },
+            { "id": "tpl-row-push-ohp-set-2", "reps": "8",  "weight": "60" },
+            { "id": "tpl-row-push-ohp-set-3", "reps": "6",  "weight": "62.5" }
+          ]
+        },
+        {
+          "id": "tpl-row-push-lateral",
+          "type": "single",
+          "exerciseId": "1769598356919_lateralraise",
+          "sets": [
+            { "id": "tpl-row-push-lateral-set-1", "reps": "12", "weight": "14" },
+            { "id": "tpl-row-push-lateral-set-2", "reps": "12", "weight": "14" },
+            { "id": "tpl-row-push-lateral-set-3", "reps": "12", "weight": "14" }
+          ]
+        },
+        {
+          "id": "tpl-row-push-dips",
+          "type": "single",
+          "exerciseId": "1769598356908_xjkjvzp40",
+          "sets": [
+            { "id": "tpl-row-push-dips-set-1", "reps": "12", "weight": "" },
+            { "id": "tpl-row-push-dips-set-2", "reps": "12", "weight": "" },
+            { "id": "tpl-row-push-dips-set-3", "reps": "10", "weight": "" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tpl_pull_a",
+      "name": "Pull Day A",
+      "createdAt": "2026-01-06T08:00:00.000Z",
+      "rows": [
+        {
+          "id": "tpl-row-pull-rows",
+          "type": "single",
+          "exerciseId": "1769598356908_6t3ss20am",
+          "sets": [
+            { "id": "tpl-row-pull-rows-set-1", "reps": "10", "weight": "85" },
+            { "id": "tpl-row-pull-rows-set-2", "reps": "8",  "weight": "90" },
+            { "id": "tpl-row-pull-rows-set-3", "reps": "6",  "weight": "92.5" }
+          ]
+        },
+        {
+          "id": "tpl-row-pull-pullups",
+          "type": "single",
+          "exerciseId": "1769598356908_audtljs1j",
+          "sets": [
+            { "id": "tpl-row-pull-pullups-set-1", "reps": "10", "weight": "" },
+            { "id": "tpl-row-pull-pullups-set-2", "reps": "9",  "weight": "" },
+            { "id": "tpl-row-pull-pullups-set-3", "reps": "8",  "weight": "" }
+          ]
+        },
+        {
+          "id": "tpl-ss-pull-arms",
+          "type": "superset",
+          "label": "Superset",
+          "exercises": [
+            {
+              "id": "tpl-ss-pull-arms-a",
+              "exerciseId": "1769598356908_vaei2f8dr",
+              "sets": [
+                { "id": "tpl-ss-pull-arms-a-set-1", "reps": "12", "weight": "22.5" },
+                { "id": "tpl-ss-pull-arms-a-set-2", "reps": "12", "weight": "22.5" },
+                { "id": "tpl-ss-pull-arms-a-set-3", "reps": "10", "weight": "22.5" }
+              ]
+            },
+            {
+              "id": "tpl-ss-pull-arms-b",
+              "exerciseId": "1769598356921_facepulls",
+              "sets": [
+                { "id": "tpl-ss-pull-arms-b-set-1", "reps": "15", "weight": "30" },
+                { "id": "tpl-ss-pull-arms-b-set-2", "reps": "15", "weight": "30" },
+                { "id": "tpl-ss-pull-arms-b-set-3", "reps": "15", "weight": "30" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tpl_legs_a",
+      "name": "Legs Day A",
+      "createdAt": "2026-01-06T08:00:00.000Z",
+      "rows": [
+        {
+          "id": "tpl-row-legs-squat",
+          "type": "single",
+          "exerciseId": "1769598356908_63m870ao9",
+          "sets": [
+            { "id": "tpl-row-legs-squat-set-1", "reps": "10", "weight": "105" },
+            { "id": "tpl-row-legs-squat-set-2", "reps": "8",  "weight": "112.5" },
+            { "id": "tpl-row-legs-squat-set-3", "reps": "6",  "weight": "117.5" }
+          ]
+        },
+        {
+          "id": "tpl-row-legs-legpress",
+          "type": "single",
+          "exerciseId": "1770010828876_iomixwb3f",
+          "sets": [
+            { "id": "tpl-row-legs-legpress-set-1", "reps": "12", "weight": "185" },
+            { "id": "tpl-row-legs-legpress-set-2", "reps": "10", "weight": "195" },
+            { "id": "tpl-row-legs-legpress-set-3", "reps": "8",  "weight": "205" }
+          ]
+        },
+        {
+          "id": "tpl-row-legs-hipthrust",
+          "type": "single",
+          "exerciseId": "1769598356920_hipthrust",
+          "sets": [
+            { "id": "tpl-row-legs-hipthrust-set-1", "reps": "12", "weight": "115" },
+            { "id": "tpl-row-legs-hipthrust-set-2", "reps": "10", "weight": "125" },
+            { "id": "tpl-row-legs-hipthrust-set-3", "reps": "8",  "weight": "135" }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tpl_supersets_only",
+      "name": "Supersets Only (Test)",
+      "createdAt": "2026-01-06T08:00:00.000Z",
+      "rows": [
+        {
+          "id": "tpl-ss-only-push-1",
+          "type": "superset",
+          "label": "Superset",
+          "exercises": [
+            {
+              "id": "tpl-ss-only-push-1-a",
+              "exerciseId": "1769598356908_flvdqzdhf",
+              "sets": [
+                { "id": "tpl-ss-only-push-1-a-set-1", "reps": "10", "weight": "90" },
+                { "id": "tpl-ss-only-push-1-a-set-2", "reps": "8",  "weight": "95" },
+                { "id": "tpl-ss-only-push-1-a-set-3", "reps": "6",  "weight": "100" }
+              ]
+            },
+            {
+              "id": "tpl-ss-only-push-1-b",
+              "exerciseId": "1769598356919_lateralraise",
+              "sets": [
+                { "id": "tpl-ss-only-push-1-b-set-1", "reps": "12", "weight": "12" },
+                { "id": "tpl-ss-only-push-1-b-set-2", "reps": "12", "weight": "12" },
+                { "id": "tpl-ss-only-push-1-b-set-3", "reps": "12", "weight": "12" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tpl-ss-only-push-2",
+          "type": "superset",
+          "label": "Superset",
+          "exercises": [
+            {
+              "id": "tpl-ss-only-push-2-a",
+              "exerciseId": "1769598356908_zy0w3s09g",
+              "sets": [
+                { "id": "tpl-ss-only-push-2-a-set-1", "reps": "10", "weight": "55" },
+                { "id": "tpl-ss-only-push-2-a-set-2", "reps": "8",  "weight": "57.5" },
+                { "id": "tpl-ss-only-push-2-a-set-3", "reps": "6",  "weight": "60" }
+              ]
+            },
+            {
+              "id": "tpl-ss-only-push-2-b",
+              "exerciseId": "1769598356908_xjkjvzp40",
+              "sets": [
+                { "id": "tpl-ss-only-push-2-b-set-1", "reps": "12", "weight": "" },
+                { "id": "tpl-ss-only-push-2-b-set-2", "reps": "10", "weight": "" },
+                { "id": "tpl-ss-only-push-2-b-set-3", "reps": "8",  "weight": "" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "tpl_supersets_plus_exercises",
+      "name": "Supersets + Exercises (Test)",
+      "createdAt": "2026-01-06T08:00:00.000Z",
+      "rows": [
+        {
+          "id": "tpl-row-mix-rows",
+          "type": "single",
+          "exerciseId": "1769598356908_6t3ss20am",
+          "sets": [
+            { "id": "tpl-row-mix-rows-set-1", "reps": "10", "weight": "80" },
+            { "id": "tpl-row-mix-rows-set-2", "reps": "8",  "weight": "85" },
+            { "id": "tpl-row-mix-rows-set-3", "reps": "6",  "weight": "90" }
+          ]
+        },
+        {
+          "id": "tpl-ss-mix-arms",
+          "type": "superset",
+          "label": "Superset",
+          "exercises": [
+            {
+              "id": "tpl-ss-mix-arms-a",
+              "exerciseId": "1769598356908_vaei2f8dr",
+              "sets": [
+                { "id": "tpl-ss-mix-arms-a-set-1", "reps": "12", "weight": "20" },
+                { "id": "tpl-ss-mix-arms-a-set-2", "reps": "12", "weight": "20" },
+                { "id": "tpl-ss-mix-arms-a-set-3", "reps": "10", "weight": "20" }
+              ]
+            },
+            {
+              "id": "tpl-ss-mix-arms-b",
+              "exerciseId": "1769598356921_facepulls",
+              "sets": [
+                { "id": "tpl-ss-mix-arms-b-set-1", "reps": "15", "weight": "27.5" },
+                { "id": "tpl-ss-mix-arms-b-set-2", "reps": "15", "weight": "27.5" },
+                { "id": "tpl-ss-mix-arms-b-set-3", "reps": "15", "weight": "27.5" }
+              ]
+            }
+          ]
+        },
+        {
+          "id": "tpl-row-mix-pullups",
+          "type": "single",
+          "exerciseId": "1769598356908_audtljs1j",
+          "sets": [
+            { "id": "tpl-row-mix-pullups-set-1", "reps": "8", "weight": "" },
+            { "id": "tpl-row-mix-pullups-set-2", "reps": "8", "weight": "" },
+            { "id": "tpl-row-mix-pullups-set-3", "reps": "6", "weight": "" }
+          ]
+        }
+      ]
+    }
   ]
 }

@@ -300,6 +300,41 @@ export const GitHubAPI = {
     },
 
     /**
+     * Get session templates from repository
+     * @returns {Promise<{templates: array, sha: string}>}
+     */
+    async getSessionTemplates() {
+        const result = await this.getFile(CONFIG.paths.sessionTemplates);
+
+        if (!result) {
+            return {
+                templates: [],
+                sha: null
+            };
+        }
+
+        return {
+            templates: result.content.templates || [],
+            sha: result.sha
+        };
+    },
+
+    /**
+     * Save session templates to repository
+     * @param {array} templates - Array of template objects
+     * @param {string|null} sha - Current file SHA
+     * @returns {Promise<object>}
+     */
+    async saveSessionTemplates(templates, sha = null) {
+        const content = { templates };
+        const message = sha
+            ? `Update session templates (${templates.length} total)`
+            : 'Initialize session templates';
+
+        return await this.putFile(CONFIG.paths.sessionTemplates, content, message, sha);
+    },
+
+    /**
      * Check API rate limit status
      * @returns {Promise<object>} Rate limit information
      */

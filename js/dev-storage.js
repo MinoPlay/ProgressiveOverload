@@ -10,6 +10,8 @@ export const DevStorage = {
     currentMonthWorkouts: [],
     currentMonthSha: 'dev-sha-workouts',
     currentMonthPath: null,
+    sessionTemplates: [],
+    sessionTemplatesSha: 'dev-sha-templates',
 
     /**
      * Initialize storage by loading from dev-data.json
@@ -27,6 +29,7 @@ export const DevStorage = {
             const data = await response.json();
             this.exercises = data.exercises || [];
             this.currentMonthWorkouts = data.workouts || [];
+            this.sessionTemplates = data.templates || [];
 
             // Set current month path
             const now = new Date();
@@ -51,7 +54,8 @@ export const DevStorage = {
         try {
             const data = {
                 exercises: this.exercises,
-                workouts: this.currentMonthWorkouts
+                workouts: this.currentMonthWorkouts,
+                templates: this.sessionTemplates
             };
 
             const response = await fetch(DEV_API_URL, {
@@ -350,6 +354,68 @@ export const DevStorage = {
         console.log(`  Total updated: ${updatedCount}/${workoutIds.length}`);
 
         // Save to file to persist the changes
+        await this.saveToFile();
+    },
+
+    // ─── Session Templates ───────────────────────────────────────────────────
+
+    async loadSessionTemplates() {
+        // Templates are loaded in initialize() from dev-data.json
+    },
+
+    getSessionTemplates() {
+        return [...this.sessionTemplates];
+    },
+
+    getSessionTemplateById(id) {
+        return this.sessionTemplates.find(t => t.id === id) || null;
+    },
+
+    async addSessionTemplate(template) {
+        console.log('🧪 DEV MODE: Adding session template');
+        if (!template.name || !template.name.trim()) {
+            throw new Error('Template name is required');
+        }
+        const trimmedName = template.name.trim();
+        if (this.sessionTemplates.some(t => t.name.toLowerCase() === trimmedName.toLowerCase())) {
+            throw new Error('A template with this name already exists');
+        }
+        const newTemplate = {
+            id: `dev-tpl-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+            name: trimmedName,
+            rows: template.rows || [],
+            createdAt: new Date().toISOString()
+        };
+        this.sessionTemplates.push(newTemplate);
+        await this.saveToFile();
+        return newTemplate;
+    },
+
+    async updateSessionTemplate(id, changes) {
+        console.log('🧪 DEV MODE: Updating session template');
+        const index = this.sessionTemplates.findIndex(t => t.id === id);
+        if (index === -1) throw new Error('Template not found');
+        if (changes.name) {
+            const trimmedName = changes.name.trim();
+            if (trimmedName !== this.sessionTemplates[index].name) {
+                if (this.sessionTemplates.some(t => t.id !== id && t.name.toLowerCase() === trimmedName.toLowerCase())) {
+                    throw new Error('A template with this name already exists');
+                }
+            }
+            changes.name = trimmedName;
+        }
+        this.sessionTemplates[index] = {
+            ...this.sessionTemplates[index],
+            ...changes,
+            updatedAt: new Date().toISOString()
+        };
+        await this.saveToFile();
+        return this.sessionTemplates[index];
+    },
+
+    async deleteSessionTemplate(id) {
+        console.log('🧪 DEV MODE: Deleting session template');
+        this.sessionTemplates = this.sessionTemplates.filter(t => t.id !== id);
         await this.saveToFile();
     }
 };

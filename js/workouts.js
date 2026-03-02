@@ -29,6 +29,9 @@ export const Workouts = {
         this.updateDateTooltip();
         this.renderLastWorkoutSummary();
 
+        // Populate template dropdown
+        this.populatePlannerTemplateDropdown();
+
         // Listen for exercise updates
         window.addEventListener('exercisesUpdated', () => {
             this.populateMuscleDropdown();
@@ -38,7 +41,10 @@ export const Workouts = {
             this.renderPlannedSession();
         });
 
-
+        // Refresh template dropdown when templates change
+        window.addEventListener('templatesUpdated', () => {
+            this.populatePlannerTemplateDropdown();
+        });
     },
 
     /**
@@ -54,6 +60,7 @@ export const Workouts = {
         const plannerAddSupersetBtn = document.getElementById('plannerAddSupersetBtn');
         const plannerSubmitBtn = document.getElementById('plannerSubmitBtn');
         const plannerClearBtn = document.getElementById('plannerClearBtn');
+        const plannerSaveAsTemplateBtn = document.getElementById('plannerSaveAsTemplateBtn');
         const plannedSessionList = document.getElementById('plannedSessionList');
 
         form.addEventListener('submit', (e) => this.handleSubmit(e));
@@ -106,6 +113,44 @@ export const Workouts = {
             plannerClearBtn.addEventListener('click', () => this.clearPlannedSession(true));
         }
 
+        if (plannerSaveAsTemplateBtn) {
+            plannerSaveAsTemplateBtn.addEventListener('click', () => this.handleSaveAsTemplate());
+        }
+
+        const saveAsTemplateConfirmBtn = document.getElementById('saveAsTemplateConfirmBtn');
+        const saveAsTemplateCancelBtn = document.getElementById('saveAsTemplateCancelBtn');
+        const saveAsTemplateNameInput = document.getElementById('saveAsTemplateNameInput');
+
+        if (saveAsTemplateConfirmBtn) {
+            saveAsTemplateConfirmBtn.addEventListener('click', () => this.confirmSaveAsTemplate());
+        }
+        if (saveAsTemplateCancelBtn) {
+            saveAsTemplateCancelBtn.addEventListener('click', () => this.closeSaveAsTemplateModal());
+        }
+        if (saveAsTemplateNameInput) {
+            saveAsTemplateNameInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') this.confirmSaveAsTemplate();
+                if (e.key === 'Escape') this.closeSaveAsTemplateModal();
+            });
+        }
+
+        const saveAsTemplateModal = document.getElementById('saveAsTemplateModal');
+        if (saveAsTemplateModal) {
+            saveAsTemplateModal.addEventListener('click', (e) => {
+                if (e.target === saveAsTemplateModal) this.closeSaveAsTemplateModal();
+            });
+        }
+
+        const plannerTemplateSelect = document.getElementById('plannerTemplateSelect');
+        if (plannerTemplateSelect) {
+            plannerTemplateSelect.addEventListener('change', () => {
+                const templateId = plannerTemplateSelect.value;
+                if (templateId) {
+                    this.loadTemplateIntoPlanner(templateId);
+                }
+            });
+        }
+
         if (plannedSessionList) {
             plannedSessionList.addEventListener('change', (event) => this.handlePlannerFieldChange(event));
             // Re-evaluate submit button on every keystroke (input fires before blur/change)
@@ -128,6 +173,7 @@ export const Workouts = {
 
     ensurePlannerActiveSet(target, sets) {
         if (!target || !Array.isArray(sets) || sets.length === 0) return null;
+        if (target.activeSetId === null) return null;
         const hasValidActiveSet = sets.some(setEntry => setEntry.id === target.activeSetId);
         if (!hasValidActiveSet) {
             target.activeSetId = sets[0].id;
@@ -293,6 +339,7 @@ export const Workouts = {
     },
 
     addPlannedExercise() {
+        this.resetLoadedTemplate();
         const rowId = `row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
         this.collapseAllPlannedRowsExcept(rowId);
@@ -312,6 +359,7 @@ export const Workouts = {
     },
 
     addSupersetBlock() {
+        this.resetLoadedTemplate();
         const blockId = `ss-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         const firstExerciseId = `${blockId}-a`;
         const secondExerciseId = `${blockId}-b`;
@@ -352,6 +400,7 @@ export const Workouts = {
         const { action, rowId, itemId } = button.dataset;
 
         if (action === 'remove-row') {
+            this.resetLoadedTemplate();
             this.plannedSession.rows = this.plannedSession.rows.filter(row => row.id !== rowId);
             this.ensureOnePlannerRowExpanded();
         }
@@ -361,10 +410,12 @@ export const Workouts = {
         }
 
         if (action === 'clear-row-fields') {
+            this.resetLoadedTemplate();
             this.clearPlannerRowFields(rowId, itemId || null);
         }
 
         if (action === 'copy-next-set') {
+            this.resetLoadedTemplate();
             this.copyPlannerSetForward(rowId, itemId || null);
         }
 
@@ -474,6 +525,7 @@ export const Workouts = {
         const field = event.target;
         if (!field?.dataset?.field) return;
 
+        this.resetLoadedTemplate();
         const fieldName = field.dataset.field;
 
         const row = this.plannedSession.rows.find(entry => entry.id === field.dataset.rowId);
@@ -505,6 +557,10 @@ export const Workouts = {
         }
 
         this.persistPlannerDraft();
+        if (fieldName === 'exerciseId') {
+            this.renderPlannedSession();
+            return;
+        }
         this.updatePlannerSubmitBtn();
     },
 
@@ -518,6 +574,8 @@ export const Workouts = {
         if (!field?.dataset?.field) return;
         const fieldName = field.dataset.field;
         if (fieldName === 'exerciseId') return; // selects handled by 'change'
+
+        this.resetLoadedTemplate();
 
         const row = this.plannedSession?.rows?.find(entry => entry.id === field.dataset.rowId);
         if (!row) return;
@@ -581,6 +639,22 @@ export const Workouts = {
         this.updatePlannerSubmitBtn();
     },
 
+    getPlannerExerciseName(exerciseId) {
+        if (!exerciseId) return 'Select Exercise';
+        const exercise = Storage.getExerciseById(exerciseId);
+        return exercise?.name || 'Unknown Exercise';
+    },
+
+    getPlannerRowTitle(row, index) {
+        const position = index + 1;
+        if (row.type === 'superset') {
+            const names = (row.exercises || []).map(entry => this.getPlannerExerciseName(entry.exerciseId));
+            return `${position}: ${names.join(' / ')}`;
+        }
+
+        return `${position}: ${this.getPlannerExerciseName(row.exerciseId)}`;
+    },
+
     createSinglePlannedRow(row, index) {
         const wrapper = document.createElement('div');
         wrapper.className = 'planned-row';
@@ -597,7 +671,7 @@ export const Workouts = {
 
         const title = document.createElement('span');
         title.className = 'planned-row-title';
-        title.textContent = `Exercise ${index + 1}`;
+    title.textContent = this.getPlannerRowTitle(row, index);
 
         const headerActions = document.createElement('div');
         headerActions.className = 'planner-row-actions';
@@ -610,14 +684,6 @@ export const Workouts = {
         collapseBtn.innerHTML = '<i data-lucide="chevron-down"></i>';
         collapseBtn.title = row.expanded === false ? 'Expand row' : 'Collapse row';
 
-        const clearBtn = document.createElement('button');
-        clearBtn.type = 'button';
-        clearBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn';
-        clearBtn.dataset.action = 'clear-row-fields';
-        clearBtn.dataset.rowId = row.id;
-        clearBtn.innerHTML = '<i data-lucide="eraser"></i>';
-        clearBtn.title = 'Clear fields';
-
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn';
@@ -627,7 +693,6 @@ export const Workouts = {
         removeBtn.title = 'Remove row';
 
         headerActions.appendChild(collapseBtn);
-        headerActions.appendChild(clearBtn);
         headerActions.appendChild(removeBtn);
 
         header.appendChild(title);
@@ -669,7 +734,7 @@ export const Workouts = {
 
         const title = document.createElement('span');
         title.className = 'superset-title';
-        title.textContent = `${row.label} ${index + 1}`;
+    title.textContent = this.getPlannerRowTitle(row, index);
 
         const headerActions = document.createElement('div');
         headerActions.className = 'planner-row-actions';
@@ -771,7 +836,7 @@ export const Workouts = {
         normalizedSets.forEach((setEntry, index) => {
             const card = document.createElement('div');
             card.className = 'planner-set-card';
-            card.classList.toggle('collapsed', setEntry.id !== activeSetId);
+            card.classList.toggle('collapsed', activeSetId === null || setEntry.id !== activeSetId);
 
             const header = document.createElement('div');
             header.className = 'planner-set-header';
@@ -1020,6 +1085,7 @@ export const Workouts = {
     },
 
     clearPlannedSession(showMessage = false) {
+        this.resetLoadedTemplate();
         const dateInput = document.getElementById('workoutDate');
         this.plannedSession = {
             id: `session-${Date.now()}`,
@@ -1161,9 +1227,181 @@ export const Workouts = {
         window.dispatchEvent(new CustomEvent('workoutsUpdated'));
     },
 
+    // ─── Session Templates ───────────────────────────────────────────────────
+
     /**
-     * Update weight field visibility and show last workout info based on selected exercise
+     * Save the current planner rows as a new session template.
+     * Asks for a name via prompt, then persists via Storage.
      */
+    handleSaveAsTemplate() {
+        if (!this.plannedSession || this.plannedSession.rows.length === 0) {
+            showToast('Add at least one exercise before saving as a template', 'error');
+            return;
+        }
+
+        const modal = document.getElementById('saveAsTemplateModal');
+        const input = document.getElementById('saveAsTemplateNameInput');
+        if (!modal || !input) return;
+
+        input.value = '';
+        modal.style.display = 'flex';
+        if (window.lucide) window.lucide.createIcons();
+        input.focus();
+    },
+
+    closeSaveAsTemplateModal() {
+        const modal = document.getElementById('saveAsTemplateModal');
+        const input = document.getElementById('saveAsTemplateNameInput');
+        if (modal) modal.style.display = 'none';
+        if (input) input.value = '';
+    },
+
+    async confirmSaveAsTemplate() {
+        const input = document.getElementById('saveAsTemplateNameInput');
+        const name = input ? input.value.trim() : '';
+
+        if (!name) {
+            showToast('Template name cannot be empty', 'error');
+            input?.focus();
+            return;
+        }
+
+        // Strip runtime-only planner fields (activeSetId, copyCursor, expanded)
+        // but keep exerciseId, sets (with reps/weight)
+        const rows = this.plannedSession.rows.map(row => {
+            if (row.type === 'single') {
+                return {
+                    type: 'single',
+                    exerciseId: row.exerciseId || '',
+                    sets: (row.sets || []).map(s => ({
+                        reps: s.reps ?? '',
+                        weight: s.weight ?? ''
+                    }))
+                };
+            } else {
+                return {
+                    type: 'superset',
+                    label: row.label || 'Superset',
+                    exercises: (row.exercises || []).map(item => ({
+                        exerciseId: item.exerciseId || '',
+                        sets: (item.sets || []).map(s => ({
+                            reps: s.reps ?? '',
+                            weight: s.weight ?? ''
+                        }))
+                    }))
+                };
+            }
+        });
+
+        try {
+            await Storage.addSessionTemplate({ name, rows });
+            showToast(`Template "${name}" saved`, 'success');
+            this.closeSaveAsTemplateModal();
+            window.dispatchEvent(new CustomEvent('templatesUpdated'));
+        } catch (error) {
+            showToast(error.message, 'error');
+        }
+    },
+
+    populatePlannerTemplateDropdown() {
+        const select = document.getElementById('plannerTemplateSelect');
+        if (!select) return;
+
+        const currentValue = select.value;
+        const templates = Storage.getSessionTemplates();
+        select.innerHTML = '<option value="">Load template…</option>';
+
+        templates.forEach(template => {
+            const opt = document.createElement('option');
+            opt.value = template.id;
+            opt.textContent = template.name;
+            select.appendChild(opt);
+        });
+
+        // Restore the selected template if it still exists
+        if (currentValue && select.querySelector(`option[value="${currentValue}"]`)) {
+            select.value = currentValue;
+        }
+    },
+
+    resetLoadedTemplate() {
+        const select = document.getElementById('plannerTemplateSelect');
+        if (select && select.value !== '') {
+            select.value = '';
+        }
+    },
+
+    /**
+     * Load a session template into the planner, replacing current rows.
+     * All row/set IDs are regenerated to avoid conflicts with saved drafts.
+     * @param {string} templateId
+     */
+    loadTemplateIntoPlanner(templateId) {
+        const template = Storage.getSessionTemplateById(templateId);
+        if (!template) {
+            showToast('Template not found', 'error');
+            return;
+        }
+
+        const stamp = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+        const newRows = (template.rows || []).map(row => {
+            if (row.type === 'single') {
+                const rowId = `row-${stamp()}`;
+                const sets = this.remapSets(row.sets, rowId);
+                return {
+                    id: rowId,
+                    type: 'single',
+                    exerciseId: row.exerciseId || '',
+                    sets,
+                    copyCursor: 1,
+                    activeSetId: null,
+                    expanded: true
+                };
+            } else {
+                const blockId = `ss-${stamp()}`;
+                const exercises = (row.exercises || []).map((item, idx) => {
+                    const itemId = `${blockId}-${String.fromCharCode(97 + idx)}`;
+                    const sets = this.remapSets(item.sets, itemId);
+                    return {
+                        id: itemId,
+                        exerciseId: item.exerciseId || '',
+                        sets,
+                        copyCursor: 1,
+                        activeSetId: null
+                    };
+                });
+                return {
+                    id: blockId,
+                    type: 'superset',
+                    label: row.label || 'Superset',
+                    expanded: true,
+                    exercises
+                };
+            }
+        });
+
+        this.plannedSession.rows = newRows;
+        this.persistPlannerDraft();
+        this.renderPlannedSession();
+        showToast(`Template "${template.name}" loaded`, 'success');
+    },
+
+    /**
+     * Remap template sets to fresh IDs under a new base
+     */
+    remapSets(templateSets, baseId) {
+        const source = Array.isArray(templateSets) && templateSets.length > 0
+            ? templateSets
+            : Array.from({ length: DEFAULT_PLANNER_SET_COUNT }, () => ({ reps: '', weight: '' }));
+
+        return source.slice(0, DEFAULT_PLANNER_SET_COUNT).map((s, i) => ({
+            id: `${baseId}-set-${i + 1}`,
+            reps: s.reps ?? '',
+            weight: s.weight ?? ''
+        }));
+    },
+
     updateWeightField() {
         const select = document.getElementById('workoutExercise');
         const weightGroup = document.getElementById('weightGroup');

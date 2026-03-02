@@ -12,6 +12,8 @@ export const Storage = {
     currentMonthWorkouts: [],
     currentMonthSha: null,
     currentMonthPath: null,
+    sessionTemplates: [],
+    sessionTemplatesSha: null,
 
     /**
      * Initialize storage by loading exercises and current month workouts
@@ -21,6 +23,7 @@ export const Storage = {
         await this.loadExercises();
         await this.loadCurrentMonthWorkouts();
         await this.migrateSequenceNumbers();
+        await this.loadSessionTemplates();
     },
 
     /**
@@ -754,6 +757,106 @@ export const Storage = {
 
             await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
         }
+    },
+
+    // ─── Session Templates ───────────────────────────────────────────────────
+
+    /**
+     * Load session templates from GitHub
+     * @returns {Promise<void>}
+     */
+    async loadSessionTemplates() {
+        const data = await GitHubAPI.getSessionTemplates();
+        this.sessionTemplates = data.templates;
+        this.sessionTemplatesSha = data.sha;
+    },
+
+    /**
+     * Get all session templates
+     * @returns {array}
+     */
+    getSessionTemplates() {
+        return this.sessionTemplates;
+    },
+
+    /**
+     * Get session template by ID
+     * @param {string} id
+     * @returns {object|null}
+     */
+    getSessionTemplateById(id) {
+        return this.sessionTemplates.find(t => t.id === id) || null;
+    },
+
+    /**
+     * Add new session template
+     * @param {object} template - { name, rows }
+     * @returns {Promise<object>}
+     */
+    async addSessionTemplate(template) {
+        if (!template.name || !template.name.trim()) {
+            throw new Error('Template name is required');
+        }
+        const trimmedName = template.name.trim();
+        if (this.sessionTemplates.some(t => t.name.toLowerCase() === trimmedName.toLowerCase())) {
+            throw new Error('A template with this name already exists');
+        }
+
+        const newTemplate = {
+            id: generateId(),
+            name: trimmedName,
+            rows: template.rows || [],
+            createdAt: new Date().toISOString()
+        };
+
+        this.sessionTemplates.push(newTemplate);
+        const result = await GitHubAPI.saveSessionTemplates(this.sessionTemplates, this.sessionTemplatesSha);
+        this.sessionTemplatesSha = result.content.sha;
+        return newTemplate;
+    },
+
+    /**
+     * Update existing session template
+     * @param {string} id
+     * @param {object} changes - { name?, rows? }
+     * @returns {Promise<object>}
+     */
+    async updateSessionTemplate(id, changes) {
+        const index = this.sessionTemplates.findIndex(t => t.id === id);
+        if (index === -1) throw new Error('Template not found');
+
+        if (changes.name) {
+            const trimmedName = changes.name.trim();
+            if (trimmedName !== this.sessionTemplates[index].name) {
+                if (this.sessionTemplates.some(t => t.id !== id && t.name.toLowerCase() === trimmedName.toLowerCase())) {
+                    throw new Error('A template with this name already exists');
+                }
+            }
+            changes.name = trimmedName;
+        }
+
+        this.sessionTemplates[index] = {
+            ...this.sessionTemplates[index],
+            ...changes,
+            updatedAt: new Date().toISOString()
+        };
+
+        const result = await GitHubAPI.saveSessionTemplates(this.sessionTemplates, this.sessionTemplatesSha);
+        this.sessionTemplatesSha = result.content.sha;
+        return this.sessionTemplates[index];
+    },
+
+    /**
+     * Delete session template
+     * @param {string} id
+     * @returns {Promise<void>}
+     */
+    async deleteSessionTemplate(id) {
+        const index = this.sessionTemplates.findIndex(t => t.id === id);
+        if (index === -1) throw new Error('Template not found');
+        this.sessionTemplates.splice(index, 1);
+        const result = await GitHubAPI.saveSessionTemplates(this.sessionTemplates, this.sessionTemplatesSha);
+        this.sessionTemplatesSha = result.content.sha;
     }
 };
 // Note: generateId, parseDate, and formatDate are now imported from utils.js

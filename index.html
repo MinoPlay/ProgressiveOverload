@@ -171,6 +171,53 @@
 
                 <!-- Exercise List -->
                 <div id="exerciseList" class="exercise-list"></div>
+
+                <!-- Templates Section -->
+                <div class="section-divider">
+                    <span>Session Templates</span>
+                </div>
+
+                <div class="section-header">
+                    <button id="addTemplateBtn" class="btn btn-primary" aria-label="Add new template">
+                        <i data-lucide="plus"></i> Add New Template
+                    </button>
+                </div>
+
+                <!-- Template List -->
+                <div id="templateList" class="template-list"></div>
+
+                <!-- Add/Edit Template Form -->
+                <div id="templateForm" class="form-container" style="display: none;">
+                    <h3 id="templateFormTitle">New Template</h3>
+
+                    <div class="form-group">
+                        <label for="templateName">Template Name <span class="required">*</span></label>
+                        <input type="text" id="templateName" placeholder="e.g., Push Day A" maxlength="100" autocomplete="off">
+                    </div>
+
+                    <div class="planner-controls" style="margin-bottom: var(--spacing-sm);">
+                        <button type="button" id="templateAddExerciseBtn"
+                            class="btn-icon btn-secondary btn-small planner-add-btn"
+                            title="Add exercise" aria-label="Add exercise">
+                            <i data-lucide="plus"></i>
+                        </button>
+                        <button type="button" id="templateAddSupersetBtn"
+                            class="btn-icon btn-secondary btn-small planner-add-btn"
+                            title="Add superset block" aria-label="Add superset block">
+                            <i data-lucide="link-2"></i>
+                        </button>
+                    </div>
+
+                    <div id="templateRowList" class="planned-session-list template-row-list" aria-live="polite"></div>
+
+                    <div class="form-actions">
+                        <button type="button" id="saveTemplateBtn" class="btn btn-primary">
+                            <i data-lucide="save"></i> Save Template
+                        </button>
+                        <button type="button" id="cancelTemplateBtn" class="btn btn-secondary">Cancel</button>
+                    </div>
+                </div>
+
             </section>
 
             <!-- Workout Section -->
@@ -244,7 +291,9 @@
 
                 <div class="form-container planner-container">
                     <div class="planner-header">
-                        <h4>Plan Session</h4>
+                        <select id="plannerTemplateSelect" class="planner-template-select" aria-label="Load a session template">
+                            <option value="">Load template…</option>
+                        </select>
                     </div>
 
                     <div id="plannerContent" class="planner-content">
@@ -262,6 +311,10 @@
                         <div id="plannedSessionList" class="planned-session-list" aria-live="polite"></div>
 
                         <div class="form-actions-inline planner-actions-inline">
+                            <button type="button" id="plannerSaveAsTemplateBtn" class="btn-icon btn-secondary" title="Save current plan as a template"
+                                aria-label="Save as template">
+                                <i data-lucide="bookmark-plus"></i>
+                            </button>
                             <button type="button" id="plannerSubmitBtn" class="btn-icon btn-primary" title="Fill in exercise and at least one set for every entry before submitting"
                                 aria-label="Submit planned session" disabled>
                                 <i data-lucide="check"></i>
@@ -413,6 +466,30 @@
                 </div>
             </section>
         </main>
+
+        <!-- Save As Template Modal -->
+        <div id="saveAsTemplateModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="saveAsTemplateModalTitle">
+            <div class="modal-content" style="max-width: 360px;">
+                <div class="modal-header">
+                    <h2 id="saveAsTemplateModalTitle">Save as Template</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="saveAsTemplateNameInput">Template Name <span class="required">*</span></label>
+                        <input type="text" id="saveAsTemplateNameInput" placeholder="e.g., Push Day A"
+                            maxlength="100" autocomplete="off">
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="saveAsTemplateConfirmBtn" class="btn btn-primary" title="Save template" aria-label="Save template">
+                            <i data-lucide="save"></i>
+                        </button>
+                        <button type="button" id="saveAsTemplateCancelBtn" class="btn btn-secondary" title="Cancel" aria-label="Cancel">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- Toast Notifications -->
         <div id="toastContainer" class="toast-container" role="region" aria-live="polite" aria-label="Notifications">

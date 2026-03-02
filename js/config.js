@@ -30,7 +30,8 @@ export const CONFIG = {
     // File Paths
     paths: {
         exercises: 'data/exercises.json',
-        workoutsPrefix: 'data/workouts-'
+        workoutsPrefix: 'data/workouts-',
+        sessionTemplates: 'data/session-templates.json'
     },
 
     // UI Limits

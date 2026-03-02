@@ -975,6 +975,32 @@
     justify-content: flex-end;
 }
 
+/* Planner last session info */
+.planner-last-session {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+    padding: 4px 6px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-light);
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.planner-last-label {
+    font-weight: 600;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+.planner-last-sets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 3px;
+}
+
 .planned-row-grid {
     display: grid;
     grid-template-columns: 1fr 110px 120px auto;
@@ -1345,15 +1371,15 @@
     white-space: nowrap;
 }
 
-/* Date Input Container (Icon Only) */
+/* Date Input Container */
 .date-input-container {
     position: relative;
-    width: 48px;
+    width: 76px;
     height: 48px;
     flex-shrink: 0;
 }
 
-.date-input-container .date-icon {
+.date-input-container .date-display {
     position: absolute;
     top: 0;
     left: 0;
@@ -1368,9 +1394,16 @@
     pointer-events: none;
     z-index: 1;
     transition: all var(--transition-base);
+    font-size: 0.78rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    text-align: center;
+    padding: 0 4px;
+    white-space: nowrap;
+    overflow: hidden;
 }
 
-.date-input-container:hover .date-icon {
+.date-input-container:hover .date-display {
     background: var(--secondary-dark);
 }
 

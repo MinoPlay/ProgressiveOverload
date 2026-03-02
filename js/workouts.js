@@ -13,6 +13,7 @@ const WORKOUT_VIEW_KEY = 'workoutActiveView';
 export const Workouts = {
     activeWorkoutView: 'log',
     plannedSession: null,
+    plannerLastSessionCache: {},  // exerciseId -> { html, hasData }
 
     /**
      * Initialize workout logging UI
@@ -84,6 +85,7 @@ export const Workouts = {
         if (dateInput) {
             dateInput.addEventListener('change', () => {
                 this.updateDateTooltip();
+                this.updateDateDisplay();
                 this.syncPlannerDate();
             });
         }
@@ -478,6 +480,7 @@ export const Workouts = {
         if (row.type === 'single') {
             if (fieldName === 'exerciseId') {
                 row.exerciseId = field.value;
+                this.updatePlannerLastSessionInfo(`planner-last-${row.id}`, field.value);
             } else {
                 const setEntry = (row.sets || []).find(entry => entry.id === field.dataset.setId);
                 if (!setEntry) return;
@@ -490,6 +493,7 @@ export const Workouts = {
 
             if (fieldName === 'exerciseId') {
                 item.exerciseId = field.value;
+                this.updatePlannerLastSessionInfo(`planner-last-${row.id}-${item.id}`, field.value);
             } else {
                 const setEntry = (item.sets || []).find(entry => entry.id === field.dataset.setId);
                 if (!setEntry) return;
@@ -520,6 +524,21 @@ export const Workouts = {
                 container.appendChild(this.createSinglePlannedRow(row, index));
             } else {
                 container.appendChild(this.createSupersetRow(row, index));
+            }
+        });
+
+        // Now that all rows are in the DOM, populate last-session info (getElementById works)
+        this.plannedSession.rows.forEach((row) => {
+            if (row.type === 'single') {
+                if (row.exerciseId) {
+                    this.updatePlannerLastSessionInfo(`planner-last-${row.id}`, row.exerciseId);
+                }
+            } else if (row.type === 'superset') {
+                row.exercises.forEach((exerciseEntry) => {
+                    if (exerciseEntry.exerciseId) {
+                        this.updatePlannerLastSessionInfo(`planner-last-${row.id}-${exerciseEntry.id}`, exerciseEntry.exerciseId);
+                    }
+                });
             }
         });
 
@@ -583,6 +602,12 @@ export const Workouts = {
         const topRow = document.createElement('div');
         topRow.className = 'planned-entry-top';
         topRow.appendChild(this.createExerciseSelect(row.id, null, row.exerciseId));
+
+        const lastSessionContainer = document.createElement('div');
+        lastSessionContainer.className = 'planner-last-session';
+        lastSessionContainer.id = `planner-last-${row.id}`;
+        lastSessionContainer.style.display = 'none';
+        topRow.appendChild(lastSessionContainer);
 
         const body = document.createElement('div');
         body.className = 'planner-row-body';
@@ -662,6 +687,12 @@ export const Workouts = {
             const topRow = document.createElement('div');
             topRow.className = 'planned-entry-top';
             topRow.appendChild(this.createExerciseSelect(row.id, exerciseEntry.id, exerciseEntry.exerciseId));
+
+            const lastSessionContainer = document.createElement('div');
+            lastSessionContainer.className = 'planner-last-session';
+            lastSessionContainer.id = `planner-last-${row.id}-${exerciseEntry.id}`;
+            lastSessionContainer.style.display = 'none';
+            topRow.appendChild(lastSessionContainer);
 
             rowContainer.appendChild(label);
             content.appendChild(topRow);
@@ -774,7 +805,12 @@ export const Workouts = {
         copyBtn.title = 'Copy previous set to next set';
         copyBtn.setAttribute('aria-label', 'Copy previous set to next set');
 
-        actionRow.appendChild(copyBtn);
+        const activeSetIndex = normalizedSets.findIndex(s => s.id === activeSetId);
+        const isLastSet = activeSetIndex !== -1 && activeSetIndex === normalizedSets.length - 1;
+
+        if (!isLastSet) {
+            actionRow.appendChild(copyBtn);
+        }
         container.appendChild(actionRow);
 
         return container;
@@ -1120,23 +1156,6 @@ export const Workouts = {
             infoContainer.innerHTML = '';
             infoContainer.style.display = 'flex';
 
-            const header = document.createElement('div');
-            header.className = 'label';
-            header.innerHTML = `<i data-lucide="clock" class="icon-xs"></i> ${lastSessions.length > 1 ? `Last ${lastSessions.length} Sessions:` : 'Previous Session:'}`;
-            infoContainer.appendChild(header);
-
-            // Identify current vs previous session
-            const todayStr = formatDate(new Date());
-            const currentSession = lastSessions[0]?.date === todayStr ? lastSessions[0] : null;
-            const previousSession = lastSessions[0]?.date === todayStr ? lastSessions[1] : lastSessions[0];
-
-            // Add Volume Suggestion for the most recent session
-            const { suggestions, maxVolume, currentVolume } = this.calculateVolumeSuggestions(currentSession, previousSession);
-            if (suggestions && (suggestions.length > 0 || currentVolume > 0)) {
-                const suggestionBox = this.renderVolumeSuggestions(suggestions, maxVolume, currentVolume);
-                infoContainer.appendChild(suggestionBox);
-            }
-
             const sessionsContainer = document.createElement('div');
             sessionsContainer.className = 'sessions-horizontal';
 
@@ -1321,17 +1340,14 @@ export const Workouts = {
         const container = document.createElement('div');
         container.className = 'volume-suggestions';
 
-        const hint = document.createElement('div');
-        hint.className = 'suggestion-hint';
-
         if (currentVolume > 0 && maxVolume > 0) {
+            const hint = document.createElement('div');
+            hint.className = 'suggestion-hint';
             const percentage = Math.min(100, (currentVolume / maxVolume) * 100).toFixed(0);
             hint.innerHTML = `<i data-lucide="zap" class="icon-xs"></i> <strong>Volume:</strong> ${currentVolume.toFixed(0)} / ${maxVolume.toFixed(0)} kg <span class="percentage-pill" style="background: var(--primary-light); color: var(--primary-color); padding: 2px 6px; border-radius: 10px; font-size: 0.75rem; margin-left: 4px;">${percentage}%</span>`;
-        } else {
-            hint.innerHTML = '<i data-lucide="zap" class="icon-xs"></i> <strong>Progress Tip:</strong> To beat previous session, try:';
+            container.appendChild(hint);
         }
 
-        container.appendChild(hint);
         if (window.lucide) window.lucide.createIcons();
 
         const list = document.createElement('div');
@@ -1386,6 +1402,7 @@ export const Workouts = {
         const dateInput = document.getElementById('workoutDate');
         const today = new Date();
         dateInput.value = formatDate(today);
+        this.updateDateDisplay();
     },
 
     /**
@@ -1398,6 +1415,27 @@ export const Workouts = {
             if (container) {
                 container.title = `Workout Date: ${dateInput.value}`;
             }
+        }
+    },
+
+    /**
+     * Update the visible date display span
+     */
+    updateDateDisplay() {
+        const dateInput = document.getElementById('workoutDate');
+        const display = document.getElementById('workoutDateDisplay');
+        if (!dateInput || !display) return;
+        const value = dateInput.value;
+        if (!value) {
+            display.textContent = '\u2014';
+            return;
+        }
+        const today = formatDate(new Date());
+        if (value === today) {
+            display.textContent = 'Today';
+        } else {
+            const dateObj = new Date(value + 'T00:00:00');
+            display.textContent = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
         }
     },
 
@@ -1464,6 +1502,9 @@ export const Workouts = {
             const exercise = Storage.getExerciseById(exerciseId);
             showToast(`Workout logged: ${exercise.name}`, 'success');
 
+            // Invalidate planner last-session cache for this exercise so plan view shows fresh data
+            delete this.plannerLastSessionCache[exerciseId];
+
             // Don't reset form - keep fields for quick re-logging
 
 
@@ -1491,6 +1532,73 @@ export const Workouts = {
         // Keep date field as-is
         this.updateWeightField();
         showToast('Form cleared', 'info');
+    },
+
+    /**
+     * Render cached planner last session data into a container element
+     */
+    _applyPlannerLastSessionCache(container, cached) {
+        if (!cached || !cached.hasData) {
+            container.innerHTML = '';
+            container.style.display = 'none';
+        } else {
+            container.innerHTML = cached.html;
+            container.style.display = 'flex';
+        }
+    },
+
+    /**
+     * Update the last session info display for a planner exercise.
+     * Renders from cache immediately (no flicker), then refreshes cache in background.
+     * @param {string} containerId - ID of the container element
+     * @param {string} exerciseId - Selected exercise ID
+     */
+    async updatePlannerLastSessionInfo(containerId, exerciseId) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        if (!exerciseId) {
+            container.innerHTML = '';
+            container.style.display = 'none';
+            return;
+        }
+
+        // Render from cache instantly so there is no blank flash on re-renders
+        if (this.plannerLastSessionCache[exerciseId] !== undefined) {
+            this._applyPlannerLastSessionCache(container, this.plannerLastSessionCache[exerciseId]);
+        }
+
+        try {
+            const sessions = await Storage.getLastWorkoutSessionsForExercise(exerciseId, 1);
+            if (!sessions || sessions.length === 0) {
+                this.plannerLastSessionCache[exerciseId] = { hasData: false, html: '' };
+            } else {
+                const session = sessions[0];
+                const dateObj = new Date(session.date + 'T00:00:00');
+                const dateFormatted = dateObj.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                const chips = session.sets.map(s => {
+                    let text = `${s.reps}`;
+                    if (s.weight !== null && s.weight !== undefined && s.weight !== '') text += `\u00d7${s.weight}`;
+                    return `<span class="set-badge-item">${text}</span>`;
+                }).join('');
+                this.plannerLastSessionCache[exerciseId] = {
+                    hasData: true,
+                    html: `<span class="planner-last-label">${dateFormatted}:</span><div class="planner-last-sets">${chips}</div>`
+                };
+            }
+            // Apply fresh data — re-read container in case DOM was rebuilt during await
+            const freshContainer = document.getElementById(containerId);
+            if (freshContainer) {
+                this._applyPlannerLastSessionCache(freshContainer, this.plannerLastSessionCache[exerciseId]);
+            }
+        } catch (error) {
+            this.plannerLastSessionCache[exerciseId] = { hasData: false, html: '' };
+            const freshContainer = document.getElementById(containerId);
+            if (freshContainer) {
+                freshContainer.innerHTML = '';
+                freshContainer.style.display = 'none';
+            }
+        }
     },
 
     /**

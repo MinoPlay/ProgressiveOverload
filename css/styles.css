@@ -51,6 +51,19 @@
     --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
     --shadow-xl: 0 8px 24px rgba(0, 0, 0, 0.2);
 
+    /* Surface Depth (Workout / History / Statistics) */
+    --surface-tier-1-bg: rgba(255, 255, 255, 0.94);
+    --surface-tier-1-border: rgba(102, 126, 234, 0.15);
+    --surface-tier-1-shadow: 0 10px 28px rgba(20, 27, 45, 0.08);
+
+    --surface-tier-2-bg: rgba(255, 255, 255, 0.88);
+    --surface-tier-2-border: rgba(102, 126, 234, 0.12);
+    --surface-tier-2-shadow: 0 6px 16px rgba(20, 27, 45, 0.06);
+
+    --surface-tier-3-bg: rgba(255, 255, 255, 0.78);
+    --surface-tier-3-border: rgba(102, 126, 234, 0.1);
+    --surface-tier-3-shadow: 0 2px 8px rgba(20, 27, 45, 0.05);
+
     /* Transitions */
     --transition-fast: 0.15s ease;
     --transition-base: 0.3s ease;

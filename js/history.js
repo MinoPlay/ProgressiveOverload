@@ -316,9 +316,7 @@ export const History = {
         header.onclick = () => group.classList.toggle('collapsed');
 
         const titleContainer = document.createElement('div');
-        titleContainer.style.display = 'flex';
-        titleContainer.style.alignItems = 'center';
-        titleContainer.style.gap = 'var(--spacing-sm)';
+        titleContainer.className = 'history-title-row';
 
         const chevron = document.createElement('span');
         chevron.className = 'chevron';
@@ -405,9 +403,7 @@ export const History = {
         };
 
         const titleContainer = document.createElement('div');
-        titleContainer.style.display = 'flex';
-        titleContainer.style.alignItems = 'center';
-        titleContainer.style.gap = 'var(--spacing-xs)';
+        titleContainer.className = 'history-title-row history-title-row--compact';
 
         const chevron = document.createElement('span');
         chevron.className = 'chevron';
@@ -450,10 +446,7 @@ export const History = {
 
             // Actions container
             const actions = document.createElement('div');
-            actions.className = 'set-actions';
-            actions.style.marginLeft = 'auto';
-            actions.style.display = 'flex';
-            actions.style.gap = 'var(--spacing-xs)';
+            actions.className = 'set-actions set-actions--push';
 
             const editBtn = document.createElement('button');
             editBtn.className = 'btn-icon btn-small btn-secondary';
@@ -465,10 +458,9 @@ export const History = {
             };
 
             const deleteBtn = document.createElement('button');
-            deleteBtn.className = 'btn-icon btn-small btn-secondary';
+            deleteBtn.className = 'btn-icon btn-small btn-secondary btn-danger-text';
             deleteBtn.innerHTML = '<i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>';
             deleteBtn.title = 'Delete Set';
-            deleteBtn.style.color = 'var(--error-color)';
             deleteBtn.onclick = (e) => {
                 e.stopPropagation();
                 this.handleDeleteWorkout(workout);

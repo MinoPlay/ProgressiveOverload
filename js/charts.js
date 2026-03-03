@@ -363,13 +363,13 @@ export const Charts = {
         const prevWeekMuscleSummary = buildMuscleSessionSummary(prevWeekWorkouts);
 
         const headerHTML = `
-            <div style="display: grid; grid-template-columns: minmax(0, 1fr) 72px 72px; align-items: center; width: 100%; border-bottom: 2px solid var(--border-light); padding: 2px 0; font-size: 0.65rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700;">
+            <div class="muscle-focus-header">
                 <span>Muscle Group</span>
-                <span style="padding: 0 10px; width: 72px; text-align: center; display: flex; justify-content: center; box-sizing: border-box;" title="Sessions (Days)">
-                    <i data-lucide="calendar" style="width: 12px; height: 12px;"></i>
+                <span class="muscle-focus-icon-cell" title="Sessions (Days)">
+                    <i data-lucide="calendar"></i>
                 </span>
-                <span style="padding: 0 10px; width: 72px; text-align: center; display: flex; justify-content: center; box-sizing: border-box;" title="Exercises Done">
-                    <i data-lucide="dumbbell" style="width: 12px; height: 12px;"></i>
+                <span class="muscle-focus-icon-cell" title="Exercises Done">
+                    <i data-lucide="dumbbell"></i>
                 </span>
             </div>`;
 
@@ -381,15 +381,15 @@ export const Charts = {
                     const sessionTrendInfo = getTrendMeta(m.count, prevCount);
                     const exerciseTrendInfo = getTrendMeta(m.exCount, prevExCount);
                     return `
-                <div style="display: grid; grid-template-columns: minmax(0, 1fr) 72px 72px; align-items: center; width: 100%; border-bottom: 1px solid var(--border-light); padding: 4px 0;">
-                    <span style="text-transform: capitalize; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0;">${m.name.replace('-', ' ')}</span>
-                    <span style="font-weight: 800; color: var(--text-light); border-left: 1px solid var(--border-light); padding: 0 10px; width: 72px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums;" title="Sessions (Days)">${m.count}<span class="kpi-entry-trend ${sessionTrendInfo.trendClass}" title="vs previous period (${prevCount})">${sessionTrendInfo.arrow}</span></span>
-                    <span style="font-weight: 800; color: var(--primary-color); border-left: 1px solid var(--border-light); padding: 0 10px; width: 72px; box-sizing: border-box; display: inline-flex; align-items: center; justify-content: center; font-variant-numeric: tabular-nums;" title="Exercises Done">${m.exCount}<span class="kpi-entry-trend ${exerciseTrendInfo.trendClass}" title="vs previous period (${prevExCount})">${exerciseTrendInfo.arrow}</span></span>
+                <div class="muscle-focus-row">
+                    <span class="muscle-focus-name">${m.name.replace('-', ' ')}</span>
+                    <span class="muscle-focus-metric muscle-focus-metric--sessions" title="Sessions (Days)">${m.count}<span class="kpi-entry-trend ${sessionTrendInfo.trendClass}" title="vs previous period (${prevCount})">${sessionTrendInfo.arrow}</span></span>
+                    <span class="muscle-focus-metric muscle-focus-metric--exercises" title="Exercises Done">${m.exCount}<span class="kpi-entry-trend ${exerciseTrendInfo.trendClass}" title="vs previous period (${prevExCount})">${exerciseTrendInfo.arrow}</span></span>
                 </div>
             `;
                 })()}
             `).join('')
-            : '<div style="color: var(--text-light); font-style: italic; margin-top: 10px;">No sessions logged yet</div>';
+            : '<div class="muscle-focus-empty">No sessions logged yet</div>';
 
         const monthMuscleFocusHTML = buildMuscleFocusHTML(monthMuscleSummary.sortedMuscles, prevMonthMuscleSummary.summaryByMuscle);
         const weekMuscleFocusHTML = buildMuscleFocusHTML(weekMuscleSummary.sortedMuscles, prevWeekMuscleSummary.summaryByMuscle);
@@ -399,8 +399,7 @@ export const Charts = {
             <div class="kpi-card kpi-card--compact">
                 <div class="kpi-icon-row">
                     <i data-lucide="calendar-check" class="kpi-icon text-primary"></i>
-                    <span class="kpi-label" title="Unique workout days this month">Workouts</span>
-                    <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">Month</span>
+                    <span class="kpi-label" title="Unique workout days this month">Monthly</span>
                 </div>
                 <div class="kpi-value">${workoutsThisMonth}</div>
                 <span class="kpi-trend ${monthTrend.trendClass}"><span class="kpi-trend-comparison"><span class="kpi-trend-arrow">${monthTrend.arrow}</span><span class="kpi-trend-delta">${monthTrend.deltaText}</span></span>vs prev month (${workoutsPrevMonth})</span>
@@ -408,8 +407,7 @@ export const Charts = {
             <div class="kpi-card kpi-card--compact">
                 <div class="kpi-icon-row">
                     <i data-lucide="calendar-days" class="kpi-icon text-warning"></i>
-                    <span class="kpi-label" title="Total unique training days this calendar week (Mon-Sun)">Workouts</span>
-                    <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">Week</span>
+                    <span class="kpi-label" title="Total unique training days this calendar week (Mon-Sun)">Weekly</span>
                 </div>
                 <div class="kpi-value">${workoutsThisWeek}</div>
                 <span class="kpi-trend ${weekTrend.trendClass}"><span class="kpi-trend-comparison"><span class="kpi-trend-arrow">${weekTrend.arrow}</span><span class="kpi-trend-delta">${weekTrend.deltaText}</span></span>vs prev week (${workoutsPrevWeek})</span>
@@ -418,16 +416,16 @@ export const Charts = {
 
         // Muscle session cards live inside the period tab panels
         const buildMuscleSessionCard = (label, title, muscleFocusHTML, totalSessions) => `
-            <div class="kpi-card kpi-card--muscle" style="display: flex; flex-direction: column; margin-bottom: var(--spacing-md);">
+            <div class="kpi-card kpi-card--muscle">
                 <div class="kpi-icon-row">
                     <i data-lucide="biceps-flexed" class="kpi-icon text-success"></i>
                     <span class="kpi-label" title="${title}">Muscle Training Sessions</span>
-                    <span style="margin-left: auto; font-size: 0.65rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; border: 1px solid var(--border-light); border-radius: 999px; padding: 2px 7px;">${label}</span>
+                    <span class="kpi-period-badge">${label}</span>
                 </div>
-                <div class="muscle-focus-list" style="flex: 1; display: flex; flex-direction: column; justify-content: flex-start; margin-top: 5px;">
+                <div class="muscle-focus-list">
                     ${muscleFocusHTML}
                 </div>
-                <span class="kpi-trend trend-neutral" style="margin-top: 10px;">
+                <span class="kpi-trend trend-neutral kpi-total-caption">
                     Sessions: ${totalSessions} total
                 </span>
             </div>
@@ -631,7 +629,6 @@ export const Charts = {
             if (!msgEl) {
                 msgEl = document.createElement('p');
                 msgEl.className = 'no-sessions-msg';
-                msgEl.style.cssText = 'text-align:center; color: var(--text-light); font-style: italic; padding: 40px 0;';
                 canvas.parentElement.appendChild(msgEl);
             }
             msgEl.style.display = '';
@@ -913,7 +910,7 @@ export const Charts = {
         const chartContainer = document.createElement('div');
         chartContainer.className = 'category-chart-container';
         chartContainer.innerHTML = `
-            <div class="chart-container" style="height: 450px;">
+            <div class="chart-container category-chart-tall">
                 <canvas id="muscleGroupChart"></canvas>
             </div>
         `;
@@ -938,8 +935,8 @@ export const Charts = {
         const header = document.createElement('div');
         header.className = 'category-selector-header';
         header.innerHTML = `
-            <h4>
-                <span class="chevron" style="display: inline-block; transition: transform 0.3s ease;">▼</span>
+            <h4 class="category-selector-title">
+                <span class="chevron category-selector-chevron">▼</span>
                 Select Muscle Groups to View
             </h4>
             <div class="selector-actions">
@@ -949,8 +946,6 @@ export const Charts = {
 
         const checkboxContainer = document.createElement('div');
         checkboxContainer.className = 'category-checkboxes';
-        checkboxContainer.style.display = 'grid';
-        checkboxContainer.style.gridTemplateColumns = 'repeat(auto-fill, minmax(140px, 1fr))';
 
         Object.keys(groupedByMuscle).forEach(muscle => {
             const label = document.createElement('label');
@@ -1000,12 +995,10 @@ export const Charts = {
 
         // Set up collapsible functionality
         const headerTitle = header.querySelector('h4');
-        headerTitle.style.cursor = 'pointer';
         headerTitle.addEventListener('click', () => {
             const chevron = headerTitle.querySelector('.chevron');
-            const isHidden = checkboxContainer.style.display === 'none';
-            checkboxContainer.style.display = isHidden ? 'grid' : 'none';
-            chevron.style.transform = isHidden ? 'rotate(0deg)' : 'rotate(-90deg)';
+            const isHidden = checkboxContainer.classList.toggle('is-collapsed');
+            chevron.classList.toggle('is-collapsed', isHidden);
         });
 
         return container;

@@ -1651,10 +1651,6 @@ export const Workouts = {
 
         const list = document.createElement('div');
         list.className = 'suggestion-chips-container';
-        list.style.display = 'flex';
-        list.style.flexWrap = 'wrap';
-        list.style.gap = '4px';
-        list.style.marginTop = '4px';
 
         suggestions.forEach(s => {
             const chip = document.createElement('div');
@@ -1662,10 +1658,7 @@ export const Workouts = {
 
             if (s.isMessage) {
                 chip.innerHTML = `<span>${s.label}</span>`;
-                chip.style.backgroundColor = 'var(--success-light)';
-                chip.style.borderColor = 'var(--success-color)';
-                chip.style.color = 'var(--success-color)';
-                chip.style.cursor = 'default';
+                chip.classList.add('suggestion-chip--static');
             } else {
                 const weightText = (s.weight !== null && s.weight !== undefined) ? `x${s.weight}` : '';
                 chip.title = (s.weight !== null && s.weight !== undefined) ? `Predicted Set Volume: ${(s.reps * s.weight).toFixed(1)}kg` : `Target: ${s.reps} reps`;

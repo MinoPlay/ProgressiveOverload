@@ -250,7 +250,7 @@
                             <select id="workoutExercise" required aria-required="true" aria-label="Select exercise">
                                 <option value="">Select Exercise...</option>
                             </select>
-                            <div id="lastWorkoutInfo" class="last-workout-info" style="display: none;"></div>
+                            <div id="lastWorkoutInfo" class="last-workout-info hidden"></div>
                         </div>
 
                         <!-- Row 3: Reps/Weight -->
@@ -330,7 +330,7 @@
                 </div>
 
                 <!-- Last Workout Summary -->
-                <div id="lastWorkoutSummary" class="last-workout-summary" style="display: none;">
+                <div id="lastWorkoutSummary" class="last-workout-summary hidden">
                     <!-- Content will be injected by JavaScript -->
                 </div>
 
@@ -381,20 +381,20 @@
                             <!-- Muscle Training Sessions (Week) injected by JS -->
                             <div id="muscleSessionsWeek"></div>
 
-                            <div class="section-card" style="margin-top: var(--spacing-md);">
-                                <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <div class="section-card stats-panel-card">
+                                <h4 class="stats-card-title stats-card-title--compact">
                                     <i data-lucide="radar"></i> Muscle Balance
                                 </h4>
-                                <div class="chart-wrapper" style="height: 260px;">
+                                <div class="chart-wrapper chart-wrapper-sm">
                                     <canvas id="muscleRadarWeekChart"></canvas>
                                 </div>
                             </div>
 
-                            <div class="section-card" style="margin-top: var(--spacing-md);">
-                                <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <div class="section-card stats-panel-card">
+                                <h4 class="stats-card-title stats-card-title--compact">
                                     <i data-lucide="radar"></i> Muscle Exercise Balance
                                 </h4>
-                                <div class="chart-wrapper" style="height: 260px;">
+                                <div class="chart-wrapper chart-wrapper-sm">
                                     <canvas id="muscleRadarWeekExerciseChart"></canvas>
                                 </div>
                             </div>
@@ -415,20 +415,20 @@
                             <!-- Muscle Training Sessions (Month) injected by JS -->
                             <div id="muscleSessionsMonth"></div>
 
-                            <div class="section-card" style="margin-top: var(--spacing-md);">
-                                <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <div class="section-card stats-panel-card">
+                                <h4 class="stats-card-title stats-card-title--compact">
                                     <i data-lucide="radar"></i> Muscle Balance
                                 </h4>
-                                <div class="chart-wrapper" style="height: 260px;">
+                                <div class="chart-wrapper chart-wrapper-sm">
                                     <canvas id="muscleRadarMonthChart"></canvas>
                                 </div>
                             </div>
 
-                            <div class="section-card" style="margin-top: var(--spacing-md);">
-                                <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <div class="section-card stats-panel-card">
+                                <h4 class="stats-card-title stats-card-title--compact">
                                     <i data-lucide="radar"></i> Muscle Exercise Balance
                                 </h4>
-                                <div class="chart-wrapper" style="height: 260px;">
+                                <div class="chart-wrapper chart-wrapper-sm">
                                     <canvas id="muscleRadarMonthExerciseChart"></canvas>
                                 </div>
                             </div>
@@ -438,27 +438,27 @@
 
                         <!-- Overall Panel -->
                         <div class="stats-period-panel inactive" id="statsPanelOverall">
-                            <div style="display: grid; grid-template-columns: 1fr; gap: 20px;">
+                            <div class="stats-overview-grid">
                                 <div class="section-card">
-                                    <h4 style="display: flex; align-items: center; gap: 8px;">
+                                    <h4 class="stats-card-title">
                                         <i data-lucide="calendar-days"></i> Training Frequency History
                                     </h4>
-                                    <div class="chart-wrapper" style="height: 200px;">
+                                    <div class="chart-wrapper chart-wrapper-xs">
                                         <canvas id="weeklyFrequencyChart"></canvas>
                                     </div>
                                 </div>
                                 <div class="section-card">
-                                    <h4 style="display: flex; align-items: center; gap: 8px;">
+                                    <h4 class="stats-card-title">
                                         <i data-lucide="bar-chart-3"></i> Muscle Group Activity History
                                     </h4>
-                                    <div class="chart-wrapper" style="height: 300px;">
+                                    <div class="chart-wrapper chart-wrapper-md">
                                         <canvas id="weeklyMuscleChart"></canvas>
                                     </div>
                                 </div>
                             </div>
 
-                            <div class="section-card" style="margin-top: var(--spacing-md);">
-                                <h4 style="display: flex; align-items: center; gap: 8px; margin-bottom: var(--spacing-md);">
+                            <div class="section-card stats-panel-card">
+                                <h4 class="stats-card-title">
                                     <i data-lucide="trending-up"></i> Muscle Group Progress Trend
                                 </h4>
                                 <div id="chartControls" class="chart-controls">

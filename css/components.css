@@ -1067,6 +1067,20 @@
     justify-content: flex-end;
 }
 
+.suggestion-chips-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    margin-top: 4px;
+}
+
+.suggestion-chip.suggestion-chip--static {
+    background: var(--success-light);
+    border-color: var(--success-color);
+    color: var(--success-color);
+    cursor: default;
+}
+
 
 
 /* Icon Buttons */
@@ -1161,6 +1175,16 @@
     cursor: pointer;
     user-select: none;
     transition: background var(--transition-base);
+}
+
+.history-title-row {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
+.history-title-row--compact {
+    gap: var(--spacing-xs);
 }
 
 .history-date-header:hover {
@@ -1349,6 +1373,15 @@
     gap: 4px;
     opacity: 0.6;
     transition: opacity var(--transition-fast);
+}
+
+.set-actions--push {
+    margin-left: auto;
+    gap: var(--spacing-xs);
+}
+
+.btn-danger-text {
+    color: var(--error-color);
 }
 
 .set-item:hover .set-actions {
@@ -2180,6 +2213,12 @@
 
 .stats-period-panel.inactive {
     display: none;
+}
+
+.stats-overview-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 20px;
 }
 
 /* Week navigation bar (Muscle Training Sessions / Muscle Balance) */
@@ -3479,4 +3518,394 @@
 .planner-template-select:focus {
     border-color: var(--primary-color);
     outline: none;
+}
+
+.kpi-period-badge {
+    margin-left: auto;
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border: 1px solid var(--border-light);
+    border-radius: 999px;
+    padding: 2px 7px;
+}
+
+.kpi-card--muscle {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: var(--spacing-md);
+}
+
+.muscle-focus-list {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    margin-top: 5px;
+}
+
+.kpi-total-caption {
+    margin-top: 10px;
+}
+
+.muscle-focus-header,
+.muscle-focus-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 72px 72px;
+    align-items: center;
+    width: 100%;
+}
+
+.muscle-focus-header {
+    border-bottom: 2px solid var(--border-light);
+    padding: 2px 0;
+    font-size: 0.65rem;
+    color: var(--text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 700;
+}
+
+.muscle-focus-row {
+    border-bottom: 1px solid var(--border-light);
+    padding: 4px 0;
+}
+
+.muscle-focus-name {
+    text-transform: capitalize;
+    font-weight: 500;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    min-width: 0;
+}
+
+.muscle-focus-metric {
+    border-left: 1px solid var(--border-light);
+    padding: 0 10px;
+    width: 72px;
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+}
+
+.muscle-focus-metric--sessions {
+    color: var(--text-light);
+}
+
+.muscle-focus-metric--exercises {
+    color: var(--primary-color);
+}
+
+.muscle-focus-empty {
+    color: var(--text-light);
+    font-style: italic;
+    margin-top: 10px;
+}
+
+.muscle-focus-icon-cell {
+    padding: 0 10px;
+    width: 72px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    box-sizing: border-box;
+}
+
+.muscle-focus-icon-cell svg {
+    width: 12px;
+    height: 12px;
+}
+
+.stats-panel-card {
+    margin-top: var(--spacing-md);
+}
+
+.stats-card-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stats-card-title--compact {
+    margin-bottom: 8px;
+}
+
+.chart-wrapper-xs {
+    height: 200px;
+}
+
+.chart-wrapper-sm {
+    height: 260px;
+}
+
+.chart-wrapper-md {
+    height: 300px;
+}
+
+.category-chart-tall {
+    height: 450px;
+}
+
+.no-sessions-msg {
+    text-align: center;
+    color: var(--text-light);
+    font-style: italic;
+    padding: 40px 0;
+}
+
+.category-checkboxes.is-collapsed {
+    display: none;
+}
+
+.category-selector-chevron {
+    display: inline-block;
+    transition: transform 0.3s ease;
+}
+
+.category-selector-title {
+    cursor: pointer;
+}
+
+.category-selector-chevron.is-collapsed {
+    transform: rotate(-90deg);
+}
+
+/* High-Visibility Modernization Pass (Workout / History / Statistics) */
+#workoutSection,
+#historySection,
+#statisticsSection {
+    background: linear-gradient(160deg, rgba(255, 255, 255, 0.9) 0%, rgba(247, 250, 255, 0.84) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.2);
+    border-radius: 20px;
+    padding: var(--spacing-lg);
+    box-shadow: 0 18px 42px rgba(20, 27, 45, 0.1);
+}
+
+#workoutSection .workout-view-tabs {
+    background: rgba(102, 126, 234, 0.08);
+    border: 1px solid rgba(102, 126, 234, 0.18);
+    border-radius: 14px;
+    padding: 6px;
+    gap: 6px;
+    margin-bottom: var(--spacing-md);
+}
+
+#workoutSection .workout-view-tab {
+    border-radius: 10px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    min-height: 42px;
+}
+
+#workoutSection .workout-view-tab.active {
+    color: #fff;
+    background: var(--primary-gradient);
+    box-shadow: 0 8px 18px rgba(102, 126, 234, 0.35);
+}
+
+#workoutSection .form-container,
+#workoutSection .last-workout-summary {
+    border-radius: 16px;
+}
+
+#workoutSection .date-input-container,
+#workoutSection .planned-row,
+#workoutSection .superset-block {
+    border-radius: 12px;
+}
+
+#historySection .history-week-group {
+    border: 1px solid rgba(102, 126, 234, 0.18);
+    border-radius: 14px;
+    box-shadow: 0 10px 22px rgba(20, 27, 45, 0.08);
+    margin-bottom: var(--spacing-sm);
+}
+
+#historySection .history-week-header {
+    padding: 0.6rem var(--spacing-md);
+}
+
+#historySection .history-week-header h3 {
+    font-size: 1rem;
+}
+
+#historySection .history-summary-section,
+#historySection .history-daily-section {
+    border-radius: 12px;
+    border-color: rgba(102, 126, 234, 0.14);
+}
+
+#historySection .history-section-sub-header {
+    padding: 0.4rem var(--spacing-md);
+    font-size: 0.82rem;
+    background: linear-gradient(180deg, rgba(248, 250, 255, 0.96), rgba(243, 246, 255, 0.92));
+}
+
+#historySection .history-date-group {
+    background: rgba(255, 255, 255, 0.96) !important;
+    border: 1px solid rgba(102, 126, 234, 0.16) !important;
+    border-radius: 10px !important;
+}
+
+#historySection .history-date-header {
+    background: linear-gradient(180deg, rgba(250, 252, 255, 0.98), rgba(244, 247, 255, 0.94)) !important;
+}
+
+#historySection .history-exercise-group {
+    background: rgba(255, 255, 255, 0.9) !important;
+    border-left-width: 3px !important;
+    border-left-color: var(--primary-color) !important;
+    border-radius: 10px !important;
+}
+
+#statisticsSection .kpi-grid {
+    gap: var(--spacing-md);
+}
+
+#statisticsSection .kpi-card {
+    border-radius: 16px;
+    padding: var(--spacing-lg);
+    border: 1px solid rgba(102, 126, 234, 0.16);
+    border-bottom-width: 1px;
+    border-top: 4px solid rgba(102, 126, 234, 0.65);
+    box-shadow: 0 14px 32px rgba(20, 27, 45, 0.1);
+}
+
+#statisticsSection .kpi-value {
+    font-size: 2.7rem;
+}
+
+#statisticsSection .stats-period-tab-nav {
+    background: rgba(102, 126, 234, 0.07);
+    border: 1px solid rgba(102, 126, 234, 0.18);
+    border-radius: 14px;
+    padding: 6px;
+    gap: 6px;
+}
+
+#statisticsSection .stats-period-tab-btn {
+    border: none;
+    border-radius: 10px;
+    font-weight: 700;
+    padding: 0.55rem 1rem;
+    background: transparent;
+}
+
+#statisticsSection .stats-period-tab-btn.active {
+    box-shadow: 0 8px 18px rgba(102, 126, 234, 0.3);
+}
+
+#statisticsSection .section-card,
+#statisticsSection .chart-controls,
+#statisticsSection .week-nav-bar {
+    border-radius: 14px;
+}
+
+#statisticsSection .stats-overview-grid {
+    grid-template-columns: minmax(0, 1fr);
+}
+
+#statisticsSection .stats-overview-grid .section-card,
+#statisticsSection .chart-wrapper,
+#statisticsSection .chart-wrapper canvas {
+    min-width: 0;
+    max-width: 100%;
+}
+
+#statisticsSection .stats-overview-grid .section-card {
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+
+    #workoutSection,
+    #historySection,
+    #statisticsSection {
+        border-radius: 14px;
+        padding: var(--spacing-md);
+    }
+
+    #statisticsSection .kpi-value {
+        font-size: 2.2rem;
+    }
+
+    #statisticsSection .stats-overview-grid {
+        gap: var(--spacing-sm);
+    }
+
+    #statisticsSection .chart-wrapper-xs {
+        height: 170px;
+    }
+
+    #statisticsSection .chart-wrapper-md {
+        height: 220px;
+    }
+}
+
+/* Surface Depth Hierarchy (Workout / History / Statistics only) */
+#workoutSection .form-container,
+#workoutSection .last-workout-summary,
+#historySection .history-week-group,
+#statisticsSection .kpi-card,
+#statisticsSection .section-card {
+    background: var(--surface-tier-1-bg);
+    border: 1px solid var(--surface-tier-1-border);
+    box-shadow: var(--surface-tier-1-shadow);
+    backdrop-filter: blur(8px);
+}
+
+#workoutSection .planned-row,
+#workoutSection .superset-block,
+#historySection .history-summary-section,
+#historySection .history-daily-section,
+#historySection .history-date-group,
+#statisticsSection .chart-controls,
+#statisticsSection .week-nav-bar {
+    background: var(--surface-tier-2-bg);
+    border: 1px solid var(--surface-tier-2-border);
+    box-shadow: var(--surface-tier-2-shadow);
+}
+
+#workoutSection .planner-set-card,
+#workoutSection .suggestion-chip,
+#historySection .history-exercise-group,
+#historySection .set-item,
+#statisticsSection .metric-btns {
+    background: var(--surface-tier-3-bg);
+    border-color: var(--surface-tier-3-border);
+    box-shadow: var(--surface-tier-3-shadow);
+}
+
+#workoutSection .form-container:hover,
+#historySection .history-week-group:hover,
+#statisticsSection .kpi-card:hover,
+#statisticsSection .section-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+#historySection .history-week-group,
+#statisticsSection .kpi-card,
+#statisticsSection .section-card {
+    transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);
+}
+
+/* Statistics readability refinement: avoid bright white text on active controls */
+#statisticsSection .stats-period-tab-btn.active {
+    color: #1f2a44;
+    background: linear-gradient(135deg, rgba(189, 204, 255, 0.9) 0%, rgba(208, 219, 255, 0.86) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.4);
+}
+
+#statisticsSection .metric-btn.active,
+#statisticsSection .toggle-btn.active {
+    color: #1f2a44;
+    background: linear-gradient(135deg, rgba(193, 207, 255, 0.92) 0%, rgba(214, 224, 255, 0.88) 100%);
+    border: 1px solid rgba(102, 126, 234, 0.36);
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
 }

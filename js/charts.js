@@ -164,8 +164,10 @@ export const Charts = {
         // Radar charts — filter by navigated week and navigated month
         const { weekStartStr, weekEndStr } = this._getNavWeekBounds();
         const { monthStartStr: radarMonthStart, monthEndStr: radarMonthEnd } = this._getNavMonthBounds();
-        this.renderMuscleRadarChart('muscleRadarWeekChart', allWorkouts.filter(w => w.date >= weekStartStr && w.date <= weekEndStr));
-        this.renderMuscleRadarChart('muscleRadarMonthChart', allWorkouts.filter(w => w.date >= radarMonthStart && w.date <= radarMonthEnd));
+        this.renderMuscleRadarChart('muscleRadarWeekChart', allWorkouts.filter(w => w.date >= weekStartStr && w.date <= weekEndStr), 'sessions');
+        this.renderMuscleRadarChart('muscleRadarWeekExerciseChart', allWorkouts.filter(w => w.date >= weekStartStr && w.date <= weekEndStr), 'exercises');
+        this.renderMuscleRadarChart('muscleRadarMonthChart', allWorkouts.filter(w => w.date >= radarMonthStart && w.date <= radarMonthEnd), 'sessions');
+        this.renderMuscleRadarChart('muscleRadarMonthExerciseChart', allWorkouts.filter(w => w.date >= radarMonthStart && w.date <= radarMonthEnd), 'exercises');
 
         // Period tab switching (Weekly / Monthly / Overall)
         const tabsEl = document.getElementById('statsPeriodTabs');
@@ -481,7 +483,9 @@ export const Charts = {
                 this.renderKPICards(this._cachedDataWithWorkouts);
                 const { monthStartStr, monthEndStr } = this._getNavMonthBounds();
                 this.renderMuscleRadarChart('muscleRadarMonthChart',
-                    this._cachedAllWorkouts.filter(w => w.date >= monthStartStr && w.date <= monthEndStr));
+                    this._cachedAllWorkouts.filter(w => w.date >= monthStartStr && w.date <= monthEndStr), 'sessions');
+                this.renderMuscleRadarChart('muscleRadarMonthExerciseChart',
+                    this._cachedAllWorkouts.filter(w => w.date >= monthStartStr && w.date <= monthEndStr), 'exercises');
             }
             if (window.lucide) window.lucide.createIcons();
         };
@@ -539,7 +543,9 @@ export const Charts = {
                 this.renderKPICards(this._cachedDataWithWorkouts);
                 const { weekStartStr, weekEndStr } = this._getNavWeekBounds();
                 this.renderMuscleRadarChart('muscleRadarWeekChart',
-                    this._cachedAllWorkouts.filter(w => w.date >= weekStartStr && w.date <= weekEndStr));
+                    this._cachedAllWorkouts.filter(w => w.date >= weekStartStr && w.date <= weekEndStr), 'sessions');
+                this.renderMuscleRadarChart('muscleRadarWeekExerciseChart',
+                    this._cachedAllWorkouts.filter(w => w.date >= weekStartStr && w.date <= weekEndStr), 'exercises');
             }
             if (window.lucide) window.lucide.createIcons();
         };
@@ -578,7 +584,7 @@ export const Charts = {
      * @param {string} canvasId - ID of the canvas element
      * @param {Array} workouts - Pre-filtered flat workouts array
      */
-    renderMuscleRadarChart(canvasId, workouts) {
+    renderMuscleRadarChart(canvasId, workouts, mode = 'sessions') {
         const canvas = document.getElementById(canvasId);
         if (!canvas) return;
 
@@ -596,17 +602,23 @@ export const Charts = {
             'other':     '#607d8b'
         };
 
-        // Count unique training sessions (dates) per muscle group
-        const sessionsByMuscle = {};
+        const metricSetsByMuscle = {};
         workouts.forEach(w => {
             if (!w.muscle) return;
-            if (!sessionsByMuscle[w.muscle]) sessionsByMuscle[w.muscle] = new Set();
-            sessionsByMuscle[w.muscle].add(w.date);
+            if (!metricSetsByMuscle[w.muscle]) metricSetsByMuscle[w.muscle] = new Set();
+
+            if (mode === 'exercises') {
+                const exerciseKey = w.exerciseId || w.exerciseName;
+                if (exerciseKey) metricSetsByMuscle[w.muscle].add(exerciseKey);
+            } else {
+                metricSetsByMuscle[w.muscle].add(w.date);
+            }
         });
 
-        const muscles = Object.keys(sessionsByMuscle).sort();
+        const muscles = Object.keys(metricSetsByMuscle).sort();
         const labels = muscles.map(m => m.charAt(0).toUpperCase() + m.slice(1).replace('-', ' '));
-        const values = muscles.map(m => sessionsByMuscle[m].size);
+        const values = muscles.map(m => metricSetsByMuscle[m].size);
+        const radarLabel = mode === 'exercises' ? 'Exercises' : 'Sessions';
 
         // Restore canvas if it was hidden by a previous empty-state render
         canvas.style.display = '';
@@ -623,7 +635,7 @@ export const Charts = {
                 canvas.parentElement.appendChild(msgEl);
             }
             msgEl.style.display = '';
-            msgEl.textContent = 'No sessions this period';
+            msgEl.textContent = mode === 'exercises' ? 'No exercises this period' : 'No sessions this period';
             return;
         }
 
@@ -639,7 +651,7 @@ export const Charts = {
             data: {
                 labels,
                 datasets: [{
-                    label: 'Sessions',
+                    label: radarLabel,
                     data: values,
                     borderColor: primaryColor,
                     backgroundColor: primaryColor + '33',
@@ -657,14 +669,16 @@ export const Charts = {
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            label: (c) => ` ${c.parsed.r} session${c.parsed.r !== 1 ? 's' : ''}`
+                            label: (c) => mode === 'exercises'
+                                ? ` ${c.parsed.r} exercise${c.parsed.r !== 1 ? 's' : ''}`
+                                : ` ${c.parsed.r} session${c.parsed.r !== 1 ? 's' : ''}`
                         }
                     }
                 },
                 scales: {
                     r: {
                         beginAtZero: true,
-                        ticks: { stepSize: 1, font: { size: 9 }, backdropColor: 'transparent' },
+                        ticks: { display: false, stepSize: 1, font: { size: 9 }, backdropColor: 'transparent' },
                         pointLabels: { font: { size: 10, weight: '600' } },
                         grid: { color: 'rgba(128,128,128,0.2)' },
                         angleLines: { color: 'rgba(128,128,128,0.2)' }

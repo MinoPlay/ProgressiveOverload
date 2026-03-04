@@ -62,6 +62,7 @@ export const Workouts = {
         const plannerClearBtn = document.getElementById('plannerClearBtn');
         const plannerSaveAsTemplateBtn = document.getElementById('plannerSaveAsTemplateBtn');
         const plannedSessionList = document.getElementById('plannedSessionList');
+        const lastWorkoutInfo = document.getElementById('lastWorkoutInfo');
 
         form.addEventListener('submit', (e) => this.handleSubmit(e));
 
@@ -156,6 +157,26 @@ export const Workouts = {
             // Re-evaluate submit button on every keystroke (input fires before blur/change)
             plannedSessionList.addEventListener('input', (event) => this.handlePlannerFieldInput(event));
             plannedSessionList.addEventListener('click', (event) => this.handlePlannerAction(event));
+        }
+
+        if (lastWorkoutInfo) {
+            lastWorkoutInfo.addEventListener('click', (event) => this.handleLastWorkoutSetClick(event));
+        }
+    },
+
+    handleLastWorkoutSetClick(event) {
+        const setBadge = event.target.closest('.set-badge-item[data-action="prefill-log-set"]');
+        if (!setBadge) return;
+
+        const repsInput = document.getElementById('workoutReps');
+        const weightInput = document.getElementById('workoutWeight');
+
+        if (repsInput) {
+            repsInput.value = setBadge.dataset.reps || '';
+        }
+
+        if (weightInput) {
+            weightInput.value = setBadge.dataset.weight ?? '';
         }
     },
 
@@ -396,6 +417,13 @@ export const Workouts = {
     },
 
     handlePlannerAction(event) {
+        const historyBadge = event.target.closest('.planner-last-session .set-badge-item[data-action="prefill-set-1"]');
+        if (historyBadge) {
+            this.resetLoadedTemplate();
+            this.prefillPlannerActiveSetFromHistory(historyBadge);
+            return;
+        }
+
         const button = event.target.closest('button[data-action]');
         if (!button) return;
 
@@ -426,6 +454,29 @@ export const Workouts = {
             this.setPlannerActiveSet(rowId, itemId || null, setId);
             return;
         }
+
+        this.persistPlannerDraft();
+        this.renderPlannedSession();
+    },
+
+    prefillPlannerActiveSetFromHistory(setBadge) {
+        const sessionContainer = setBadge.closest('.planner-last-session');
+        const rowId = sessionContainer?.dataset?.rowId;
+        if (!rowId) return;
+
+        const itemId = sessionContainer.dataset.itemId || null;
+        const target = this.getPlannerTarget(rowId, itemId);
+        if (!target || !Array.isArray(target.sets) || target.sets.length === 0) return;
+
+        const activeSet = target.activeSetId
+            ? target.sets.find(entry => entry.id === target.activeSetId)
+            : null;
+        const destinationSet = activeSet || target.sets[0];
+        if (!destinationSet) return;
+
+        destinationSet.reps = setBadge.dataset.reps || '';
+        destinationSet.weight = setBadge.dataset.weight ?? '';
+        target.activeSetId = destinationSet.id;
 
         this.persistPlannerDraft();
         this.renderPlannedSession();
@@ -547,7 +598,7 @@ export const Workouts = {
         if (row.type === 'single') {
             if (fieldName === 'exerciseId') {
                 row.exerciseId = field.value;
-                this.updatePlannerLastSessionInfo(`planner-last-${row.id}`, field.value);
+                this.updatePlannerLastSessionInfo(`planner-last-${row.id}`, field.value, row.id, null);
             } else {
                 const setEntry = (row.sets || []).find(entry => entry.id === field.dataset.setId);
                 if (!setEntry) return;
@@ -560,7 +611,7 @@ export const Workouts = {
 
             if (fieldName === 'exerciseId') {
                 item.exerciseId = field.value;
-                this.updatePlannerLastSessionInfo(`planner-last-${row.id}-${item.id}`, field.value);
+                this.updatePlannerLastSessionInfo(`planner-last-${row.id}-${item.id}`, field.value, row.id, item.id);
             } else {
                 const setEntry = (item.sets || []).find(entry => entry.id === field.dataset.setId);
                 if (!setEntry) return;
@@ -640,12 +691,12 @@ export const Workouts = {
         this.plannedSession.rows.forEach((row) => {
             if (row.type === 'single') {
                 if (row.exerciseId) {
-                    this.updatePlannerLastSessionInfo(`planner-last-${row.id}`, row.exerciseId);
+                    this.updatePlannerLastSessionInfo(`planner-last-${row.id}`, row.exerciseId, row.id, null);
                 }
             } else if (row.type === 'superset') {
                 row.exercises.forEach((exerciseEntry) => {
                     if (exerciseEntry.exerciseId) {
-                        this.updatePlannerLastSessionInfo(`planner-last-${row.id}-${exerciseEntry.id}`, exerciseEntry.exerciseId);
+                        this.updatePlannerLastSessionInfo(`planner-last-${row.id}-${exerciseEntry.id}`, exerciseEntry.exerciseId, row.id, exerciseEntry.id);
                     }
                 });
             }
@@ -1486,7 +1537,13 @@ export const Workouts = {
 
                 session.sets.forEach((set) => {
                     const setBadge = document.createElement('span');
-                    setBadge.className = 'set-badge-item';
+                    setBadge.className = 'set-badge-item clickable';
+                    setBadge.dataset.action = 'prefill-log-set';
+                    setBadge.dataset.reps = set.reps ?? '';
+                    setBadge.dataset.weight = set.weight !== null && set.weight !== undefined && set.weight !== ''
+                        ? String(set.weight)
+                        : '';
+                    setBadge.title = 'Click to prefill reps/weight';
 
                     let text = `${set.reps}`;
                     if (set.weight !== null && set.weight !== undefined) {
@@ -1864,9 +1921,21 @@ export const Workouts = {
      * @param {string} containerId - ID of the container element
      * @param {string} exerciseId - Selected exercise ID
      */
-    async updatePlannerLastSessionInfo(containerId, exerciseId) {
+    async updatePlannerLastSessionInfo(containerId, exerciseId, rowId = null, itemId = null) {
         const container = document.getElementById(containerId);
         if (!container) return;
+
+        if (rowId) {
+            container.dataset.rowId = rowId;
+        } else {
+            delete container.dataset.rowId;
+        }
+
+        if (itemId) {
+            container.dataset.itemId = itemId;
+        } else {
+            delete container.dataset.itemId;
+        }
 
         if (!exerciseId) {
             container.innerHTML = '';
@@ -1890,7 +1959,7 @@ export const Workouts = {
                 const chips = session.sets.map(s => {
                     let text = `${s.reps}`;
                     if (s.weight !== null && s.weight !== undefined && s.weight !== '') text += `\u00d7${s.weight}`;
-                    return `<span class="set-badge-item">${text}</span>`;
+                    return `<span class="set-badge-item clickable" data-action="prefill-set-1" data-reps="${s.reps ?? ''}" data-weight="${s.weight ?? ''}" title="Click to prefill active set">${text}</span>`;
                 }).join('');
                 this.plannerLastSessionCache[exerciseId] = {
                     hasData: true,

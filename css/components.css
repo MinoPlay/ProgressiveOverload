@@ -2835,6 +2835,15 @@
     border-radius: 4px;
 }
 
+.set-badge-item.clickable {
+    cursor: pointer;
+    transition: opacity var(--transition-fast);
+}
+
+.set-badge-item.clickable:hover {
+    opacity: 0.85;
+}
+
 /* Navigation Dropdown */
 .nav-dropdown {
     position: relative;

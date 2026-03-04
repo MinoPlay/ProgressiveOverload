@@ -2366,12 +2366,25 @@
 }
 
 .kpi-entry-trend {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 1px;
     margin-left: 3px;
     font-size: 0.82rem;
     font-weight: 800;
     line-height: 1;
     vertical-align: middle;
+}
+
+.kpi-entry-trend-arrow {
+    line-height: 1;
+}
+
+.kpi-entry-trend-delta {
+    font-size: 0.64rem;
+    font-weight: 700;
+    opacity: 0.85;
+    line-height: 1;
 }
 
 /* Compact variant for simple count cards (e.g. Workouts Month / Week) */
@@ -2595,6 +2608,20 @@
     cursor: pointer;
     color: var(--text-secondary);
     transition: all var(--transition-base);
+}
+
+.metric-btn--icon {
+    min-width: 34px;
+    min-height: 30px;
+    padding: 5px 8px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.metric-btn--icon svg {
+    width: 14px;
+    height: 14px;
 }
 
 .metric-btn:hover {
@@ -3546,6 +3573,39 @@
     margin-bottom: var(--spacing-md);
 }
 
+.muscle-card-collapse {
+    width: 100%;
+}
+
+.muscle-card-toggle {
+    list-style: none;
+    cursor: pointer;
+}
+
+.muscle-card-toggle::-webkit-details-marker {
+    display: none;
+}
+
+.muscle-card-toggle::marker {
+    content: '';
+}
+
+.muscle-card-chevron {
+    width: 14px;
+    height: 14px;
+    color: var(--text-light);
+    margin-left: 6px;
+    transition: transform var(--transition-base);
+}
+
+.muscle-card-collapse[open] .muscle-card-chevron {
+    transform: rotate(180deg);
+}
+
+.muscle-card-content {
+    margin-top: 2px;
+}
+
 .muscle-focus-list {
     flex: 1;
     display: flex;
@@ -3828,6 +3888,23 @@
 
 #statisticsSection .stats-overview-grid .section-card {
     overflow: hidden;
+}
+
+#statisticsSection #chartControls.chart-controls {
+    justify-content: center;
+    margin-bottom: var(--spacing-sm);
+}
+
+#statisticsSection #chartControls .metric-btns {
+    margin: 0 auto;
+}
+
+#statisticsSection #categoryTabContent .category-tab-pane {
+    padding-top: 0;
+}
+
+#statisticsSection .category-chart-container {
+    margin-top: 0;
 }
 
 @media (max-width: 768px) {

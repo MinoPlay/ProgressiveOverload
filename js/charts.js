@@ -214,6 +214,25 @@ export const Charts = {
         const kpiGrid = document.getElementById('kpiGrid');
         if (!kpiGrid) return;
 
+        const collapseStateKey = (period) => `sessionsPerMuscleCollapsed:${period}`;
+        const isMuscleCardCollapsed = (period) => {
+            const saved = localStorage.getItem(collapseStateKey(period));
+            if (saved === null) return true;
+            return saved === 'true';
+        };
+        const wireMuscleCardCollapseState = (container) => {
+            if (!container) return;
+            const detailsEl = container.querySelector('.muscle-card-collapse');
+            if (!detailsEl) return;
+
+            const period = detailsEl.dataset.period;
+            detailsEl.open = !isMuscleCardCollapsed(period);
+
+            detailsEl.addEventListener('toggle', () => {
+                localStorage.setItem(collapseStateKey(period), String(!detailsEl.open));
+            });
+        };
+
         const toDateString = (date) => date.toISOString().split('T')[0];
 
         const getTrendMeta = (current, previous) => {
@@ -383,8 +402,8 @@ export const Charts = {
                     return `
                 <div class="muscle-focus-row">
                     <span class="muscle-focus-name">${m.name.replace('-', ' ')}</span>
-                    <span class="muscle-focus-metric muscle-focus-metric--sessions" title="Sessions (Days)">${m.count}<span class="kpi-entry-trend ${sessionTrendInfo.trendClass}" title="vs previous period (${prevCount})">${sessionTrendInfo.arrow}</span></span>
-                    <span class="muscle-focus-metric muscle-focus-metric--exercises" title="Exercises Done">${m.exCount}<span class="kpi-entry-trend ${exerciseTrendInfo.trendClass}" title="vs previous period (${prevExCount})">${exerciseTrendInfo.arrow}</span></span>
+                    <span class="muscle-focus-metric muscle-focus-metric--sessions" title="Sessions (Days)">${m.count}<span class="kpi-entry-trend ${sessionTrendInfo.trendClass}" title="vs previous period (${prevCount})"><span class="kpi-entry-trend-arrow">${sessionTrendInfo.arrow}</span><span class="kpi-entry-trend-delta">${sessionTrendInfo.deltaText}</span></span></span>
+                    <span class="muscle-focus-metric muscle-focus-metric--exercises" title="Exercises Done">${m.exCount}<span class="kpi-entry-trend ${exerciseTrendInfo.trendClass}" title="vs previous period (${prevExCount})"><span class="kpi-entry-trend-arrow">${exerciseTrendInfo.arrow}</span><span class="kpi-entry-trend-delta">${exerciseTrendInfo.deltaText}</span></span></span>
                 </div>
             `;
                 })()}
@@ -417,17 +436,22 @@ export const Charts = {
         // Muscle session cards live inside the period tab panels
         const buildMuscleSessionCard = (label, title, muscleFocusHTML, totalSessions) => `
             <div class="kpi-card kpi-card--muscle">
-                <div class="kpi-icon-row">
-                    <i data-lucide="biceps-flexed" class="kpi-icon text-success"></i>
-                    <span class="kpi-label" title="${title}">Muscle Training Sessions</span>
-                    <span class="kpi-period-badge">${label}</span>
-                </div>
-                <div class="muscle-focus-list">
-                    ${muscleFocusHTML}
-                </div>
-                <span class="kpi-trend trend-neutral kpi-total-caption">
-                    Sessions: ${totalSessions} total
-                </span>
+                <details class="muscle-card-collapse" data-period="${label.toLowerCase()}">
+                    <summary class="kpi-icon-row muscle-card-toggle">
+                        <i data-lucide="biceps-flexed" class="kpi-icon text-success"></i>
+                        <span class="kpi-label" title="${title}">Sessions Per Muscle</span>
+                        <span class="kpi-period-badge">${label}</span>
+                        <i data-lucide="chevron-down" class="muscle-card-chevron" aria-hidden="true"></i>
+                    </summary>
+                    <div class="muscle-card-content">
+                        <div class="muscle-focus-list">
+                            ${muscleFocusHTML}
+                        </div>
+                        <span class="kpi-trend trend-neutral kpi-total-caption">
+                            Sessions: ${totalSessions} total
+                        </span>
+                    </div>
+                </details>
             </div>
         `;
 
@@ -438,6 +462,7 @@ export const Charts = {
                 'Training frequency and variety per muscle group this calendar month (Sessions | Exercises)',
                 monthMuscleFocusHTML, monthMuscleSummary.totalSessions
             );
+            wireMuscleCardCollapseState(muscleMonthEl);
         }
 
         const muscleWeekEl = document.getElementById('muscleSessionsWeek');
@@ -447,6 +472,7 @@ export const Charts = {
                 'Training frequency and variety per muscle group this week (Sessions | Exercises)',
                 weekMuscleFocusHTML, weekMuscleSummary.totalSessions
             );
+            wireMuscleCardCollapseState(muscleWeekEl);
         }
 
         if (window.lucide) window.lucide.createIcons();
@@ -752,7 +778,7 @@ export const Charts = {
                         beginAtZero: true,
                         max: 7,
                         ticks: { stepSize: 1 },
-                        title: { display: true, text: 'Days/Week' }
+                        title: { display: false }
                     }
                 }
             }
@@ -760,9 +786,18 @@ export const Charts = {
     },
 
     /**
-     * Render the muscle group activity line chart
+     * Render weekly muscle activity as unique exercises per muscle group (not sets)
      */
     renderMuscleActivityChart(canvas, displayData, labels) {
+        const hiddenSeriesKey = 'muscleGroupActivityHiddenSeries';
+        let hiddenSeries = new Set();
+        try {
+            const stored = JSON.parse(localStorage.getItem(hiddenSeriesKey) || '[]');
+            if (Array.isArray(stored)) hiddenSeries = new Set(stored);
+        } catch (error) {
+            hiddenSeries = new Set();
+        }
+
         const muscleGroups = new Set();
         displayData.forEach(week => {
             Object.keys(week.muscleGroupCounts || {}).forEach(m => muscleGroups.add(m));
@@ -782,11 +817,18 @@ export const Charts = {
         };
 
         const datasets = Array.from(muscleGroups).sort().map(muscle => ({
+            muscleKey: muscle,
             label: muscle.charAt(0).toUpperCase() + muscle.slice(1).replace('-', ' '),
             data: displayData.map(d => (d.muscleGroupCounts && d.muscleGroupCounts[muscle]) || 0),
             borderColor: muscleColors[muscle] || '#667eea',
-            backgroundColor: (muscleColors[muscle] || '#667eea') + '99',
-            borderWidth: 1
+            backgroundColor: (muscleColors[muscle] || '#667eea') + '22',
+            borderWidth: 2,
+            fill: false,
+            tension: 0.35,
+            pointRadius: 0,
+            pointHoverRadius: 0,
+            pointHitRadius: 0,
+            hidden: hiddenSeries.has(muscle)
         }));
 
         const ctx = canvas.getContext('2d');
@@ -794,7 +836,7 @@ export const Charts = {
         if (existingChart) existingChart.destroy();
 
         new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: labels,
                 datasets: datasets
@@ -805,9 +847,27 @@ export const Charts = {
                 plugins: {
                     legend: {
                         position: 'top',
-                        labels: { boxWidth: 10, font: { size: 10 } }
+                        labels: { boxWidth: 10, font: { size: 10 } },
+                        onClick: (event, legendItem, legend) => {
+                            const chart = legend.chart;
+                            const datasetIndex = legendItem.datasetIndex;
+                            if (datasetIndex == null) return;
+
+                            if (chart.isDatasetVisible(datasetIndex)) {
+                                chart.hide(datasetIndex);
+                            } else {
+                                chart.show(datasetIndex);
+                            }
+
+                            const nextHiddenSeries = chart.data.datasets
+                                .filter((dataset, index) => !chart.isDatasetVisible(index))
+                                .map(dataset => dataset.muscleKey)
+                                .filter(Boolean);
+                            localStorage.setItem(hiddenSeriesKey, JSON.stringify(nextHiddenSeries));
+                        }
                     },
                     tooltip: {
+                        enabled: false,
                         mode: 'index',
                         intersect: false,
                         callbacks: {
@@ -820,7 +880,7 @@ export const Charts = {
                     y: {
                         beginAtZero: true,
                         ticks: { stepSize: 1 },
-                        title: { display: true, text: 'Unique Exercises' }
+                        title: { display: false }
                     }
                 }
             }
@@ -1035,6 +1095,15 @@ export const Charts = {
         const chartContainer = document.querySelector('.category-chart-container .chart-container');
         if (!chartContainer) return;
 
+        const hiddenSeriesKey = 'muscleGroupProgressHiddenSeries';
+        let hiddenSeries = new Set();
+        try {
+            const stored = JSON.parse(localStorage.getItem(hiddenSeriesKey) || '[]');
+            if (Array.isArray(stored)) hiddenSeries = new Set(stored);
+        } catch (error) {
+            hiddenSeries = new Set();
+        }
+
         if (this.selectedMuscleGroups.length === 0) {
             chartContainer.innerHTML = '<p class="empty-state">Select muscle groups from the list above to view progress.</p>';
             return;
@@ -1134,12 +1203,14 @@ export const Charts = {
             });
 
             return {
+                muscleKey: muscle,
                 label: this.capitalize(muscle),
                 data: weekValues,
                 borderColor: colors[muscle] || '#667eea',
                 backgroundColor: (colors[muscle] || '#667eea') + '99',
                 borderWidth: 1,
-                spanGaps: true
+                spanGaps: true,
+                hidden: hiddenSeries.has(muscle)
             };
         });
 
@@ -1158,8 +1229,28 @@ export const Charts = {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { position: 'top' },
+                    legend: {
+                        position: 'top',
+                        onClick: (event, legendItem, legend) => {
+                            const chart = legend.chart;
+                            const datasetIndex = legendItem.datasetIndex;
+                            if (datasetIndex == null) return;
+
+                            if (chart.isDatasetVisible(datasetIndex)) {
+                                chart.hide(datasetIndex);
+                            } else {
+                                chart.show(datasetIndex);
+                            }
+
+                            const nextHiddenSeries = chart.data.datasets
+                                .filter((dataset, index) => !chart.isDatasetVisible(index))
+                                .map(dataset => dataset.muscleKey)
+                                .filter(Boolean);
+                            localStorage.setItem(hiddenSeriesKey, JSON.stringify(nextHiddenSeries));
+                        }
+                    },
                     tooltip: {
+                        enabled: false,
                         mode: 'index',
                         intersect: false,
                         callbacks: {
@@ -1182,7 +1273,7 @@ export const Charts = {
                 scales: {
                     y: {
                         beginAtZero: false,
-                        title: { display: true, text: yAxisLabel }
+                        title: { display: false }
                     },
                     x: {
                         title: { display: true, text: 'Week' }
@@ -1202,19 +1293,26 @@ export const Charts = {
 
         controls.innerHTML = `
             <div style="display: flex; align-items: center; gap: var(--spacing-md); flex-wrap: wrap; width: 100%;">
-                <label style="font-size: 0.85rem; font-weight: 600; color: var(--text-secondary); white-space: nowrap;">View Metric:</label>
                 <div class="metric-btns">
-                    <button class="metric-btn ${this.selectedMetric === 'relative' ? 'active' : ''}" data-metric="relative" title="Progress relative to your first workouts">Relative %</button>
-                    <button class="metric-btn ${this.selectedMetric === 'weight' ? 'active' : ''}" data-metric="weight" title="Heaviest weight lifted (PR)">Weight (PR)</button>
-                    <button class="metric-btn ${this.selectedMetric === 'reps' ? 'active' : ''}" data-metric="reps" title="Total repetitions performed">Reps</button>
+                    <button class="metric-btn metric-btn--icon ${this.selectedMetric === 'relative' ? 'active' : ''}" data-metric="relative" title="Progress relative to your first workouts" aria-label="Relative progress metric">
+                        <i data-lucide="percent"></i>
+                    </button>
+                    <button class="metric-btn metric-btn--icon ${this.selectedMetric === 'weight' ? 'active' : ''}" data-metric="weight" title="Heaviest weight lifted (PR)" aria-label="Weight PR metric">
+                        <i data-lucide="dumbbell"></i>
+                    </button>
+                    <button class="metric-btn metric-btn--icon ${this.selectedMetric === 'reps' ? 'active' : ''}" data-metric="reps" title="Total repetitions performed" aria-label="Repetitions metric">
+                        <i data-lucide="repeat"></i>
+                    </button>
                 </div>
             </div>
         `;
 
+        if (window.lucide) window.lucide.createIcons();
+
         // Metric handlers
         controls.querySelectorAll('.metric-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
-                this.switchMetric(e.target.dataset.metric);
+                this.switchMetric(e.currentTarget.dataset.metric);
             });
         });
     },

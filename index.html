@@ -367,7 +367,7 @@
                                     <i data-lucide="chevron-right"></i>
                                 </button>
                             </div>
-                            <!-- Muscle Training Sessions (Week) injected by JS -->
+                            <!-- Sessions Per Muscle (Week) injected by JS -->
                             <div id="muscleSessionsWeek"></div>
 
                             <div class="section-card stats-panel-card">
@@ -401,7 +401,7 @@
                                     <i data-lucide="chevron-right"></i>
                                 </button>
                             </div>
-                            <!-- Muscle Training Sessions (Month) injected by JS -->
+                            <!-- Sessions Per Muscle (Month) injected by JS -->
                             <div id="muscleSessionsMonth"></div>
 
                             <div class="section-card stats-panel-card">
@@ -430,7 +430,7 @@
                             <div class="stats-overview-grid">
                                 <div class="section-card">
                                     <h4 class="stats-card-title">
-                                        <i data-lucide="calendar-days"></i> Training Frequency History
+                                        <i data-lucide="calendar-days"></i> Training Frequency
                                     </h4>
                                     <div class="chart-wrapper chart-wrapper-xs">
                                         <canvas id="weeklyFrequencyChart"></canvas>
@@ -438,28 +438,28 @@
                                 </div>
                                 <div class="section-card">
                                     <h4 class="stats-card-title">
-                                        <i data-lucide="bar-chart-3"></i> Muscle Group Activity History
+                                        <i data-lucide="trending-up"></i> Progressive Overload
                                     </h4>
-                                    <div class="chart-wrapper chart-wrapper-md">
-                                        <canvas id="weeklyMuscleChart"></canvas>
+                                    <div id="chartControls" class="chart-controls">
+                                        <!-- Metric selector will be injected here -->
+                                    </div>
+                                    <div id="categoryTabsContainer">
+                                        <div class="category-tabs" id="categoryTabs">
+                                            <!-- Tabs will be dynamically populated -->
+                                        </div>
+                                        <div class="category-tab-content" id="categoryTabContent">
+                                            <!-- Tab content will be dynamically populated -->
+                                        </div>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="section-card stats-panel-card">
                                 <h4 class="stats-card-title">
-                                    <i data-lucide="trending-up"></i> Muscle Group Progress Trend
+                                    <i data-lucide="bar-chart-3"></i> Weekly Muscle Activity
                                 </h4>
-                                <div id="chartControls" class="chart-controls">
-                                    <!-- Metric selector will be injected here -->
-                                </div>
-                                <div id="categoryTabsContainer">
-                                    <div class="category-tabs" id="categoryTabs">
-                                        <!-- Tabs will be dynamically populated -->
-                                    </div>
-                                    <div class="category-tab-content" id="categoryTabContent">
-                                        <!-- Tab content will be dynamically populated -->
-                                    </div>
+                                <div class="chart-wrapper chart-wrapper-md">
+                                    <canvas id="weeklyMuscleChart"></canvas>
                                 </div>
                             </div>
 

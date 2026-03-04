@@ -104,7 +104,7 @@ const App = {
 
         // Section label map for the trigger button
         const sectionLabels = {
-            workout: 'Log Workout',
+            workout: 'Workout',
             history: 'History',
             statistics: 'Statistics',
             exercises: 'Manage'

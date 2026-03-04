@@ -31,13 +31,13 @@
                         <button class="nav-btn dropdown-trigger main-nav-trigger" id="mainNavTrigger"
                             aria-haspopup="true" aria-expanded="false" aria-label="Open navigation menu">
                             <i data-lucide="menu" class="nav-icon"></i>
-                            <span id="activeNavLabel">Log Workout</span>
+                            <span id="activeNavLabel">Workout</span>
                             <i data-lucide="chevron-down" class="chevron-icon"></i>
                         </button>
                         <div class="dropdown-content main-nav-content" id="mainNavContent">
                             <!-- Navigation items -->
                             <button class="nav-btn dropdown-item" data-section="workout">
-                                <i data-lucide="plus-circle" class="nav-icon"></i> Log Workout
+                                <i data-lucide="plus-circle" class="nav-icon"></i> Workout
                             </button>
                             <button class="nav-btn dropdown-item" data-section="history">
                                 <i data-lucide="calendar" class="nav-icon"></i> History
@@ -221,20 +221,9 @@
             </section>
 
             <!-- Workout Section -->
-            <section id="workoutSection" class="content-section active" role="region" aria-label="Log Workout">
+            <section id="workoutSection" class="content-section active" role="region" aria-label="Workout">
 
-                <div class="workout-view-tabs" role="tablist" aria-label="Workout views">
-                    <button type="button" id="workoutLogTabBtn" class="btn btn-secondary workout-view-tab active"
-                        data-view="log" role="tab" aria-selected="true" aria-controls="workoutLogView">
-                        Log Workout
-                    </button>
-                    <button type="button" id="workoutPlanTabBtn" class="btn btn-secondary workout-view-tab"
-                        data-view="plan" role="tab" aria-selected="false" aria-controls="workoutPlanView">
-                        Plan Session
-                    </button>
-                </div>
-
-                <div id="workoutLogView" class="workout-view active" role="tabpanel" aria-labelledby="workoutLogTabBtn">
+                <div id="workoutLogView" class="workout-view">
 
                 <div class="form-container">
                     <form id="workoutFormElement" class="compact-workout-form">
@@ -287,7 +276,7 @@
 
                 </div>
 
-                <div id="workoutPlanView" class="workout-view" role="tabpanel" aria-labelledby="workoutPlanTabBtn">
+                <div id="workoutPlanView" class="workout-view active" role="region" aria-label="Workout planner">
 
                 <div class="form-container planner-container">
                     <div class="planner-header">

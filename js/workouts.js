@@ -11,7 +11,7 @@ const DEFAULT_PLANNER_SET_COUNT = 3;
 const WORKOUT_VIEW_KEY = 'workoutActiveView';
 
 export const Workouts = {
-    activeWorkoutView: 'log',
+    activeWorkoutView: 'plan',
     plannedSession: null,
     plannerLastSessionCache: {},  // exerciseId -> { html, hasData }
 
@@ -194,8 +194,9 @@ export const Workouts = {
 
     initializeWorkoutViewTabs() {
         const tabButtons = document.querySelectorAll('.workout-view-tab[data-view]');
+        const hasLogTab = Boolean(document.getElementById('workoutLogTabBtn'));
         const savedView = localStorage.getItem(WORKOUT_VIEW_KEY);
-        const defaultView = savedView === 'plan' ? 'plan' : 'log';
+        const defaultView = (savedView === 'plan' || (savedView === 'log' && hasLogTab)) ? savedView : 'plan';
 
         this.setWorkoutView(defaultView);
 
@@ -205,13 +206,14 @@ export const Workouts = {
     },
 
     setWorkoutView(view) {
-        const normalizedView = view === 'plan' ? 'plan' : 'log';
-        this.activeWorkoutView = normalizedView;
-
         const logView = document.getElementById('workoutLogView');
         const planView = document.getElementById('workoutPlanView');
         const logTab = document.getElementById('workoutLogTabBtn');
         const planTab = document.getElementById('workoutPlanTabBtn');
+        const hasLog = Boolean(logView && logTab);
+
+        const normalizedView = view === 'log' && hasLog ? 'log' : 'plan';
+        this.activeWorkoutView = normalizedView;
 
         if (logView) logView.classList.toggle('active', normalizedView === 'log');
         if (planView) planView.classList.toggle('active', normalizedView === 'plan');

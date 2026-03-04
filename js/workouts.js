@@ -1904,10 +1904,12 @@ export const Workouts = {
             const lastSession = await Storage.getLastWorkoutSession();
 
             if (!lastSession || !lastSession.exercises || lastSession.exercises.length === 0) {
+                container.classList.add('hidden');
                 container.style.display = 'none';
                 return;
             }
 
+            container.classList.remove('hidden');
             container.style.display = 'block';
 
             const dateObj = new Date(lastSession.date);
@@ -1962,6 +1964,7 @@ export const Workouts = {
             }
         } catch (error) {
             console.error('Error rendering last workout summary:', error);
+            container.classList.add('hidden');
             container.style.display = 'none';
         }
     }

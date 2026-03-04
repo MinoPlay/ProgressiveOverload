@@ -506,12 +506,23 @@ export const Workouts = {
 
         if (!target || !Array.isArray(target.sets) || target.sets.length < 2) return;
 
-        let nextIndex = Number.isInteger(target.copyCursor) ? target.copyCursor : 1;
-        if (nextIndex >= target.sets.length) {
-            nextIndex = 1;
+        let sourceIndex = -1;
+
+        if (target.activeSetId) {
+            sourceIndex = target.sets.findIndex(entry => entry.id === target.activeSetId);
         }
 
-        const sourceIndex = nextIndex - 1;
+        let nextIndex;
+        if (sourceIndex >= 0 && sourceIndex < target.sets.length - 1) {
+            nextIndex = sourceIndex + 1;
+        } else {
+            nextIndex = Number.isInteger(target.copyCursor) ? target.copyCursor : 1;
+            if (nextIndex >= target.sets.length) {
+                nextIndex = 1;
+            }
+            sourceIndex = nextIndex - 1;
+        }
+
         const sourceSet = target.sets[sourceIndex];
         const destinationSet = target.sets[nextIndex];
 
@@ -584,12 +595,18 @@ export const Workouts = {
 
         if (row.type === 'single') {
             const setEntry = (row.sets || []).find(entry => entry.id === field.dataset.setId);
-            if (setEntry) setEntry[fieldName] = field.value;
+            if (setEntry) {
+                setEntry[fieldName] = field.value;
+                row.activeSetId = field.dataset.setId;
+            }
         } else {
             const item = row.exercises?.find(entry => entry.id === field.dataset.itemId);
             if (item) {
                 const setEntry = (item.sets || []).find(entry => entry.id === field.dataset.setId);
-                if (setEntry) setEntry[fieldName] = field.value;
+                if (setEntry) {
+                    setEntry[fieldName] = field.value;
+                    item.activeSetId = field.dataset.setId;
+                }
             }
         }
 

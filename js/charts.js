@@ -44,6 +44,11 @@ export const Charts = {
             this.renderCombinedChart();
         });
 
+        // Re-render charts when theme changes so grid/label colors update
+        window.addEventListener('themeChanged', () => {
+            this.renderCombinedChart();
+        });
+
     },
 
     /**

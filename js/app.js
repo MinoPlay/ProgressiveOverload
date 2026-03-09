@@ -11,6 +11,81 @@ import { Templates } from './templates.js';
 import { CONFIG, loadConfig } from './config.js';
 
 /**
+ * Theme management
+ */
+const Theme = {
+    STORAGE_KEY: 'theme',
+
+    /** Apply saved theme before content renders to avoid flash */
+    applyEarly() {
+        const saved = localStorage.getItem(this.STORAGE_KEY) || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        this._applyChartDefaults(saved);
+    },
+
+    /** Wire up the toggle button and sync its icon */
+    init() {
+        const saved = localStorage.getItem(this.STORAGE_KEY) || 'light';
+        document.documentElement.setAttribute('data-theme', saved);
+        this._syncIcon(saved);
+        this._applyChartDefaults(saved);
+
+        const btn = document.getElementById('themeToggleBtn');
+        if (btn) {
+            btn.addEventListener('click', () => this.toggle());
+        }
+    },
+
+    toggle() {
+        const current = document.documentElement.getAttribute('data-theme') || 'light';
+        const next = current === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', next);
+        localStorage.setItem(this.STORAGE_KEY, next);
+        this._syncIcon(next);
+        this._applyChartDefaults(next);
+        // Re-render charts so they pick up new grid/label colors
+        window.dispatchEvent(new CustomEvent('themeChanged', { detail: { theme: next } }));
+    },
+
+    /** Update Chart.js global defaults to match current theme */
+    _applyChartDefaults(theme) {
+        if (typeof window.Chart === 'undefined') return;
+        const isDark = theme === 'dark';
+        const textColor    = isDark ? '#9090aa' : '#666666';
+        const gridColor    = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+        const borderColor  = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
+
+        window.Chart.defaults.color = textColor;
+        window.Chart.defaults.borderColor = borderColor;
+        if (window.Chart.defaults.scale) {
+            window.Chart.defaults.scale.grid = { color: gridColor };
+        }
+        if (window.Chart.defaults.scales) {
+            ['x', 'y', 'r'].forEach(axis => {
+                if (window.Chart.defaults.scales[axis]) {
+                    window.Chart.defaults.scales[axis].grid = { color: gridColor };
+                    window.Chart.defaults.scales[axis].ticks = { color: textColor };
+                }
+            });
+        }
+        // Legend and title
+        if (window.Chart.defaults.plugins?.legend?.labels) {
+            window.Chart.defaults.plugins.legend.labels.color = textColor;
+        }
+    },
+
+    _syncIcon(theme) {
+        const iconEl = document.getElementById('themeToggleIcon');
+        if (!iconEl) return;
+        iconEl.setAttribute('data-lucide', theme === 'dark' ? 'sun' : 'moon');
+        if (window.lucide) window.lucide.createIcons();
+    }
+};
+
+// Apply theme immediately to avoid flash of unstyled content
+Theme.applyEarly();
+
+/**
  * Main App object
  */
 const App = {
@@ -40,6 +115,9 @@ const App = {
 
         // Show app
         document.getElementById('app').style.display = 'block';
+
+        // Initialize theme toggle
+        Theme.init();
 
         // Initialize
         await this.initApp();

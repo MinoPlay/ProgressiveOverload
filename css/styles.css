@@ -80,6 +80,371 @@
     --z-toast: 1080;
 }
 
+/* ─── Dark Theme ─────────────────────────────────────────────────────────── */
+[data-theme="dark"] {
+    /* Backgrounds */
+    --bg-primary: #1e1e2e;
+    --bg-secondary: #13131f;
+    --bg-overlay: rgba(0, 0, 0, 0.7);
+
+    /* Text */
+    --text-primary: #e0e0f0;
+    --text-secondary: #9090aa;
+    --text-light: #55556a;
+    /* text-inverse stays #ffffff — it's always used on top of gradient/coloured backgrounds */
+
+    /* Borders */
+    --border-color: #2e2e44;
+    --border-light: #252538;
+
+    /* Secondary buttons / surfaces */
+    --secondary-color: #2a2a3e;
+    --secondary-dark: #353550;
+
+    /* Status colours — slightly muted */
+    --success-light: #1a3a1c;
+    --error-light: #3a1a1c;
+    --info-light: #1a2a3a;
+
+    /* Primary accent — keep visible but slightly muted */
+    --primary-light: rgba(102, 126, 234, 0.18);
+
+    /* Dark-mode gradient: same hue family, clearly darker */
+    --primary-gradient: linear-gradient(135deg, #243276 0%, #3d1e60 100%);
+
+    /* Surface depth layers */
+    --surface-tier-1-bg: rgba(30, 30, 50, 0.96);
+    --surface-tier-1-border: rgba(102, 126, 234, 0.2);
+    --surface-tier-1-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+
+    --surface-tier-2-bg: rgba(24, 24, 40, 0.92);
+    --surface-tier-2-border: rgba(102, 126, 234, 0.15);
+    --surface-tier-2-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+
+    --surface-tier-3-bg: rgba(20, 20, 34, 0.85);
+    --surface-tier-3-border: rgba(102, 126, 234, 0.1);
+    --surface-tier-3-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Scrollbar in dark mode */
+[data-theme="dark"] ::-webkit-scrollbar-track {
+    background: #18182a;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb {
+    background: #44445a;
+}
+
+[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
+    background: #66667a;
+}
+
+/* Dropdown panel (hardcoded #fff in layout.css) */
+[data-theme="dark"] .dropdown-content {
+    background: #252538;
+    border: 1px solid var(--border-color);
+}
+
+/* Modal */
+[data-theme="dark"] .modal-content {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+/* Inputs & selects */
+[data-theme="dark"] input,
+[data-theme="dark"] select,
+[data-theme="dark"] textarea {
+    background: #252538;
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="dark"] input::placeholder,
+[data-theme="dark"] textarea::placeholder {
+    color: var(--text-light);
+}
+
+/* Config form inputs on the gradient header */
+[data-theme="dark"] .config-form input {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+[data-theme="dark"] .config-form input:focus {
+    background: rgba(255, 255, 255, 0.22);
+}
+
+/* Equipment badges — darken the pastel backgrounds */
+[data-theme="dark"] .equipment-badge.barbell  { background: #2a1e0a; color: #ffb74d; }
+[data-theme="dark"] .equipment-badge.dumbbell { background: #0a2010; color: #66bb6a; }
+[data-theme="dark"] .equipment-badge.kettlebell { background: #2a0a14; color: #f48fb1; }
+[data-theme="dark"] .equipment-badge.machines  { background: #1e0a28; color: #ce93d8; }
+[data-theme="dark"] .equipment-badge.bodyweight { background: #0a1e28; color: #81d4fa; }
+
+/* History entries (hardcoded backgrounds) */
+[data-theme="dark"] .history-date-group {
+    background: #1e1e2e !important;
+    border-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .history-date-header {
+    background: #252538 !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+[data-theme="dark"] .history-exercise-group {
+    background: #1a1a2c !important;
+}
+
+[data-theme="dark"] .history-exercise-group:hover {
+    background: #22223a !important;
+}
+
+/* Current-week badge (hardcoded white) */
+[data-theme="dark"] .current-week-badge {
+    background: rgba(255, 255, 255, 0.15);
+    color: #fff;
+}
+
+/* Section cards */
+[data-theme="dark"] .section-card,
+[data-theme="dark"] .form-container,
+[data-theme="dark"] .exercise-chart-section,
+[data-theme="dark"] .kpi-card {
+    background: var(--surface-tier-1-bg);
+    border-color: var(--surface-tier-1-border);
+}
+
+/* Hardcoded white card backgrounds in chart/stats areas */
+[data-theme="dark"] .stats-overview-grid .section-card,
+[data-theme="dark"] .stats-panel-card {
+    background: var(--surface-tier-1-bg);
+}
+
+/* Last workout summary */
+[data-theme="dark"] .last-workout-summary {
+    background: var(--surface-tier-1-bg);
+    border-color: var(--surface-tier-1-border);
+}
+
+/* Workout plan / planner container */
+[data-theme="dark"] .planner-container {
+    background: var(--surface-tier-1-bg);
+}
+
+/* Planned session rows */
+[data-theme="dark"] .planned-set-row,
+[data-theme="dark"] .planned-exercise-block,
+[data-theme="dark"] .planned-row,
+[data-theme="dark"] .superset-block {
+    background: var(--surface-tier-2-bg);
+    border-color: var(--border-color);
+}
+
+/* Planner set cards */
+[data-theme="dark"] .planner-set-card {
+    background: var(--surface-tier-3-bg);
+    border-color: var(--border-color);
+}
+
+/* Suggestion chips */
+[data-theme="dark"] .suggestion-chip {
+    background: var(--surface-tier-3-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* Default equipment badge (no variant class) */
+[data-theme="dark"] .equipment-badge {
+    background: #0e1e2e;
+    color: #81d4fa;
+}
+[data-theme="dark"] .equipment-badge.bodyweight-plus { background: #0a1824; color: #4dd0e1; }
+
+/* History sub-section headers (hardcoded #f8f9fa / #f1f3f5) */
+[data-theme="dark"] .history-section-sub-header {
+    background: #1e1e2e !important;
+    color: var(--text-secondary) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+[data-theme="dark"] .history-section-sub-header:hover {
+    background: #252538 !important;
+    color: var(--primary-color) !important;
+}
+[data-theme="dark"] .history-summary-section,
+[data-theme="dark"] .history-daily-section {
+    background: #1a1a2c !important;
+    border-color: var(--border-color) !important;
+}
+
+/* History week group content area */
+[data-theme="dark"] .history-week-content {
+    background: #13131f;
+}
+
+/* Stats period active tab (overrides hardcoded light gradient) */
+[data-theme="dark"] #statisticsSection .stats-period-tab-btn.active,
+[data-theme="dark"] .stats-period-tab-btn.active {
+    color: #fff;
+    background: var(--primary-gradient);
+    border-color: var(--primary-color);
+}
+
+/* Stats metric / toggle active buttons (overrides hardcoded light blue) */
+[data-theme="dark"] #statisticsSection .metric-btn.active,
+[data-theme="dark"] #statisticsSection .toggle-btn.active,
+[data-theme="dark"] .metric-btn.active,
+[data-theme="dark"] .toggle-btn.active {
+    color: #fff;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+/* Category tab buttons */
+[data-theme="dark"] .category-tab-btn {
+    background: var(--surface-tier-3-bg);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+[data-theme="dark"] .category-tab-btn.active {
+    background: var(--primary-gradient);
+    color: #fff;
+    border-color: var(--primary-color);
+}
+
+/* View toggle area */
+[data-theme="dark"] .view-toggle-group {
+    background: var(--surface-tier-2-bg);
+}
+
+/* Charts & metrics background panels */
+[data-theme="dark"] .chart-controls,
+[data-theme="dark"] .metric-btns {
+    background: var(--surface-tier-2-bg);
+    border-color: var(--border-color);
+}
+
+/* Exercise cards (Manage section) */
+[data-theme="dark"] .exercise-card {
+    background: var(--surface-tier-1-bg);
+    border-color: var(--surface-tier-1-border);
+}
+
+/* Equipment group collapsible */
+[data-theme="dark"] .equipment-group {
+    background: var(--surface-tier-1-bg);
+    border: 1px solid var(--surface-tier-1-border);
+}
+[data-theme="dark"] .equipment-group-content {
+    background: var(--bg-secondary);
+}
+/* equipment-group-header uses a hardcoded gradient, not the variable */
+[data-theme="dark"] .equipment-group-header {
+    background: linear-gradient(135deg, #243276 0%, #3d1e60 100%);
+}
+[data-theme="dark"] .equipment-group-header:hover {
+    background: linear-gradient(135deg, #1e2a66 0%, #331852 100%);
+}
+
+/* Template cards */
+[data-theme="dark"] .template-card {
+    background: var(--surface-tier-1-bg);
+    border-color: var(--border-color);
+}
+
+/* Workout stat badges in history */
+[data-theme="dark"] .workout-stat {
+    background: var(--surface-tier-2-bg);
+    color: var(--text-secondary);
+}
+
+/* Milestone badge (hardcoded yellow) */
+[data-theme="dark"] .milestone-badge {
+    background: #2a1e00;
+    color: #ffcc02;
+}
+
+/* Security warning box */
+[data-theme="dark"] .security-warning {
+    background: #28200a;
+    border-color: #bf9000;
+    color: var(--text-primary);
+}
+
+/* Table rows in dark mode */
+[data-theme="dark"] .weekly-stats-table th,
+[data-theme="dark"] .stats-summary-table th {
+    color: var(--text-secondary);
+    border-bottom-color: var(--border-color);
+}
+[data-theme="dark"] .weekly-stats-table td,
+[data-theme="dark"] .stats-summary-table td {
+    border-bottom-color: var(--border-color);
+    color: var(--text-primary);
+}
+[data-theme="dark"] .weekly-stats-table,
+[data-theme="dark"] .stats-summary-table {
+    background: var(--surface-tier-1-bg);
+}
+
+/* App content (section wrapper) explicit dark background */
+[data-theme="dark"] .app-content,
+[data-theme="dark"] #workoutSection,
+[data-theme="dark"] #historySection,
+[data-theme="dark"] #statisticsSection,
+[data-theme="dark"] #exercisesSection {
+    background: transparent;
+}
+
+/* Workout count pill */
+[data-theme="dark"] .workout-count {
+    background: var(--secondary-color);
+    color: var(--text-primary);
+}
+
+/* ─── Theme Toggle Button ─────────────────────────────────────────────────── */
+.theme-toggle-btn {
+    padding: var(--spacing-sm);
+    background: transparent;
+    border: none;
+    color: rgba(255, 255, 255, 0.85);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 44px;
+    width: 44px;
+}
+
+.theme-toggle-btn:hover {
+    color: white;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.theme-toggle-btn svg {
+    width: 20px;
+    height: 20px;
+}
+
+/* Smooth theme transition */
+*, *::before, *::after {
+    transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;
+}
+
+/* Exclude elements that should NOT transition (avoid flash on icon swaps etc.) */
+.btn,
+.nav-btn,
+.dropdown-item,
+[class*="chart"],
+canvas {
+    transition: all var(--transition-base);
+}
+
 /* Smooth Scrolling */
 html {
     scroll-behavior: smooth;

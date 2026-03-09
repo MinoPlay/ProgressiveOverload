@@ -185,12 +185,29 @@ const App = {
             workout: 'Workout',
             history: 'History',
             statistics: 'Statistics',
-            exercises: 'Manage'
+            exercises: 'Manage',
+            design1: 'Session Board',
+            design3: 'Workout Builder'
         };
 
         const activeNavLabel = document.getElementById('activeNavLabel');
         const dropdownTrigger = document.getElementById('mainNavTrigger');
         const dropdownContent = document.getElementById('mainNavContent');
+        const appContent = document.querySelector('.app-content');
+        const designSections = document.querySelectorAll('.workout-design-section');
+
+        const updateDesignSectionHeight = () => {
+            if (!appContent || !designSections.length) return;
+            const appRect = appContent.getBoundingClientRect();
+            const styles = window.getComputedStyle(appContent);
+            const paddingTop = parseFloat(styles.paddingTop) || 0;
+            const paddingBottom = parseFloat(styles.paddingBottom) || 0;
+            const viewportHeight = Math.floor(window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight);
+            const availableHeight = Math.max(320, Math.floor(viewportHeight - appRect.top - paddingTop - paddingBottom));
+            designSections.forEach(section => {
+                section.style.height = `${availableHeight}px`;
+            });
+        };
 
         const closeDropdown = () => {
             if (dropdownTrigger && dropdownContent) {
@@ -201,6 +218,11 @@ const App = {
 
         const switchSection = (targetSection) => {
             if (!targetSection) return;
+
+            const targetSectionElement = document.getElementById(`${targetSection}Section`);
+            if (!targetSectionElement) {
+                targetSection = 'workout';
+            }
 
             // Update the trigger label
             if (activeNavLabel && sectionLabels[targetSection]) {
@@ -223,6 +245,10 @@ const App = {
             sections.forEach(section => {
                 section.classList.toggle('active', section.id === `${targetSection}Section`);
             });
+
+            if (targetSection.startsWith('design')) {
+                updateDesignSectionHeight();
+            }
 
             // Save to localStorage for persistence
             localStorage.setItem('activeSection', targetSection);
@@ -257,11 +283,27 @@ const App = {
                 }
             });
 
-            // Close dropdown when clicking outside
-            document.addEventListener('click', () => {
-                closeDropdown();
-            });
+            // Close dropdown when clicking outside (capture phase so it's reliable
+            // even when inner controls stop bubbling click events)
+            document.addEventListener('pointerdown', (e) => {
+                const navContainer = dropdownTrigger.closest('.main-nav-dropdown');
+                if (!navContainer) {
+                    closeDropdown();
+                    return;
+                }
+
+                if (!navContainer.contains(e.target)) {
+                    closeDropdown();
+                }
+            }, true);
         }
+
+        window.addEventListener('resize', () => {
+            const activeSection = localStorage.getItem('activeSection') || 'workout';
+            if (activeSection.startsWith('design')) {
+                updateDesignSectionHeight();
+            }
+        });
 
         // Config collapsible toggle
         const configToggleBtn = document.getElementById('configToggleBtn');

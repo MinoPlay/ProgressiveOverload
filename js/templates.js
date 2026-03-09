@@ -340,6 +340,14 @@ export const Templates = {
             ? sets
             : this.createDefaultSets(itemId || rowId);
 
+        const row = this.editorSession?.rows?.find(r => r.id === rowId);
+        const target = row?.type === 'superset'
+            ? (row.exercises || []).find(e => e.id === itemId)
+            : row;
+        const exerciseId = target?.exerciseId || '';
+        const exercise = exerciseId ? Storage.getExerciseById(exerciseId) : null;
+        const requiresWeight = Boolean(exercise?.requiresWeight);
+
         normalizedSets.forEach((setEntry, idx) => {
             // In the template editor all sets are always visible (no collapsing)
             const card = document.createElement('div');
@@ -355,6 +363,7 @@ export const Templates = {
 
             const fields = document.createElement('div');
             fields.className = 'planner-set-fields';
+            fields.classList.toggle('requires-weight', requiresWeight);
 
             const repsInput = document.createElement('input');
             repsInput.type = 'number';
@@ -367,6 +376,29 @@ export const Templates = {
             repsInput.dataset.setId = setEntry.id;
             if (itemId) repsInput.dataset.itemId = itemId;
 
+            const repsControl = document.createElement('div');
+            repsControl.className = 'planner-reps-control';
+
+            const repsDown = document.createElement('button');
+            repsDown.type = 'button';
+            repsDown.className = 'planner-reps-btn';
+            repsDown.textContent = '−';
+            repsDown.dataset.action = 'step-reps';
+            repsDown.dataset.rowId = rowId;
+            repsDown.dataset.setId = setEntry.id;
+            repsDown.dataset.delta = '-1';
+            if (itemId) repsDown.dataset.itemId = itemId;
+
+            const repsUp = document.createElement('button');
+            repsUp.type = 'button';
+            repsUp.className = 'planner-reps-btn';
+            repsUp.textContent = '+';
+            repsUp.dataset.action = 'step-reps';
+            repsUp.dataset.rowId = rowId;
+            repsUp.dataset.setId = setEntry.id;
+            repsUp.dataset.delta = '1';
+            if (itemId) repsUp.dataset.itemId = itemId;
+
             const weightInput = document.createElement('input');
             weightInput.type = 'number';
             weightInput.placeholder = 'Weight';
@@ -378,8 +410,13 @@ export const Templates = {
             weightInput.dataset.setId = setEntry.id;
             if (itemId) weightInput.dataset.itemId = itemId;
 
-            fields.appendChild(repsInput);
-            fields.appendChild(weightInput);
+            repsControl.appendChild(repsDown);
+            repsControl.appendChild(repsInput);
+            repsControl.appendChild(repsUp);
+            fields.appendChild(repsControl);
+            if (requiresWeight) {
+                fields.appendChild(weightInput);
+            }
 
             card.appendChild(header);
             card.appendChild(fields);
@@ -402,6 +439,15 @@ export const Templates = {
         if (row.type === 'single') {
             if (fieldName === 'exerciseId') {
                 row.exerciseId = field.value;
+                const exercise = field.value ? Storage.getExerciseById(field.value) : null;
+                const requiresWeight = Boolean(exercise?.requiresWeight);
+                if (!requiresWeight) {
+                    (row.sets || []).forEach(setEntry => {
+                        setEntry.weight = '';
+                    });
+                }
+                this.renderEditorRows();
+                return;
             } else {
                 const set = (row.sets || []).find(s => s.id === setId);
                 if (set) set[fieldName] = field.value;
@@ -411,6 +457,15 @@ export const Templates = {
             if (!item) return;
             if (fieldName === 'exerciseId') {
                 item.exerciseId = field.value;
+                const exercise = field.value ? Storage.getExerciseById(field.value) : null;
+                const requiresWeight = Boolean(exercise?.requiresWeight);
+                if (!requiresWeight) {
+                    (item.sets || []).forEach(setEntry => {
+                        setEntry.weight = '';
+                    });
+                }
+                this.renderEditorRows();
+                return;
             } else {
                 const set = (item.sets || []).find(s => s.id === setId);
                 if (set) set[fieldName] = field.value;
@@ -422,11 +477,36 @@ export const Templates = {
         const button = event.target.closest('button[data-action]');
         if (!button || !this.editorSession) return;
 
-        const { action, rowId } = button.dataset;
+        const { action, rowId, itemId, setId, delta } = button.dataset;
 
         if (action === 'remove-row') {
             this.editorSession.rows = this.editorSession.rows.filter(r => r.id !== rowId);
             this.renderEditorRows();
+            return;
+        }
+
+        if (action === 'step-reps') {
+            const row = this.editorSession.rows.find(r => r.id === rowId);
+            if (!row || !setId) return;
+
+            const target = row.type === 'superset'
+                ? (row.exercises || []).find(e => e.id === itemId)
+                : row;
+            if (!target) return;
+
+            const setEntry = (target.sets || []).find(s => s.id === setId);
+            if (!setEntry) return;
+
+            const step = parseInt(delta || '0', 10);
+            const current = parseInt(setEntry.reps || '0', 10) || 0;
+            const next = Math.max(1, current + step);
+            setEntry.reps = String(next);
+
+            const control = button.closest('.planner-reps-control');
+            const input = control?.querySelector('input[data-field="reps"]');
+            if (input) {
+                input.value = String(next);
+            }
         }
     },
 

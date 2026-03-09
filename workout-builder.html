@@ -1,0 +1,1580 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout Builder — Session Design</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #e4e7f5;
+  min-height: 100vh;
+  width: 100%;
+  overflow: hidden;
+}
+
+:root {
+  --accent: #7c3aed;
+  --accent2: #a855f7;
+  --accent-dark: #6d28d9;
+  --accent-light: rgba(124,58,237,.12);
+  --accent-glow: rgba(124,58,237,.28);
+  --bg: #f0eefc;
+  --surface: #ffffff;
+  --surface2: #f7f5ff;
+  --border: #e2ddf8;
+  --text: #1e1530;
+  --text2: #5a4e78;
+  --text3: #a090c0;
+  --success: #059669;
+  --success-bg: #d1fae5;
+  --success-text: #065f46;
+  --danger: #dc2626;
+  --shadow: 0 2px 12px rgba(0,0,0,.07);
+  --shadow-lg: 0 8px 32px rgba(124,58,237,.16);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --tab-h: 68px;
+  --header-h: 60px;
+}
+[data-theme="dark"] {
+  --bg: #0b1512;
+  --surface: #13201b;
+  --surface2: #1a2b24;
+  --border: #244136;
+  --text: #ecfff7;
+  --text2: #a6d9c7;
+  --text3: #6da78f;
+  --accent: #22c55e;
+  --accent2: #16a34a;
+  --accent-dark: #15803d;
+  --accent-light: rgba(34,197,94,.18);
+  --success-bg: #0c2018;
+  --success-text: #34d399;
+  --shadow: 0 2px 12px rgba(0,0,0,.45);
+  --shadow-lg: 0 8px 32px rgba(0,0,0,.45);
+  --accent-glow: rgba(34,197,94,.22);
+}
+
+/* Phone */
+.phone {
+  width: 100%;
+  min-height: 100vh;
+  background: var(--bg);
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.phone-notch {
+  display: none;
+}
+
+/* Header */
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  gap: 8px;
+  flex-shrink: 0;
+  min-height: var(--header-h);
+}
+.header-left { flex: 1; }
+.header-title {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-title i { color: var(--accent); width: 20px; height: 20px; }
+.header-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
+.icon-btn {
+  width: 36px; height: 36px;
+  border: none; background: var(--surface2);
+  border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text2); flex-shrink: 0;
+}
+.icon-btn i { width: 18px; height: 18px; }
+
+.embedded-mode .app-header { display: none; }
+.design-badge {
+  font-size: 11px; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .06em; color: #fff; background: var(--accent);
+  border-radius: 6px; padding: 3px 8px;
+}
+
+/* Scroll */
+.scroll-area {
+  flex: 1; overflow-y: auto; -webkit-overflow-scrolling: touch;
+}
+.scroll-area::-webkit-scrollbar { width: 0; }
+.scroll-inner { padding: 14px 14px 100px; }
+.scroll-inner { padding: 12px 12px 96px; }
+
+/* View */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── BUILD VIEW ─────────────────────────────────────────────────────── */
+
+.section-label {
+  font-size: 12px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .06em; margin-bottom: 10px;
+}
+
+/* Template loader */
+.tmpl-loader {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 16px var(--accent-glow);
+}
+.tmpl-loader-icon {
+  width: 40px; height: 40px;
+  background: rgba(255,255,255,.2);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.tmpl-loader-icon i { width: 20px; height: 20px; color: #fff; }
+.tmpl-loader-text { flex: 1; }
+.tmpl-loader-label { font-size: 12px; font-weight: 600; color: rgba(255,255,255,.75); }
+.tmpl-loader-name { font-size: 16px; font-weight: 800; color: #fff; margin-top: 2px; }
+.tmpl-loader-chevron i { width: 18px; height: 18px; color: rgba(255,255,255,.7); }
+
+/* Build exercise row */
+.build-row {
+  background: var(--surface);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border);
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 10px;
+  box-shadow: var(--shadow);
+  cursor: grab;
+  transition: box-shadow .15s;
+}
+.build-row:active { cursor: grabbing; box-shadow: var(--shadow-lg); }
+.build-row.dragging { opacity: .45; }
+.build-row.superset-start {
+  border-top-left-radius: 12px;
+  border-top-right-radius: 12px;
+}
+.build-row.superset-end {
+  border-bottom-left-radius: 12px;
+  border-bottom-right-radius: 12px;
+}
+.build-row.superset-linked {
+  margin-bottom: 2px;
+  border-color: rgba(124,58,237,.35);
+}
+.build-row.superset-linked + .build-row.superset-linked {
+  margin-top: -1px;
+}
+.build-row-superset {
+  display: inline-flex;
+  margin-top: 4px;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  background: var(--accent-light);
+  color: var(--accent);
+}
+.drag-handle {
+  color: var(--text3); flex-shrink: 0; display: flex; align-items: center;
+  cursor: grab; padding: 4px;
+}
+.drag-handle i { width: 16px; height: 16px; }
+.build-row-icon {
+  width: 38px; height: 38px;
+  border-radius: 10px;
+  background: var(--accent-light);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.build-row-icon i { width: 18px; height: 18px; color: var(--accent); }
+.build-row-icon .equipment-icon {
+  width: 18px;
+  height: 18px;
+  color: var(--accent);
+}
+.build-row-info { flex: 1; min-width: 0; }
+.build-row-name { font-size: 15px; font-weight: 700; color: var(--text); }
+.build-row-meta { font-size: 12px; color: var(--text3); margin-top: 2px; }
+.link-next-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.link-next-btn i { width: 14px; height: 14px; }
+.link-next-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
+.link-next-btn:disabled { opacity: .35; cursor: not-allowed; }
+.build-del-btn {
+  background: none; border: none; cursor: pointer; color: var(--text3);
+  padding: 6px; border-radius: 6px; display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0; transition: color .12s;
+}
+.build-del-btn:hover { color: var(--danger); }
+.build-del-btn i { width: 16px; height: 16px; }
+
+/* Add exercise row */
+.add-ex-row {
+  width: 52px;
+  height: 52px;
+  margin: 4px auto 12px;
+  border-radius: 50%;
+  border: 1.5px dashed var(--border);
+  background: var(--surface);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: border-color .15s, color .15s;
+  color: var(--text3);
+}
+.add-ex-row:hover { border-color: var(--accent); color: var(--accent); }
+.add-ex-row i { width: 22px; height: 22px; }
+.exercise-picker {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.28);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 120;
+  padding: 16px;
+}
+.exercise-picker.open { display: flex; }
+.exercise-picker-dialog {
+  width: 100%;
+  max-width: 360px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 12px;
+  box-shadow: var(--shadow-lg);
+}
+.exercise-picker-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.picker-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+}
+.picker-btn {
+  flex: 1;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  border-radius: 10px;
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+.picker-btn.primary {
+  border-color: var(--accent);
+  background: var(--accent-light);
+  color: var(--accent);
+}
+
+/* Start Workout sticky */
+.start-sticky {
+  position: absolute;
+  bottom: var(--tab-h);
+  left: 0; right: 0;
+  padding: 12px 14px;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  z-index: 40;
+  display: none;
+}
+.start-sticky.visible { display: block; }
+.start-btn {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  font-size: 17px;
+  font-weight: 800;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  box-shadow: 0 4px 18px var(--accent-glow);
+  letter-spacing: .01em;
+}
+.start-btn i { width: 20px; height: 20px; }
+
+/* ── EXECUTE VIEW ─────────────────────────────────────────────────── */
+
+/* Progress bar */
+.progress-bar-wrap {
+  padding: 14px 14px 0;
+}
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.progress-label { font-size: 13px; font-weight: 600; color: var(--text3); }
+.progress-fraction { font-size: 14px; font-weight: 800; color: var(--accent); }
+.progress-track {
+  height: 5px;
+  background: var(--border);
+  border-radius: 3px;
+  overflow: hidden;
+}
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--accent) 0%, var(--accent2) 100%);
+  border-radius: 3px;
+  transition: width .4s;
+}
+
+/* Exercise header in execute */
+.exec-header {
+  padding: 14px 14px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+.exec-icon {
+  width: 52px; height: 52px;
+  border-radius: 14px;
+  background: var(--accent-light);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.exec-icon i { width: 26px; height: 26px; color: var(--accent); }
+.exec-icon .equipment-icon {
+  width: 26px;
+  height: 26px;
+  color: var(--accent);
+}
+.exec-name { font-size: 22px; font-weight: 900; color: var(--text); line-height: 1.15; }
+.exec-name { font-size: 20px; }
+.exec-muscle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 4px;
+  font-size: 12px; font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-light);
+  border-radius: 20px;
+  padding: 3px 10px;
+}
+
+/* Execute sets */
+.exec-sets-wrap { padding: 16px 14px 170px; }
+.exec-set-header {
+  display: grid;
+  grid-template-columns: 36px 1fr 1fr 52px;
+  gap: 8px;
+  align-items: center;
+  padding: 0 2px 6px;
+  font-size: 11px; font-weight: 700; color: var(--text3);
+  text-transform: uppercase; letter-spacing: .05em;
+}
+.exec-set-header.bodyweight {
+  grid-template-columns: 36px 1fr 52px;
+}
+.exec-set-header.bodyweight span:nth-child(3) {
+  display: none;
+}
+.exec-set-row {
+  display: grid;
+  grid-template-columns: 36px 1fr 1fr 52px;
+  gap: 8px;
+  align-items: center;
+  padding: 5px 0;
+  transition: opacity .2s;
+}
+.exec-set-row.bodyweight {
+  grid-template-columns: 36px 1fr 52px;
+}
+.exec-set-row.done { opacity: .4; }
+.exec-set-num {
+  width: 32px; height: 32px;
+  border-radius: 50%;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: var(--text3);
+}
+.exec-set-row.done .exec-set-num {
+  background: var(--success-bg);
+  border-color: rgba(5,150,105,.25);
+  color: var(--success-text);
+}
+.exec-input {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px 8px;
+  font-size: 17px; font-weight: 700;
+  color: var(--text);
+  text-align: center;
+  width: 100%;
+  outline: none;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  transition: border-color .15s;
+}
+.exec-input:focus { border-color: var(--accent); }
+.exec-input::-webkit-outer-spin-button,
+.exec-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.exec-input.ghost { color: var(--text3); }
+.exec-reps-control {
+  display: grid;
+  grid-template-columns: 30px 1fr 30px;
+  gap: 6px;
+  align-items: center;
+}
+.exec-reps-btn {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.exec-reps-btn:active { transform: scale(.97); }
+.exec-tick {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: var(--surface2);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text3);
+  transition: all .15s;
+  padding: 0;
+}
+.exec-tick:hover, .exec-tick.done {
+  background: var(--success-bg);
+  border-color: var(--success);
+  color: var(--success);
+}
+.exec-tick.done { pointer-events: none; }
+.exec-tick i { width: 20px; height: 20px; }
+.exec-section {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+  margin-bottom: 10px;
+}
+.exec-section-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 6px;
+}
+.exec-section-meta {
+  font-size: 12px;
+  color: var(--text3);
+  margin-bottom: 8px;
+}
+/* Nav buttons */
+.exec-footer {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: var(--tab-h);
+  z-index: 25;
+  background: var(--bg);
+  border-top: 1px solid var(--border);
+  padding: 10px 12px 8px;
+}
+.exec-nav {
+  display: flex;
+  gap: 10px;
+  padding: 0;
+}
+.nav-prev-btn, .nav-next-btn {
+  flex: 1;
+  padding: 13px;
+  border-radius: var(--radius-sm);
+  border: none;
+  font-size: 15px; font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: opacity .15s;
+}
+.nav-prev-btn {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  color: var(--text2);
+}
+.nav-prev-btn:disabled { opacity: .35; cursor: not-allowed; }
+.nav-next-btn {
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  color: #fff;
+  box-shadow: 0 3px 14px var(--accent-glow);
+}
+.nav-next-btn i { width: 18px; height: 18px; }
+.nav-prev-btn i { width: 18px; height: 18px; }
+
+/* Bottom tab bar */
+.tab-bar {
+  height: var(--tab-h);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 50;
+}
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text3);
+  transition: color .15s;
+  padding-bottom: 4px;
+}
+.tab-item i { width: 22px; height: 22px; }
+.tab-item span { font-size: 11px; font-weight: 600; }
+.tab-item.active { color: var(--accent); }
+.tab-item.disabled {
+  opacity: .45;
+  cursor: not-allowed;
+}
+
+/* Log view (quick log) */
+.log-view-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.log-view-card h3 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
+.form-group { margin-bottom: 10px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; display: block; }
+.form-select, .form-input {
+  width: 100%; padding: 11px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface2); color: var(--text);
+  font-size: 15px; outline: none; appearance: none;
+  transition: border-color .15s;
+}
+.form-select:focus, .form-input:focus { border-color: var(--accent); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.quick-reps-control {
+  display: grid;
+  grid-template-columns: 34px 1fr 34px;
+  gap: 8px;
+  align-items: center;
+}
+.quick-reps-btn {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+.quick-reps-btn:active { transform: scale(.97); }
+.log-btn {
+  width: 100%; padding: 14px;
+  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
+  color: #fff; border: none; border-radius: var(--radius-sm);
+  font-size: 16px; font-weight: 700; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 4px;
+}
+.log-btn i { width: 18px; height: 18px; }
+.log-view-card.locked {
+  opacity: .55;
+}
+
+/* Prev hint */
+.prev-hint {
+  display: flex; gap: 6px; padding: 4px 0 10px;
+  font-size: 12px; color: var(--text3); align-items: center;
+}
+.prev-hint i { width: 12px; height: 12px; color: var(--accent); flex-shrink: 0; }
+
+.nav-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.22);
+  display: none;
+  z-index: 80;
+}
+.nav-backdrop.open { display: block; }
+.nav-menu {
+  position: absolute;
+  top: 64px;
+  left: 12px;
+  min-width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  display: none;
+  z-index: 90;
+}
+.nav-menu.open { display: block; }
+.nav-link {
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface2);
+  color: var(--accent);
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="phone-notch"></div>
+
+  <!-- Header (dynamic) -->
+  <header class="app-header" id="appHeader">
+    <button class="icon-btn" onclick="toggleNavMenu(event)" title="Menu">
+      <i data-lucide="menu"></i>
+    </button>
+    <div class="header-left">
+      <div class="header-title" id="headerTitle">
+        <i data-lucide="layers"></i>
+        Plan Session
+      </div>
+      <div class="header-sub" id="headerSub">Custom session · 0 exercises</div>
+    </div>
+    <button class="icon-btn" onclick="toggleTheme()">
+      <i data-lucide="moon" id="themeIcon"></i>
+    </button>
+    <span class="design-badge">Design 3</span>
+  </header>
+
+  <div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+  <div class="nav-menu" id="navMenu">
+    <button class="nav-link" onclick="window.location.href='index.html'">Main App</button>
+    <button class="nav-link" onclick="window.location.href='session-board.html'">Session Board</button>
+    <button class="nav-link active" onclick="window.location.href='workout-builder.html'">Workout Builder</button>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="scroll-area" id="scrollArea">
+    <div class="scroll-inner" id="scrollInner">
+
+      <!-- BUILD VIEW -->
+      <div class="view active" id="buildView">
+
+        <!-- Template card -->
+        <div class="tmpl-loader" onclick="changeTmpl()">
+          <div class="tmpl-loader-icon"><i data-lucide="bookmark"></i></div>
+          <div class="tmpl-loader-text">
+            <div class="tmpl-loader-label">Template</div>
+            <div class="tmpl-loader-name" id="tmplName">No template</div>
+          </div>
+          <div class="tmpl-loader-chevron"><i data-lucide="chevron-right"></i></div>
+        </div>
+
+        <div class="section-label">Exercises</div>
+
+        <!-- Exercise rows -->
+        <div id="buildList"></div>
+
+        <!-- Add exercise -->
+        <button class="add-ex-row" onclick="openExercisePicker('add')">
+          <i data-lucide="plus"></i>
+        </button>
+
+        <div class="exercise-picker" id="exercisePicker" onclick="closeExercisePicker()">
+          <div class="exercise-picker-dialog" onclick="event.stopPropagation()">
+            <div class="exercise-picker-title">Select exercise</div>
+            <label class="form-label" for="exercisePickerSelect">Exercise</label>
+            <select class="form-select" id="exercisePickerSelect"></select>
+            <div class="picker-actions">
+              <button class="picker-btn" type="button" onclick="closeExercisePicker()">Cancel</button>
+              <button class="picker-btn primary" type="button" onclick="confirmExercisePicker()">Apply</button>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /buildView -->
+
+      <!-- EXECUTE VIEW -->
+      <div class="view" id="execView">
+
+        <!-- Progress -->
+        <div class="progress-bar-wrap">
+          <div class="progress-header">
+            <span class="progress-label">Exercise progress</span>
+            <span class="progress-fraction" id="progressFraction">1 / 3</span>
+          </div>
+          <div class="progress-track">
+            <div class="progress-fill" id="progressFill" style="width:33%"></div>
+          </div>
+        </div>
+
+        <!-- Exercise heading -->
+        <div class="exec-header" style="margin-top:14px;">
+          <div class="exec-icon"><i data-lucide="dumbbell" class="equipment-icon" id="execIcon" aria-hidden="true"></i></div>
+          <div>
+            <div class="exec-name" id="execName">Bench Press</div>
+            <div class="exec-muscle" id="execMuscle"><i data-lucide="target"></i> Chest</div>
+          </div>
+        </div>
+
+        <!-- Sets -->
+        <div class="exec-sets-wrap">
+          <div class="exec-set-header" id="execSetHeader">
+            <span>Set</span><span>Reps</span><span>Weight</span><span></span>
+          </div>
+          <div id="execSetList">
+            <div class="exec-set-row">
+              <div class="exec-set-num">1</div>
+              <div class="exec-reps-control">
+                <button class="exec-reps-btn" type="button" onclick="changeExecReps(this,-1)">−</button>
+                <input class="exec-input" type="number" value="4" inputmode="numeric">
+                <button class="exec-reps-btn" type="button" onclick="changeExecReps(this,1)">+</button>
+              </div>
+              <input class="exec-input ghost" type="number" placeholder="82.5" inputmode="decimal">
+              <button class="exec-tick" onclick="tickExecSet(this)"><i data-lucide="check"></i></button>
+            </div>
+            <div class="exec-set-row">
+              <div class="exec-set-num">2</div>
+              <div class="exec-reps-control">
+                <button class="exec-reps-btn" type="button" onclick="changeExecReps(this,-1)">−</button>
+                <input class="exec-input" type="number" placeholder="4" inputmode="numeric">
+                <button class="exec-reps-btn" type="button" onclick="changeExecReps(this,1)">+</button>
+              </div>
+              <input class="exec-input ghost" type="number" placeholder="82.5" inputmode="decimal">
+              <button class="exec-tick" onclick="tickExecSet(this)"><i data-lucide="check"></i></button>
+            </div>
+            <div class="exec-set-row">
+              <div class="exec-set-num">3</div>
+              <div class="exec-reps-control">
+                <button class="exec-reps-btn" type="button" onclick="changeExecReps(this,-1)">−</button>
+                <input class="exec-input" type="number" placeholder="4" inputmode="numeric">
+                <button class="exec-reps-btn" type="button" onclick="changeExecReps(this,1)">+</button>
+              </div>
+              <input class="exec-input ghost" type="number" placeholder="82.5" inputmode="decimal">
+              <button class="exec-tick" onclick="tickExecSet(this)"><i data-lucide="check"></i></button>
+            </div>
+          </div>
+        </div>
+
+        <div class="exec-footer">
+          <div class="exec-nav">
+            <button class="nav-prev-btn" id="prevBtn" onclick="navExercise(-1)" disabled>
+              <i data-lucide="chevron-left"></i> Prev
+            </button>
+            <button class="nav-next-btn" id="nextBtn" onclick="navExercise(1)">
+              Next <i data-lucide="chevron-right"></i>
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /execView -->
+
+      <!-- LOG VIEW -->
+      <div class="view" id="logView">
+        <div class="log-view-card">
+          <h3>Quick Log a Set</h3>
+          <div class="form-group">
+            <label class="form-label">Muscle Group</label>
+            <select class="form-select">
+              <option>All Muscles</option>
+              <option selected>Chest</option>
+              <option>Shoulders</option>
+              <option>Back</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Exercise</label>
+            <select class="form-select">
+              <option selected>Bench Press</option>
+              <option>Incline Press</option>
+              <option>Cable Fly</option>
+            </select>
+          </div>
+          <div class="prev-hint">
+            <i data-lucide="history"></i>
+            <span>Last: 4 reps × 80 kg — Mon, Mar 2</span>
+          </div>
+          <div class="row2">
+            <div class="form-group">
+              <label class="form-label">Reps</label>
+              <div class="quick-reps-control">
+                <button class="quick-reps-btn" type="button" onclick="changeQuickLogReps(-1)">−</button>
+                <input class="form-input" id="quickLogReps" type="number" placeholder="4" inputmode="numeric" style="text-align:center;font-size:22px;font-weight:700;padding:14px 6px;">
+                <button class="quick-reps-btn" type="button" onclick="changeQuickLogReps(1)">+</button>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Weight</label>
+              <input class="form-input" type="number" placeholder="80" inputmode="decimal" style="text-align:center;font-size:22px;font-weight:700;padding:14px 6px;">
+            </div>
+          </div>
+          <button class="log-btn"><i data-lucide="check-circle-2"></i> Log Set</button>
+        </div>
+      </div>
+
+    </div><!-- /scroll-inner -->
+  </div><!-- /scroll-area -->
+
+  <!-- Start sticky (build view) -->
+  <div class="start-sticky" id="startSticky">
+    <button class="start-btn" onclick="startWorkout()">
+      <i data-lucide="play"></i> Start Workout
+    </button>
+  </div>
+
+  <!-- Bottom tab bar -->
+  <nav class="tab-bar">
+    <button class="tab-item active" id="tab-build" onclick="switchTab('build')">
+      <i data-lucide="layers"></i>
+      <span>Plan</span>
+    </button>
+    <button class="tab-item" id="tab-exec" onclick="switchTab('exec')">
+      <i data-lucide="play-circle"></i>
+      <span>Execute</span>
+    </button>
+    <button class="tab-item" id="tab-log" onclick="switchTab('log')">
+      <i data-lucide="plus-circle"></i>
+      <span>Quick Log</span>
+    </button>
+  </nav>
+
+</div>
+
+<script>
+lucide.createIcons();
+
+const THEME_KEY = 'theme';
+const DESIGN3_STATE_KEY = 'workout3.designState';
+const EMBED_MODE = window.self !== window.top;
+
+function applyStoredTheme() {
+  const storedTheme = localStorage.getItem(THEME_KEY) || 'light';
+  document.documentElement.setAttribute('data-theme', storedTheme);
+  const icon = document.getElementById('themeIcon');
+  if (icon) {
+    icon.setAttribute('data-lucide', storedTheme === 'dark' ? 'sun' : 'moon');
+  }
+  lucide.createIcons();
+}
+
+function applyEmbeddedMode() {
+  if (!EMBED_MODE) return;
+  document.documentElement.classList.add('embedded-mode');
+}
+
+applyStoredTheme();
+applyEmbeddedMode();
+
+window.addEventListener('storage', (event) => {
+  if (event.key === THEME_KEY) {
+    applyStoredTheme();
+  }
+});
+
+/* ── Theme ── */
+function toggleTheme() {
+  const html = document.documentElement;
+  const dark = html.getAttribute('data-theme') === 'dark';
+  const nextTheme = dark ? 'light' : 'dark';
+  html.setAttribute('data-theme', nextTheme);
+  localStorage.setItem(THEME_KEY, nextTheme);
+  document.getElementById('themeIcon').setAttribute('data-lucide', dark ? 'moon' : 'sun');
+  lucide.createIcons();
+}
+
+function toggleNavMenu(event) {
+  event.stopPropagation();
+  const menu = document.getElementById('navMenu');
+  const backdrop = document.getElementById('navBackdrop');
+  const isOpen = menu.classList.contains('open');
+  menu.classList.toggle('open', !isOpen);
+  backdrop.classList.toggle('open', !isOpen);
+}
+
+function closeNavMenu() {
+  document.getElementById('navMenu').classList.remove('open');
+  document.getElementById('navBackdrop').classList.remove('open');
+}
+
+function changeExecReps(btn, delta) {
+  const input = btn.closest('.exec-reps-control')?.querySelector('.exec-input');
+  if (!input) {
+    return;
+  }
+  const current = parseInt(input.value || input.placeholder || '0', 10) || 0;
+  input.value = Math.max(1, current + delta);
+}
+
+function changeQuickLogReps(delta) {
+  if (executionActive) {
+    return;
+  }
+  const input = document.getElementById('quickLogReps');
+  if (!input) {
+    return;
+  }
+  const current = parseInt(input.value || input.placeholder || '0', 10) || 0;
+  input.value = Math.max(1, current + delta);
+}
+
+/* ── Execute data ── */
+const EXERCISE_LIBRARY = {
+  bench: { id: 'bench', name: 'Bench Press', muscle: 'Chest', equipment: 'barbell', mode: 'weight', prev: '4×80 kg · 4×82.5 kg · 3×82.5 kg', reps: '4', weight: '80' },
+  ohp: { id: 'ohp', name: 'Overhead Press', muscle: 'Shoulders', equipment: 'barbell', mode: 'weight', prev: '5×50 kg · 5×50 kg · 4×50 kg', reps: '5', weight: '50' },
+  dips: { id: 'dips', name: 'Tricep Dips', muscle: 'Triceps', equipment: 'bodyweight', mode: 'bodyweight', prev: '10 reps · 10 reps · 8 reps', reps: '10', weight: 'BW' },
+  incline: { id: 'incline', name: 'Incline Press', muscle: 'Chest', equipment: 'dumbbell', mode: 'weight', prev: '8×30 kg · 8×30 kg · 7×30 kg', reps: '8', weight: '30' },
+  fly: { id: 'fly', name: 'Cable Fly', muscle: 'Chest', equipment: 'machines', mode: 'weight', prev: '12×15 kg · 12×15 kg · 10×15 kg', reps: '12', weight: '15' },
+  lateral: { id: 'lateral', name: 'Lateral Raise', muscle: 'Shoulders', equipment: 'dumbbell', mode: 'weight', prev: '12×8 kg · 12×8 kg · 10×8 kg', reps: '12', weight: '8' },
+  row: { id: 'row', name: 'Barbell Row', muscle: 'Back', equipment: 'barbell', mode: 'weight', prev: '8×60 kg · 8×60 kg · 7×60 kg', reps: '8', weight: '60' },
+  pullup: { id: 'pullup', name: 'Pull-Up', muscle: 'Back', equipment: 'bodyweight', mode: 'bodyweight', prev: '8 reps · 7 reps · 6 reps', reps: '8', weight: 'BW' },
+  squat: { id: 'squat', name: 'Back Squat', muscle: 'Legs', equipment: 'barbell', mode: 'weight', prev: '5×100 kg · 5×100 kg · 4×100 kg', reps: '5', weight: '100' }
+};
+
+function getEquipmentIcon(equipment) {
+  const icons = {
+    barbell: 'dumbbell',
+    dumbbell: 'dumbbell',
+    kettlebell: 'dumbbell',
+    machines: 'settings',
+    bodyweight: 'user',
+    'bodyweight+': 'user'
+  };
+  return icons[equipment] || 'dumbbell';
+}
+
+const TEMPLATES = {
+  'Push Day A': [
+    { exerciseId: 'bench', sets: 3, superset: 'A' },
+    { exerciseId: 'ohp', sets: 3, superset: 'A' },
+    { exerciseId: 'dips', sets: 3, superset: null }
+  ],
+  'Pull Day B': [
+    { exerciseId: 'row', sets: 3, superset: 'A' },
+    { exerciseId: 'pullup', sets: 3, superset: 'A' },
+    { exerciseId: 'lateral', sets: 3, superset: null }
+  ],
+  'Leg Day': [
+    { exerciseId: 'squat', sets: 4, superset: null },
+    { exerciseId: 'dips', sets: 3, superset: null }
+  ],
+  'Full Body': [
+    { exerciseId: 'squat', sets: 3, superset: 'A' },
+    { exerciseId: 'bench', sets: 3, superset: 'A' },
+    { exerciseId: 'row', sets: 3, superset: null }
+  ]
+};
+
+let activeTemplate = '';
+let buildExercises = [];
+let executionBlocks = [];
+let currentBlockIndex = 0;
+let executionActive = false;
+let currentTab = 'build';
+let pickerState = { mode: 'add', index: -1 };
+
+function saveDesign3State() {
+  const activeTab = currentTab;
+  const state = {
+    template: activeTemplate || '',
+    exercises: buildExercises,
+    executionActive,
+    currentBlockIndex,
+    activeTab
+  };
+  localStorage.setItem(DESIGN3_STATE_KEY, JSON.stringify(state));
+}
+
+function hydrateExerciseFromState(item) {
+  const base = cloneExerciseFromLibrary(item?.exerciseId || 'bench', 3, null);
+  base.superset = typeof item?.superset === 'string' ? item.superset : null;
+  if (Array.isArray(item?.sets) && item.sets.length) {
+    base.sets = item.sets.map((setEntry) => ({
+      r: String(setEntry?.r ?? base.reps),
+      w: base.mode === 'bodyweight' ? 'BW' : String(setEntry?.w ?? base.weight),
+      done: Boolean(setEntry?.done)
+    }));
+  }
+  return base;
+}
+
+function applySavedDesign3State() {
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(DESIGN3_STATE_KEY) || 'null');
+  } catch {
+    saved = null;
+  }
+  if (!saved || typeof saved !== 'object') {
+    loadTemplate('');
+    return;
+  }
+  activeTemplate = typeof saved.template === 'string' ? saved.template : '';
+  currentBlockIndex = Number.isFinite(saved.currentBlockIndex) ? Math.max(0, saved.currentBlockIndex) : 0;
+  executionActive = Boolean(saved.executionActive);
+  currentTab = ['build', 'exec', 'log'].includes(saved.activeTab) ? saved.activeTab : 'build';
+  if (executionActive && currentTab === 'log') {
+    currentTab = 'exec';
+  }
+  if (Array.isArray(saved.exercises)) {
+    buildExercises = saved.exercises.map((item) => hydrateExerciseFromState(item));
+  } else {
+    const templateRows = TEMPLATES[activeTemplate] || [];
+    buildExercises = templateRows.map((row) => cloneExerciseFromLibrary(row.exerciseId, row.sets, row.superset));
+  }
+  normalizeSupersets();
+  executionBlocks = [];
+  document.getElementById('tmplName').textContent = activeTemplate || 'No template';
+  renderBuildList();
+  renderExecutionFromBuild();
+  updateBuildHeader();
+  updateQuickLogLock();
+}
+
+function cloneExerciseFromLibrary(exerciseId, sets, superset) {
+  const source = EXERCISE_LIBRARY[exerciseId] || EXERCISE_LIBRARY.bench;
+  return {
+    exerciseId: source.id,
+    name: source.name,
+    muscle: source.muscle,
+    equipment: source.equipment || 'barbell',
+    mode: source.mode,
+    prev: source.prev,
+    superset,
+    sets: Array.from({ length: 3 }, () => ({ r: source.reps, w: source.weight, done: false }))
+  };
+}
+
+function normalizeSupersets() {
+  for (let i = 0; i < buildExercises.length; i += 1) {
+    const current = buildExercises[i];
+    const next = buildExercises[i + 1];
+    if (!current.superset) {
+      continue;
+    }
+    if (!next || next.superset !== current.superset) {
+      current.superset = null;
+    } else {
+      i += 1;
+    }
+  }
+}
+
+function loadTemplate(templateName) {
+  activeTemplate = templateName || '';
+  const templateRows = TEMPLATES[templateName] || [];
+  buildExercises = templateRows.map((row) => cloneExerciseFromLibrary(row.exerciseId, row.sets, row.superset));
+  normalizeSupersets();
+  executionBlocks = [];
+  currentBlockIndex = 0;
+  executionActive = false;
+  document.getElementById('tmplName').textContent = activeTemplate || 'No template';
+  renderBuildList();
+  renderExecutionFromBuild();
+  updateBuildHeader();
+  updateQuickLogLock();
+  saveDesign3State();
+}
+
+function buildExecutionBlocks() {
+  const blocks = [];
+  for (let i = 0; i < buildExercises.length; i += 1) {
+    const current = buildExercises[i];
+    const next = buildExercises[i + 1];
+    if (current.superset && next && next.superset === current.superset) {
+      blocks.push({ type: 'superset', label: current.superset, items: [current, next] });
+      i += 1;
+    } else {
+      blocks.push({ type: 'single', items: [current] });
+    }
+  }
+  return blocks;
+}
+
+function getNextSupersetLabel() {
+  const labels = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
+  const used = new Set(buildExercises.map((item) => item.superset).filter(Boolean));
+  return labels.find((label) => !used.has(label)) || 'A';
+}
+
+function isExerciseComplete(exercise) {
+  return exercise.sets.length > 0 && exercise.sets.every((setEntry) => setEntry.done);
+}
+
+function isSessionComplete() {
+  return buildExercises.length > 0 && buildExercises.every((exercise) => isExerciseComplete(exercise));
+}
+
+function renderExecutionFromBuild() {
+  executionBlocks = buildExecutionBlocks();
+  if (executionBlocks.length === 0) {
+    currentBlockIndex = 0;
+    document.getElementById('execName').textContent = 'No exercises planned';
+    document.getElementById('execMuscle').innerHTML = '<i data-lucide="target"></i> Build your session first';
+    document.getElementById('progressFraction').textContent = '0 / 0';
+    document.getElementById('progressFill').style.width = '0%';
+    document.getElementById('execSetList').innerHTML = '';
+    document.getElementById('prevBtn').disabled = true;
+    document.getElementById('nextBtn').disabled = true;
+    lucide.createIcons();
+    return;
+  }
+  currentBlockIndex = Math.max(0, Math.min(executionBlocks.length - 1, currentBlockIndex));
+  renderExecutionBlock(currentBlockIndex);
+}
+
+function renderExecutionBlock(index) {
+  const block = executionBlocks[index];
+  const primary = block.items[0];
+  document.getElementById('execName').textContent = block.type === 'superset'
+    ? `${block.items[0].name} + ${block.items[1].name}`
+    : primary.name;
+  const muscleLabel = block.type === 'superset'
+    ? Array.from(new Set(block.items.map((exercise) => exercise.muscle))).join(' • ')
+    : primary.muscle;
+  document.getElementById('execMuscle').innerHTML = `<i data-lucide="target"></i> ${muscleLabel}`;
+  document.getElementById('execIcon').setAttribute('data-lucide', getEquipmentIcon(primary.equipment));
+
+  const currentPosition = Math.min(index + 1, executionBlocks.length);
+  document.getElementById('progressFraction').textContent = `${currentPosition} / ${executionBlocks.length}`;
+  document.getElementById('progressFill').style.width = `${(currentPosition / executionBlocks.length) * 100}%`;
+
+  const list = document.getElementById('execSetList');
+  list.innerHTML = '';
+  const header = document.getElementById('execSetHeader');
+  header.style.display = 'none';
+
+  block.items.forEach((exercise) => {
+    const section = document.createElement('div');
+    section.className = 'exec-section';
+    const isBodyweight = exercise.mode === 'bodyweight';
+    section.innerHTML = `
+      <div class="exec-section-title">
+        <span>${exercise.name}</span>
+      </div>
+      <div class="exec-section-meta">${exercise.muscle}</div>
+      <div class="exec-set-header${isBodyweight ? ' bodyweight' : ''}">
+        <span>Set</span><span>Reps</span><span>Weight</span><span></span>
+      </div>
+      <div class="exec-section-rows" data-exercise="${exercise.exerciseId}"></div>
+    `;
+    list.appendChild(section);
+
+    const rowsWrap = section.querySelector('.exec-section-rows');
+    exercise.sets.forEach((setEntry, setIndex) => {
+      const row = document.createElement('div');
+      row.className = `exec-set-row${isBodyweight ? ' bodyweight' : ''}${setEntry.done ? ' done' : ''}`;
+      row.innerHTML = isBodyweight ? `
+        <div class="exec-set-num">${setIndex + 1}</div>
+        <div class="exec-reps-control">
+          <button class="exec-reps-btn" type="button" onclick="changeExecSetValue('${exercise.exerciseId}', ${setIndex}, 'r', -1)">−</button>
+          <input class="exec-input" type="number" value="${setEntry.r}" inputmode="numeric" onchange="syncExecSetValue('${exercise.exerciseId}', ${setIndex}, 'r', this.value)">
+          <button class="exec-reps-btn" type="button" onclick="changeExecSetValue('${exercise.exerciseId}', ${setIndex}, 'r', 1)">+</button>
+        </div>
+        <button class="exec-tick${setEntry.done ? ' done' : ''}" onclick="tickExecSet('${exercise.exerciseId}', ${setIndex})"><i data-lucide="check"></i></button>
+      ` : `
+        <div class="exec-set-num">${setIndex + 1}</div>
+        <div class="exec-reps-control">
+          <button class="exec-reps-btn" type="button" onclick="changeExecSetValue('${exercise.exerciseId}', ${setIndex}, 'r', -1)">−</button>
+          <input class="exec-input" type="number" value="${setEntry.r}" inputmode="numeric" onchange="syncExecSetValue('${exercise.exerciseId}', ${setIndex}, 'r', this.value)">
+          <button class="exec-reps-btn" type="button" onclick="changeExecSetValue('${exercise.exerciseId}', ${setIndex}, 'r', 1)">+</button>
+        </div>
+        <input class="exec-input ghost" type="number" value="${setEntry.w === 'BW' ? '' : setEntry.w}" placeholder="Weight" inputmode="decimal" onchange="syncExecSetValue('${exercise.exerciseId}', ${setIndex}, 'w', this.value)">
+        <button class="exec-tick${setEntry.done ? ' done' : ''}" onclick="tickExecSet('${exercise.exerciseId}', ${setIndex})"><i data-lucide="check"></i></button>
+      `;
+      rowsWrap.appendChild(row);
+    });
+  });
+
+  document.getElementById('prevBtn').disabled = index === 0;
+  document.getElementById('nextBtn').disabled = false;
+  document.getElementById('nextBtn').innerHTML = index === executionBlocks.length - 1
+    ? '<i data-lucide="flag"></i> Finish'
+    : 'Next <i data-lucide="chevron-right"></i>';
+  lucide.createIcons();
+}
+
+function getExerciseById(exerciseId) {
+  return buildExercises.find((exercise) => exercise.exerciseId === exerciseId);
+}
+
+function changeExecSetValue(exerciseId, setIndex, key, delta) {
+  const exercise = getExerciseById(exerciseId);
+  if (!exercise || !exercise.sets[setIndex]) {
+    return;
+  }
+  const setEntry = exercise.sets[setIndex];
+  const current = parseFloat(setEntry[key] === 'BW' ? '0' : setEntry[key]) || 0;
+  const next = key === 'r' ? Math.max(1, current + delta) : Math.max(0, current + delta);
+  setEntry[key] = String(next);
+  setEntry.done = false;
+  saveDesign3State();
+  renderExecutionBlock(currentBlockIndex);
+}
+
+function syncExecSetValue(exerciseId, setIndex, key, value) {
+  const exercise = getExerciseById(exerciseId);
+  if (!exercise || !exercise.sets[setIndex]) {
+    return;
+  }
+  const sanitized = (value || '').trim();
+  if (key === 'w' && exercise.mode === 'bodyweight') {
+    exercise.sets[setIndex].w = 'BW';
+  } else {
+    exercise.sets[setIndex][key] = sanitized || (key === 'r' ? '1' : '0');
+  }
+  exercise.sets[setIndex].done = false;
+  saveDesign3State();
+  renderExecutionBlock(currentBlockIndex);
+}
+
+function tickExecSet(exerciseId, setIndex) {
+  const exercise = getExerciseById(exerciseId);
+  if (!exercise || !exercise.sets[setIndex]) {
+    return;
+  }
+  exercise.sets[setIndex].done = !exercise.sets[setIndex].done;
+
+  const markedComplete = exercise.sets[setIndex].done === true;
+
+  if (markedComplete) {
+    const currentBlock = executionBlocks[currentBlockIndex];
+    const blockComplete = Boolean(currentBlock) && currentBlock.items.every((item) => isExerciseComplete(item));
+
+    if (blockComplete && currentBlockIndex < executionBlocks.length - 1) {
+      currentBlockIndex += 1;
+      saveDesign3State();
+      renderExecutionBlock(currentBlockIndex);
+      return;
+    }
+  }
+
+  saveDesign3State();
+  renderExecutionBlock(currentBlockIndex);
+}
+
+function navExercise(dir) {
+  if (executionBlocks.length === 0) {
+    return;
+  }
+  if (dir === 1 && currentBlockIndex === executionBlocks.length - 1) {
+    finishSession();
+    return;
+  }
+  currentBlockIndex = Math.max(0, Math.min(executionBlocks.length - 1, currentBlockIndex + dir));
+  saveDesign3State();
+  renderExecutionBlock(currentBlockIndex);
+}
+
+/* ── Build view ── */
+function delBuildRow(btn) {
+  const row = btn.closest('.build-row');
+  const index = Number(row.dataset.index);
+  buildExercises.splice(index, 1);
+  normalizeSupersets();
+  renderBuildList();
+  renderExecutionFromBuild();
+  updateBuildHeader();
+  saveDesign3State();
+}
+
+let draggedBuildRow = null;
+function initBuildDrag() {
+  const rows = document.querySelectorAll('#buildList .build-row');
+  rows.forEach((row) => {
+    row.draggable = true;
+    row.ondragstart = () => {
+      draggedBuildRow = row;
+      row.classList.add('dragging');
+    };
+    row.ondragover = (event) => {
+      event.preventDefault();
+    };
+    row.ondrop = (event) => {
+      event.preventDefault();
+      if (!draggedBuildRow || draggedBuildRow === row) {
+        return;
+      }
+      const list = document.getElementById('buildList');
+      const rect = row.getBoundingClientRect();
+      const insertAfter = event.clientY > rect.top + rect.height / 2;
+      if (insertAfter) {
+        list.insertBefore(draggedBuildRow, row.nextSibling);
+      } else {
+        list.insertBefore(draggedBuildRow, row);
+      }
+      const orderedIndexes = Array.from(list.querySelectorAll('.build-row')).map((node) => Number(node.dataset.index));
+      buildExercises = orderedIndexes.map((idx) => buildExercises[idx]);
+      normalizeSupersets();
+      renderBuildList();
+      renderExecutionFromBuild();
+      updateBuildHeader();
+      saveDesign3State();
+    };
+    row.ondragend = () => {
+      row.classList.remove('dragging');
+      draggedBuildRow = null;
+    };
+  });
+}
+
+function openExercisePicker(mode, index = -1) {
+  pickerState = { mode, index };
+  const picker = document.getElementById('exercisePicker');
+  const select = document.getElementById('exercisePickerSelect');
+  const usedIds = new Set(buildExercises.map((exercise) => exercise.exerciseId));
+  const availableIds = Object.keys(EXERCISE_LIBRARY).filter((id) => !usedIds.has(id));
+
+  if (!availableIds.length) {
+    alert('All exercises are already in the plan.');
+    closeExercisePicker();
+    return;
+  }
+
+  select.innerHTML = availableIds.map((id) => `<option value="${id}">${EXERCISE_LIBRARY[id].name}</option>`).join('');
+  select.value = availableIds[0];
+  picker.classList.add('open');
+}
+
+function closeExercisePicker() {
+  document.getElementById('exercisePicker').classList.remove('open');
+}
+
+function confirmExercisePicker() {
+  const select = document.getElementById('exercisePickerSelect');
+  const selectedId = select.value;
+  if (!selectedId) {
+    return;
+  }
+  if (pickerState.mode === 'replace' && pickerState.index >= 0) {
+    const current = buildExercises[pickerState.index];
+    buildExercises[pickerState.index] = cloneExerciseFromLibrary(selectedId, 3, current?.superset || null);
+  } else {
+    if (activeTemplate) {
+      activeTemplate = '';
+      document.getElementById('tmplName').textContent = 'No template';
+    }
+    buildExercises.push(cloneExerciseFromLibrary(selectedId, 3, null));
+  }
+  normalizeSupersets();
+  renderBuildList();
+  renderExecutionFromBuild();
+  updateBuildHeader();
+  saveDesign3State();
+  closeExercisePicker();
+}
+
+function toggleSupersetLink(index) {
+  const prev = buildExercises[index - 1];
+  const current = buildExercises[index];
+  const next = buildExercises[index + 1];
+  const nextNext = buildExercises[index + 2];
+  if (!current || !next) {
+    return;
+  }
+
+  const isCurrentLinkedToNext = Boolean(current.superset && next.superset && current.superset === next.superset);
+
+  if (isCurrentLinkedToNext) {
+    current.superset = null;
+    next.superset = null;
+  } else {
+    if (prev && prev.superset && current.superset && prev.superset === current.superset) {
+      prev.superset = null;
+      current.superset = null;
+    }
+    if (nextNext && next.superset && nextNext.superset && next.superset === nextNext.superset) {
+      next.superset = null;
+      nextNext.superset = null;
+    }
+    const label = getNextSupersetLabel();
+    current.superset = label;
+    next.superset = label;
+  }
+  normalizeSupersets();
+  renderBuildList();
+  renderExecutionFromBuild();
+  saveDesign3State();
+}
+
+function updateBuildHeader() {
+  const n = document.querySelectorAll('#buildList .build-row').length;
+  const templateLabel = activeTemplate || 'Custom session';
+  document.getElementById('headerSub').textContent = templateLabel + ' · ' + n + ' exercise' + (n===1?'':'s');
+}
+
+function changeTmpl() {
+  const names = ['', 'Push Day A','Pull Day B','Leg Day','Full Body'];
+  const next = names[(names.indexOf(activeTemplate)+1) % names.length];
+  loadTemplate(next);
+}
+
+/* ── Start workout ── */
+function startWorkout() {
+  executionActive = true;
+  updateQuickLogLock();
+  renderExecutionFromBuild();
+  switchTab('exec');
+  saveDesign3State();
+}
+
+/* ── Finish session ── */
+function finishSession() {
+  if (!isSessionComplete()) {
+    alert('Complete every set in Execute before finishing the session.');
+    return;
+  }
+  alert('Session finished! 🎉\n\nIn the real app this saves your workout data.');
+  executionActive = false;
+  updateQuickLogLock();
+  saveDesign3State();
+}
+
+function updateQuickLogLock() {
+  const logTab = document.getElementById('tab-log');
+  const logCard = document.querySelector('.log-view-card');
+  const controls = document.querySelectorAll('#logView input, #logView select, #logView button.log-btn');
+  const locked = executionActive;
+  logTab.classList.toggle('disabled', locked);
+  logCard.classList.toggle('locked', locked);
+  controls.forEach((node) => {
+    node.disabled = locked;
+  });
+}
+
+function renderBuildList() {
+  const list = document.getElementById('buildList');
+  list.innerHTML = '';
+  buildExercises.forEach((exercise, index) => {
+    const prev = buildExercises[index - 1];
+    const next = buildExercises[index + 1];
+    const linkedToNext = Boolean(next && exercise.superset && next.superset === exercise.superset);
+    const linked = !!exercise.superset;
+    const isStart = linked && (!prev || prev.superset !== exercise.superset);
+    const isEnd = linked && (!next || next.superset !== exercise.superset);
+
+    const row = document.createElement('div');
+    row.className = `build-row${linked ? ' superset-linked' : ''}${isStart ? ' superset-start' : ''}${isEnd ? ' superset-end' : ''}`;
+    row.dataset.index = String(index);
+    row.dataset.id = exercise.exerciseId;
+    row.innerHTML = `
+      <div class="drag-handle"><i data-lucide="grip-vertical"></i></div>
+      <div class="build-row-icon" onclick="openExercisePicker('replace', ${index})"><i class="equipment-icon" data-lucide="${getEquipmentIcon(exercise.equipment)}" aria-hidden="true"></i></div>
+      <div class="build-row-info" onclick="openExercisePicker('replace', ${index})">
+        <div class="build-row-name">${exercise.name}</div>
+        <div class="build-row-meta">${exercise.muscle}</div>
+        ${linked ? `<span class="build-row-superset">Superset</span>` : ''}
+      </div>
+      <button class="link-next-btn ${linkedToNext ? 'active' : ''}" type="button" onclick="toggleSupersetLink(${index})" ${next ? '' : 'disabled'}><i data-lucide="link-2"></i></button>
+      <button class="build-del-btn" onclick="delBuildRow(this)"><i data-lucide="trash-2"></i></button>
+    `;
+    list.appendChild(row);
+  });
+  initBuildDrag();
+  lucide.createIcons();
+}
+
+/* ── Tab switch ── */
+function switchTab(tab, options = {}) {
+  const { force = false, persist = true } = options;
+  if (tab === 'log' && executionActive) {
+    if (force) {
+      tab = 'exec';
+    } else {
+      alert('Quick Log is disabled while executing a workout.');
+      return;
+    }
+  }
+  ['build','exec','log'].forEach(t => {
+    document.getElementById(t + 'View').classList.toggle('active', t === tab);
+    document.getElementById('tab-' + t).classList.toggle('active', t === tab);
+  });
+  currentTab = tab;
+  document.getElementById('startSticky').classList.toggle('visible', tab === 'build');
+  // Update header
+  const titles = { build: ['Plan Session', 'layers'], exec: ['Execute', 'play-circle'], log: ['Quick Log', 'plus-circle'] };
+  const [titleText, iconName] = titles[tab];
+  document.getElementById('headerTitle').innerHTML = `<i data-lucide="${iconName}"></i>${titleText}`;
+  lucide.createIcons();
+  if (persist) {
+    saveDesign3State();
+  }
+}
+
+/* Init */
+applySavedDesign3State();
+switchTab(currentTab, { force: true, persist: false });
+updateQuickLogLock();
+
+</script>
+</body>
+</html>

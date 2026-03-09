@@ -731,6 +731,43 @@
     opacity: 0.7;
 }
 
+.quick-reps-control {
+    display: grid;
+    grid-template-columns: 48px 1fr 48px;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.quick-rep-btn {
+    width: 48px;
+    height: 48px;
+    border: 2px solid var(--border-light);
+    border-radius: var(--radius-md);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 1.3rem;
+    font-weight: 600;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.quick-rep-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.compact-workout-form input[type="number"] {
+    appearance: textfield;
+    -moz-appearance: textfield;
+}
+
+.compact-workout-form input[type="number"]::-webkit-outer-spin-button,
+.compact-workout-form input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+    display: none;
+}
+
 .form-actions-inline {
     display: flex;
     gap: var(--spacing-sm);
@@ -809,9 +846,11 @@
 }
 
 .planner-add-btn {
-    width: 56px;
-    height: 36px;
-    min-height: 36px;
+    width: 52px;
+    height: 52px;
+    min-height: 52px;
+    border-radius: 50%;
+    border-style: dashed;
 }
 
 .planned-session-list {
@@ -926,10 +965,12 @@
 .planner-set-header {
     display: flex;
     align-items: center;
+    gap: var(--spacing-xs);
 }
 
 .planner-set-toggle {
-    width: 100%;
+    width: auto;
+    flex: 1;
     border: none;
     background: transparent;
     padding: 0;
@@ -963,6 +1004,8 @@
     height: 1.5rem;
     padding: 0;
     border: 1px solid transparent;
+    background: transparent;
+    cursor: pointer;
 }
 
 .planner-set-status .lucide {
@@ -1002,20 +1045,50 @@
 
 .planner-set-fields {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: var(--spacing-xs);
+}
+
+.planner-set-fields.requires-weight {
+    grid-template-columns: minmax(0, 1fr) minmax(72px, 90px);
+    align-items: center;
 }
 
 .planner-set-fields input {
     width: 100%;
     min-width: 0;
-    padding: 0 0.35rem;
+    padding: 0 0.3rem;
     border: 1px solid var(--border-light);
     border-radius: var(--radius-sm);
-    font-size: 0.8rem;
+    font-size: 0.92rem;
     background: var(--bg-primary);
     color: var(--text-primary);
-    height: 32px;
+    height: 30px;
+}
+
+.planner-reps-control {
+    display: grid;
+    grid-template-columns: 24px minmax(0, 1fr) 24px;
+    gap: 0.25rem;
+    align-items: center;
+}
+
+.planner-reps-btn {
+    width: 24px;
+    height: 24px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    font-size: 0.82rem;
+    font-weight: 700;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.planner-reps-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
 }
 
 .planner-set-actions {
@@ -1034,6 +1107,65 @@
 
 .planner-sets-progress.all-done {
     color: var(--success-color);
+}
+
+.workout-sets-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
+}
+
+.workout-set-card {
+    padding: 0.35rem;
+    gap: 0.25rem;
+}
+
+.workout-set-card.is-active {
+    border-color: var(--primary-color);
+}
+
+.workout-set-title {
+    font-size: 0.84rem;
+    margin-bottom: 0.1rem;
+}
+
+.workout-set-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    gap: 0;
+}
+
+.workout-set-row-label {
+    display: none;
+}
+
+.workout-set-row-label .lucide {
+    width: 0.9rem;
+    height: 0.9rem;
+    stroke-width: 2.2;
+}
+
+.workout-set-row-value {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: stretch;
+}
+
+.workout-set-row-value input {
+    width: 100%;
+    font-size: 1.02rem;
+    height: 32px;
+    padding: 0 0.2rem;
+    text-align: center;
+}
+
+.workout-set-row.is-check-row .workout-set-row-value {
+    justify-content: center;
+}
+
+.workout-set-row-value.is-empty {
+    min-height: 30px;
 }
 
 /* Planner last session info */
@@ -1150,9 +1282,15 @@
 
 .superset-collapsed-summary {
     display: none;
+    align-items: center;
+    gap: 0.35rem;
     align-self: center;
     font-size: 0.8rem;
     color: var(--text-secondary);
+    min-width: 0;
+}
+
+.superset-collapsed-text {
     min-width: 0;
     white-space: nowrap;
     overflow: hidden;
@@ -1160,7 +1298,7 @@
 }
 
 .superset-exercise-row.collapsed .superset-collapsed-summary {
-    display: block;
+    display: inline-flex;
 }
 
 .planner-actions {
@@ -1170,6 +1308,13 @@
 
 .planner-actions-inline {
     justify-content: flex-end;
+    position: sticky;
+    bottom: 0;
+    z-index: 8;
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-light);
+    padding-top: var(--spacing-sm);
+    margin-top: var(--spacing-xs);
 }
 
 .suggestion-chips-container {
@@ -1611,7 +1756,7 @@
         justify-content: center;
     }
 
-    .planner-sets-grid {
+    .planner-sets-grid:not(.workout-sets-grid) {
         display: grid;
         grid-template-columns: 1fr;
     }
@@ -3029,6 +3174,17 @@
     margin-right: 0;
 }
 
+.dropdown-item.nav-sub-item {
+    padding-left: calc(var(--spacing-lg) + 1rem);
+    font-size: 0.9rem;
+}
+
+.dropdown-item.nav-sub-item .nav-icon {
+    width: 16px;
+    height: 16px;
+    opacity: 0.9;
+}
+
 /* Muscle Group Breakdown */
 .muscle-grid {
     display: grid;
@@ -4099,4 +4255,56 @@
     background: linear-gradient(135deg, rgba(193, 207, 255, 0.92) 0%, rgba(214, 224, 255, 0.88) 100%);
     border: 1px solid rgba(102, 126, 234, 0.36);
     box-shadow: 0 4px 10px rgba(102, 126, 234, 0.2);
+}
+
+.planner-exercise-picker-btn {
+    width: 100%;
+    min-height: 40px;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    font-size: 0.95rem;
+    padding: 0 var(--spacing-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    cursor: pointer;
+}
+
+.planner-exercise-picker-main {
+    min-width: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    overflow: hidden;
+}
+
+.planner-exercise-picker-icon {
+    font-size: 1rem;
+    line-height: 1;
+    flex-shrink: 0;
+}
+
+.planner-exercise-picker-main > span:last-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.planner-exercise-picker-btn .placeholder {
+    color: var(--text-secondary);
+}
+
+.planner-exercise-picker-btn i {
+    width: 16px;
+    height: 16px;
+    color: var(--text-secondary);
+}
+
+.planner-link-btn.active {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--primary-light);
 }

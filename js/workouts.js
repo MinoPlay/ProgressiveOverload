@@ -14,6 +14,7 @@ export const Workouts = {
     activeWorkoutView: 'plan',
     plannedSession: null,
     plannerLastSessionCache: {},  // exerciseId -> { html, hasData }
+    plannerPickerContext: null,
 
     /**
      * Initialize workout logging UI
@@ -57,12 +58,16 @@ export const Workouts = {
         const clearBtn = document.getElementById('clearWorkoutBtn');
         const dateInput = document.getElementById('workoutDate');
         const plannerAddExerciseBtn = document.getElementById('plannerAddExerciseBtn');
-        const plannerAddSupersetBtn = document.getElementById('plannerAddSupersetBtn');
         const plannerSubmitBtn = document.getElementById('plannerSubmitBtn');
         const plannerClearBtn = document.getElementById('plannerClearBtn');
         const plannerSaveAsTemplateBtn = document.getElementById('plannerSaveAsTemplateBtn');
         const plannedSessionList = document.getElementById('plannedSessionList');
         const lastWorkoutInfo = document.getElementById('lastWorkoutInfo');
+        const workoutRepsDown = document.getElementById('workoutRepsDown');
+        const workoutRepsUp = document.getElementById('workoutRepsUp');
+        const plannerPickerConfirmBtn = document.getElementById('plannerExercisePickerConfirmBtn');
+        const plannerPickerCancelBtn = document.getElementById('plannerExercisePickerCancelBtn');
+        const plannerPickerModal = document.getElementById('plannerExercisePickerModal');
 
         form.addEventListener('submit', (e) => this.handleSubmit(e));
 
@@ -99,11 +104,9 @@ export const Workouts = {
         }
 
         if (plannerAddExerciseBtn) {
-            plannerAddExerciseBtn.addEventListener('click', () => this.addPlannedExercise());
-        }
-
-        if (plannerAddSupersetBtn) {
-            plannerAddSupersetBtn.addEventListener('click', () => this.addSupersetBlock());
+            plannerAddExerciseBtn.addEventListener('click', () => {
+                this.openPlannerExercisePicker({ mode: 'add' });
+            });
         }
 
         if (plannerSubmitBtn) {
@@ -159,9 +162,40 @@ export const Workouts = {
             plannedSessionList.addEventListener('click', (event) => this.handlePlannerAction(event));
         }
 
+        if (plannerPickerConfirmBtn) {
+            plannerPickerConfirmBtn.addEventListener('click', () => this.confirmPlannerExercisePicker());
+        }
+
+        if (plannerPickerCancelBtn) {
+            plannerPickerCancelBtn.addEventListener('click', () => this.closePlannerExercisePicker());
+        }
+
+        if (plannerPickerModal) {
+            plannerPickerModal.addEventListener('click', (event) => {
+                if (event.target === plannerPickerModal) {
+                    this.closePlannerExercisePicker();
+                }
+            });
+        }
+
         if (lastWorkoutInfo) {
             lastWorkoutInfo.addEventListener('click', (event) => this.handleLastWorkoutSetClick(event));
         }
+
+        if (workoutRepsDown) {
+            workoutRepsDown.addEventListener('click', () => this.stepQuickLogReps(-1));
+        }
+
+        if (workoutRepsUp) {
+            workoutRepsUp.addEventListener('click', () => this.stepQuickLogReps(1));
+        }
+    },
+
+    stepQuickLogReps(delta) {
+        const repsInput = document.getElementById('workoutReps');
+        if (!repsInput) return;
+        const current = parseInt(repsInput.value || repsInput.placeholder || '0', 10) || 0;
+        repsInput.value = String(Math.max(1, current + delta));
     },
 
     handleLastWorkoutSetClick(event) {
@@ -347,7 +381,9 @@ export const Workouts = {
         this.plannedSession = {
             id: `session-${Date.now()}`,
             date: currentDate,
-            rows: []
+            rows: [],
+            loadedTemplateId: '',
+            loadedTemplateName: ''
         };
 
         this.restorePlannerDraft();
@@ -364,23 +400,105 @@ export const Workouts = {
     },
 
     addPlannedExercise() {
-        this.resetLoadedTemplate();
-        const rowId = `row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        this.openPlannerExercisePicker({ mode: 'add' });
+    },
 
-        this.collapseAllPlannedRowsExcept(rowId);
+    getPlannerSelectedExerciseIds(exclude = null) {
+        const selected = new Set();
+        const isExcluded = (rowId, itemId = null) => {
+            if (!exclude) return false;
+            if (exclude.rowId !== rowId) return false;
+            return (exclude.itemId || null) === (itemId || null);
+        };
 
-        this.plannedSession.rows.push({
-            id: rowId,
-            type: 'single',
-            exerciseId: '',
-            sets: this.createDefaultPlannerSets(rowId),
-            copyCursor: 1,
-            activeSetId: `${rowId}-set-1`,
-            expanded: true
+        (this.plannedSession?.rows || []).forEach((row) => {
+            if (row.type === 'single') {
+                if (row.exerciseId && !isExcluded(row.id, null)) {
+                    selected.add(row.exerciseId);
+                }
+                return;
+            }
+            (row.exercises || []).forEach((entry) => {
+                if (entry.exerciseId && !isExcluded(row.id, entry.id)) {
+                    selected.add(entry.exerciseId);
+                }
+            });
         });
+
+        return selected;
+    },
+
+    openPlannerExercisePicker(context) {
+        const modal = document.getElementById('plannerExercisePickerModal');
+        const select = document.getElementById('plannerExercisePickerSelect');
+        if (!modal || !select) return;
+
+        const exclude = context?.mode === 'replace'
+            ? { rowId: context.rowId, itemId: context.itemId || null }
+            : null;
+        const usedExerciseIds = this.getPlannerSelectedExerciseIds(exclude);
+        const options = Storage.getExercises()
+            .slice()
+            .sort((a, b) => a.name.localeCompare(b.name))
+            .filter((exercise) => !usedExerciseIds.has(exercise.id));
+
+        if (!options.length) {
+            showToast('All exercises are already in the plan', 'info');
+            return;
+        }
+
+        select.innerHTML = options
+            .map((exercise) => `<option value="${exercise.id}">${exercise.name}</option>`)
+            .join('');
+
+        this.plannerPickerContext = context;
+        modal.style.display = 'flex';
+        select.focus();
+    },
+
+    closePlannerExercisePicker() {
+        const modal = document.getElementById('plannerExercisePickerModal');
+        const select = document.getElementById('plannerExercisePickerSelect');
+        if (modal) modal.style.display = 'none';
+        if (select) select.innerHTML = '';
+        this.plannerPickerContext = null;
+    },
+
+    confirmPlannerExercisePicker() {
+        const select = document.getElementById('plannerExercisePickerSelect');
+        const selectedExerciseId = select?.value;
+        if (!selectedExerciseId || !this.plannerPickerContext) {
+            return;
+        }
+
+        this.resetLoadedTemplate();
+        const context = this.plannerPickerContext;
+
+        if (context.mode === 'add') {
+            const rowId = `row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            this.collapseAllPlannedRowsExcept(rowId);
+            this.plannedSession.rows.push({
+                id: rowId,
+                type: 'single',
+                exerciseId: selectedExerciseId,
+                sets: this.createDefaultPlannerSets(rowId),
+                copyCursor: 1,
+                activeSetId: `${rowId}-set-1`,
+                expanded: true
+            });
+        } else if (context.mode === 'replace') {
+            const target = this.getPlannerTarget(context.rowId, context.itemId || null);
+            if (target) {
+                target.exerciseId = selectedExerciseId;
+                (target.sets || []).forEach((setEntry) => {
+                    setEntry.completed = false;
+                });
+            }
+        }
 
         this.persistPlannerDraft();
         this.renderPlannedSession();
+        this.closePlannerExercisePicker();
     },
 
     addSupersetBlock() {
@@ -447,6 +565,19 @@ export const Workouts = {
             this.toggleSupersetSubset(rowId, itemId || null);
         }
 
+        if (action === 'replace-exercise') {
+            this.openPlannerExercisePicker({ mode: 'replace', rowId, itemId: itemId || null });
+            return;
+        }
+
+        if (action === 'toggle-link-next') {
+            this.resetLoadedTemplate();
+            this.togglePlannerLinkWithNext(rowId);
+            this.persistPlannerDraft();
+            this.renderPlannedSession();
+            return;
+        }
+
         if (action === 'clear-row-fields') {
             this.resetLoadedTemplate();
             this.clearPlannerRowFields(rowId, itemId || null);
@@ -463,8 +594,152 @@ export const Workouts = {
             return;
         }
 
+        if (action === 'toggle-set-complete') {
+            const { setId } = button.dataset;
+            this.togglePlannerSetComplete(rowId, itemId || null, setId);
+            return;
+        }
+
+        if (action === 'step-reps') {
+            this.adjustPlannerReps(button);
+            return;
+        }
+
         this.persistPlannerDraft();
         this.renderPlannedSession();
+    },
+
+    adjustPlannerReps(button) {
+        const { rowId, itemId, setId, delta } = button.dataset;
+        if (!rowId || !setId) return;
+
+        const target = this.getPlannerTarget(rowId, itemId || null);
+        if (!target || !Array.isArray(target.sets)) return;
+
+        const setEntry = target.sets.find(entry => entry.id === setId);
+        if (!setEntry) return;
+
+        const step = parseInt(delta || '0', 10);
+        const current = parseInt(setEntry.reps || '0', 10) || 0;
+        const next = Math.max(1, current + step);
+
+        this.resetLoadedTemplate();
+        setEntry.reps = String(next);
+        setEntry.completed = false;
+        target.activeSetId = setId;
+
+        const control = button.closest('.planner-reps-control');
+        const input = control?.querySelector('input[data-field="reps"]');
+        if (input) {
+            input.value = String(next);
+        }
+
+        this.persistPlannerDraft();
+        this.updatePlannerSubmitBtn();
+        this.refreshPlannerSetIndicators(rowId, itemId || null);
+    },
+
+    togglePlannerSetComplete(rowId, itemId = null, setId) {
+        const target = this.getPlannerTarget(rowId, itemId);
+        if (!target || !Array.isArray(target.sets)) return;
+
+        const setEntry = target.sets.find(entry => entry.id === setId);
+        if (!setEntry) return;
+
+        if (setEntry.completed) {
+            setEntry.completed = false;
+        } else {
+            if (!this.canPlannerSetBeCompleted(setEntry, target.exerciseId || '')) {
+                showToast('Fill reps/weight before marking set complete', 'error');
+                return;
+            }
+            setEntry.completed = true;
+        }
+
+        target.activeSetId = setId;
+        this.persistPlannerDraft();
+        this.updatePlannerSubmitBtn();
+
+        const currentItemId = itemId || null;
+        if (setEntry.completed) {
+            const nextSetId = this.getFirstIncompletePlannerSetId(target.sets);
+            if (nextSetId) {
+                target.activeSetId = nextSetId;
+                this.persistPlannerDraft();
+                this.renderPlannedSession();
+                return;
+            }
+
+            if (this.advancePlannerAfterCompletedTarget(rowId, currentItemId)) {
+                this.persistPlannerDraft();
+                this.renderPlannedSession();
+                return;
+            }
+        }
+
+        this.refreshPlannerSetIndicators(rowId, currentItemId);
+    },
+
+    getFirstIncompletePlannerSetId(sets = []) {
+        if (!Array.isArray(sets)) return null;
+        const nextIncomplete = sets.find((setEntry) => !Boolean(setEntry?.completed));
+        return nextIncomplete?.id || null;
+    },
+
+    isPlannerTargetFullyComplete(target) {
+        if (!target || !Array.isArray(target.sets)) return false;
+        const exerciseId = target.exerciseId || '';
+        return target.sets.length > 0 && target.sets.every((setEntry) => this.isPlannerSetComplete(setEntry, exerciseId));
+    },
+
+    advancePlannerAfterCompletedTarget(rowId, itemId = null) {
+        if (!this.plannedSession || !Array.isArray(this.plannedSession.rows)) return false;
+
+        const rowIndex = this.plannedSession.rows.findIndex((entry) => entry.id === rowId);
+        if (rowIndex < 0) return false;
+
+        const row = this.plannedSession.rows[rowIndex];
+        if (!row) return false;
+
+        if (row.type === 'superset' && Array.isArray(row.exercises)) {
+            const nextIncompleteExercise = row.exercises.find((entry) => !this.isPlannerTargetFullyComplete(entry));
+            if (nextIncompleteExercise) {
+                row.expanded = true;
+                row.exercises.forEach((entry) => {
+                    entry.expanded = entry.id === nextIncompleteExercise.id;
+                });
+                const nextSetId = this.getFirstIncompletePlannerSetId(nextIncompleteExercise.sets)
+                    || nextIncompleteExercise.sets?.[0]?.id
+                    || null;
+                nextIncompleteExercise.activeSetId = nextSetId;
+                return true;
+            }
+        }
+
+        const nextRow = this.plannedSession.rows[rowIndex + 1];
+        if (!nextRow) return false;
+
+        this.collapseAllPlannedRowsExcept(nextRow.id);
+        nextRow.expanded = true;
+
+        if (nextRow.type === 'superset' && Array.isArray(nextRow.exercises)) {
+            const nextExercise = nextRow.exercises.find((entry) => !this.isPlannerTargetFullyComplete(entry))
+                || nextRow.exercises[0];
+            if (!nextExercise) return true;
+
+            nextRow.exercises.forEach((entry) => {
+                entry.expanded = entry.id === nextExercise.id;
+            });
+            nextExercise.activeSetId = this.getFirstIncompletePlannerSetId(nextExercise.sets)
+                || nextExercise.sets?.[0]?.id
+                || null;
+            return true;
+        }
+
+        nextRow.activeSetId = this.getFirstIncompletePlannerSetId(nextRow.sets)
+            || nextRow.sets?.[0]?.id
+            || null;
+        return true;
     },
 
     toggleSupersetSubset(rowId, itemId = null) {
@@ -476,6 +751,83 @@ export const Workouts = {
         if (!subset) return;
 
         subset.expanded = subset.expanded === false;
+    },
+
+    togglePlannerLinkWithNext(rowId) {
+        if (!this.plannedSession || !Array.isArray(this.plannedSession.rows)) return;
+        const index = this.plannedSession.rows.findIndex((row) => row.id === rowId);
+        if (index < 0) return;
+
+        const row = this.plannedSession.rows[index];
+
+        if (row.type === 'superset') {
+            const first = row.exercises?.[0];
+            const second = row.exercises?.[1];
+            if (!first || !second) return;
+
+            const firstId = `row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const secondId = `row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+            const firstRow = {
+                id: firstId,
+                type: 'single',
+                exerciseId: first.exerciseId || '',
+                sets: this.remapSets(first.sets, firstId),
+                copyCursor: 1,
+                activeSetId: `${firstId}-set-1`,
+                expanded: true
+            };
+
+            const secondRow = {
+                id: secondId,
+                type: 'single',
+                exerciseId: second.exerciseId || '',
+                sets: this.remapSets(second.sets, secondId),
+                copyCursor: 1,
+                activeSetId: `${secondId}-set-1`,
+                expanded: true
+            };
+
+            this.plannedSession.rows.splice(index, 1, firstRow, secondRow);
+            return;
+        }
+
+        const next = this.plannedSession.rows[index + 1];
+        if (!next || next.type !== 'single') {
+            showToast('Link works with this exercise and the one below it', 'info');
+            return;
+        }
+
+        const blockId = `ss-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+        const firstExerciseId = `${blockId}-a`;
+        const secondExerciseId = `${blockId}-b`;
+
+        const supersetBlock = {
+            id: blockId,
+            type: 'superset',
+            label: 'Superset',
+            expanded: true,
+            exercises: [
+                {
+                    id: firstExerciseId,
+                    exerciseId: row.exerciseId || '',
+                    sets: this.remapSets(row.sets, firstExerciseId),
+                    copyCursor: 1,
+                    activeSetId: `${firstExerciseId}-set-1`,
+                    expanded: true
+                },
+                {
+                    id: secondExerciseId,
+                    exerciseId: next.exerciseId || '',
+                    sets: this.remapSets(next.sets, secondExerciseId),
+                    copyCursor: 1,
+                    activeSetId: `${secondExerciseId}-set-1`,
+                    expanded: true
+                }
+            ]
+        };
+
+        this.plannedSession.rows.splice(index, 2, supersetBlock);
     },
 
     prefillPlannerActiveSetFromHistory(setBadge) {
@@ -495,6 +847,7 @@ export const Workouts = {
 
         destinationSet.reps = setBadge.dataset.reps || '';
         destinationSet.weight = setBadge.dataset.weight ?? '';
+        destinationSet.completed = false;
         target.activeSetId = destinationSet.id;
 
         this.persistPlannerDraft();
@@ -538,6 +891,7 @@ export const Workouts = {
                 exerciseEntry.sets.forEach(setEntry => {
                     setEntry.reps = '';
                     setEntry.weight = '';
+                    setEntry.completed = false;
                 });
                 exerciseEntry.activeSetId = exerciseEntry.sets[0]?.id || null;
             });
@@ -562,6 +916,7 @@ export const Workouts = {
         target.sets.forEach(setEntry => {
             setEntry.reps = '';
             setEntry.weight = '';
+            setEntry.completed = false;
         });
         target.activeSetId = target.sets[0]?.id || null;
     },
@@ -600,6 +955,7 @@ export const Workouts = {
 
         destinationSet.reps = sourceSet.reps;
         destinationSet.weight = sourceSet.weight;
+        destinationSet.completed = false;
         target.copyCursor = nextIndex + 1 >= target.sets.length ? 1 : nextIndex + 1;
         target.activeSetId = destinationSet.id;
     },
@@ -622,6 +978,9 @@ export const Workouts = {
                 const setEntry = (row.sets || []).find(entry => entry.id === field.dataset.setId);
                 if (!setEntry) return;
                 setEntry[fieldName] = field.value;
+                if (fieldName === 'reps' || fieldName === 'weight') {
+                    setEntry.completed = false;
+                }
                 row.activeSetId = field.dataset.setId;
             }
         } else {
@@ -635,6 +994,9 @@ export const Workouts = {
                 const setEntry = (item.sets || []).find(entry => entry.id === field.dataset.setId);
                 if (!setEntry) return;
                 setEntry[fieldName] = field.value;
+                if (fieldName === 'reps' || fieldName === 'weight') {
+                    setEntry.completed = false;
+                }
                 item.activeSetId = field.dataset.setId;
             }
         }
@@ -668,6 +1030,9 @@ export const Workouts = {
             const setEntry = (row.sets || []).find(entry => entry.id === field.dataset.setId);
             if (setEntry) {
                 setEntry[fieldName] = field.value;
+                if (fieldName === 'reps' || fieldName === 'weight') {
+                    setEntry.completed = false;
+                }
                 row.activeSetId = field.dataset.setId;
             }
         } else {
@@ -676,6 +1041,9 @@ export const Workouts = {
                 const setEntry = (item.sets || []).find(entry => entry.id === field.dataset.setId);
                 if (setEntry) {
                     setEntry[fieldName] = field.value;
+                    if (fieldName === 'reps' || fieldName === 'weight') {
+                        setEntry.completed = false;
+                    }
                     item.activeSetId = field.dataset.setId;
                 }
             }
@@ -708,21 +1076,6 @@ export const Workouts = {
             }
         });
 
-        // Now that all rows are in the DOM, populate last-session info (getElementById works)
-        this.plannedSession.rows.forEach((row) => {
-            if (row.type === 'single') {
-                if (row.exerciseId) {
-                    this.updatePlannerLastSessionInfo(`planner-last-${row.id}`, row.exerciseId, row.id, null);
-                }
-            } else if (row.type === 'superset') {
-                row.exercises.forEach((exerciseEntry) => {
-                    if (exerciseEntry.exerciseId) {
-                        this.updatePlannerLastSessionInfo(`planner-last-${row.id}-${exerciseEntry.id}`, exerciseEntry.exerciseId, row.id, exerciseEntry.id);
-                    }
-                });
-            }
-        });
-
         if (window.lucide) {
             window.lucide.createIcons();
         }
@@ -734,6 +1087,23 @@ export const Workouts = {
         if (!exerciseId) return 'Select Exercise';
         const exercise = Storage.getExerciseById(exerciseId);
         return exercise?.name || 'Unknown Exercise';
+    },
+
+    getPlannerExerciseIcon(exercise) {
+        if (!exercise) {
+            return 'plus-circle';
+        }
+
+        const equipmentIcons = {
+            barbell: 'dumbbell',
+            dumbbell: 'dumbbell',
+            kettlebell: 'dumbbell',
+            machines: 'settings',
+            bodyweight: 'user',
+            'bodyweight+': 'user'
+        };
+
+        return equipmentIcons[exercise.equipmentType] || 'dumbbell';
     },
 
     getPlannerRowTitle(row, index) {
@@ -767,6 +1137,16 @@ export const Workouts = {
         const headerActions = document.createElement('div');
         headerActions.className = 'planner-row-actions';
 
+        const linkBtn = document.createElement('button');
+        linkBtn.type = 'button';
+        linkBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-link-btn';
+        linkBtn.dataset.action = 'toggle-link-next';
+        linkBtn.dataset.rowId = row.id;
+        linkBtn.innerHTML = '<i data-lucide="link-2"></i>';
+        const hasNextRow = Boolean(this.plannedSession.rows[index + 1]);
+        linkBtn.disabled = !hasNextRow;
+        linkBtn.title = hasNextRow ? 'Link this exercise with the one below' : 'No row below to link';
+
         const collapseBtn = document.createElement('button');
         collapseBtn.type = 'button';
         collapseBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-collapse-btn';
@@ -783,6 +1163,7 @@ export const Workouts = {
         removeBtn.innerHTML = '<i data-lucide="trash-2"></i>';
         removeBtn.title = 'Remove row';
 
+        headerActions.appendChild(linkBtn);
         headerActions.appendChild(collapseBtn);
         headerActions.appendChild(removeBtn);
 
@@ -791,13 +1172,7 @@ export const Workouts = {
 
         const topRow = document.createElement('div');
         topRow.className = 'planned-entry-top';
-        topRow.appendChild(this.createExerciseSelect(row.id, null, row.exerciseId));
-
-        const lastSessionContainer = document.createElement('div');
-        lastSessionContainer.className = 'planner-last-session';
-        lastSessionContainer.id = `planner-last-${row.id}`;
-        lastSessionContainer.style.display = 'none';
-        topRow.appendChild(lastSessionContainer);
+        topRow.appendChild(this.createExercisePickerButton(row.id, null, row.exerciseId));
 
         const body = document.createElement('div');
         body.className = 'planner-row-body';
@@ -830,6 +1205,14 @@ export const Workouts = {
         const headerActions = document.createElement('div');
         headerActions.className = 'planner-row-actions';
 
+        const linkBtn = document.createElement('button');
+        linkBtn.type = 'button';
+        linkBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-link-btn active';
+        linkBtn.dataset.action = 'toggle-link-next';
+        linkBtn.dataset.rowId = row.id;
+        linkBtn.innerHTML = '<i data-lucide="link-2"></i>';
+        linkBtn.title = 'Unlink superset into two single exercises';
+
         const collapseBtn = document.createElement('button');
         collapseBtn.type = 'button';
         collapseBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-collapse-btn';
@@ -846,6 +1229,7 @@ export const Workouts = {
         removeBtn.innerHTML = '<i data-lucide="trash-2"></i>';
         removeBtn.title = 'Remove superset block';
 
+        headerActions.appendChild(linkBtn);
         headerActions.appendChild(collapseBtn);
         headerActions.appendChild(removeBtn);
         header.appendChild(title);
@@ -887,18 +1271,27 @@ export const Workouts = {
 
             const collapsedSummary = document.createElement('div');
             collapsedSummary.className = 'superset-collapsed-summary';
+            const summaryExercise = exerciseEntry.exerciseId
+                ? Storage.getExerciseById(exerciseEntry.exerciseId)
+                : null;
+            const exerciseIcon = this.getPlannerExerciseIcon(summaryExercise);
             const exerciseName = this.getPlannerExerciseName(exerciseEntry.exerciseId);
-            collapsedSummary.textContent = exerciseName;
+
+            const collapsedIcon = document.createElement('i');
+            collapsedIcon.className = 'planner-exercise-picker-icon';
+            collapsedIcon.dataset.lucide = exerciseIcon;
+            collapsedIcon.setAttribute('aria-hidden', 'true');
+
+            const collapsedLabel = document.createElement('span');
+            collapsedLabel.className = 'superset-collapsed-text';
+            collapsedLabel.textContent = exerciseName;
+
+            collapsedSummary.appendChild(collapsedIcon);
+            collapsedSummary.appendChild(collapsedLabel);
 
             const topRow = document.createElement('div');
             topRow.className = 'planned-entry-top';
-            topRow.appendChild(this.createExerciseSelect(row.id, exerciseEntry.id, exerciseEntry.exerciseId));
-
-            const lastSessionContainer = document.createElement('div');
-            lastSessionContainer.className = 'planner-last-session';
-            lastSessionContainer.id = `planner-last-${row.id}-${exerciseEntry.id}`;
-            lastSessionContainer.style.display = 'none';
-            topRow.appendChild(lastSessionContainer);
+            topRow.appendChild(this.createExercisePickerButton(row.id, exerciseEntry.id, exerciseEntry.exerciseId));
 
             rowContainer.appendChild(label);
             rowContainer.appendChild(collapsedSummary);
@@ -942,9 +1335,29 @@ export const Workouts = {
         return select;
     },
 
+    createExercisePickerButton(rowId, itemId, selectedValue) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'planner-exercise-picker-btn';
+        button.dataset.action = 'replace-exercise';
+        button.dataset.rowId = rowId;
+        if (itemId) {
+            button.dataset.itemId = itemId;
+        }
+
+        const exercise = selectedValue ? Storage.getExerciseById(selectedValue) : null;
+        const label = exercise?.name || 'Select Exercise...';
+        const labelClass = exercise ? '' : 'placeholder';
+        const icon = this.getPlannerExerciseIcon(exercise);
+        button.innerHTML = `<span class="planner-exercise-picker-main"><i class="planner-exercise-picker-icon" data-lucide="${icon}" aria-hidden="true"></i><span class="${labelClass}">${label}</span></span><i data-lucide="chevron-down"></i>`;
+        button.title = 'Select or replace exercise';
+
+        return button;
+    },
+
     createPlannerSetsGrid(rowId, itemId, sets = []) {
         const container = document.createElement('div');
-        container.className = 'planner-sets-grid';
+        container.className = 'planner-sets-grid workout-sets-grid';
         container.dataset.rowId = rowId;
         if (itemId) {
             container.dataset.itemId = itemId;
@@ -954,14 +1367,16 @@ export const Workouts = {
         const target = this.getPlannerTarget(rowId, itemId || null);
         const activeSetId = this.ensurePlannerActiveSet(target, normalizedSets);
         const exerciseId = target?.exerciseId || '';
+        const exercise = exerciseId ? Storage.getExerciseById(exerciseId) : null;
+        const requiresWeight = Boolean(exercise?.requiresWeight);
         const totalSetCount = normalizedSets.length;
         let completeSetCount = 0;
 
         normalizedSets.forEach((setEntry, index) => {
             const card = document.createElement('div');
-            card.className = 'planner-set-card';
+            card.className = 'planner-set-card workout-set-card';
             card.dataset.setId = setEntry.id;
-            card.classList.toggle('collapsed', activeSetId === null || setEntry.id !== activeSetId);
+            card.classList.toggle('is-active', activeSetId !== null && setEntry.id === activeSetId);
 
             const isComplete = this.isPlannerSetComplete(setEntry, exerciseId);
             if (isComplete) {
@@ -970,57 +1385,75 @@ export const Workouts = {
             card.classList.toggle('is-complete', isComplete);
             card.classList.toggle('is-incomplete', !isComplete);
 
-            const header = document.createElement('div');
-            header.className = 'planner-set-header';
+            const setLabel = document.createElement('div');
+            setLabel.className = 'planner-set-title workout-set-title';
+            setLabel.textContent = `Set ${index + 1}`;
 
-            const toggleBtn = document.createElement('button');
-            toggleBtn.type = 'button';
-            toggleBtn.className = 'planner-set-toggle';
-            toggleBtn.dataset.action = 'toggle-set';
-            toggleBtn.dataset.rowId = rowId;
-            toggleBtn.dataset.setId = setEntry.id;
+            const repsRow = document.createElement('div');
+            repsRow.className = 'workout-set-row';
+
+            const repsLabel = document.createElement('span');
+            repsLabel.className = 'workout-set-row-label';
+            repsLabel.textContent = '';
+
+            const repsInput = this.createPlannerInput('number', 'reps', rowId, itemId, setEntry.id, setEntry.reps, 'Reps', 1, 999);
+
+            const repsValue = document.createElement('div');
+            repsValue.className = 'workout-set-row-value';
+            repsValue.appendChild(repsInput);
+            repsRow.appendChild(repsLabel);
+            repsRow.appendChild(repsValue);
+
+            const completeBtn = document.createElement('button');
+            completeBtn.type = 'button';
+            completeBtn.className = `planner-set-status ${isComplete ? 'complete' : 'incomplete'}`;
+            completeBtn.dataset.action = 'toggle-set-complete';
+            completeBtn.dataset.rowId = rowId;
+            completeBtn.dataset.setId = setEntry.id;
             if (itemId) {
-                toggleBtn.dataset.itemId = itemId;
+                completeBtn.dataset.itemId = itemId;
+            }
+            completeBtn.setAttribute('aria-label', isComplete ? 'Set complete' : 'Set incomplete');
+            completeBtn.title = isComplete ? 'Set complete' : 'Set incomplete';
+            completeBtn.innerHTML = this.getPlannerSetStatusIcon(isComplete);
+
+            const weightRow = document.createElement('div');
+            weightRow.className = 'workout-set-row';
+
+            const weightLabel = document.createElement('span');
+            weightLabel.className = 'workout-set-row-label';
+            weightLabel.textContent = '';
+
+            const weightCell = document.createElement('div');
+            weightCell.className = 'workout-set-row-value';
+            if (requiresWeight) {
+                weightCell.appendChild(this.createPlannerInput('number', 'weight', rowId, itemId, setEntry.id, setEntry.weight, 'Weight', 0, null, 'any'));
+            } else {
+                weightCell.classList.add('is-empty');
             }
 
-            const title = document.createElement('span');
-            title.className = 'planner-set-title';
-            title.textContent = `Set ${index + 1}`;
+            weightRow.appendChild(weightLabel);
+            weightRow.appendChild(weightCell);
 
-            const statusBadge = document.createElement('span');
-            statusBadge.className = `planner-set-status ${isComplete ? 'complete' : 'incomplete'}`;
-            statusBadge.setAttribute('role', 'img');
-            statusBadge.setAttribute('aria-label', isComplete ? 'Set complete' : 'Set incomplete');
-            statusBadge.title = isComplete ? 'Set complete' : 'Set incomplete';
-            statusBadge.innerHTML = this.getPlannerSetStatusIcon(isComplete);
+            const checkRow = document.createElement('div');
+            checkRow.className = 'workout-set-row';
+            checkRow.classList.add('is-check-row');
 
-            const titleWrap = document.createElement('span');
-            titleWrap.className = 'planner-set-title-wrap';
-            titleWrap.appendChild(title);
-            titleWrap.appendChild(statusBadge);
+            const checkLabel = document.createElement('span');
+            checkLabel.className = 'workout-set-row-label';
+            checkLabel.textContent = '';
 
-            const summary = document.createElement('span');
-            summary.className = 'planner-set-summary';
-            const repsText = setEntry.reps !== '' && setEntry.reps !== null && setEntry.reps !== undefined
-                ? setEntry.reps
-                : '-';
-            const weightText = setEntry.weight !== '' && setEntry.weight !== null && setEntry.weight !== undefined
-                ? setEntry.weight
-                : '-';
-            summary.textContent = `${repsText} / ${weightText}`;
+            const checkCell = document.createElement('div');
+            checkCell.className = 'workout-set-row-value';
+            checkCell.appendChild(completeBtn);
 
-            toggleBtn.appendChild(titleWrap);
-            toggleBtn.appendChild(summary);
+            checkRow.appendChild(checkLabel);
+            checkRow.appendChild(checkCell);
 
-            header.appendChild(toggleBtn);
-
-            const fields = document.createElement('div');
-            fields.className = 'planner-set-fields';
-            fields.appendChild(this.createPlannerInput('number', 'reps', rowId, itemId, setEntry.id, setEntry.reps, 'Reps', 1, 999));
-            fields.appendChild(this.createPlannerInput('number', 'weight', rowId, itemId, setEntry.id, setEntry.weight, 'Weight', 0, null, 'any'));
-
-            card.appendChild(header);
-            card.appendChild(fields);
+            card.appendChild(setLabel);
+            card.appendChild(repsRow);
+            card.appendChild(weightRow);
+            card.appendChild(checkRow);
             container.appendChild(card);
         });
 
@@ -1088,7 +1521,7 @@ export const Workouts = {
         return value !== '' && value !== null && value !== undefined;
     },
 
-    isPlannerSetComplete(setEntry, exerciseId) {
+    canPlannerSetBeCompleted(setEntry, exerciseId) {
         const hasReps = this.isPlannerSetHasReps(setEntry);
         if (!hasReps) return false;
 
@@ -1101,8 +1534,12 @@ export const Workouts = {
         return this.isPlannerFieldFilled(setEntry?.weight);
     },
 
+    isPlannerSetComplete(setEntry, exerciseId) {
+        return Boolean(setEntry?.completed) && this.canPlannerSetBeCompleted(setEntry, exerciseId);
+    },
+
     getPlannerSetStatusIcon(isComplete) {
-        const iconName = isComplete ? 'check' : 'alert-triangle';
+        const iconName = isComplete ? 'check' : 'circle';
         return `<i data-lucide="${iconName}" aria-hidden="true"></i>`;
     },
 
@@ -1122,14 +1559,7 @@ export const Workouts = {
         target.sets.forEach(setEntry => {
             const card = container.querySelector(`.planner-set-card[data-set-id="${setEntry.id}"]`);
             if (!card) return;
-
-            const repsText = this.isPlannerFieldFilled(setEntry.reps) ? setEntry.reps : '-';
-            const weightText = this.isPlannerFieldFilled(setEntry.weight) ? setEntry.weight : '-';
-
-            const summary = card.querySelector('.planner-set-summary');
-            if (summary) {
-                summary.textContent = `${repsText} / ${weightText}`;
-            }
+            card.classList.toggle('is-active', Boolean(target.activeSetId) && target.activeSetId === setEntry.id);
 
             const isComplete = this.isPlannerSetComplete(setEntry, exerciseId);
             if (isComplete) {
@@ -1139,7 +1569,7 @@ export const Workouts = {
             card.classList.toggle('is-complete', isComplete);
             card.classList.toggle('is-incomplete', !isComplete);
 
-            const statusBadge = card.querySelector('.planner-set-status');
+            const statusBadge = card.querySelector('button[data-action="toggle-set-complete"]');
             if (statusBadge) {
                 statusBadge.classList.toggle('complete', isComplete);
                 statusBadge.classList.toggle('incomplete', !isComplete);
@@ -1175,15 +1605,18 @@ export const Workouts = {
             const parsed = JSON.parse(rawDraft);
             if (!parsed || !Array.isArray(parsed.rows)) return;
 
-            // Always use today's date — never restore a stale date from the draft
             const dateInput = document.getElementById('workoutDate');
             const today = formatDate(new Date());
-            const currentDate = (dateInput && dateInput.value) ? dateInput.value : today;
+            const currentDate = isValidDate(parsed.date)
+                ? parsed.date
+                : (dateInput?.value || today);
 
             this.plannedSession = {
                 id: parsed.id || `session-${Date.now()}`,
                 date: currentDate,
-                rows: parsed.rows.map((row, index) => this.normalizePlannedRow(row, index))
+                rows: parsed.rows.map((row, index) => this.normalizePlannedRow(row, index)),
+                loadedTemplateId: typeof parsed.loadedTemplateId === 'string' ? parsed.loadedTemplateId : '',
+                loadedTemplateName: typeof parsed.loadedTemplateName === 'string' ? parsed.loadedTemplateName : ''
             };
         } catch (error) {
             console.warn('Could not restore planner draft:', error);
@@ -1195,7 +1628,8 @@ export const Workouts = {
         return Array.from({ length: DEFAULT_PLANNER_SET_COUNT }, (_, index) => ({
             id: `${baseId}-set-${index + 1}`,
             reps: '',
-            weight: ''
+            weight: '',
+            completed: false
         }));
     },
 
@@ -1204,7 +1638,8 @@ export const Workouts = {
             ? rawSets.map((setEntry, index) => ({
                 id: setEntry?.id || `${baseId}-set-${index + 1}`,
                 reps: setEntry?.reps ?? '',
-                weight: setEntry?.weight ?? ''
+                weight: setEntry?.weight ?? '',
+                completed: setEntry?.completed === true
             }))
             : [];
 
@@ -1212,7 +1647,8 @@ export const Workouts = {
             normalized.push({
                 id: `${baseId}-set-1`,
                 reps: legacyReps ?? '',
-                weight: legacyWeight ?? ''
+                weight: legacyWeight ?? '',
+                completed: false
             });
         }
 
@@ -1221,7 +1657,8 @@ export const Workouts = {
             normalized.push({
                 id: `${baseId}-set-${nextIndex}`,
                 reps: '',
-                weight: ''
+                weight: '',
+                completed: false
             });
         }
 
@@ -1294,12 +1731,12 @@ export const Workouts = {
             if (row.type === 'single') {
                 if (!row.exerciseId) return false;
                 if (!Array.isArray(row.sets) || row.sets.length === 0) return false;
-                if (!row.sets.every(s => this.isPlannerSetHasReps(s))) return false;
+                if (!row.sets.every(s => this.isPlannerSetComplete(s, row.exerciseId))) return false;
             } else {
                 for (const item of row.exercises) {
                     if (!item.exerciseId) return false;
                     if (!Array.isArray(item.sets) || item.sets.length === 0) return false;
-                    if (!item.sets.every(s => this.isPlannerSetHasReps(s))) return false;
+                    if (!item.sets.every(s => this.isPlannerSetComplete(s, item.exerciseId))) return false;
                 }
             }
         }
@@ -1311,7 +1748,7 @@ export const Workouts = {
         if (!btn) return;
         const ready = this.isPlannerSessionComplete();
         btn.disabled = !ready;
-        btn.title = ready ? 'Submit planned session' : 'Fill in exercise and at least one set for every entry before submitting';
+        btn.title = ready ? 'Submit planned session' : 'Mark all sets complete for every entry before submitting';
     },
 
     clearPlannedSession(showMessage = false) {
@@ -1320,7 +1757,9 @@ export const Workouts = {
         this.plannedSession = {
             id: `session-${Date.now()}`,
             date: dateInput?.value || formatDate(new Date()),
-            rows: []
+            rows: [],
+            loadedTemplateId: '',
+            loadedTemplateName: ''
         };
 
         localStorage.removeItem(PLANNER_DRAFT_KEY);
@@ -1351,7 +1790,7 @@ export const Workouts = {
             if (row.type === 'single') {
                 for (let setIndex = 0; setIndex < row.sets.length; setIndex += 1) {
                     const setEntry = row.sets[setIndex];
-                    if (this.isPlannerSetEmpty(setEntry)) {
+                    if (!this.isPlannerSetComplete(setEntry, row.exerciseId)) {
                         continue;
                     }
 
@@ -1366,7 +1805,7 @@ export const Workouts = {
                 for (const supersetItem of row.exercises) {
                     for (let setIndex = 0; setIndex < supersetItem.sets.length; setIndex += 1) {
                         const setEntry = supersetItem.sets[setIndex];
-                        if (this.isPlannerSetEmpty(setEntry)) {
+                        if (!this.isPlannerSetComplete(setEntry, supersetItem.exerciseId)) {
                             continue;
                         }
 
@@ -1388,7 +1827,7 @@ export const Workouts = {
         }
 
         if (batch.length === 0) {
-            showToast('Enter reps/weight for at least one set before submitting', 'error');
+            showToast('Mark all sets complete before submitting', 'error');
             return;
         }
 
@@ -1548,13 +1987,20 @@ export const Workouts = {
             select.appendChild(opt);
         });
 
-        // Restore the selected template if it still exists
-        if (currentValue && select.querySelector(`option[value="${currentValue}"]`)) {
-            select.value = currentValue;
+        // Restore current selection, else restore from persisted planner draft
+        const persistedTemplateId = this.plannedSession?.loadedTemplateId || '';
+        const selectedTemplateId = currentValue || persistedTemplateId;
+        if (selectedTemplateId && select.querySelector(`option[value="${selectedTemplateId}"]`)) {
+            select.value = selectedTemplateId;
         }
     },
 
     resetLoadedTemplate() {
+        if (this.plannedSession) {
+            this.plannedSession.loadedTemplateId = '';
+            this.plannedSession.loadedTemplateName = '';
+        }
+
         const select = document.getElementById('plannerTemplateSelect');
         if (select && select.value !== '') {
             select.value = '';
@@ -1566,7 +2012,7 @@ export const Workouts = {
      * All row/set IDs are regenerated to avoid conflicts with saved drafts.
      * @param {string} templateId
      */
-    loadTemplateIntoPlanner(templateId) {
+    async loadTemplateIntoPlanner(templateId) {
         const template = Storage.getSessionTemplateById(templateId);
         if (!template) {
             showToast('Template not found', 'error');
@@ -1575,43 +2021,58 @@ export const Workouts = {
 
         const stamp = () => `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-        const newRows = (template.rows || []).map(row => {
+        const newRows = [];
+
+        for (const row of (template.rows || [])) {
             if (row.type === 'single') {
                 const rowId = `row-${stamp()}`;
-                const sets = this.remapSets(row.sets, rowId);
-                return {
+                const exerciseId = row.exerciseId || '';
+                const sets = await this.resolveTemplateLoadSets(exerciseId, row.sets, rowId);
+                newRows.push({
                     id: rowId,
                     type: 'single',
-                    exerciseId: row.exerciseId || '',
+                    exerciseId,
                     sets,
                     copyCursor: 1,
                     activeSetId: null,
                     expanded: true
-                };
-            } else {
-                const blockId = `ss-${stamp()}`;
-                const exercises = (row.exercises || []).map((item, idx) => {
-                    const itemId = `${blockId}-${String.fromCharCode(97 + idx)}`;
-                    const sets = this.remapSets(item.sets, itemId);
-                    return {
-                        id: itemId,
-                        exerciseId: item.exerciseId || '',
-                        sets,
-                        copyCursor: 1,
-                        activeSetId: null
-                    };
                 });
-                return {
-                    id: blockId,
-                    type: 'superset',
-                    label: row.label || 'Superset',
-                    expanded: true,
-                    exercises
-                };
+                continue;
             }
-        });
+
+            const blockId = `ss-${stamp()}`;
+            const exercises = [];
+            for (const [idx, item] of (row.exercises || []).entries()) {
+                const itemId = `${blockId}-${String.fromCharCode(97 + idx)}`;
+                const exerciseId = item.exerciseId || '';
+                const sets = await this.resolveTemplateLoadSets(exerciseId, item.sets, itemId);
+                exercises.push({
+                    id: itemId,
+                    exerciseId,
+                    sets,
+                    copyCursor: 1,
+                    activeSetId: null
+                });
+            }
+
+            newRows.push({
+                id: blockId,
+                type: 'superset',
+                label: row.label || 'Superset',
+                expanded: true,
+                exercises
+            });
+        }
 
         this.plannedSession.rows = newRows;
+        this.plannedSession.loadedTemplateId = template.id;
+        this.plannedSession.loadedTemplateName = template.name || '';
+
+        const select = document.getElementById('plannerTemplateSelect');
+        if (select && select.querySelector(`option[value="${template.id}"]`)) {
+            select.value = template.id;
+        }
+
         this.persistPlannerDraft();
         this.renderPlannedSession();
         showToast(`Template "${template.name}" loaded`, 'success');
@@ -1623,13 +2084,55 @@ export const Workouts = {
     remapSets(templateSets, baseId) {
         const source = Array.isArray(templateSets) && templateSets.length > 0
             ? templateSets
-            : Array.from({ length: DEFAULT_PLANNER_SET_COUNT }, () => ({ reps: '', weight: '' }));
+            : Array.from({ length: DEFAULT_PLANNER_SET_COUNT }, () => ({ reps: '', weight: '', completed: false }));
 
         return source.slice(0, DEFAULT_PLANNER_SET_COUNT).map((s, i) => ({
             id: `${baseId}-set-${i + 1}`,
             reps: s.reps ?? '',
-            weight: s.weight ?? ''
+            weight: s.weight ?? '',
+            completed: false
         }));
+    },
+
+    async resolveTemplateLoadSets(exerciseId, templateSets, baseId) {
+        const fallbackSets = this.remapSets(templateSets, baseId);
+        if (!exerciseId) {
+            return fallbackSets;
+        }
+
+        try {
+            const sessions = await Storage.getLastWorkoutSessionsForExercise(exerciseId, 1);
+            const latest = sessions?.[0];
+            const latestSets = Array.isArray(latest?.sets) ? latest.sets : [];
+            if (!latestSets.length) {
+                return fallbackSets;
+            }
+
+            const exercise = Storage.getExerciseById(exerciseId);
+            const requiresWeight = Boolean(exercise?.requiresWeight);
+
+            const fromHistory = latestSets
+                .slice(0, DEFAULT_PLANNER_SET_COUNT)
+                .map((setEntry, index) => ({
+                    id: `${baseId}-set-${index + 1}`,
+                    reps: setEntry?.reps ?? '',
+                    weight: requiresWeight ? (setEntry?.weight ?? '') : '',
+                    completed: false
+                }));
+
+            while (fromHistory.length < DEFAULT_PLANNER_SET_COUNT) {
+                fromHistory.push({
+                    id: `${baseId}-set-${fromHistory.length + 1}`,
+                    reps: '',
+                    weight: '',
+                    completed: false
+                });
+            }
+
+            return fromHistory;
+        } catch (error) {
+            return fallbackSets;
+        }
     },
 
     updateWeightField() {

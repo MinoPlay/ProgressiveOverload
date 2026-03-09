@@ -372,6 +372,20 @@ body {
     display: block;
 }
 
+.workout-design-section {
+    height: calc(100vh - 170px);
+    min-height: 560px;
+}
+
+.workout-design-frame {
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: var(--radius-lg);
+    background: var(--bg-primary);
+    box-shadow: var(--shadow-md);
+}
+
 /* Section Header */
 .section-header {
     display: flex;
@@ -582,6 +596,11 @@ body {
 
     .app-content {
         padding: var(--spacing-sm) var(--spacing-md);
+    }
+
+    .workout-design-section {
+        height: calc(100vh - 140px);
+        min-height: 480px;
     }
 
     .section-header {

@@ -43,6 +43,13 @@
                             <button class="nav-btn dropdown-item" data-section="workout">
                                 <i data-lucide="plus-circle" class="nav-icon"></i> Workout
                             </button>
+                            <button class="nav-btn dropdown-item nav-sub-item" data-section="design1">
+                                <i data-lucide="layout-list" class="nav-icon"></i> Session Board
+                            </button>
+                            <button class="nav-btn dropdown-item nav-sub-item" data-section="design3">
+                                <i data-lucide="layers" class="nav-icon"></i> Workout Builder
+                            </button>
+                            <div class="dropdown-divider"></div>
                             <button class="nav-btn dropdown-item" data-section="history">
                                 <i data-lucide="calendar" class="nav-icon"></i> History
                             </button>
@@ -249,12 +256,16 @@
                         <!-- Row 3: Reps/Weight -->
                         <div class="form-group-row">
                             <div class="form-group">
-                                <input type="number" id="workoutReps" min="1" max="999" placeholder="Reps" required
-                                    aria-required="true" aria-label="Number of repetitions">
+                                <div class="quick-reps-control">
+                                    <button type="button" id="workoutRepsDown" class="quick-rep-btn" aria-label="Decrease reps">−</button>
+                                    <input type="number" id="workoutReps" min="1" max="999" placeholder="Reps" required
+                                        aria-required="true" aria-label="Number of repetitions">
+                                    <button type="button" id="workoutRepsUp" class="quick-rep-btn" aria-label="Increase reps">+</button>
+                                </div>
                             </div>
 
                             <div class="form-group" id="weightGroup">
-                                <input type="number" id="workoutWeight" min="0" step="any" placeholder="Weight (kg)"
+                                <input type="number" id="workoutWeight" min="0" step="any" placeholder="Weight"
                                     aria-label="Weight in kilograms">
                             </div>
                         </div>
@@ -294,10 +305,6 @@
                             <button type="button" id="plannerAddExerciseBtn" class="btn-icon btn-secondary btn-small planner-add-btn"
                                 title="Add exercise" aria-label="Add exercise">
                                 <i data-lucide="plus"></i>
-                            </button>
-                            <button type="button" id="plannerAddSupersetBtn" class="btn-icon btn-secondary btn-small planner-add-btn"
-                                title="Add superset block" aria-label="Add superset block">
-                                <i data-lucide="link-2"></i>
                             </button>
                         </div>
 
@@ -476,6 +483,15 @@
                     <p>No workout data available</p>
                 </div>
             </section>
+
+            <!-- Workout Design Sections (embedded without modifying design files) -->
+            <section id="design1Section" class="content-section workout-design-section" role="region" aria-label="Design 1 - Active Session Board">
+                <iframe src="session-board.html" title="Session Board" class="workout-design-frame" loading="lazy"></iframe>
+            </section>
+
+            <section id="design3Section" class="content-section workout-design-section" role="region" aria-label="Design 3 - Workout Builder">
+                <iframe src="workout-builder.html" title="Workout Builder" class="workout-design-frame" loading="lazy"></iframe>
+            </section>
         </main>
 
         <!-- Save As Template Modal -->
@@ -495,6 +511,29 @@
                             <i data-lucide="save"></i>
                         </button>
                         <button type="button" id="saveAsTemplateCancelBtn" class="btn btn-secondary" title="Cancel" aria-label="Cancel">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Planner Exercise Picker Modal -->
+        <div id="plannerExercisePickerModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="plannerExercisePickerTitle">
+            <div class="modal-content" style="max-width: 360px;">
+                <div class="modal-header">
+                    <h2 id="plannerExercisePickerTitle">Select Exercise</h2>
+                </div>
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="plannerExercisePickerSelect">Exercise <span class="required">*</span></label>
+                        <select id="plannerExercisePickerSelect"></select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" id="plannerExercisePickerConfirmBtn" class="btn btn-primary" title="Apply" aria-label="Apply selection">
+                            <i data-lucide="check"></i>
+                        </button>
+                        <button type="button" id="plannerExercisePickerCancelBtn" class="btn btn-secondary" title="Cancel" aria-label="Cancel selection">
                             <i data-lucide="x"></i>
                         </button>
                     </div>

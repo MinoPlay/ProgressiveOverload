@@ -1,0 +1,1950 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Session Board — Active Workout</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+/* ── Reset & Base ─────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 16px; height: 100%; overflow: hidden; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: #e8e8f0;
+  min-height: 100vh;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+/* ── Theme Variables ──────────────────────────────────────────────── */
+:root {
+  --accent: #667eea;
+  --accent-dark: #5568d3;
+  --accent-light: rgba(102,126,234,.12);
+  --bg: #f4f4f8;
+  --surface: #ffffff;
+  --surface2: #f8f8fc;
+  --border: #e2e2ec;
+  --text: #1a1a2e;
+  --text2: #555570;
+  --text3: #9898b0;
+  --success: #22c55e;
+  --success-bg: #dcfce7;
+  --shadow: 0 2px 12px rgba(0,0,0,.08);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,.12);
+  --radius: 14px;
+  --radius-sm: 8px;
+  --tab-h: 64px;
+  --header-h: 56px;
+}
+[data-theme="dark"] {
+  --bg: #13131f;
+  --surface: #1e1e2e;
+  --surface2: #252538;
+  --border: #2e2e46;
+  --text: #e0e0f0;
+  --text2: #9090aa;
+  --text3: #55556a;
+  --success-bg: #14291e;
+  --shadow: 0 2px 12px rgba(0,0,0,.35);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,.45);
+}
+
+/* ── Phone Shell ──────────────────────────────────────────────────── */
+.phone {
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  background: var(--bg);
+  border-radius: 0;
+  box-shadow: none;
+  overflow: hidden;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+.phone-notch {
+  display: none;
+}
+
+/* ── Header ───────────────────────────────────────────────────────── */
+.app-header {
+  height: var(--header-h);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  padding: 0 12px;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.header-title {
+  flex: 1;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.header-title i { color: var(--accent); width: 20px; height: 20px; }
+.header-date {
+  font-size: 12px;
+  color: var(--text2);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 3px 9px;
+  cursor: pointer;
+}
+.icon-btn {
+  width: 36px; height: 36px;
+  border: none; background: var(--surface2);
+  border-radius: 50%; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text2);
+  flex-shrink: 0;
+  transition: background .15s;
+}
+.icon-btn:hover { background: var(--border); }
+.icon-btn i { width: 18px; height: 18px; }
+
+.embedded-mode .app-header { display: none; }
+
+/* ── Scrollable Content ───────────────────────────────────────────── */
+.scroll-area {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 10px 12px 168px;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+.scroll-area::-webkit-scrollbar { width: 0; }
+
+/* ── Template Picker ─────────────────────────────────────────────── */
+.template-picker {
+  position: relative;
+  margin-bottom: 8px;
+}
+.template-btn {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  cursor: pointer;
+}
+.template-btn i { width: 16px; height: 16px; color: var(--accent); }
+.template-btn .chev { margin-left: auto; color: var(--text3); }
+.template-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  display: none;
+  z-index: 70;
+}
+.template-menu.open { display: block; }
+.template-option {
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 10px 10px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.template-option.active,
+.template-option:hover {
+  background: var(--surface2);
+  color: var(--accent);
+}
+
+/* ── Exercise Card ────────────────────────────────────────────────── */
+.exercise-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  margin-bottom: 10px;
+  overflow: visible;
+  box-shadow: var(--shadow);
+  transition: all .2s;
+  position: relative;
+}
+.exercise-card.done {
+  opacity: 1;
+}
+.card-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  cursor: pointer;
+}
+.exercise-name {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--text);
+}
+.header-exercise-picker {
+  flex: 1;
+  min-width: 0;
+  display: none;
+}
+.exercise-card.card-open .header-exercise-picker {
+  display: block;
+}
+.exercise-card.card-open .exercise-name {
+  display: none;
+}
+.exercise-icon {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: var(--accent-light);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.exercise-name.done-text { text-decoration: none; color: var(--text); }
+.completed-pill {
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--success);
+  background: var(--success-bg);
+  border: 1px solid rgba(34,197,94,.25);
+  border-radius: 999px;
+  padding: 2px 7px;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.muscle-chip {
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 9px;
+  border-radius: 20px;
+  background: var(--accent-light);
+  color: var(--accent);
+  text-transform: capitalize;
+}
+.link-next-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.link-next-btn i { width: 14px; height: 14px; }
+.link-next-btn.active { color: var(--accent); border-color: var(--accent); background: var(--accent-light); }
+.link-next-btn:disabled { opacity: .35; cursor: not-allowed; }
+.collapse-btn {
+  width: 28px; height: 28px;
+  background: none; border: none; cursor: pointer;
+  color: var(--text3);
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  transition: transform .2s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.collapse-btn i { width: 16px; height: 16px; }
+.collapse-btn.open { transform: rotate(180deg); }
+
+/* ── Set Rows ─────────────────────────────────────────────────────── */
+.sets-body { padding: 0 10px 8px; }
+.set-header-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 1fr 40px 32px;
+  gap: 6px;
+  align-items: center;
+  padding: 0 2px 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.set-header-row.bodyweight {
+  grid-template-columns: 32px 1fr 40px 32px;
+}
+.set-header-row.bodyweight span:nth-child(3) {
+  display: none;
+}
+.set-row {
+  display: grid;
+  grid-template-columns: 32px 1fr 1fr 40px 32px;
+  gap: 6px;
+  align-items: center;
+  padding: 4px 0;
+  transition: opacity .2s;
+}
+.set-row.bodyweight {
+  grid-template-columns: 32px 1fr 40px 32px;
+}
+.set-row.bodyweight .weight-input,
+.set-row.bodyweight .set-input.bw {
+  display: none;
+}
+.set-row.completed { opacity: .45; }
+.set-num {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text3);
+  text-align: center;
+}
+.set-input {
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 8px;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  text-align: center;
+  width: 100%;
+  outline: none;
+  appearance: textfield;
+  -moz-appearance: textfield;
+  transition: border-color .15s;
+}
+.set-input::-webkit-outer-spin-button,
+.set-input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.set-input:focus { border-color: var(--accent); }
+.set-input.ghost { color: var(--text3); }
+.set-input.prefilled { color: var(--text); background: var(--surface); }
+.set-input.bw {
+  color: var(--text3);
+  background: var(--surface2);
+  cursor: not-allowed;
+}
+.tick-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text3);
+  transition: all .15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.tick-btn i { width: 16px; height: 16px; }
+.tick-btn:hover, .tick-btn.ticked {
+  background: var(--success);
+  border-color: var(--success);
+  color: #fff;
+}
+
+.reps-cell {
+  display: grid;
+  grid-template-columns: 28px 1fr 28px;
+  gap: 4px;
+  align-items: center;
+}
+.rep-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 16px;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.rep-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* Previous session hint row */
+.prev-hint {
+  display: flex;
+  gap: 6px;
+  padding: 2px 2px 6px;
+  font-size: 11px;
+  color: var(--text3);
+  align-items: center;
+}
+.prev-hint i { width: 11px; height: 11px; flex-shrink: 0; }
+.prev-hint span { font-style: italic; }
+
+/* Add set btn */
+.add-set-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 7px 10px;
+  border: 1.5px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: none;
+  color: var(--text3);
+  font-size: 13px;
+  cursor: pointer;
+  width: 100%;
+  transition: all .15s;
+}
+.add-set-btn:hover { border-color: var(--accent); color: var(--accent); }
+.add-set-btn i { width: 14px; height: 14px; }
+
+.exercise-card.link-start::before,
+.exercise-card.link-end::before {
+  content: '';
+  position: absolute;
+  left: 6px;
+  width: 5px;
+  background: var(--accent);
+  border-radius: 4px;
+}
+.exercise-card.link-start::before { top: 8px; bottom: 0; }
+.exercise-card.link-end::before { top: 0; bottom: 8px; }
+.exercise-card.link-start::after,
+.exercise-card.link-end::after {
+  content: '';
+  position: absolute;
+  left: 6px;
+  width: 16px;
+  height: 5px;
+  background: var(--accent);
+  border-radius: 4px;
+}
+.exercise-card.link-start::after { top: 8px; }
+.exercise-card.link-end::after { bottom: 8px; }
+
+.exercise-card.link-start { margin-bottom: 6px; }
+.exercise-card.link-end { margin-top: -2px; }
+
+/* Collapsed summary */
+.card-summary {
+  padding: 0 14px 12px;
+  font-size: 13px;
+  color: var(--text3);
+  display: none;
+}
+.card-summary .set-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 4px; }
+.set-tag {
+  background: var(--success-bg);
+  color: var(--success);
+  border-radius: 20px;
+  padding: 3px 9px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ── Log View ─────────────────────────────────────────────────────── */
+.log-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  padding: 16px;
+  box-shadow: var(--shadow);
+}
+.log-card h3 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 12px; }
+.form-group { margin-bottom: 10px; }
+.form-label { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; display: block; }
+.form-select, .form-input {
+  width: 100%;
+  padding: 11px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  color: var(--text);
+  font-size: 15px;
+  outline: none;
+  appearance: none;
+  transition: border-color .15s;
+}
+.form-select:focus, .form-input:focus { border-color: var(--accent); }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.log-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+.log-btn i { width: 18px; height: 18px; }
+.log-btn:active { background: var(--accent-dark); }
+
+.quick-reps-control {
+  display: grid;
+  grid-template-columns: 32px 1fr 32px;
+  gap: 6px;
+  align-items: center;
+}
+.quick-rep-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text2);
+  font-size: 17px;
+  line-height: 1;
+  cursor: pointer;
+}
+.quick-rep-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+.exercise-config-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 4px 0 8px;
+}
+.exercise-select,
+.superset-select {
+  width: 100%;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface2);
+  color: var(--text);
+  padding: 8px 10px;
+  font-size: 13px;
+  font-weight: 600;
+}
+.header-exercise-picker .exercise-select {
+  width: 100%;
+}
+.remove-ex-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: var(--surface2);
+  color: var(--text3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.remove-ex-btn i { width: 14px; height: 14px; }
+.remove-ex-btn:hover { color: #ef4444; border-color: #ef4444; }
+
+/* ── FAB ──────────────────────────────────────────────────────────── */
+.fab {
+  position: absolute;
+  bottom: calc(var(--tab-h) + 76px);
+  right: 14px;
+  width: 52px; height: 52px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  box-shadow: 0 4px 16px rgba(102,126,234,.45);
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50;
+  transition: transform .15s;
+}
+.fab:active { transform: scale(.92); }
+.fab i { width: 22px; height: 22px; }
+
+/* ── Sticky Submit ────────────────────────────────────────────────── */
+.sticky-submit {
+  position: absolute;
+  bottom: var(--tab-h);
+  left: 0; right: 0;
+  padding: 10px 12px;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  z-index: 40;
+}
+.submit-btn {
+  width: 100%;
+  padding: 14px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px;
+  transition: opacity .2s;
+}
+.submit-btn:disabled { opacity: .4; cursor: not-allowed; }
+.submit-btn i { width: 18px; height: 18px; }
+
+/* ── Bottom Tab Bar ───────────────────────────────────────────────── */
+.tab-bar {
+  height: var(--tab-h);
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-shrink: 0;
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+}
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  color: var(--text3);
+  transition: color .15s;
+  padding-bottom: 4px;
+}
+.tab-item i { width: 22px; height: 22px; }
+.tab-item span { font-size: 11px; font-weight: 600; letter-spacing: .01em; }
+.tab-item.active { color: var(--accent); }
+
+/* ── Views ────────────────────────────────────────────────────────── */
+.view { display: none; }
+.view.active { display: block; }
+
+/* ── Section label ────────────────────────────────────────────────── */
+.section-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: 4px 2px 8px;
+}
+
+/* ── Empty state ──────────────────────────────────────────────────── */
+.empty-state {
+  padding: 40px 20px;
+  text-align: center;
+  color: var(--text3);
+}
+.empty-state i { width: 40px; height: 40px; margin-bottom: 12px; opacity: .4; }
+.empty-state p { font-size: 15px; }
+
+/* Badge label */
+.design-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: #fff;
+  background: var(--accent);
+  border-radius: 6px;
+  padding: 3px 8px;
+  margin-left: auto;
+}
+
+.nav-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,.22);
+  display: none;
+  z-index: 80;
+}
+.nav-backdrop.open { display: block; }
+.nav-menu {
+  position: absolute;
+  top: 62px;
+  left: 12px;
+  min-width: 180px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-lg);
+  padding: 6px;
+  display: none;
+  z-index: 90;
+}
+.nav-menu.open { display: block; }
+.nav-link {
+  width: 100%;
+  border: none;
+  background: none;
+  text-align: left;
+  padding: 10px 12px;
+  border-radius: 8px;
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.nav-link:hover, .nav-link.active {
+  background: var(--surface2);
+  color: var(--accent);
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+  <div class="phone-notch"></div>
+
+  <!-- Header -->
+  <header class="app-header">
+    <button class="icon-btn" onclick="toggleNavMenu(event)" title="Menu">
+      <i data-lucide="menu"></i>
+    </button>
+    <div class="header-title">
+      <i data-lucide="dumbbell"></i> Workout Session
+    </div>
+    <button class="header-date" id="dateDisplay" onclick="pickDate()">Mon, Mar 9</button>
+    <button class="icon-btn" onclick="toggleTheme()" title="Toggle theme">
+      <i id="themeIcon" data-lucide="sun"></i>
+    </button>
+    <span class="design-badge">Design 1</span>
+  </header>
+
+  <div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+  <div class="nav-menu" id="navMenu">
+    <button class="nav-link" onclick="window.location.href='index.html'">Main App</button>
+    <button class="nav-link active" onclick="window.location.href='session-board.html'">Session Board</button>
+    <button class="nav-link" onclick="window.location.href='workout-builder.html'">Workout Builder</button>
+  </div>
+
+  <!-- Scrollable content -->
+  <div class="scroll-area" id="scrollArea">
+
+    <!-- PLAN VIEW -->
+    <div class="view active" id="planView">
+
+      <div class="template-picker">
+        <button class="template-btn" onclick="toggleTemplateMenu(event)">
+          <i data-lucide="bookmark"></i>
+          <span id="activeTemplateLabel">No template</span>
+          <i data-lucide="chevron-down" class="chev"></i>
+        </button>
+        <div class="template-menu" id="templateMenu">
+          <button class="template-option active" data-template="" onclick="chooseTemplate('')">No template</button>
+          <button class="template-option" data-template="Push Day A" onclick="chooseTemplate('Push Day A')">Push Day A</button>
+          <button class="template-option" data-template="Pull Day B" onclick="chooseTemplate('Pull Day B')">Pull Day B</button>
+          <button class="template-option" data-template="Leg Day" onclick="chooseTemplate('Leg Day')">Leg Day</button>
+          <button class="template-option" data-template="Full Body" onclick="chooseTemplate('Full Body')">Full Body</button>
+        </div>
+      </div>
+
+      <div class="section-label">Exercises</div>
+
+      <!-- Exercise Card 1: Bench Press -->
+      <div class="exercise-card card-open" id="card-bench">
+        <div class="card-header" onclick="toggleCard('card-bench')">
+          <div class="exercise-name" id="name-bench">Bench Press</div>
+          <div class="header-exercise-picker" onclick="event.stopPropagation()">
+            <select class="exercise-select" onchange="applyExercisePreset(this,'card-bench')"></select>
+          </div>
+          <button class="link-next-btn" onclick="toggleLinkWithNext('card-bench', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
+          <button class="collapse-btn open" id="btn-bench"><i data-lucide="chevron-down"></i></button>
+        </div>
+        <div class="sets-body" id="body-bench">
+          <div class="prev-hint">
+            <i data-lucide="history"></i>
+            <span>Last session: 4×80 kg · 4×82.5 kg · 3×82.5 kg</span>
+          </div>
+          <div class="set-header-row">
+            <span>Set</span><span>Reps</span><span>Weight</span><span></span><span></span>
+          </div>
+          <div class="set-row" id="set-bench-1">
+            <span class="set-num">1</span>
+            <input class="set-input reps-input" type="number" placeholder="4" value="4" inputmode="numeric">
+            <input class="set-input prefilled" type="number" placeholder="80" value="82.5" inputmode="decimal">
+            <button class="tick-btn" onclick="tickSet(this, 'card-bench')"><i data-lucide="check"></i></button>
+            <span></span>
+          </div>
+          <div class="set-row" id="set-bench-2">
+            <span class="set-num">2</span>
+            <input class="set-input" type="number" placeholder="4" inputmode="numeric">
+            <input class="set-input ghost" type="number" placeholder="82.5" inputmode="decimal">
+            <button class="tick-btn" onclick="tickSet(this, 'card-bench')"><i data-lucide="check"></i></button>
+            <span></span>
+          </div>
+          <div class="set-row" id="set-bench-3">
+            <span class="set-num">3</span>
+            <input class="set-input" type="number" placeholder="4" inputmode="numeric">
+            <input class="set-input ghost" type="number" placeholder="82.5" inputmode="decimal">
+            <button class="tick-btn" onclick="tickSet(this, 'card-bench')"><i data-lucide="check"></i></button>
+            <span></span>
+          </div>
+        </div>
+        <div class="card-summary" id="summary-bench">
+          <div class="set-tags"></div>
+        </div>
+      </div>
+
+      <!-- Exercise Card 2: Overhead Press -->
+      <div class="exercise-card card-open" id="card-ohp">
+        <div class="card-header" onclick="toggleCard('card-ohp')">
+          <div class="exercise-name" id="name-ohp">Overhead Press</div>
+          <div class="header-exercise-picker" onclick="event.stopPropagation()">
+            <select class="exercise-select" onchange="applyExercisePreset(this,'card-ohp')"></select>
+          </div>
+          <button class="link-next-btn" onclick="toggleLinkWithNext('card-ohp', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
+          <button class="collapse-btn open" id="btn-ohp"><i data-lucide="chevron-down"></i></button>
+        </div>
+        <div class="sets-body" id="body-ohp">
+          <div class="prev-hint">
+            <i data-lucide="history"></i>
+            <span>Last session: 5×50 kg · 5×50 kg · 4×50 kg</span>
+          </div>
+          <div class="set-header-row">
+            <span>Set</span><span>Reps</span><span>Weight</span><span></span><span></span>
+          </div>
+          <div class="set-row">
+            <span class="set-num">1</span>
+            <input class="set-input" type="number" placeholder="5" inputmode="numeric">
+            <input class="set-input ghost" type="number" placeholder="50" inputmode="decimal">
+            <button class="tick-btn" onclick="tickSet(this, 'card-ohp')"><i data-lucide="check"></i></button>
+            <span></span>
+          </div>
+          <div class="set-row">
+            <span class="set-num">2</span>
+            <input class="set-input" type="number" placeholder="5" inputmode="numeric">
+            <input class="set-input ghost" type="number" placeholder="50" inputmode="decimal">
+            <button class="tick-btn" onclick="tickSet(this, 'card-ohp')"><i data-lucide="check"></i></button>
+            <span></span>
+          </div>
+          <div class="set-row">
+            <span class="set-num">3</span>
+            <input class="set-input" type="number" placeholder="5" inputmode="numeric">
+            <input class="set-input ghost" type="number" placeholder="50" inputmode="decimal">
+            <button class="tick-btn" onclick="tickSet(this, 'card-ohp')"><i data-lucide="check"></i></button>
+            <span></span>
+          </div>
+        </div>
+        <div class="card-summary" id="summary-ohp">
+          <div class="set-tags"></div>
+        </div>
+      </div>
+
+      <!-- Exercise Card 3: Tricep Dips -->
+      <div class="exercise-card card-open" id="card-dips">
+        <div class="card-header" onclick="toggleCard('card-dips')">
+          <div class="exercise-name" id="name-dips">Tricep Dips</div>
+          <div class="header-exercise-picker" onclick="event.stopPropagation()">
+            <select class="exercise-select" onchange="applyExercisePreset(this,'card-dips')"></select>
+          </div>
+          <button class="link-next-btn" onclick="toggleLinkWithNext('card-dips', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
+          <button class="collapse-btn open" id="btn-dips"><i data-lucide="chevron-down"></i></button>
+        </div>
+        <div class="sets-body" id="body-dips">
+          <div class="prev-hint">
+            <i data-lucide="history"></i>
+            <span>Last session: 10 reps · 10 reps · 8 reps</span>
+          </div>
+          <div class="set-header-row bodyweight">
+            <span>Set</span><span>Reps</span><span>Weight</span><span></span><span></span>
+          </div>
+          <div class="set-row bodyweight">
+            <span class="set-num">1</span>
+            <input class="set-input" type="number" placeholder="10" inputmode="numeric">
+            <button class="tick-btn" onclick="tickSet(this, 'card-dips')"><i data-lucide="check"></i></button>
+            <span></span>
+          </div>
+          <div class="set-row bodyweight">
+            <span class="set-num">2</span>
+            <input class="set-input" type="number" placeholder="10" inputmode="numeric">
+            <button class="tick-btn" onclick="tickSet(this, 'card-dips')"><i data-lucide="check"></i></button>
+            <span></span>
+          </div>
+          <div class="set-row bodyweight">
+            <span class="set-num">3</span>
+            <input class="set-input" type="number" placeholder="8" inputmode="numeric">
+            <button class="tick-btn" onclick="tickSet(this, 'card-dips')"><i data-lucide="check"></i></button>
+            <span></span>
+          </div>
+        </div>
+        <div class="card-summary" id="summary-dips">
+          <div class="set-tags"></div>
+        </div>
+      </div>
+
+    </div><!-- /planView -->
+
+    <!-- LOG VIEW -->
+    <div class="view" id="logView">
+      <div class="log-card">
+        <h3>Log a Set</h3>
+        <div class="form-group">
+          <label class="form-label">Muscle Group</label>
+          <select class="form-select">
+            <option>All Muscles</option>
+            <option selected>Chest</option>
+            <option>Shoulders</option>
+            <option>Back</option>
+            <option>Legs</option>
+            <option>Triceps</option>
+            <option>Biceps</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Exercise</label>
+          <select class="form-select">
+            <option selected>Bench Press</option>
+            <option>Incline Press</option>
+            <option>Cable Fly</option>
+            <option>Dumbbell Press</option>
+          </select>
+        </div>
+        <div class="prev-hint" style="margin-bottom:8px;">
+          <i data-lucide="history"></i>
+          <span>Last: 4 reps × 80 kg — Mon, Mar 2</span>
+        </div>
+        <div class="row2">
+          <div class="form-group">
+            <label class="form-label">Reps</label>
+            <div class="quick-reps-control">
+              <button class="quick-rep-btn" type="button" onclick="changeQuickLogReps(-1)">−</button>
+              <input id="quickLogReps" class="form-input" type="number" placeholder="4" value="4" inputmode="numeric" style="text-align:center;font-size:22px;font-weight:700;padding:14px 8px;">
+              <button class="quick-rep-btn" type="button" onclick="changeQuickLogReps(1)">+</button>
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Weight</label>
+            <input class="form-input" type="number" placeholder="80" inputmode="decimal" style="text-align:center;font-size:22px;font-weight:700;padding:14px 8px;">
+          </div>
+        </div>
+        <button class="log-btn">
+          <i data-lucide="check-circle"></i> Log Set
+        </button>
+      </div>
+    </div><!-- /logView -->
+
+  </div><!-- /scroll-area -->
+
+  <!-- Sticky Submit (Plan view only) -->
+  <div class="sticky-submit" id="stickySubmit">
+    <button class="submit-btn" id="submitBtn" disabled>
+      <i data-lucide="send"></i> Submit Session
+    </button>
+  </div>
+
+  <!-- Bottom Tab Bar -->
+  <nav class="tab-bar">
+    <button class="tab-item active" id="tab-plan" onclick="switchTab('plan')">
+      <i data-lucide="layout-list"></i>
+      <span>Plan</span>
+    </button>
+    <button class="tab-item" id="tab-log" onclick="switchTab('log')">
+      <i data-lucide="plus-circle"></i>
+      <span>Quick Log</span>
+    </button>
+  </nav>
+</div>
+
+<!-- FAB (Plan view only) -->
+<button class="fab" id="fab" onclick="addExercise()" title="Add exercise">
+  <i data-lucide="plus"></i>
+</button>
+
+<script>
+lucide.createIcons();
+
+const THEME_KEY = 'theme';
+const DESIGN1_STATE_KEY = 'workout1.designState';
+const DESIGN1_LAST_WORKOUT_KEY = 'workout1.lastWorkoutByExercise';
+const EMBED_MODE = window.self !== window.top;
+
+function applyStoredTheme() {
+  const storedTheme = localStorage.getItem(THEME_KEY) || 'light';
+  document.documentElement.setAttribute('data-theme', storedTheme);
+  const icon = document.getElementById('themeIcon');
+  if (icon) {
+    icon.setAttribute('data-lucide', storedTheme === 'dark' ? 'sun' : 'moon');
+  }
+  lucide.createIcons();
+}
+
+function applyEmbeddedMode() {
+  if (!EMBED_MODE) return;
+  document.documentElement.classList.add('embedded-mode');
+}
+
+applyStoredTheme();
+applyEmbeddedMode();
+
+window.addEventListener('storage', (event) => {
+  if (event.key === THEME_KEY) {
+    applyStoredTheme();
+  }
+});
+
+/* ── Theme ── */
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  const nextTheme = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', nextTheme);
+  localStorage.setItem(THEME_KEY, nextTheme);
+  const icon = document.getElementById('themeIcon');
+  icon.setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+  lucide.createIcons();
+}
+
+function toggleNavMenu(event) {
+  event.stopPropagation();
+  const menu = document.getElementById('navMenu');
+  const backdrop = document.getElementById('navBackdrop');
+  const isOpen = menu.classList.contains('open');
+  menu.classList.toggle('open', !isOpen);
+  backdrop.classList.toggle('open', !isOpen);
+}
+
+function closeNavMenu() {
+  document.getElementById('navMenu').classList.remove('open');
+  document.getElementById('navBackdrop').classList.remove('open');
+}
+
+function toggleTemplateMenu(event) {
+  event.stopPropagation();
+  const menu = document.getElementById('templateMenu');
+  menu.classList.toggle('open');
+}
+
+function closeTemplateMenu() {
+  document.getElementById('templateMenu').classList.remove('open');
+}
+
+let activeTemplateName = '';
+
+const EXERCISE_PRESETS = {
+  'Bench Press': { muscle: 'Chest', equipment: 'barbell', reps: '4', weight: '82.5', bodyweight: false },
+  'Overhead Press': { muscle: 'Shoulders', equipment: 'barbell', reps: '5', weight: '50', bodyweight: false },
+  'Tricep Dips': { muscle: 'Triceps', equipment: 'bodyweight', reps: '10', weight: 'BW', bodyweight: true },
+  'Pull Ups': { muscle: 'Back', equipment: 'bodyweight', reps: '8', weight: 'BW', bodyweight: true },
+  'Squat': { muscle: 'Legs', equipment: 'barbell', reps: '5', weight: '100', bodyweight: false },
+  'Barbell Row': { muscle: 'Back', equipment: 'barbell', reps: '8', weight: '60', bodyweight: false },
+  'Bicep Curl': { muscle: 'Biceps', equipment: 'dumbbell', reps: '10', weight: '12', bodyweight: false },
+  'Leg Press': { muscle: 'Legs', equipment: 'machines', reps: '10', weight: '180', bodyweight: false },
+  'Calf Raise': { muscle: 'Legs', equipment: 'machines', reps: '15', weight: '40', bodyweight: false },
+  'Deadlift': { muscle: 'Back', equipment: 'barbell', reps: '5', weight: '120', bodyweight: false }
+};
+
+function getEquipmentIcon(equipment) {
+  const icons = {
+    barbell: 'dumbbell',
+    dumbbell: 'dumbbell',
+    kettlebell: 'dumbbell',
+    machines: 'settings',
+    bodyweight: 'user',
+    'bodyweight+': 'user'
+  };
+  return icons[equipment] || 'dumbbell';
+}
+
+function ensureCardEquipmentIcon(cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+
+  const header = card.querySelector('.card-header');
+  const nameEl = card.querySelector('.exercise-name');
+  if (!header || !nameEl) return;
+
+  const exerciseName = (nameEl.textContent || '').trim();
+  const preset = EXERCISE_PRESETS[exerciseName];
+  const equipment = preset?.equipment || (card.dataset.bodyweight === '1' ? 'bodyweight' : null);
+
+  let iconEl = header.querySelector('.exercise-icon');
+  if (!iconEl) {
+    iconEl = document.createElement('i');
+    iconEl.className = 'exercise-icon';
+    iconEl.setAttribute('aria-hidden', 'true');
+    header.insertBefore(iconEl, nameEl);
+  }
+
+  iconEl.setAttribute('data-lucide', getEquipmentIcon(equipment));
+  if (window.lucide) {
+    window.lucide.createIcons();
+  }
+}
+
+function refreshExerciseIcons() {
+  document.querySelectorAll('#planView .exercise-card').forEach((card) => {
+    ensureCardEquipmentIcon(card.id);
+  });
+}
+
+function getLastWorkoutMap() {
+  try {
+    const parsed = JSON.parse(localStorage.getItem(DESIGN1_LAST_WORKOUT_KEY) || '{}');
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function saveLastWorkoutMap(map) {
+  localStorage.setItem(DESIGN1_LAST_WORKOUT_KEY, JSON.stringify(map || {}));
+}
+
+function getLastWorkoutForExercise(exerciseName) {
+  if (!exerciseName) return null;
+  const map = getLastWorkoutMap();
+  const entry = map[exerciseName];
+  return entry && Array.isArray(entry.sets) ? entry : null;
+}
+
+function buildCardSetSnapshot(card) {
+  if (!card) return [];
+  const isCardBodyweight = card.dataset.bodyweight === '1';
+  const rows = Array.from(card.querySelectorAll('.set-row'));
+
+  return rows
+    .map((row) => {
+      const repsInput = row.querySelector('.reps-input') || row.querySelector('input.set-input');
+      const weightInput = row.querySelector('.weight-input') || row.querySelectorAll('input')[1] || null;
+      const isBodyweight = isCardBodyweight || row.classList.contains('bodyweight');
+      const repsValue = (repsInput?.value || '').trim() || (repsInput?.placeholder || '').trim();
+      const weightValue = isBodyweight
+        ? 'BW'
+        : ((weightInput?.value || '').trim() || (weightInput?.placeholder || '').trim());
+
+      if (!repsValue && (!weightValue || weightValue === 'BW')) {
+        return null;
+      }
+
+      return {
+        reps: repsValue,
+        weight: isBodyweight ? 'BW' : weightValue
+      };
+    })
+    .filter(Boolean);
+}
+
+function captureLastWorkoutFromCurrentBoard() {
+  const map = getLastWorkoutMap();
+  const cards = Array.from(document.querySelectorAll('#planView .exercise-card'));
+
+  cards.forEach((card) => {
+    const name = (card.querySelector('.exercise-name')?.textContent || '').trim();
+    if (!name) return;
+
+    const sets = buildCardSetSnapshot(card);
+    if (!sets.length) return;
+
+    map[name] = {
+      sets,
+      timestamp: Date.now()
+    };
+  });
+
+  saveLastWorkoutMap(map);
+}
+
+function getPresetNames() {
+  return Object.keys(EXERCISE_PRESETS);
+}
+
+function getWorkoutExerciseNames(excludeCardId = null) {
+  return Array.from(document.querySelectorAll('#planView .exercise-card')).map((card) => {
+    if (excludeCardId && card.id === excludeCardId) return null;
+    const nameEl = card.querySelector('.exercise-name');
+    return (nameEl?.textContent || '').trim();
+  }).filter(Boolean);
+}
+
+function hasExerciseInWorkout(name, excludeCardId = null) {
+  return getWorkoutExerciseNames(excludeCardId).includes(name);
+}
+
+function getAvailableExerciseNames(excludeCardId = null) {
+  const used = new Set(getWorkoutExerciseNames(excludeCardId));
+  return getPresetNames().filter((name) => !used.has(name));
+}
+
+function buildExerciseOptionsHtml(currentValue, excludeCardId = null) {
+  const options = getAvailableExerciseNames(excludeCardId);
+  if (currentValue && !options.includes(currentValue)) {
+    options.unshift(currentValue);
+  }
+  return options.map((name) => `<option${name === currentValue ? ' selected' : ''}>${name}</option>`).join('');
+}
+
+function refreshExerciseSelectOptions() {
+  document.querySelectorAll('#planView .exercise-card').forEach((card) => {
+    const select = card.querySelector('.exercise-select');
+    if (!select) return;
+    const currentName = (card.querySelector('.exercise-name')?.textContent || '').trim();
+    select.innerHTML = buildExerciseOptionsHtml(currentName, card.id);
+    select.value = currentName;
+  });
+}
+
+function serializeDesign1Cards() {
+  return Array.from(document.querySelectorAll('#planView .exercise-card')).map((card) => {
+    const bodyKey = card.id.replace('card-', '');
+    const name = (card.querySelector('.exercise-name')?.textContent || '').trim();
+    const muscle = (card.querySelector('.muscle-chip')?.textContent || '').trim();
+    const body = document.getElementById('body-' + bodyKey);
+    const sets = Array.from(body?.querySelectorAll('.set-row') || []).map((row) => {
+      const repsInput = row.querySelector('.reps-input') || row.querySelector('input.set-input');
+      const weightInput = row.querySelector('.weight-input') || row.querySelectorAll('input')[1] || null;
+      const isBodyweight = row.classList.contains('bodyweight') || card.dataset.bodyweight === '1';
+      return {
+        repsValue: repsInput?.value || '',
+        repsPlaceholder: repsInput?.placeholder || '—',
+        weightValue: isBodyweight ? '' : (weightInput?.value || ''),
+        weightPlaceholder: isBodyweight ? 'BW' : (weightInput?.placeholder || '—'),
+        isBodyweight,
+        ticked: Boolean(row.querySelector('.tick-btn')?.classList.contains('ticked'))
+      };
+    });
+    return {
+      name,
+      muscle,
+      bodyweight: card.dataset.bodyweight === '1',
+      sets,
+      removeable: Boolean(card.querySelector('.remove-ex-btn'))
+    };
+  });
+}
+
+function applyCardState(cardId, cardState) {
+  const bodyKey = cardId.replace('card-', '');
+  const card = document.getElementById(cardId);
+  const body = document.getElementById('body-' + bodyKey);
+  if (!card || !body || !cardState) return;
+
+  const desiredSets = Array.isArray(cardState.sets) && cardState.sets.length ? cardState.sets : [];
+  while (body.querySelectorAll('.set-row').length < desiredSets.length) {
+    addSet(cardId, true);
+  }
+  while (body.querySelectorAll('.set-row').length > desiredSets.length && desiredSets.length > 0) {
+    const rows = body.querySelectorAll('.set-row');
+    const last = rows[rows.length - 1];
+    if (!last) {
+      break;
+    }
+    const tickBtn = last.querySelector('.tick-btn');
+    if (tickBtn && tickBtn.classList.contains('ticked')) {
+      tickedCount = Math.max(0, tickedCount - 1);
+    }
+    last.remove();
+  }
+  renumberSets(cardId);
+
+  if (cardState.bodyweight) {
+    updateCardWeightMode(cardId, true, 'BW');
+  }
+
+  const rows = body.querySelectorAll('.set-row');
+  rows.forEach((row, idx) => {
+    const setState = desiredSets[idx];
+    if (!setState) return;
+    const repsInput = row.querySelector('.reps-input') || row.querySelector('input.set-input');
+    const tickBtn = row.querySelector('.tick-btn');
+    if (repsInput) {
+      repsInput.placeholder = setState.repsPlaceholder || '—';
+      repsInput.value = setState.repsValue || '';
+    }
+    if (setState.isBodyweight) {
+      updateCardWeightMode(cardId, true, 'BW');
+    } else {
+      if (card.dataset.bodyweight === '1') {
+        updateCardWeightMode(cardId, false, setState.weightPlaceholder || '—');
+      }
+      const weightInput = row.querySelector('.weight-input') || row.querySelectorAll('input')[1] || null;
+      if (weightInput) {
+        weightInput.placeholder = setState.weightPlaceholder || '—';
+        weightInput.value = setState.weightValue || '';
+      }
+    }
+    if (tickBtn) {
+      tickBtn.classList.toggle('ticked', !!setState.ticked);
+      row.classList.toggle('completed', !!setState.ticked);
+    }
+  });
+
+  checkCardDone(cardId);
+  ensureCardEquipmentIcon(cardId);
+}
+
+function setTemplateSelection(name) {
+  activeTemplateName = name || '';
+  document.getElementById('activeTemplateLabel').textContent = activeTemplateName || 'No template';
+  document.querySelectorAll('.template-option').forEach((option) => {
+    option.classList.toggle('active', (option.dataset.template || '') === activeTemplateName);
+  });
+}
+
+function getPlanExerciseNames() {
+  return Array.from(document.querySelectorAll('#planView .exercise-card .exercise-name')).map((el) => (el.textContent || '').trim()).filter(Boolean);
+}
+
+function saveDesign1State() {
+  const state = {
+    template: activeTemplateName || '',
+    cards: serializeDesign1Cards(),
+    exercises: getPlanExerciseNames()
+  };
+  localStorage.setItem(DESIGN1_STATE_KEY, JSON.stringify(state));
+}
+
+function applySavedDesign1State() {
+  let saved = null;
+  try {
+    saved = JSON.parse(localStorage.getItem(DESIGN1_STATE_KEY) || 'null');
+  } catch {
+    saved = null;
+  }
+  if (!saved || typeof saved !== 'object') {
+    chooseTemplate('');
+    return;
+  }
+  const savedCards = Array.isArray(saved.cards) ? saved.cards : [];
+  const savedExercises = Array.isArray(saved.exercises) ? saved.exercises.filter(Boolean) : [];
+  const savedTemplate = typeof saved.template === 'string' ? saved.template : '';
+
+  if (savedCards.length) {
+    setTemplateSelection(savedTemplate && templates[savedTemplate] ? savedTemplate : '');
+    loadTemplate('');
+    tickedCount = 0;
+    savedCards.forEach((cardState) => {
+      const cardId = addExercise(cardState.name, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false });
+      if (!cardId) return;
+      applyCardState(cardId, cardState);
+    });
+    tickedCount = document.querySelectorAll('#planView .tick-btn.ticked').length;
+    updateSubmit();
+    refreshExerciseSelectOptions();
+    saveDesign1State();
+    return;
+  }
+
+  if (savedTemplate && templates[savedTemplate]) {
+    chooseTemplate(savedTemplate);
+    return;
+  }
+
+  chooseTemplate('');
+  if (!savedExercises.length) {
+    return;
+  }
+  savedExercises.forEach((exerciseName) => {
+    addExercise(exerciseName, false, { suppressSave: true, suppressScroll: true, allowDuplicate: false });
+  });
+  refreshExerciseSelectOptions();
+  saveDesign1State();
+}
+
+document.addEventListener('click', () => {
+  closeTemplateMenu();
+});
+
+/* ── Date picker ── */
+function pickDate() {
+  const d = document.getElementById('dateDisplay');
+  const input = document.createElement('input');
+  input.type = 'date';
+  const today = new Date().toISOString().split('T')[0];
+  input.value = today;
+  input.style.cssText = 'position:absolute;opacity:0;pointer-events:none;';
+  document.body.appendChild(input);
+  input.addEventListener('change', () => {
+    const parts = new Date(input.value + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+    d.textContent = parts;
+    input.remove();
+  });
+  input.showPicker && input.showPicker();
+  input.click();
+  setTimeout(() => input.remove(), 5000);
+}
+
+/* ── Tab Switch ── */
+function switchTab(tab) {
+  document.getElementById('planView').classList.toggle('active', tab === 'plan');
+  document.getElementById('logView').classList.toggle('active', tab === 'log');
+  document.getElementById('tab-plan').classList.toggle('active', tab === 'plan');
+  document.getElementById('tab-log').classList.toggle('active', tab === 'log');
+  document.getElementById('fab').style.display = tab === 'plan' ? '' : 'none';
+}
+
+/* ── Toggle Card ── */
+function toggleCard(id) {
+  const card = document.getElementById(id);
+  const body = document.getElementById('body-' + id.replace('card-',''));
+  const btn  = document.getElementById('btn-'  + id.replace('card-',''));
+  const sum  = document.getElementById('summary-' + id.replace('card-',''));
+  const isOpen = btn.classList.contains('open');
+  if (!card || !body || !btn) return;
+  btn.classList.toggle('open', !isOpen);
+  card.classList.toggle('card-open', !isOpen);
+  body.style.display = isOpen ? 'none' : '';
+  if (sum) {
+    const showCompletedSummary = isOpen && card.classList.contains('done');
+    sum.style.display = showCompletedSummary ? 'block' : 'none';
+  }
+  lucide.createIcons();
+}
+
+/* ── Tick Set ── */
+let tickedCount = 0;
+function tickSet(btn, cardId) {
+  const row = btn.closest('.set-row');
+  const wasTicked = btn.classList.contains('ticked');
+  btn.classList.toggle('ticked', !wasTicked);
+  row.classList.toggle('completed', !wasTicked);
+  tickedCount += wasTicked ? -1 : 1;
+  updateSubmit();
+  checkCardDone(cardId);
+  saveDesign1State();
+  lucide.createIcons();
+}
+
+function updateSubmit() {
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = tickedCount === 0;
+}
+
+function checkCardDone(cardId) {
+  const bodyKey = cardId.replace('card-','');
+  const body = document.getElementById('body-' + bodyKey);
+  const ticks = body.querySelectorAll('.tick-btn.ticked');
+  const allTicks = body.querySelectorAll('.tick-btn');
+  const card = document.getElementById(cardId);
+  const nameEl = document.getElementById('name-' + bodyKey);
+  const summary = document.getElementById('summary-' + bodyKey);
+  const btn = document.getElementById('btn-' + bodyKey);
+  const oldPill = card.querySelector('.completed-pill');
+  if (oldPill) oldPill.remove();
+  if (ticks.length === allTicks.length && ticks.length > 0) {
+    card.classList.add('done');
+    if (nameEl) nameEl.classList.add('done-text');
+    const pill = document.createElement('span');
+    pill.className = 'completed-pill';
+    pill.textContent = '(Completed)';
+    if (nameEl) nameEl.appendChild(pill);
+    if (btn && btn.classList.contains('open')) {
+      toggleCard(cardId);
+    }
+    // Collect set tags
+    if (summary) {
+      const tagContainer = summary.querySelector('.set-tags');
+      tagContainer.innerHTML = '';
+      const rows = body.querySelectorAll('.set-row');
+      rows.forEach((r,i) => {
+        const repsInput = r.querySelector('.reps-input') || r.querySelector('input.set-input');
+        const weightInput = r.querySelector('.weight-input');
+        const reps = repsInput ? (repsInput.value || repsInput.placeholder || '—') : '—';
+        const fallbackWeightInput = r.querySelectorAll('input')[1];
+        const wt = r.classList.contains('bodyweight')
+          ? 'BW'
+          : ((weightInput || fallbackWeightInput)
+            ? ((weightInput || fallbackWeightInput).value || (weightInput || fallbackWeightInput).placeholder || '—')
+            : '—');
+        const tag = document.createElement('span');
+        tag.className = 'set-tag';
+        tag.textContent = reps + '×' + wt;
+        tagContainer.appendChild(tag);
+      });
+    }
+  } else {
+    card.classList.remove('done');
+    if (nameEl) nameEl.classList.remove('done-text');
+    if (summary) {
+      summary.style.display = 'none';
+    }
+  }
+}
+
+/* ── Add Set ── */
+function addSet(cardId, suppressSave = false) {
+  const bodyKey = cardId.replace('card-','');
+  const body = document.getElementById('body-' + bodyKey);
+  const addBtn = body.querySelector('.add-set-btn');
+  const rows = body.querySelectorAll('.set-row');
+  const card = document.getElementById(cardId);
+  const exerciseName = card?.dataset?.exerciseName || '';
+  const preset = exerciseName ? EXERCISE_PRESETS[exerciseName] : null;
+  const lastWorkout = exerciseName ? getLastWorkoutForExercise(exerciseName) : null;
+  const isBodyweight = body.querySelector('.set-row.bodyweight') || card?.dataset?.bodyweight === '1';
+  const n = rows.length + 1;
+  const sourceSet = Array.isArray(lastWorkout?.sets) && lastWorkout.sets.length
+    ? (lastWorkout.sets[n - 1] || lastWorkout.sets[lastWorkout.sets.length - 1])
+    : null;
+  const repsDefault = sourceSet?.reps || preset?.reps || '—';
+  const repsValue = sourceSet?.reps ? String(sourceSet.reps) : '';
+  const weightFromHistory = sourceSet?.weight && sourceSet.weight !== 'BW' ? String(sourceSet.weight) : '';
+  const weightDefault = !isBodyweight
+    ? (weightFromHistory || preset?.weight || '—')
+    : '—';
+  const row = document.createElement('div');
+  row.className = `set-row${isBodyweight ? ' bodyweight' : ''}`;
+  row.dataset.added = '1';
+  row.innerHTML = `<span class="set-num">${n}</span>
+    <input class="set-input reps-input" type="number" placeholder="${repsDefault}" value="${repsValue}" inputmode="numeric">
+    ${isBodyweight ? `` : `<input class="set-input ghost weight-input" type="number" placeholder="${weightDefault}" value="${weightFromHistory}" inputmode="decimal">`}
+    <button class="tick-btn" onclick="tickSet(this,'${cardId}')"><i data-lucide="check"></i></button>
+    <span></span>`;
+  body.insertBefore(row, addBtn);
+  enhanceRepsControls(row);
+  if (!suppressSave) {
+    saveDesign1State();
+  }
+  lucide.createIcons();
+}
+
+function changeRepInput(btn, delta) {
+  const wrap = btn.closest('.reps-cell');
+  if (!wrap) return;
+  const input = wrap.querySelector('.reps-input');
+  const current = parseInt(input.value || input.placeholder || '0', 10) || 0;
+  input.value = Math.max(0, current + delta);
+  saveDesign1State();
+}
+
+function enhanceRepsControls(scope = document) {
+  const rows = scope.querySelectorAll ? scope.querySelectorAll('.set-row') : [];
+  rows.forEach((row) => {
+    const existing = row.querySelector('.reps-cell');
+    if (existing) return;
+    const repsInput = row.querySelector('.reps-input') || row.querySelector('input.set-input');
+    if (!repsInput) return;
+    repsInput.classList.add('reps-input');
+    const wrap = document.createElement('div');
+    wrap.className = 'reps-cell';
+    repsInput.parentNode.insertBefore(wrap, repsInput);
+    wrap.innerHTML = `<button class="rep-btn" type="button" onclick="changeRepInput(this,-1)">−</button>`;
+    wrap.appendChild(repsInput);
+    const plus = document.createElement('button');
+    plus.className = 'rep-btn';
+    plus.type = 'button';
+    plus.textContent = '+';
+    plus.setAttribute('onclick', 'changeRepInput(this,1)');
+    wrap.appendChild(plus);
+  });
+}
+
+function updateCardWeightMode(cardId, isBodyweight, defaultWeight = '—') {
+  const bodyKey = cardId.replace('card-','');
+  const body = document.getElementById('body-' + bodyKey);
+  if (!body) return;
+  const header = body.querySelector('.set-header-row');
+  if (header) {
+    header.classList.toggle('bodyweight', isBodyweight);
+    const third = header.querySelector('span:nth-child(3)');
+    if (third) third.textContent = 'Weight';
+  }
+  const rows = body.querySelectorAll('.set-row');
+  rows.forEach((row) => {
+    row.classList.toggle('bodyweight', isBodyweight);
+    let weightInput = row.querySelector('.weight-input');
+    const tickBtn = row.querySelector('.tick-btn');
+    if (isBodyweight) {
+      if (weightInput) weightInput.remove();
+    } else {
+      if (!weightInput && tickBtn) {
+        weightInput = document.createElement('input');
+        weightInput.className = 'set-input ghost weight-input';
+        weightInput.type = 'number';
+        weightInput.placeholder = defaultWeight;
+        weightInput.inputMode = 'decimal';
+        row.insertBefore(weightInput, tickBtn);
+      }
+      if (weightInput) {
+        weightInput.placeholder = defaultWeight;
+      }
+    }
+  });
+}
+
+function changeQuickLogReps(delta) {
+  const input = document.getElementById('quickLogReps');
+  if (!input) return;
+  const current = parseInt(input.value || input.placeholder || '0', 10) || 0;
+  input.value = Math.max(0, current + delta);
+}
+
+function renumberSets(cardId) {
+  const bodyKey = cardId.replace('card-','');
+  const rows = document.querySelectorAll(`#body-${bodyKey} .set-row`);
+  rows.forEach((row, index) => {
+    const n = row.querySelector('.set-num');
+    if (n) n.textContent = index + 1;
+  });
+}
+
+/* ── Add Exercise ── */
+function addExercise(defaultExerciseName = null, markAsCustom = true, options = {}) {
+  const { suppressSave = false, suppressScroll = false, allowDuplicate = false, ensureThreeSets = true } = options;
+  const planView = document.getElementById('planView');
+  const scrollArea = document.getElementById('scrollArea');
+  if (markAsCustom && activeTemplateName) {
+    setTemplateSelection('');
+  }
+  const availableNames = getAvailableExerciseNames();
+  let selectedName = defaultExerciseName;
+  if (!selectedName || !EXERCISE_PRESETS[selectedName] || (!allowDuplicate && hasExerciseInWorkout(selectedName))) {
+    selectedName = availableNames[0] || null;
+  }
+  if (!selectedName) {
+    alert('All exercises are already in this workout.');
+    return null;
+  }
+  const id = 'card-new' + Date.now() + '-' + Math.floor(Math.random() * 10000);
+  const bodyKey = id.replace('card-','');
+  const card = document.createElement('div');
+  card.className = 'exercise-card card-open';
+  card.id = id;
+  card.dataset.bodyweight = '0';
+  card.innerHTML = `
+    <div class="card-header" onclick="toggleCard('${id}')">
+      <i class="exercise-icon" data-lucide="dumbbell" aria-hidden="true"></i>
+      <div class="exercise-name" id="name-${bodyKey}">New Exercise</div>
+      <div class="header-exercise-picker" onclick="event.stopPropagation()">
+        <select class="exercise-select" onchange="applyExercisePreset(this,'${id}')">
+          ${buildExerciseOptionsHtml(selectedName)}
+        </select>
+      </div>
+      <button class="link-next-btn" onclick="toggleLinkWithNext('${id}', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
+      <button class="collapse-btn open" id="btn-${bodyKey}"><i data-lucide="chevron-down"></i></button>
+      <button class="remove-ex-btn" onclick="removeExercise('${id}', event)"><i data-lucide="trash-2"></i></button>
+    </div>
+    <div class="sets-body" id="body-${bodyKey}">
+      <div class="set-header-row"><span>Set</span><span>Reps</span><span>Weight</span><span></span><span></span></div>
+      <div class="set-row">
+        <span class="set-num">1</span>
+        <input class="set-input reps-input" type="number" placeholder="—" inputmode="numeric">
+        <input class="set-input ghost weight-input" type="number" placeholder="—" inputmode="decimal">
+        <button class="tick-btn" onclick="tickSet(this,'${id}')"><i data-lucide="check"></i></button>
+        <span></span>
+      </div>
+    </div>
+    <div class="card-summary" id="summary-${bodyKey}"><div class="set-tags"></div></div>`;
+  planView.appendChild(card);
+  const select = card.querySelector('.exercise-select');
+  if (selectedName && Array.from(select.options).some((option) => option.value === selectedName)) {
+    select.value = selectedName;
+  }
+  applyExercisePreset(select, id);
+  ensureCardEquipmentIcon(id);
+  if (ensureThreeSets) {
+    while (document.querySelectorAll(`#body-${bodyKey} .set-row`).length < 3) {
+      addSet(id, suppressSave);
+    }
+  }
+  refreshLinkButtons();
+  updateLinkVisuals();
+  refreshExerciseSelectOptions();
+  enhanceRepsControls(card);
+  lucide.createIcons();
+  if (!suppressSave) {
+    saveDesign1State();
+  }
+  if (!suppressScroll) {
+    requestAnimationFrame(() => {
+      scrollArea.scrollTo({ top: scrollArea.scrollHeight, behavior: 'smooth' });
+    });
+  }
+  return id;
+}
+
+function removeExercise(cardId, event) {
+  event.stopPropagation();
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  clearExerciseLink(cardId);
+  const ticked = card.querySelectorAll('.tick-btn.ticked').length;
+  tickedCount = Math.max(0, tickedCount - ticked);
+  card.remove();
+  updateSubmit();
+  refreshLinkButtons();
+  updateLinkVisuals();
+  refreshExerciseSelectOptions();
+  saveDesign1State();
+}
+
+function clearExerciseLink(cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  const partnerId = card.dataset.linkedWith;
+  delete card.dataset.linkedWith;
+  if (partnerId) {
+    const partner = document.getElementById(partnerId);
+    if (partner && partner.dataset.linkedWith === cardId) {
+      delete partner.dataset.linkedWith;
+    }
+  }
+}
+
+function toggleLinkWithNext(cardId, event) {
+  if (event) event.stopPropagation();
+  const cards = Array.from(document.querySelectorAll('#planView .exercise-card'));
+  const index = cards.findIndex((card) => card.id === cardId);
+  if (index < 0 || index === cards.length - 1) {
+    return;
+  }
+  const targetId = cards[index + 1].id;
+  const current = document.getElementById(cardId)?.dataset.linkedWith;
+  if (current === targetId) {
+    clearExerciseLink(cardId);
+    clearExerciseLink(targetId);
+    updateLinkVisuals();
+    refreshLinkButtons();
+    saveDesign1State();
+    return;
+  }
+  clearExerciseLink(cardId);
+  clearExerciseLink(targetId);
+  const card = document.getElementById(cardId);
+  const target = document.getElementById(targetId);
+  if (card && target) {
+    card.dataset.linkedWith = targetId;
+    target.dataset.linkedWith = cardId;
+  }
+  updateLinkVisuals();
+  refreshLinkButtons();
+  saveDesign1State();
+}
+
+function updateLinkVisuals() {
+  const cards = Array.from(document.querySelectorAll('#planView .exercise-card'));
+  cards.forEach((card) => {
+    card.classList.remove('link-start', 'link-end');
+  });
+  cards.forEach((card, index) => {
+    const next = cards[index + 1];
+    if (!next) return;
+    if (card.dataset.linkedWith === next.id && next.dataset.linkedWith === card.id) {
+      card.classList.add('link-start');
+      next.classList.add('link-end');
+    }
+  });
+}
+
+function refreshLinkButtons() {
+  const cards = Array.from(document.querySelectorAll('#planView .exercise-card'));
+  cards.forEach((card, index) => {
+    const btn = card.querySelector('.link-next-btn');
+    if (!btn) return;
+    const next = cards[index + 1];
+    const isLast = !next;
+    btn.disabled = isLast;
+    if (isLast) {
+      btn.classList.remove('active');
+      return;
+    }
+    const linked = card.dataset.linkedWith === next.id && next.dataset.linkedWith === card.id;
+    btn.classList.toggle('active', linked);
+  });
+}
+
+function applyExercisePreset(select, cardId) {
+  const previousName = document.getElementById(cardId)?.dataset.exerciseName || '';
+  if (hasExerciseInWorkout(select.value, cardId)) {
+    alert('This exercise is already in the workout.');
+    if (previousName) {
+      select.value = previousName;
+    }
+    return;
+  }
+  const ex = EXERCISE_PRESETS[select.value];
+  if (!ex) return;
+  const lastWorkout = getLastWorkoutForExercise(select.value);
+  const bodyKey = cardId.replace('card-','');
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  card.dataset.bodyweight = ex.bodyweight ? '1' : '0';
+  card.dataset.exerciseName = select.value;
+  document.getElementById('name-' + bodyKey).textContent = select.value;
+  const muscleChip = card.querySelector('.muscle-chip');
+  if (muscleChip) muscleChip.textContent = ex.muscle;
+  ensureCardEquipmentIcon(cardId);
+
+  const rows = Array.from(card.querySelectorAll('.set-row'));
+  if (!rows.length) return;
+
+  if (ex.bodyweight) {
+    updateCardWeightMode(cardId, true, 'BW');
+  } else {
+    updateCardWeightMode(cardId, false, ex.weight);
+  }
+
+  const updatedRows = Array.from(card.querySelectorAll('.set-row'));
+  updatedRows.forEach((row, index) => {
+    const sourceSet = Array.isArray(lastWorkout?.sets) && lastWorkout.sets.length
+      ? (lastWorkout.sets[index] || lastWorkout.sets[lastWorkout.sets.length - 1])
+      : null;
+    const repsDefault = sourceSet?.reps || ex.reps;
+    const repsInput = row.querySelector('.reps-input') || row.querySelector('input.set-input');
+    if (repsInput) {
+      repsInput.placeholder = repsDefault;
+      repsInput.value = sourceSet?.reps ? String(sourceSet.reps) : '';
+    }
+
+    if (!ex.bodyweight) {
+      const weightInput = row.querySelector('.weight-input') || row.querySelectorAll('input')[1] || null;
+      if (weightInput) {
+        const historyWeight = sourceSet?.weight && sourceSet.weight !== 'BW' ? String(sourceSet.weight) : '';
+        weightInput.placeholder = historyWeight || ex.weight;
+        weightInput.value = historyWeight;
+      }
+    }
+  });
+
+  enhanceRepsControls(card);
+  refreshExerciseSelectOptions();
+  refreshLinkButtons();
+  updateLinkVisuals();
+  saveDesign1State();
+}
+
+/* ── Load Template ── */
+// Template data
+const templates = {
+  'Push Day A': [
+    { name: 'Bench Press', muscle: 'Chest', sets: [ { reps: 4, weight: 80 }, { reps: 4, weight: 82.5 }, { reps: 3, weight: 82.5 } ] },
+    { name: 'Overhead Press', muscle: 'Shoulders', sets: [ { reps: 5, weight: 50 }, { reps: 5, weight: 50 }, { reps: 4, weight: 50 } ] },
+    { name: 'Tricep Dips', muscle: 'Triceps', sets: [ { reps: 10, weight: 'BW' }, { reps: 10, weight: 'BW' }, { reps: 8, weight: 'BW' } ] }
+  ],
+  'Pull Day B': [
+    { name: 'Pull Ups', muscle: 'Back', sets: [ { reps: 8, weight: 'BW' }, { reps: 7, weight: 'BW' }, { reps: 6, weight: 'BW' } ] },
+    { name: 'Barbell Row', muscle: 'Back', sets: [ { reps: 8, weight: 60 }, { reps: 8, weight: 62.5 }, { reps: 7, weight: 62.5 } ] },
+    { name: 'Bicep Curl', muscle: 'Biceps', sets: [ { reps: 10, weight: 12 }, { reps: 10, weight: 12 }, { reps: 8, weight: 14 } ] }
+  ],
+  'Leg Day': [
+    { name: 'Squat', muscle: 'Legs', sets: [ { reps: 5, weight: 100 }, { reps: 5, weight: 105 }, { reps: 4, weight: 105 } ] },
+    { name: 'Leg Press', muscle: 'Legs', sets: [ { reps: 10, weight: 180 }, { reps: 10, weight: 180 }, { reps: 8, weight: 200 } ] },
+    { name: 'Calf Raise', muscle: 'Legs', sets: [ { reps: 15, weight: 40 }, { reps: 15, weight: 40 }, { reps: 12, weight: 45 } ] }
+  ],
+  'Full Body': [
+    { name: 'Deadlift', muscle: 'Back', sets: [ { reps: 5, weight: 120 }, { reps: 5, weight: 120 }, { reps: 4, weight: 125 } ] },
+    { name: 'Bench Press', muscle: 'Chest', sets: [ { reps: 4, weight: 80 }, { reps: 4, weight: 82.5 }, { reps: 3, weight: 82.5 } ] },
+    { name: 'Squat', muscle: 'Legs', sets: [ { reps: 5, weight: 100 }, { reps: 5, weight: 105 }, { reps: 4, weight: 105 } ] }
+  ]
+};
+
+function chooseTemplate(name) {
+  setTemplateSelection(name);
+  closeTemplateMenu();
+  loadTemplate(activeTemplateName);
+  saveDesign1State();
+}
+
+function loadTemplate(name) {
+  tickedCount = 0;
+  updateSubmit();
+  // Remove existing cards
+  const planView = document.getElementById('planView');
+  planView.querySelectorAll('.exercise-card').forEach(card => card.remove());
+  const templateExercises = templates[name];
+  if (!templateExercises) {
+    refreshLinkButtons();
+    updateLinkVisuals();
+    enhanceRepsControls(planView);
+    lucide.createIcons();
+    return;
+  }
+  // Add new cards
+  templateExercises.forEach((ex, idx) => {
+    const cardId = 'card-' + ex.name.toLowerCase().replace(/\s+/g,'');
+    const bodyKey = cardId.replace('card-','');
+    const card = document.createElement('div');
+    card.className = 'exercise-card card-open';
+    card.id = cardId;
+    let prevHint = '';
+    if (ex.sets && ex.sets.length) {
+      prevHint = `<div class='prev-hint'><i data-lucide="history"></i><span>Last session: ` + ex.sets.map(s => `${s.reps}×${s.weight} kg`).join(' · ') + `</span></div>`;
+    }
+    let setRows = '';
+    ex.sets.forEach((s,i) => {
+      const isBw = String(s.weight).toUpperCase() === 'BW';
+      setRows += `<div class='set-row${isBw ? ' bodyweight' : ''}' id='set-${bodyKey}-${i+1}'>
+        <span class='set-num'>${i+1}</span>
+        <input class='set-input reps-input' type='number' placeholder='${s.reps}' inputmode='numeric'>
+        ${isBw
+          ? ``
+          : `<input class='set-input prefilled weight-input' type='number' placeholder='${s.weight}' value='${s.weight}' inputmode='decimal'>`}
+        <button class='tick-btn' onclick="tickSet(this, '${cardId}')"><i data-lucide='check'></i></button>
+        <span></span>
+      </div>`;
+    });
+    card.innerHTML = `
+      <div class='card-header' onclick="toggleCard('${cardId}')">
+        <i class='exercise-icon' data-lucide='${getEquipmentIcon(EXERCISE_PRESETS[ex.name]?.equipment)}' aria-hidden='true'></i>
+        <div class='exercise-name' id='name-${bodyKey}'>${ex.name}</div>
+        <div class='header-exercise-picker' onclick='event.stopPropagation()'>
+          <select class='exercise-select' onchange="applyExercisePreset(this,'${cardId}')">
+            ${buildExerciseOptionsHtml(ex.name, cardId)}
+          </select>
+        </div>
+        <button class='link-next-btn' onclick="toggleLinkWithNext('${cardId}', event)" title='Link with exercise below'><i data-lucide='link'></i></button>
+        <button class='collapse-btn open' id='btn-${bodyKey}'><i data-lucide='chevron-down'></i></button>
+      </div>
+      <div class='sets-body' id='body-${bodyKey}'>
+        ${prevHint}
+        <div class='set-header-row${ex.name === 'Tricep Dips' || ex.name === 'Pull Ups' ? ' bodyweight' : ''}'><span>Set</span><span>Reps</span><span>Weight</span><span></span><span></span></div>
+        ${setRows}
+      </div>
+      <div class='card-summary' id='summary-${bodyKey}'><div class='set-tags'></div></div>
+    `;
+    card.dataset.bodyweight = ex.name === 'Tricep Dips' || ex.name === 'Pull Ups' ? '1' : '0';
+    planView.appendChild(card);
+  });
+  refreshLinkButtons();
+  updateLinkVisuals();
+  refreshExerciseSelectOptions();
+  refreshExerciseIcons();
+  enhanceRepsControls(planView);
+  lucide.createIcons();
+}
+
+applySavedDesign1State();
+refreshExerciseIcons();
+
+refreshLinkButtons();
+updateLinkVisuals();
+enhanceRepsControls();
+
+document.getElementById('planView').addEventListener('input', (event) => {
+  if (event.target && event.target.classList && event.target.classList.contains('set-input')) {
+    saveDesign1State();
+  }
+});
+
+/* ── Submit ── */
+document.getElementById('submitBtn').addEventListener('click', () => {
+  captureLastWorkoutFromCurrentBoard();
+  alert('Session submitted! ✅\n\nIn the real app this saves to your storage.');
+});
+</script>
+</body>
+</html>

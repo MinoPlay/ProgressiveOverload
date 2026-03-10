@@ -432,41 +432,43 @@ body {
 }
 
 /* Execute sets */
-.exec-sets-wrap { padding: 16px 14px 170px; }
+.exec-sets-wrap { padding: 1rem .875rem 10.625rem; }
 .exec-set-header {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1.35fr) minmax(0, 1fr) 44px;
-  gap: 6px;
+  grid-template-columns: 2rem minmax(0, 1.35fr) minmax(0, 1fr) clamp(2.25rem, 12%, 2.75rem);
+  gap: .375rem;
   align-items: center;
-  padding: 0 2px 6px;
-  font-size: 11px; font-weight: 700; color: var(--text3);
+  padding: 0 .125rem .375rem;
+  font-size: .6875rem; font-weight: 700; color: var(--text3);
   text-transform: uppercase; letter-spacing: .05em;
 }
 .exec-set-header.bodyweight {
-  grid-template-columns: 32px minmax(0, 1fr) 44px;
+  grid-template-columns: 2rem minmax(0, 1fr) clamp(2.25rem, 12%, 2.75rem);
 }
 .exec-set-header.bodyweight span:nth-child(3) {
   display: none;
 }
 .exec-set-row {
   display: grid;
-  grid-template-columns: 32px minmax(0, 1.35fr) minmax(0, 1fr) 44px;
-  gap: 6px;
+  grid-template-columns: 2rem minmax(0, 1.35fr) minmax(0, 1fr) clamp(2.25rem, 12%, 2.75rem);
+  gap: .375rem;
   align-items: center;
-  padding: 5px 0;
+  padding: .3125rem 0;
   transition: opacity .2s;
 }
 .exec-set-row.bodyweight {
-  grid-template-columns: 32px minmax(0, 1fr) 44px;
+  grid-template-columns: 2rem minmax(0, 1fr) clamp(2.25rem, 12%, 2.75rem);
 }
 .exec-set-row.done { opacity: .4; }
 .exec-set-num {
-  width: 32px; height: 32px;
+  width: 100%;
+  max-width: 2rem;
+  aspect-ratio: 1 / 1;
   border-radius: 50%;
   background: var(--surface2);
-  border: 1.5px solid var(--border);
+  border: .09375rem solid var(--border);
   display: flex; align-items: center; justify-content: center;
-  font-size: 13px; font-weight: 800; color: var(--text3);
+  font-size: .8125rem; font-weight: 800; color: var(--text3);
 }
 .exec-set-row.done .exec-set-num {
   background: var(--success-bg);
@@ -475,10 +477,10 @@ body {
 }
 .exec-input {
   background: var(--surface);
-  border: 1.5px solid var(--border);
+  border: .09375rem solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 10px 8px;
-  font-size: 17px; font-weight: 700;
+  padding: .625rem .5rem;
+  font-size: 1.0625rem; font-weight: 700;
   color: var(--text);
   text-align: center;
   width: 100%;
@@ -493,23 +495,23 @@ body {
 .exec-input.ghost { color: var(--text3); }
 .exec-reps-control {
   display: grid;
-  grid-template-columns: 28px minmax(44px, 1fr) 28px;
-  gap: 4px;
+  grid-template-columns: clamp(1.5rem, 24%, 1.9rem) minmax(0, 1fr) clamp(1.5rem, 24%, 1.9rem);
+  gap: .25rem;
   align-items: center;
 }
 .exec-reps-control .exec-input {
   min-width: 0;
-  padding-left: 6px;
-  padding-right: 6px;
+  padding-left: .35em;
+  padding-right: .35em;
 }
 .exec-reps-btn {
-  width: 28px;
-  height: 28px;
-  border-radius: 8px;
-  border: 1.5px solid var(--border);
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  border-radius: .5rem;
+  border: .09375rem solid var(--border);
   background: var(--surface2);
   color: var(--text2);
-  font-size: 16px;
+  font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
   display: flex;
@@ -519,12 +521,15 @@ body {
 }
 .exec-reps-btn:active { transform: scale(.97); }
 .exec-tick {
-  width: 40px; height: 40px;
-  border-radius: 12px;
-  border: 2px solid var(--border);
+  width: 100%;
+  max-width: clamp(2.25rem, 12%, 2.75rem);
+  aspect-ratio: 1 / 1;
+  border-radius: .75rem;
+  border: .125rem solid var(--border);
   background: var(--surface2);
   cursor: pointer;
   display: flex; align-items: center; justify-content: center;
+  justify-self: end;
   color: var(--text3);
   transition: all .15s;
   padding: 0;
@@ -535,27 +540,27 @@ body {
   color: var(--success);
 }
 .exec-tick.done { pointer-events: none; }
-.exec-tick i { width: 20px; height: 20px; }
+.exec-tick i { width: 1.25rem; height: 1.25rem; }
 .exec-section {
   background: var(--surface);
-  border: 1px solid var(--border);
+  border: .0625rem solid var(--border);
   border-radius: var(--radius-sm);
-  padding: 10px;
-  margin-bottom: 10px;
+  padding: .625rem;
+  margin-bottom: .625rem;
 }
 .exec-section-title {
-  font-size: 14px;
+  font-size: .875rem;
   font-weight: 800;
   color: var(--text);
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 6px;
+  margin-bottom: .375rem;
 }
 .exec-section-meta {
-  font-size: 12px;
+  font-size: .75rem;
   color: var(--text3);
-  margin-bottom: 8px;
+  margin-bottom: .5rem;
 }
 /* Nav buttons */
 .exec-footer {
@@ -654,13 +659,22 @@ body {
 .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
 .quick-reps-control {
   display: grid;
-  grid-template-columns: 34px 1fr 34px;
-  gap: 8px;
+  grid-template-columns: clamp(1.7rem, 18%, 2.2rem) minmax(0, 1fr) clamp(1.7rem, 18%, 2.2rem);
+  gap: .5rem;
   align-items: center;
 }
+.quick-reps-control .form-input {
+  min-width: 0;
+}
+.quick-reps-input {
+  text-align: center;
+  font-size: clamp(1.1rem, 3.8vw, 1.375rem);
+  font-weight: 700;
+  padding: .75rem .4em;
+}
 .quick-reps-btn {
-  width: 34px;
-  height: 34px;
+  width: 100%;
+  aspect-ratio: 1 / 1;
   border-radius: 10px;
   border: 1.5px solid var(--border);
   background: var(--surface2);
@@ -964,7 +978,7 @@ body {
               <label class="form-label">Reps</label>
               <div class="quick-reps-control">
                 <button class="quick-reps-btn" type="button" onclick="changeQuickLogReps(-1)">−</button>
-                <input class="form-input" id="quickLogReps" type="number" placeholder="4" inputmode="numeric" style="text-align:center;font-size:22px;font-weight:700;padding:14px 6px;">
+                <input class="form-input quick-reps-input" id="quickLogReps" type="number" placeholder="4" inputmode="numeric">
                 <button class="quick-reps-btn" type="button" onclick="changeQuickLogReps(1)">+</button>
               </div>
             </div>
@@ -1712,7 +1726,10 @@ function tickExecSet(exerciseId, setIndex) {
 
 function navExercise(dir) {
   if (executionBlocks.length === 0) {
-    return;
+    renderExecutionFromBuild();
+    if (executionBlocks.length === 0) {
+      return;
+    }
   }
   if (dir === 1 && currentBlockIndex === executionBlocks.length - 1) {
     finishSession();
@@ -1987,6 +2004,9 @@ function switchTab(tab, options = {}) {
   currentTab = tab;
   document.getElementById('startSticky').classList.toggle('visible', tab === 'build');
   document.getElementById('execFooter').classList.toggle('visible', tab === 'exec');
+  if (tab === 'exec' && executionBlocks.length === 0 && buildExercises.length > 0) {
+    renderExecutionFromBuild();
+  }
   // Update header
   const titles = { build: ['Plan Session', 'layers'], exec: ['Execute', 'play-circle'], log: ['Quick Log', 'plus-circle'] };
   const [titleText, iconName] = titles[tab];

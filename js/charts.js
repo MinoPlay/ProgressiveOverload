@@ -715,8 +715,8 @@ export const Charts = {
                         beginAtZero: true,
                         ticks: { display: false, stepSize: 1, font: { size: 9 }, backdropColor: 'transparent' },
                         pointLabels: { font: { size: 10, weight: '600' } },
-                        grid: { color: 'rgba(128,128,128,0.4)' },
-                        angleLines: { color: 'rgba(128,128,128,0.4)' }
+                        grid: { display: true, color: 'rgba(128,128,128,0.4)', lineWidth: 1 },
+                        angleLines: { display: true, color: 'rgba(128,128,128,0.4)', lineWidth: 1 }
                     }
                 }
             }

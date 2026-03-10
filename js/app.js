@@ -58,13 +58,16 @@ const Theme = {
         window.Chart.defaults.color = textColor;
         window.Chart.defaults.borderColor = borderColor;
         if (window.Chart.defaults.scale) {
-            window.Chart.defaults.scale.grid = { color: gridColor };
+            if (!window.Chart.defaults.scale.grid) window.Chart.defaults.scale.grid = {};
+            window.Chart.defaults.scale.grid.color = gridColor;
         }
         if (window.Chart.defaults.scales) {
             ['x', 'y', 'r'].forEach(axis => {
                 if (window.Chart.defaults.scales[axis]) {
-                    window.Chart.defaults.scales[axis].grid = { color: gridColor };
-                    window.Chart.defaults.scales[axis].ticks = { color: textColor };
+                    if (!window.Chart.defaults.scales[axis].grid) window.Chart.defaults.scales[axis].grid = {};
+                    window.Chart.defaults.scales[axis].grid.color = gridColor;
+                    if (!window.Chart.defaults.scales[axis].ticks) window.Chart.defaults.scales[axis].ticks = {};
+                    window.Chart.defaults.scales[axis].ticks.color = textColor;
                 }
             });
         }

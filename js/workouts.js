@@ -6,7 +6,7 @@ import { showToast } from './app.js';
 import { CONFIG } from './config.js';
 import { isValidDate, validateNumber, formatDate } from './utils.js';
 
-const PLANNER_DRAFT_KEY = 'plannedSessionDraft';
+const SESSION_KEY = 'workout.activeSession';
 const DEFAULT_PLANNER_SET_COUNT = 3;
 const WORKOUT_VIEW_KEY = 'workoutActiveView';
 
@@ -47,9 +47,9 @@ export const Workouts = {
             this.populatePlannerTemplateDropdown();
         });
 
-        // Listen for shared session state changes
+        // Listen for session state changes from other views
         window.addEventListener('storage', (event) => {
-            if (event.key === 'sharedSessionState' && event.newValue) {
+            if (event.key === SESSION_KEY && event.newValue) {
                 try {
                     const parsed = JSON.parse(event.newValue);
                     if (parsed && Array.isArray(parsed.rows)) {
@@ -1613,17 +1613,21 @@ export const Workouts = {
 
     persistPlannerDraft() {
         if (!this.plannedSession) return;
-        localStorage.setItem(PLANNER_DRAFT_KEY, JSON.stringify(this.plannedSession));
-        // Also update shared session state
-        localStorage.setItem('sharedSessionState', JSON.stringify(this.plannedSession));
+        localStorage.setItem(SESSION_KEY, JSON.stringify(this.plannedSession));
     },
 
     restorePlannerDraft() {
-        // Prefer sharedSessionState if available
-        let rawDraft = localStorage.getItem('sharedSessionState');
-        if (!rawDraft) {
-            rawDraft = localStorage.getItem(PLANNER_DRAFT_KEY);
+        // One-time migration from legacy keys
+        if (!localStorage.getItem(SESSION_KEY)) {
+            const legacy = localStorage.getItem('sharedSessionState') ||
+                localStorage.getItem('plannedSessionDraft') ||
+                localStorage.getItem('workout1.designState') ||
+                localStorage.getItem('workout3.designState');
+            if (legacy) localStorage.setItem(SESSION_KEY, legacy);
         }
+        ['sharedSessionState', 'plannedSessionDraft', 'workout1.designState', 'workout3.designState']
+            .forEach(k => localStorage.removeItem(k));
+        const rawDraft = localStorage.getItem(SESSION_KEY);
         if (!rawDraft) return;
 
         try {
@@ -1674,7 +1678,7 @@ export const Workouts = {
             };
         } catch (error) {
             console.warn('Could not restore planner draft:', error);
-            localStorage.removeItem(PLANNER_DRAFT_KEY);
+            localStorage.removeItem(SESSION_KEY);
         }
     },
 
@@ -1816,7 +1820,7 @@ export const Workouts = {
             loadedTemplateName: ''
         };
 
-        localStorage.removeItem(PLANNER_DRAFT_KEY);
+        localStorage.removeItem(SESSION_KEY);
         this.renderPlannedSession();
 
         if (showMessage) {

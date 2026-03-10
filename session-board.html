@@ -1125,7 +1125,7 @@ body {
 lucide.createIcons();
 
 const THEME_KEY = 'theme';
-const DESIGN1_STATE_KEY = 'workout1.designState';
+const SESSION_KEY = 'workout.activeSession';
 const DESIGN1_LAST_WORKOUT_KEY = 'workout1.lastWorkoutByExercise';
 const EMBED_MODE = window.self !== window.top;
 
@@ -1865,9 +1865,7 @@ function saveDesign1State() {
     exercises: getPlanExerciseIds(),
     rows
   };
-  localStorage.setItem(DESIGN1_STATE_KEY, JSON.stringify(state));
-  // Also update shared session state
-  localStorage.setItem('sharedSessionState', JSON.stringify(state));
+  localStorage.setItem(SESSION_KEY, JSON.stringify(state));
 }
 
 let _design1SharedListenerAttached = false;
@@ -1875,11 +1873,10 @@ function ensureDesign1SharedStateListener() {
   if (_design1SharedListenerAttached) return;
   _design1SharedListenerAttached = true;
   window.addEventListener('storage', (event) => {
-    if (event.key !== 'sharedSessionState' || !event.newValue) return;
+    if (event.key !== SESSION_KEY || !event.newValue) return;
     try {
       const parsed = JSON.parse(event.newValue);
       if (parsed && typeof parsed === 'object') {
-        localStorage.setItem(DESIGN1_STATE_KEY, event.newValue);
         applySavedDesign1State();
       }
     } catch {}
@@ -1887,10 +1884,19 @@ function ensureDesign1SharedStateListener() {
 }
 
 function applySavedDesign1State() {
+  // One-time migration from legacy keys
+  if (!localStorage.getItem(SESSION_KEY)) {
+    const legacy = localStorage.getItem('sharedSessionState') ||
+      localStorage.getItem('workout1.designState') ||
+      localStorage.getItem('workout3.designState') ||
+      localStorage.getItem('plannedSessionDraft');
+    if (legacy) localStorage.setItem(SESSION_KEY, legacy);
+  }
+  ['sharedSessionState', 'workout1.designState', 'workout3.designState', 'plannedSessionDraft']
+    .forEach(k => localStorage.removeItem(k));
   let saved = null;
   try {
-    // Prefer sharedSessionState if available
-    saved = JSON.parse(localStorage.getItem('sharedSessionState') || localStorage.getItem(DESIGN1_STATE_KEY) || 'null');
+    saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
   } catch {
     saved = null;
   }

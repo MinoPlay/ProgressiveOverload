@@ -1035,7 +1035,7 @@ body {
 lucide.createIcons();
 
 const THEME_KEY = 'theme';
-const DESIGN3_STATE_KEY = 'workout3.designState';
+const SESSION_KEY = 'workout.activeSession';
 const EMBED_MODE = window.self !== window.top;
 
 function applyStoredTheme() {
@@ -1326,16 +1326,35 @@ let pickerState = { mode: 'add', index: -1 };
 
 function saveDesign3State() {
   const activeTab = currentTab;
+  // Derive canonical rows array shared with all views
+  const rows = [];
+  let i = 0;
+  const mapSet = s => ({ reps: s.r ?? '', weight: s.w ?? '', completed: Boolean(s.done) });
+  while (i < buildExercises.length) {
+    const item = buildExercises[i];
+    if (!item.superset) {
+      rows.push({ type: 'single', exerciseId: item.exerciseId, sets: (item.sets || []).map(mapSet) });
+      i++;
+    } else {
+      const label = item.superset;
+      const superExercises = [];
+      while (i < buildExercises.length && buildExercises[i].superset === label) {
+        const ex = buildExercises[i];
+        superExercises.push({ exerciseId: ex.exerciseId, sets: (ex.sets || []).map(mapSet) });
+        i++;
+      }
+      rows.push({ type: 'superset', exercises: superExercises });
+    }
+  }
   const state = {
     template: activeTemplate || '',
+    rows,
     exercises: buildExercises,
     executionActive,
     currentBlockIndex,
     activeTab
   };
-  localStorage.setItem(DESIGN3_STATE_KEY, JSON.stringify(state));
-  // Also update shared session state
-  localStorage.setItem('sharedSessionState', JSON.stringify(state));
+  localStorage.setItem(SESSION_KEY, JSON.stringify(state));
 }
 
 function hydrateExerciseFromState(item) {
@@ -1356,11 +1375,10 @@ function ensureDesign3SharedStateListener() {
   if (_design3SharedListenerAttached) return;
   _design3SharedListenerAttached = true;
   window.addEventListener('storage', (event) => {
-    if (event.key !== 'sharedSessionState' || !event.newValue) return;
+    if (event.key !== SESSION_KEY || !event.newValue) return;
     try {
       const parsed = JSON.parse(event.newValue);
       if (parsed && typeof parsed === 'object') {
-        localStorage.setItem(DESIGN3_STATE_KEY, event.newValue);
         applySavedDesign3State();
       }
     } catch {}
@@ -1368,10 +1386,19 @@ function ensureDesign3SharedStateListener() {
 }
 
 function applySavedDesign3State() {
+  // One-time migration from legacy keys
+  if (!localStorage.getItem(SESSION_KEY)) {
+    const legacy = localStorage.getItem('sharedSessionState') ||
+      localStorage.getItem('workout3.designState') ||
+      localStorage.getItem('workout1.designState') ||
+      localStorage.getItem('plannedSessionDraft');
+    if (legacy) localStorage.setItem(SESSION_KEY, legacy);
+  }
+  ['sharedSessionState', 'workout3.designState', 'workout1.designState', 'plannedSessionDraft']
+    .forEach(k => localStorage.removeItem(k));
   let saved = null;
   try {
-    // Prefer sharedSessionState if available
-    saved = JSON.parse(localStorage.getItem('sharedSessionState') || localStorage.getItem(DESIGN3_STATE_KEY) || 'null');
+    saved = JSON.parse(localStorage.getItem(SESSION_KEY) || 'null');
   } catch {
     saved = null;
   }

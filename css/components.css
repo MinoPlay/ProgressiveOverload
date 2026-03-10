@@ -3184,17 +3184,6 @@
     margin-right: 0;
 }
 
-.dropdown-item.nav-sub-item {
-    padding-left: calc(var(--spacing-lg) + 1rem);
-    font-size: 0.9rem;
-}
-
-.dropdown-item.nav-sub-item .nav-icon {
-    width: 16px;
-    height: 16px;
-    opacity: 0.9;
-}
-
 /* Muscle Group Breakdown */
 .muscle-grid {
     display: grid;

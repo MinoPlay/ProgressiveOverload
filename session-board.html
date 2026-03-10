@@ -861,8 +861,8 @@ body {
   <div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
   <div class="nav-menu" id="navMenu">
     <button class="nav-link" onclick="window.location.href='index.html'">Main App</button>
-    <button class="nav-link active" onclick="window.location.href='session-board.html'">Session Board</button>
-    <button class="nav-link" onclick="window.location.href='workout-builder.html'">Workout Builder</button>
+    <button class="nav-link active" onclick="window.location.href='session-board.html'">Workout v2</button>
+    <button class="nav-link" onclick="window.location.href='workout-builder.html'">Workout v3</button>
   </div>
 
   <!-- Scrollable content -->
@@ -1158,6 +1158,15 @@ function _mergeParentExercises(exercises) {
   // Always overwrite/add exercises from parent — parent data is authoritative
   let count = 0;
   exercises.forEach(ex => {
+    EXERCISE_META_BY_ID[ex.id] = {
+      id: ex.id,
+      name: ex.name,
+      muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1),
+      equipment: ex.equipmentType || 'barbell',
+      reps: '8',
+      weight: ex.requiresWeight === false ? 'BW' : '20',
+      bodyweight: ex.requiresWeight === false
+    };
     EXERCISE_PRESETS[ex.name] = {
       muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1),
       equipment: ex.equipmentType || 'barbell',
@@ -1189,6 +1198,7 @@ function _mergeParentTemplates(parentTemplates) {
         }));
         if (!sets.length) sets.push({ reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 });
         rows.push({
+          exerciseId: ex.id,
           name: ex.name,
           muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1),
           sets
@@ -1203,7 +1213,7 @@ function _mergeParentTemplates(parentTemplates) {
             weight: isBodyweight ? 'BW' : (parseFloat(s.weight) || 20)
           }));
           if (!sets.length) sets.push({ reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 });
-          rows.push({ name: ex.name, muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1), sets });
+          rows.push({ exerciseId: ex.id, name: ex.name, muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1), sets });
         });
       }
     });
@@ -1224,7 +1234,7 @@ function _rebuildTemplateMenu() {
     allNames.map(n => `<button class="template-option${n === activeTemplateName ? ' active' : ''}" data-template="${n}" onclick="chooseTemplate('${n.replace(/'/g, "\\'")}')">${n}</button>`).join('');
 }
 
-// Per-exercise workout history storage: { exerciseName: [{date, sets: [{reps, weight}]}] }
+// Per-exercise workout history storage: { exerciseId: [{date, sets: [{reps, weight}]}] }
 const _exerciseHistory = {};
 
 function _mergeParentWorkouts(workouts) {
@@ -1239,8 +1249,9 @@ function _mergeParentWorkouts(workouts) {
   Object.entries(byExercise).forEach(([parentId, entries]) => {
     const parentEx = _parentExerciseMap[parentId];
     if (!parentEx) return;
-    const name = parentEx.name;
-    if (!EXERCISE_PRESETS[name]) return;
+    const exerciseId = parentEx.id;
+    const preset = getExerciseMetaById(exerciseId);
+    if (!preset) return;
 
     // Sort by date desc, take most recent date's entries
     entries.sort((a, b) => new Date(b.date) - new Date(a.date));
@@ -1252,15 +1263,15 @@ function _mergeParentWorkouts(workouts) {
 
     // Update preset defaults from latest session
     const first = latestSets[0];
-    EXERCISE_PRESETS[name].reps = String(first.reps);
-    if (!EXERCISE_PRESETS[name].bodyweight) {
-      EXERCISE_PRESETS[name].weight = String(first.weight);
+    preset.reps = String(first.reps);
+    if (!preset.bodyweight) {
+      preset.weight = String(first.weight);
     }
 
     // Also update template entries that reference this exercise
     Object.values(templates).forEach(exList => {
       exList.forEach(ex => {
-        if (ex.name === name) {
+        if ((ex.exerciseId || getExerciseIdByName(ex.name)) === exerciseId) {
           ex.sets = latestSets.map(s => ({ reps: s.reps, weight: s.weight }));
         }
       });
@@ -1272,7 +1283,7 @@ function _mergeParentWorkouts(workouts) {
       if (!byDate[w.date]) byDate[w.date] = [];
       byDate[w.date].push(w);
     });
-    _exerciseHistory[name] = Object.entries(byDate)
+    _exerciseHistory[exerciseId] = Object.entries(byDate)
       .sort(([a], [b]) => b.localeCompare(a))
       .slice(0, 10) // Keep last 10 sessions
       .map(([date, sets]) => ({
@@ -1287,17 +1298,19 @@ function _mergeParentWorkouts(workouts) {
 }
 
 /* ── Exercise History Popup ── */
-function showExerciseHistory(exerciseName) {
+function showExerciseHistory(exerciseId) {
   const overlay = document.getElementById('exerciseHistoryOverlay');
   const titleEl = document.getElementById('historyExerciseName');
   const listEl = document.getElementById('historySessionsList');
   if (!overlay || !listEl) return;
+  const meta = getExerciseMetaById(exerciseId);
+  const exerciseName = meta?.name || 'Exercise';
 
   titleEl.textContent = exerciseName;
 
   // Combine parent history + local lastWorkout data
-  const sessions = _exerciseHistory[exerciseName] || [];
-  const localLast = getLastWorkoutForExercise(exerciseName);
+  const sessions = _exerciseHistory[exerciseId] || [];
+  const localLast = getLastWorkoutForExercise(exerciseId);
   // If local data exists but isn't already in sessions (different from parent data), prepend it
   if (localLast && localLast.sets?.length && !sessions.length) {
     sessions.unshift({ date: 'Previous session', sets: localLast.sets });
@@ -1336,9 +1349,8 @@ document.getElementById('planView')?.addEventListener('click', (e) => {
   if (!hint) return;
   const card = hint.closest('.exercise-card');
   if (!card) return;
-  const nameEl = card.querySelector('.exercise-name');
-  const name = nameEl?.textContent?.trim();
-  if (name) showExerciseHistory(name);
+  const exerciseId = card.dataset.exerciseId;
+  if (exerciseId) showExerciseHistory(exerciseId);
 });
 
 if (EMBED_MODE) {
@@ -1416,20 +1428,60 @@ const _FALLBACK_EXERCISE_PRESETS = {
 
 // In embed mode, start empty and let parent data populate; standalone uses fallback presets
 const EXERCISE_PRESETS = EMBED_MODE ? {} : Object.assign({}, _FALLBACK_EXERCISE_PRESETS);
+const EXERCISE_META_BY_ID = {};
+
+function toExerciseKey(name = '') {
+  return String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/(^_|_$)/g, '');
+}
+
+function ensureExerciseMetaById() {
+  Object.keys(EXERCISE_PRESETS).forEach((name) => {
+    const key = toExerciseKey(name);
+    if (!EXERCISE_META_BY_ID[key]) {
+      EXERCISE_META_BY_ID[key] = { id: key, name, ...EXERCISE_PRESETS[name] };
+    }
+  });
+}
+
+function getExerciseMetaById(exerciseId) {
+  if (!exerciseId) return null;
+  if (EXERCISE_META_BY_ID[exerciseId]) return EXERCISE_META_BY_ID[exerciseId];
+  const parent = _parentExerciseMap[exerciseId];
+  if (parent) {
+    return {
+      id: parent.id,
+      name: parent.name,
+      muscle: (parent.muscle || 'other').charAt(0).toUpperCase() + (parent.muscle || 'other').slice(1),
+      equipment: parent.equipmentType || 'barbell',
+      reps: '8',
+      weight: parent.requiresWeight === false ? 'BW' : '20',
+      bodyweight: parent.requiresWeight === false
+    };
+  }
+  return null;
+}
+
+function getExerciseIdByName(name) {
+  if (!name) return '';
+  const match = Object.values(EXERCISE_META_BY_ID).find((meta) => meta.name === name);
+  return match?.id || toExerciseKey(name);
+}
+
+ensureExerciseMetaById();
 
 /* ── Session Exercise Picker ── */
 let _sessionPickerCardId = null;
-let _sessionPickerSelectedName = null;
+let _sessionPickerSelectedId = null;
 
 function openSessionPicker(cardId) {
   _sessionPickerCardId = cardId;
   const search = document.getElementById('sessionPickerSearch');
-  const available = getAvailableExerciseNames(cardId);
+  const available = getAvailableExerciseIds(cardId);
   if (!available.length) {
     alert('All exercises are already in this workout.');
     return;
   }
-  _sessionPickerSelectedName = available[0];
+  _sessionPickerSelectedId = available[0];
   search.value = '';
   renderSessionPickerList('');
   document.getElementById('sessionPicker').classList.add('open');
@@ -1445,30 +1497,31 @@ function closeSessionPicker() {
 function renderSessionPickerList(query) {
   const list = document.getElementById('sessionPickerList');
   const q = query.toLowerCase();
-  const available = getAvailableExerciseNames(_sessionPickerCardId);
-  const filtered = available.filter((name) => {
-    const preset = EXERCISE_PRESETS[name];
+  const available = getAvailableExerciseIds(_sessionPickerCardId);
+  const filtered = available.filter((exerciseId) => {
+    const preset = getExerciseMetaById(exerciseId);
+    const name = preset?.name || '';
     return !q || name.toLowerCase().includes(q) || (preset?.muscle || '').toLowerCase().includes(q);
   });
   if (!filtered.length) {
     list.innerHTML = '<div class="session-picker-empty">No matching exercises</div>';
-    _sessionPickerSelectedName = null;
+    _sessionPickerSelectedId = null;
     return;
   }
-  if (!filtered.includes(_sessionPickerSelectedName)) _sessionPickerSelectedName = filtered[0];
-  list.innerHTML = filtered.map((name) => {
-    const preset = EXERCISE_PRESETS[name];
-    const escapedName = name.replace(/'/g, "\\'");
-    return `<div class="session-picker-item${name === _sessionPickerSelectedName ? ' selected' : ''}" data-name="${name}" onclick="selectSessionPickerItem('${escapedName}')">
+  if (!filtered.includes(_sessionPickerSelectedId)) _sessionPickerSelectedId = filtered[0];
+  list.innerHTML = filtered.map((exerciseId) => {
+    const preset = getExerciseMetaById(exerciseId);
+    const name = preset?.name || exerciseId;
+    return `<div class="session-picker-item${exerciseId === _sessionPickerSelectedId ? ' selected' : ''}" data-id="${exerciseId}" onclick="selectSessionPickerItem('${exerciseId}')">
       ${name}<span class="sp-muscle">${preset?.muscle || ''}</span>
     </div>`;
   }).join('');
 }
 
-function selectSessionPickerItem(name) {
-  _sessionPickerSelectedName = name;
+function selectSessionPickerItem(exerciseId) {
+  _sessionPickerSelectedId = exerciseId;
   document.querySelectorAll('.session-picker-item').forEach((el) => {
-    el.classList.toggle('selected', el.dataset.name === name);
+    el.classList.toggle('selected', el.dataset.id === exerciseId);
   });
 }
 
@@ -1478,26 +1531,25 @@ function filterSessionPickerList() {
 }
 
 function confirmSessionPicker() {
-  if (!_sessionPickerSelectedName || !_sessionPickerCardId) return;
-  applyExercisePresetByName(_sessionPickerSelectedName, _sessionPickerCardId);
+  if (!_sessionPickerSelectedId || !_sessionPickerCardId) return;
+  applyExercisePresetById(_sessionPickerSelectedId, _sessionPickerCardId);
   closeSessionPicker();
 }
 
-function applyExercisePresetByName(name, cardId) {
-  const previousName = document.getElementById(cardId)?.dataset.exerciseName || '';
-  if (hasExerciseInWorkout(name, cardId)) {
+function applyExercisePresetById(exerciseId, cardId) {
+  if (hasExerciseInWorkout(exerciseId, cardId)) {
     alert('This exercise is already in the workout.');
     return;
   }
-  const ex = EXERCISE_PRESETS[name];
+  const ex = getExerciseMetaById(exerciseId);
   if (!ex) return;
-  const lastWorkout = getLastWorkoutForExercise(name);
+  const lastWorkout = getLastWorkoutForExercise(exerciseId);
   const bodyKey = cardId.replace('card-', '');
   const card = document.getElementById(cardId);
   if (!card) return;
   card.dataset.bodyweight = ex.bodyweight ? '1' : '0';
-  card.dataset.exerciseName = name;
-  document.getElementById('name-' + bodyKey).textContent = name;
+  card.dataset.exerciseId = exerciseId;
+  document.getElementById('name-' + bodyKey).textContent = ex.name;
   const muscleChip = card.querySelector('.muscle-chip');
   if (muscleChip) muscleChip.textContent = ex.muscle;
   ensureCardEquipmentIcon(cardId);
@@ -1560,8 +1612,8 @@ function ensureCardEquipmentIcon(cardId) {
   const nameEl = card.querySelector('.exercise-name');
   if (!header || !nameEl) return;
 
-  const exerciseName = (nameEl.textContent || '').trim();
-  const preset = EXERCISE_PRESETS[exerciseName];
+  const exerciseId = card.dataset.exerciseId || getExerciseIdByName((nameEl.textContent || '').trim());
+  const preset = getExerciseMetaById(exerciseId);
   const equipment = preset?.equipment || (card.dataset.bodyweight === '1' ? 'bodyweight' : null);
 
   let iconEl = header.querySelector('.exercise-icon');
@@ -1597,10 +1649,10 @@ function saveLastWorkoutMap(map) {
   localStorage.setItem(DESIGN1_LAST_WORKOUT_KEY, JSON.stringify(map || {}));
 }
 
-function getLastWorkoutForExercise(exerciseName) {
-  if (!exerciseName) return null;
+function getLastWorkoutForExercise(exerciseId) {
+  if (!exerciseId) return null;
   const map = getLastWorkoutMap();
-  const entry = map[exerciseName];
+  const entry = map[exerciseId];
   return entry && Array.isArray(entry.sets) ? entry : null;
 }
 
@@ -1636,13 +1688,13 @@ function captureLastWorkoutFromCurrentBoard() {
   const cards = Array.from(document.querySelectorAll('#planView .exercise-card'));
 
   cards.forEach((card) => {
-    const name = (card.querySelector('.exercise-name')?.textContent || '').trim();
-    if (!name) return;
+    const exerciseId = card.dataset.exerciseId;
+    if (!exerciseId) return;
 
     const sets = buildCardSetSnapshot(card);
     if (!sets.length) return;
 
-    map[name] = {
+    map[exerciseId] = {
       sets,
       timestamp: Date.now()
     };
@@ -1651,33 +1703,35 @@ function captureLastWorkoutFromCurrentBoard() {
   saveLastWorkoutMap(map);
 }
 
-function getPresetNames() {
-  return Object.keys(EXERCISE_PRESETS);
+function getPresetIds() {
+  return Object.keys(EXERCISE_META_BY_ID);
 }
 
-function getWorkoutExerciseNames(excludeCardId = null) {
+function getWorkoutExerciseIds(excludeCardId = null) {
   return Array.from(document.querySelectorAll('#planView .exercise-card')).map((card) => {
     if (excludeCardId && card.id === excludeCardId) return null;
-    const nameEl = card.querySelector('.exercise-name');
-    return (nameEl?.textContent || '').trim();
+    return card.dataset.exerciseId || null;
   }).filter(Boolean);
 }
 
-function hasExerciseInWorkout(name, excludeCardId = null) {
-  return getWorkoutExerciseNames(excludeCardId).includes(name);
+function hasExerciseInWorkout(exerciseId, excludeCardId = null) {
+  return getWorkoutExerciseIds(excludeCardId).includes(exerciseId);
 }
 
-function getAvailableExerciseNames(excludeCardId = null) {
-  const used = new Set(getWorkoutExerciseNames(excludeCardId));
-  return getPresetNames().filter((name) => !used.has(name));
+function getAvailableExerciseIds(excludeCardId = null) {
+  const used = new Set(getWorkoutExerciseIds(excludeCardId));
+  return getPresetIds().filter((exerciseId) => !used.has(exerciseId));
 }
 
 function buildExerciseOptionsHtml(currentValue, excludeCardId = null) {
-  const options = getAvailableExerciseNames(excludeCardId);
+  const options = getAvailableExerciseIds(excludeCardId);
   if (currentValue && !options.includes(currentValue)) {
     options.unshift(currentValue);
   }
-  return options.map((name) => `<option${name === currentValue ? ' selected' : ''}>${name}</option>`).join('');
+  return options.map((exerciseId) => {
+    const meta = getExerciseMetaById(exerciseId);
+    return `<option value="${exerciseId}"${exerciseId === currentValue ? ' selected' : ''}>${meta?.name || exerciseId}</option>`;
+  }).join('');
 }
 
 function refreshExerciseSelectOptions() {
@@ -1687,6 +1741,7 @@ function refreshExerciseSelectOptions() {
 function serializeDesign1Cards() {
   return Array.from(document.querySelectorAll('#planView .exercise-card')).map((card) => {
     const bodyKey = card.id.replace('card-', '');
+    const exerciseId = card.dataset.exerciseId || '';
     const name = (card.querySelector('.exercise-name')?.textContent || '').trim();
     const muscle = (card.querySelector('.muscle-chip')?.textContent || '').trim();
     const body = document.getElementById('body-' + bodyKey);
@@ -1704,6 +1759,7 @@ function serializeDesign1Cards() {
       };
     });
     return {
+      exerciseId,
       name,
       muscle,
       bodyweight: card.dataset.bodyweight === '1',
@@ -1781,23 +1837,55 @@ function setTemplateSelection(name) {
   });
 }
 
-function getPlanExerciseNames() {
-  return Array.from(document.querySelectorAll('#planView .exercise-card .exercise-name')).map((el) => (el.textContent || '').trim()).filter(Boolean);
+function getPlanExerciseIds() {
+  return Array.from(document.querySelectorAll('#planView .exercise-card')).map((card) => card.dataset.exerciseId).filter(Boolean);
 }
 
 function saveDesign1State() {
+  const cards = serializeDesign1Cards();
+  const rows = cards.map((card, index) => ({
+    id: `row-design1-${index + 1}`,
+    type: 'single',
+    exerciseId: card.exerciseId,
+    sets: (card.sets || []).map((setState, setIndex) => ({
+      id: `row-design1-${index + 1}-set-${setIndex + 1}`,
+      reps: setState.repsValue || setState.repsPlaceholder || '',
+      weight: setState.isBodyweight ? '' : (setState.weightValue || setState.weightPlaceholder || ''),
+      completed: Boolean(setState.ticked)
+    }))
+  }));
   const state = {
     template: activeTemplateName || '',
-    cards: serializeDesign1Cards(),
-    exercises: getPlanExerciseNames()
+    cards,
+    exercises: getPlanExerciseIds(),
+    rows
   };
   localStorage.setItem(DESIGN1_STATE_KEY, JSON.stringify(state));
+  // Also update shared session state
+  localStorage.setItem('sharedSessionState', JSON.stringify(state));
+}
+
+let _design1SharedListenerAttached = false;
+function ensureDesign1SharedStateListener() {
+  if (_design1SharedListenerAttached) return;
+  _design1SharedListenerAttached = true;
+  window.addEventListener('storage', (event) => {
+    if (event.key !== 'sharedSessionState' || !event.newValue) return;
+    try {
+      const parsed = JSON.parse(event.newValue);
+      if (parsed && typeof parsed === 'object') {
+        localStorage.setItem(DESIGN1_STATE_KEY, event.newValue);
+        applySavedDesign1State();
+      }
+    } catch {}
+  });
 }
 
 function applySavedDesign1State() {
   let saved = null;
   try {
-    saved = JSON.parse(localStorage.getItem(DESIGN1_STATE_KEY) || 'null');
+    // Prefer sharedSessionState if available
+    saved = JSON.parse(localStorage.getItem('sharedSessionState') || localStorage.getItem(DESIGN1_STATE_KEY) || 'null');
   } catch {
     saved = null;
   }
@@ -1805,18 +1893,67 @@ function applySavedDesign1State() {
     chooseTemplate('');
     return;
   }
+  const savedRows = Array.isArray(saved.rows) ? saved.rows : [];
   const savedCards = Array.isArray(saved.cards) ? saved.cards : [];
   const savedExercises = Array.isArray(saved.exercises) ? saved.exercises.filter(Boolean) : [];
   const savedTemplate = typeof saved.template === 'string' ? saved.template : '';
+
+  const toCardStateFromRow = (row) => {
+    const exerciseId = row.exerciseId || getExerciseIdByName(row.name || '');
+    const meta = getExerciseMetaById(exerciseId);
+    const isBodyweight = Boolean(meta?.bodyweight);
+    return {
+      exerciseId,
+      name: meta?.name || row.name || '',
+      bodyweight: isBodyweight,
+      sets: Array.isArray(row.sets) ? row.sets.map((setEntry) => ({
+        repsValue: setEntry?.reps !== undefined && setEntry?.reps !== null ? String(setEntry.reps) : '',
+        repsPlaceholder: setEntry?.reps !== undefined && setEntry?.reps !== null ? String(setEntry.reps) : '—',
+        weightValue: isBodyweight ? '' : (setEntry?.weight !== undefined && setEntry?.weight !== null ? String(setEntry.weight) : ''),
+        weightPlaceholder: isBodyweight ? 'BW' : (setEntry?.weight !== undefined && setEntry?.weight !== null ? String(setEntry.weight) : '—'),
+        isBodyweight,
+        ticked: Boolean(setEntry?.completed)
+      })) : []
+    };
+  };
+
+  if (savedRows.length) {
+    setTemplateSelection(savedTemplate && templates[savedTemplate] ? savedTemplate : '');
+    loadTemplate('');
+    tickedCount = 0;
+    savedRows.forEach((row) => {
+      if (row.type === 'superset' && Array.isArray(row.exercises)) {
+        row.exercises.forEach((exerciseRow) => {
+          const cardState = toCardStateFromRow(exerciseRow);
+          const cardId = addExercise(cardState.exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false });
+          if (!cardId) return;
+          applyCardState(cardId, cardState);
+        });
+        return;
+      }
+      if (row.type !== 'single') return;
+      const cardState = toCardStateFromRow(row);
+      const cardId = addExercise(cardState.exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false });
+      if (!cardId) return;
+      applyCardState(cardId, cardState);
+    });
+    tickedCount = document.querySelectorAll('#planView .tick-btn.ticked').length;
+    updateSubmit();
+    refreshExerciseSelectOptions();
+    saveDesign1State();
+    return;
+  }
 
   if (savedCards.length) {
     setTemplateSelection(savedTemplate && templates[savedTemplate] ? savedTemplate : '');
     loadTemplate('');
     tickedCount = 0;
     savedCards.forEach((cardState) => {
-      const cardId = addExercise(cardState.name, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false });
+      // If cardState.name is an id, convert to name
+      const exerciseId = cardState.exerciseId || getExerciseIdByName(cardState.name);
+      const cardId = addExercise(exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false });
       if (!cardId) return;
-      applyCardState(cardId, cardState);
+      applyCardState(cardId, { ...cardState, exerciseId });
     });
     tickedCount = document.querySelectorAll('#planView .tick-btn.ticked').length;
     updateSubmit();
@@ -1834,8 +1971,8 @@ function applySavedDesign1State() {
   if (!savedExercises.length) {
     return;
   }
-  savedExercises.forEach((exerciseName) => {
-    addExercise(exerciseName, false, { suppressSave: true, suppressScroll: true, allowDuplicate: false });
+  savedExercises.forEach((exerciseId) => {
+    addExercise(exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: false });
   });
   refreshExerciseSelectOptions();
   saveDesign1State();
@@ -1968,9 +2105,9 @@ function addSet(cardId, suppressSave = false) {
   const addBtn = body.querySelector('.add-set-btn');
   const rows = body.querySelectorAll('.set-row');
   const card = document.getElementById(cardId);
-  const exerciseName = card?.dataset?.exerciseName || '';
-  const preset = exerciseName ? EXERCISE_PRESETS[exerciseName] : null;
-  const lastWorkout = exerciseName ? getLastWorkoutForExercise(exerciseName) : null;
+  const exerciseId = card?.dataset?.exerciseId || '';
+  const preset = exerciseId ? getExerciseMetaById(exerciseId) : null;
+  const lastWorkout = exerciseId ? getLastWorkoutForExercise(exerciseId) : null;
   const isBodyweight = body.querySelector('.set-row.bodyweight') || card?.dataset?.bodyweight === '1';
   const n = rows.length + 1;
   const sourceSet = Array.isArray(lastWorkout?.sets) && lastWorkout.sets.length
@@ -2079,19 +2216,19 @@ function renumberSets(cardId) {
 }
 
 /* ── Add Exercise ── */
-function addExercise(defaultExerciseName = null, markAsCustom = true, options = {}) {
+function addExercise(defaultExerciseId = null, markAsCustom = true, options = {}) {
   const { suppressSave = false, suppressScroll = false, allowDuplicate = false, ensureThreeSets = true } = options;
   const planView = document.getElementById('planView');
   const scrollArea = document.getElementById('scrollArea');
   if (markAsCustom && activeTemplateName) {
     setTemplateSelection('');
   }
-  const availableNames = getAvailableExerciseNames();
-  let selectedName = defaultExerciseName;
-  if (!selectedName || !EXERCISE_PRESETS[selectedName] || (!allowDuplicate && hasExerciseInWorkout(selectedName))) {
-    selectedName = availableNames[0] || null;
+  const availableIds = getAvailableExerciseIds();
+  let selectedId = defaultExerciseId;
+  if (!selectedId || !getExerciseMetaById(selectedId) || (!allowDuplicate && hasExerciseInWorkout(selectedId))) {
+    selectedId = availableIds[0] || null;
   }
-  if (!selectedName) {
+  if (!selectedId) {
     alert('All exercises are already in this workout.');
     return null;
   }
@@ -2124,7 +2261,7 @@ function addExercise(defaultExerciseName = null, markAsCustom = true, options = 
     </div>
     <div class="card-summary" id="summary-${bodyKey}"><div class="set-tags"></div></div>`;
   planView.appendChild(card);
-  applyExercisePresetByName(selectedName, id);
+  applyExercisePresetById(selectedId, id);
   ensureCardEquipmentIcon(id);
   if (ensureThreeSets) {
     while (document.querySelectorAll(`#body-${bodyKey} .set-row`).length < 3) {
@@ -2238,31 +2375,31 @@ function refreshLinkButtons() {
 }
 
 function applyExercisePreset(select, cardId) {
-  applyExercisePresetByName(select.value, cardId);
+  applyExercisePresetById(select.value, cardId);
 }
 
 /* ── Load Template ── */
 // Template data — in embed mode start empty, parent data populates via bridge
 const _FALLBACK_TEMPLATES = {
   'Push Day A': [
-    { name: 'Bench Press', muscle: 'Chest', sets: [ { reps: 4, weight: 80 }, { reps: 4, weight: 82.5 }, { reps: 3, weight: 82.5 } ] },
-    { name: 'Overhead Press', muscle: 'Shoulders', sets: [ { reps: 5, weight: 50 }, { reps: 5, weight: 50 }, { reps: 4, weight: 50 } ] },
-    { name: 'Tricep Dips', muscle: 'Triceps', sets: [ { reps: 10, weight: 'BW' }, { reps: 10, weight: 'BW' }, { reps: 8, weight: 'BW' } ] }
+    { exerciseId: 'bench_press', name: 'Bench Press', muscle: 'Chest', sets: [ { reps: 4, weight: 80 }, { reps: 4, weight: 82.5 }, { reps: 3, weight: 82.5 } ] },
+    { exerciseId: 'overhead_press', name: 'Overhead Press', muscle: 'Shoulders', sets: [ { reps: 5, weight: 50 }, { reps: 5, weight: 50 }, { reps: 4, weight: 50 } ] },
+    { exerciseId: 'tricep_dips', name: 'Tricep Dips', muscle: 'Triceps', sets: [ { reps: 10, weight: 'BW' }, { reps: 10, weight: 'BW' }, { reps: 8, weight: 'BW' } ] }
   ],
   'Pull Day B': [
-    { name: 'Pull Ups', muscle: 'Back', sets: [ { reps: 8, weight: 'BW' }, { reps: 7, weight: 'BW' }, { reps: 6, weight: 'BW' } ] },
-    { name: 'Barbell Row', muscle: 'Back', sets: [ { reps: 8, weight: 60 }, { reps: 8, weight: 62.5 }, { reps: 7, weight: 62.5 } ] },
-    { name: 'Bicep Curl', muscle: 'Biceps', sets: [ { reps: 10, weight: 12 }, { reps: 10, weight: 12 }, { reps: 8, weight: 14 } ] }
+    { exerciseId: 'pull_ups', name: 'Pull Ups', muscle: 'Back', sets: [ { reps: 8, weight: 'BW' }, { reps: 7, weight: 'BW' }, { reps: 6, weight: 'BW' } ] },
+    { exerciseId: 'barbell_row', name: 'Barbell Row', muscle: 'Back', sets: [ { reps: 8, weight: 60 }, { reps: 8, weight: 62.5 }, { reps: 7, weight: 62.5 } ] },
+    { exerciseId: 'bicep_curl', name: 'Bicep Curl', muscle: 'Biceps', sets: [ { reps: 10, weight: 12 }, { reps: 10, weight: 12 }, { reps: 8, weight: 14 } ] }
   ],
   'Leg Day': [
-    { name: 'Squat', muscle: 'Legs', sets: [ { reps: 5, weight: 100 }, { reps: 5, weight: 105 }, { reps: 4, weight: 105 } ] },
-    { name: 'Leg Press', muscle: 'Legs', sets: [ { reps: 10, weight: 180 }, { reps: 10, weight: 180 }, { reps: 8, weight: 200 } ] },
-    { name: 'Calf Raise', muscle: 'Legs', sets: [ { reps: 15, weight: 40 }, { reps: 15, weight: 40 }, { reps: 12, weight: 45 } ] }
+    { exerciseId: 'squat', name: 'Squat', muscle: 'Legs', sets: [ { reps: 5, weight: 100 }, { reps: 5, weight: 105 }, { reps: 4, weight: 105 } ] },
+    { exerciseId: 'leg_press', name: 'Leg Press', muscle: 'Legs', sets: [ { reps: 10, weight: 180 }, { reps: 10, weight: 180 }, { reps: 8, weight: 200 } ] },
+    { exerciseId: 'calf_raise', name: 'Calf Raise', muscle: 'Legs', sets: [ { reps: 15, weight: 40 }, { reps: 15, weight: 40 }, { reps: 12, weight: 45 } ] }
   ],
   'Full Body': [
-    { name: 'Deadlift', muscle: 'Back', sets: [ { reps: 5, weight: 120 }, { reps: 5, weight: 120 }, { reps: 4, weight: 125 } ] },
-    { name: 'Bench Press', muscle: 'Chest', sets: [ { reps: 4, weight: 80 }, { reps: 4, weight: 82.5 }, { reps: 3, weight: 82.5 } ] },
-    { name: 'Squat', muscle: 'Legs', sets: [ { reps: 5, weight: 100 }, { reps: 5, weight: 105 }, { reps: 4, weight: 105 } ] }
+    { exerciseId: 'deadlift', name: 'Deadlift', muscle: 'Back', sets: [ { reps: 5, weight: 120 }, { reps: 5, weight: 120 }, { reps: 4, weight: 125 } ] },
+    { exerciseId: 'bench_press', name: 'Bench Press', muscle: 'Chest', sets: [ { reps: 4, weight: 80 }, { reps: 4, weight: 82.5 }, { reps: 3, weight: 82.5 } ] },
+    { exerciseId: 'squat', name: 'Squat', muscle: 'Legs', sets: [ { reps: 5, weight: 100 }, { reps: 5, weight: 105 }, { reps: 4, weight: 105 } ] }
   ]
 };
 
@@ -2291,7 +2428,10 @@ function loadTemplate(name) {
   }
   // Add new cards
   templateExercises.forEach((ex, idx) => {
-    const cardId = 'card-' + ex.name.toLowerCase().replace(/\s+/g,'');
+    const exerciseId = ex.exerciseId || getExerciseIdByName(ex.name);
+    const meta = getExerciseMetaById(exerciseId);
+    const exerciseName = meta?.name || ex.name;
+    const cardId = 'card-' + exerciseId;
     const bodyKey = cardId.replace('card-','');
     const card = document.createElement('div');
     card.className = 'exercise-card card-open';
@@ -2315,8 +2455,8 @@ function loadTemplate(name) {
     });
     card.innerHTML = `
       <div class='card-header' onclick="toggleCard('${cardId}')">
-        <i class='exercise-icon' data-lucide='${getEquipmentIcon(EXERCISE_PRESETS[ex.name]?.equipment)}' aria-hidden='true'></i>
-        <div class='exercise-name' id='name-${bodyKey}'>${ex.name}</div>
+        <i class='exercise-icon' data-lucide='${getEquipmentIcon(meta?.equipment)}' aria-hidden='true'></i>
+        <div class='exercise-name' id='name-${bodyKey}'>${exerciseName}</div>
         <div class='header-exercise-picker' onclick='event.stopPropagation()'>
           <button class='exercise-picker-btn' onclick="openSessionPicker('${cardId}')">Change</button>
         </div>
@@ -2325,12 +2465,13 @@ function loadTemplate(name) {
       </div>
       <div class='sets-body' id='body-${bodyKey}'>
         ${prevHint}
-        <div class='set-header-row${ex.name === 'Tricep Dips' || ex.name === 'Pull Ups' ? ' bodyweight' : ''}'><span>Set</span><span>Reps</span><span>Weight</span><span></span><span></span></div>
+        <div class='set-header-row${meta?.bodyweight ? ' bodyweight' : ''}'><span>Set</span><span>Reps</span><span>Weight</span><span></span><span></span></div>
         ${setRows}
       </div>
       <div class='card-summary' id='summary-${bodyKey}'><div class='set-tags'></div></div>
     `;
-    card.dataset.bodyweight = ex.name === 'Tricep Dips' || ex.name === 'Pull Ups' ? '1' : '0';
+    card.dataset.exerciseId = exerciseId;
+    card.dataset.bodyweight = meta?.bodyweight ? '1' : '0';
     planView.appendChild(card);
   });
   refreshLinkButtons();
@@ -2341,6 +2482,7 @@ function loadTemplate(name) {
   lucide.createIcons();
 }
 _rebuildTemplateMenu();
+ensureDesign1SharedStateListener();
 applySavedDesign1State();
 refreshExerciseIcons();
 

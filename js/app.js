@@ -192,8 +192,8 @@ const App = {
             history: 'History',
             statistics: 'Statistics',
             exercises: 'Manage',
-            design1: 'Session Board',
-            design3: 'Workout Builder'
+            design1: 'Workout v2',
+            design3: 'Workout v3'
         };
 
         const activeNavLabel = document.getElementById('activeNavLabel');

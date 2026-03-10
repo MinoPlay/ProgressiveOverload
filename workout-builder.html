@@ -820,8 +820,8 @@ body {
 
   <div class="nav-menu" id="navMenu">
     <button class="nav-link" onclick="window.location.href='index.html'">Main App</button>
-    <button class="nav-link" onclick="window.location.href='session-board.html'">Session Board</button>
-    <button class="nav-link active" onclick="window.location.href='workout-builder.html'">Workout Builder</button>
+    <button class="nav-link" onclick="window.location.href='session-board.html'">Workout v2</button>
+    <button class="nav-link active" onclick="window.location.href='workout-builder.html'">Workout v3</button>
   </div>
 
   <!-- Scrollable content -->
@@ -1315,6 +1315,8 @@ function saveDesign3State() {
     activeTab
   };
   localStorage.setItem(DESIGN3_STATE_KEY, JSON.stringify(state));
+  // Also update shared session state
+  localStorage.setItem('sharedSessionState', JSON.stringify(state));
 }
 
 function hydrateExerciseFromState(item) {
@@ -1330,10 +1332,27 @@ function hydrateExerciseFromState(item) {
   return base;
 }
 
+let _design3SharedListenerAttached = false;
+function ensureDesign3SharedStateListener() {
+  if (_design3SharedListenerAttached) return;
+  _design3SharedListenerAttached = true;
+  window.addEventListener('storage', (event) => {
+    if (event.key !== 'sharedSessionState' || !event.newValue) return;
+    try {
+      const parsed = JSON.parse(event.newValue);
+      if (parsed && typeof parsed === 'object') {
+        localStorage.setItem(DESIGN3_STATE_KEY, event.newValue);
+        applySavedDesign3State();
+      }
+    } catch {}
+  });
+}
+
 function applySavedDesign3State() {
   let saved = null;
   try {
-    saved = JSON.parse(localStorage.getItem(DESIGN3_STATE_KEY) || 'null');
+    // Prefer sharedSessionState if available
+    saved = JSON.parse(localStorage.getItem('sharedSessionState') || localStorage.getItem(DESIGN3_STATE_KEY) || 'null');
   } catch {
     saved = null;
   }
@@ -1349,7 +1368,19 @@ function applySavedDesign3State() {
     currentTab = 'exec';
   }
   if (Array.isArray(saved.exercises)) {
-    buildExercises = saved.exercises.map((item) => hydrateExerciseFromState(item));
+    // Translate name to exerciseId if needed
+    function getExerciseId(nameOrId) {
+      if (typeof Storage !== 'undefined' && Storage.getExercises) {
+        const ex = Storage.getExercises().find(e => e.name === nameOrId || e.id === nameOrId);
+        if (ex) return ex.id;
+      }
+      return nameOrId;
+    }
+    buildExercises = saved.exercises.map((item) => {
+      // If item.exerciseId is a name, convert to id
+      const exerciseId = getExerciseId(item.exerciseId || item.name);
+      return hydrateExerciseFromState({ ...item, exerciseId });
+    });
   } else {
     const templateRows = TEMPLATES[activeTemplate] || [];
     buildExercises = templateRows.map((row) => cloneExerciseFromLibrary(row.exerciseId, row.sets, row.superset));
@@ -1926,6 +1957,7 @@ document.getElementById('execSetList')?.addEventListener('click', (e) => {
 });
 
 /* Init */
+ensureDesign3SharedStateListener();
 applySavedDesign3State();
 switchTab(currentTab, { force: true, persist: false });
 updateQuickLogLock();

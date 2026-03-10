@@ -46,6 +46,25 @@ export const Workouts = {
         window.addEventListener('templatesUpdated', () => {
             this.populatePlannerTemplateDropdown();
         });
+
+        // Listen for shared session state changes
+        window.addEventListener('storage', (event) => {
+            if (event.key === 'sharedSessionState' && event.newValue) {
+                try {
+                    const parsed = JSON.parse(event.newValue);
+                    if (parsed && Array.isArray(parsed.rows)) {
+                        this.plannedSession = {
+                            id: parsed.id || `session-${Date.now()}`,
+                            date: parsed.date || formatDate(new Date()),
+                            rows: parsed.rows.map((row, index) => this.normalizePlannedRow(row, index)),
+                            loadedTemplateId: typeof parsed.loadedTemplateId === 'string' ? parsed.loadedTemplateId : '',
+                            loadedTemplateName: typeof parsed.loadedTemplateName === 'string' ? parsed.loadedTemplateName : ''
+                        };
+                        this.renderPlannedSession();
+                    }
+                } catch {}
+            }
+        });
     },
 
     /**
@@ -719,7 +738,7 @@ export const Workouts = {
         const nextRow = this.plannedSession.rows[rowIndex + 1];
         if (!nextRow) return false;
 
-        this.collapseAllPlannedRowsExcept(nextRow.id);
+        this.collapseAllPlannerRowsExcept(nextRow.id);
         nextRow.expanded = true;
 
         if (nextRow.type === 'superset' && Array.isArray(nextRow.exercises)) {
@@ -1595,10 +1614,16 @@ export const Workouts = {
     persistPlannerDraft() {
         if (!this.plannedSession) return;
         localStorage.setItem(PLANNER_DRAFT_KEY, JSON.stringify(this.plannedSession));
+        // Also update shared session state
+        localStorage.setItem('sharedSessionState', JSON.stringify(this.plannedSession));
     },
 
     restorePlannerDraft() {
-        const rawDraft = localStorage.getItem(PLANNER_DRAFT_KEY);
+        // Prefer sharedSessionState if available
+        let rawDraft = localStorage.getItem('sharedSessionState');
+        if (!rawDraft) {
+            rawDraft = localStorage.getItem(PLANNER_DRAFT_KEY);
+        }
         if (!rawDraft) return;
 
         try {
@@ -1611,10 +1636,39 @@ export const Workouts = {
                 ? parsed.date
                 : (dateInput?.value || today);
 
+            // Translate exercise name to id if needed
+            function getExerciseId(nameOrId) {
+                if (typeof Storage !== 'undefined' && Storage.getExercises) {
+                    const ex = Storage.getExercises().find(e => e.name === nameOrId || e.id === nameOrId);
+                    if (ex) return ex.id;
+                }
+                return nameOrId;
+            }
+
+            function normalizeRow(row, index) {
+                if (row.type === 'single') {
+                    return {
+                        ...row,
+                        exerciseId: getExerciseId(row.exerciseId || row.name),
+                        sets: Array.isArray(row.sets) ? row.sets.map(set => ({ ...set })) : []
+                    };
+                } else if (row.type === 'superset') {
+                    return {
+                        ...row,
+                        exercises: Array.isArray(row.exercises) ? row.exercises.map(item => ({
+                            ...item,
+                            exerciseId: getExerciseId(item.exerciseId || item.name),
+                            sets: Array.isArray(item.sets) ? item.sets.map(set => ({ ...set })) : []
+                        })) : []
+                    };
+                }
+                return row;
+            }
+
             this.plannedSession = {
                 id: parsed.id || `session-${Date.now()}`,
                 date: currentDate,
-                rows: parsed.rows.map((row, index) => this.normalizePlannedRow(row, index)),
+                rows: parsed.rows.map(normalizeRow),
                 loadedTemplateId: typeof parsed.loadedTemplateId === 'string' ? parsed.loadedTemplateId : '',
                 loadedTemplateName: typeof parsed.loadedTemplateName === 'string' ? parsed.loadedTemplateName : ''
             };

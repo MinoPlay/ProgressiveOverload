@@ -562,7 +562,9 @@ body {
   background: var(--bg);
   border-top: 1px solid var(--border);
   padding: 10px 12px 8px;
+  display: none;
 }
+.exec-footer.visible { display: block; }
 .exec-nav {
   display: flex;
   gap: 10px;
@@ -925,17 +927,6 @@ body {
           </div>
         </div>
 
-        <div class="exec-footer">
-          <div class="exec-nav">
-            <button class="nav-prev-btn" id="prevBtn" onclick="navExercise(-1)" disabled>
-              <i data-lucide="chevron-left"></i> Prev
-            </button>
-            <button class="nav-next-btn" id="nextBtn" onclick="navExercise(1)">
-              Next <i data-lucide="chevron-right"></i>
-            </button>
-          </div>
-        </div>
-
       </div><!-- /execView -->
 
       <!-- LOG VIEW -->
@@ -983,6 +974,18 @@ body {
 
     </div><!-- /scroll-inner -->
   </div><!-- /scroll-area -->
+
+  <!-- Exec footer (execute view) -->
+  <div class="exec-footer" id="execFooter">
+    <div class="exec-nav">
+      <button class="nav-prev-btn" id="prevBtn" onclick="navExercise(-1)" disabled>
+        <i data-lucide="chevron-left"></i> Prev
+      </button>
+      <button class="nav-next-btn" id="nextBtn" onclick="navExercise(1)">
+        Next <i data-lucide="chevron-right"></i>
+      </button>
+    </div>
+  </div>
 
   <!-- Start sticky (build view) -->
   <div class="start-sticky" id="startSticky">
@@ -1857,6 +1860,7 @@ function switchTab(tab, options = {}) {
   });
   currentTab = tab;
   document.getElementById('startSticky').classList.toggle('visible', tab === 'build');
+  document.getElementById('execFooter').classList.toggle('visible', tab === 'exec');
   // Update header
   const titles = { build: ['Plan Session', 'layers'], exec: ['Execute', 'play-circle'], log: ['Quick Log', 'plus-circle'] };
   const [titleText, iconName] = titles[tab];

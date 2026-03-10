@@ -208,15 +208,16 @@ body {
   color: var(--text);
 }
 .header-exercise-picker {
-  flex: 1;
+  flex: 0 0 auto;
   min-width: 0;
   display: none;
 }
 .exercise-card.card-open .header-exercise-picker {
-  display: block;
+  display: inline-flex;
+  flex: 0 0 auto;
 }
 .exercise-card.card-open .exercise-name {
-  display: none;
+  display: inline-flex;
 }
 .exercise-icon {
   width: 28px;
@@ -608,7 +609,16 @@ body {
 }
 .header-exercise-picker .exercise-select,
 .header-exercise-picker .exercise-picker-btn {
-  width: 100%;
+  width: auto;
+  padding: 4px 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--accent);
+  background: var(--accent-light);
+  border: 1px solid var(--accent);
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
 }
 
 /* Session Exercise Picker Modal */

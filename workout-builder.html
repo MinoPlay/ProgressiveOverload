@@ -435,29 +435,29 @@ body {
 .exec-sets-wrap { padding: 16px 14px 170px; }
 .exec-set-header {
   display: grid;
-  grid-template-columns: 36px 1fr 1fr 52px;
-  gap: 8px;
+  grid-template-columns: 32px minmax(0, 1.35fr) minmax(0, 1fr) 44px;
+  gap: 6px;
   align-items: center;
   padding: 0 2px 6px;
   font-size: 11px; font-weight: 700; color: var(--text3);
   text-transform: uppercase; letter-spacing: .05em;
 }
 .exec-set-header.bodyweight {
-  grid-template-columns: 36px 1fr 52px;
+  grid-template-columns: 32px minmax(0, 1fr) 44px;
 }
 .exec-set-header.bodyweight span:nth-child(3) {
   display: none;
 }
 .exec-set-row {
   display: grid;
-  grid-template-columns: 36px 1fr 1fr 52px;
-  gap: 8px;
+  grid-template-columns: 32px minmax(0, 1.35fr) minmax(0, 1fr) 44px;
+  gap: 6px;
   align-items: center;
   padding: 5px 0;
   transition: opacity .2s;
 }
 .exec-set-row.bodyweight {
-  grid-template-columns: 36px 1fr 52px;
+  grid-template-columns: 32px minmax(0, 1fr) 44px;
 }
 .exec-set-row.done { opacity: .4; }
 .exec-set-num {
@@ -493,13 +493,18 @@ body {
 .exec-input.ghost { color: var(--text3); }
 .exec-reps-control {
   display: grid;
-  grid-template-columns: 30px 1fr 30px;
-  gap: 6px;
+  grid-template-columns: 28px minmax(44px, 1fr) 28px;
+  gap: 4px;
   align-items: center;
 }
+.exec-reps-control .exec-input {
+  min-width: 0;
+  padding-left: 6px;
+  padding-right: 6px;
+}
 .exec-reps-btn {
-  width: 30px;
-  height: 30px;
+  width: 28px;
+  height: 28px;
   border-radius: 8px;
   border: 1.5px solid var(--border);
   background: var(--surface2);
@@ -514,7 +519,7 @@ body {
 }
 .exec-reps-btn:active { transform: scale(.97); }
 .exec-tick {
-  width: 44px; height: 44px;
+  width: 40px; height: 40px;
   border-radius: 12px;
   border: 2px solid var(--border);
   background: var(--surface2);
@@ -1367,20 +1372,106 @@ function applySavedDesign3State() {
   if (executionActive && currentTab === 'log') {
     currentTab = 'exec';
   }
-  if (Array.isArray(saved.exercises)) {
-    // Translate name to exerciseId if needed
+  if (Array.isArray(saved.exercises) || Array.isArray(saved.rows)) {
+    // Translate name/parent-id to local V3 exerciseId if needed
     function getExerciseId(nameOrId) {
+      if (!nameOrId) {
+        return nameOrId;
+      }
+
+      // Already a local key in the V3 exercise library
+      if (EXERCISE_LIBRARY[nameOrId]) {
+        return nameOrId;
+      }
+
+      // Parent exercise ID -> local key (via received parent exercise map)
+      if (_parentExerciseMap[nameOrId]) {
+        const localKey = _findLocalKeyByName(_parentExerciseMap[nameOrId].name);
+        if (localKey) {
+          return localKey;
+        }
+      }
+
+      // Name -> local key
+      const byNameKey = _findLocalKeyByName(nameOrId);
+      if (byNameKey) {
+        return byNameKey;
+      }
+
+      // Legacy fallback when Storage exists in standalone scenarios
       if (typeof Storage !== 'undefined' && Storage.getExercises) {
         const ex = Storage.getExercises().find(e => e.name === nameOrId || e.id === nameOrId);
-        if (ex) return ex.id;
+        if (ex) {
+          const localFromStorage = _findLocalKeyByName(ex.name);
+          return localFromStorage || ex.id;
+        }
       }
+
       return nameOrId;
     }
-    buildExercises = saved.exercises.map((item) => {
-      // If item.exerciseId is a name, convert to id
-      const exerciseId = getExerciseId(item.exerciseId || item.name);
-      return hydrateExerciseFromState({ ...item, exerciseId });
-    });
+
+    const normalizedItems = [];
+
+    if (Array.isArray(saved.rows) && saved.rows.length) {
+      let nextSupersetCharCode = 'A'.charCodeAt(0);
+      saved.rows.forEach((row) => {
+        if (row?.type === 'superset' && Array.isArray(row.exercises)) {
+          const supersetLabel = String.fromCharCode(nextSupersetCharCode);
+          nextSupersetCharCode += 1;
+          row.exercises.forEach((exerciseRow) => {
+            normalizedItems.push({
+              exerciseId: exerciseRow?.exerciseId || exerciseRow?.name,
+              name: exerciseRow?.name,
+              superset: supersetLabel,
+              sets: Array.isArray(exerciseRow?.sets)
+                ? exerciseRow.sets.map((setEntry) => ({
+                    r: String(setEntry?.reps ?? setEntry?.r ?? ''),
+                    w: String(setEntry?.weight ?? setEntry?.w ?? ''),
+                    done: Boolean(setEntry?.done ?? setEntry?.completed)
+                  }))
+                : []
+            });
+          });
+          return;
+        }
+
+        normalizedItems.push({
+          exerciseId: row?.exerciseId || row?.name,
+          name: row?.name,
+          superset: null,
+          sets: Array.isArray(row?.sets)
+            ? row.sets.map((setEntry) => ({
+                r: String(setEntry?.reps ?? setEntry?.r ?? ''),
+                w: String(setEntry?.weight ?? setEntry?.w ?? ''),
+                done: Boolean(setEntry?.done ?? setEntry?.completed)
+              }))
+            : []
+        });
+      });
+    } else if (Array.isArray(saved.exercises)) {
+      saved.exercises.forEach((item) => {
+        if (typeof item === 'string') {
+          normalizedItems.push({ exerciseId: item });
+        } else if (item && typeof item === 'object') {
+          normalizedItems.push(item);
+        }
+      });
+    }
+
+    buildExercises = normalizedItems
+      .map((item) => {
+        const exerciseId = getExerciseId(item.exerciseId || item.name);
+        if (!exerciseId || !EXERCISE_LIBRARY[exerciseId]) {
+          return null;
+        }
+        return hydrateExerciseFromState({ ...item, exerciseId });
+      })
+      .filter(Boolean);
+
+    if (!buildExercises.length) {
+      const templateRows = TEMPLATES[activeTemplate] || [];
+      buildExercises = templateRows.map((row) => cloneExerciseFromLibrary(row.exerciseId, row.sets, row.superset));
+    }
   } else {
     const templateRows = TEMPLATES[activeTemplate] || [];
     buildExercises = templateRows.map((row) => cloneExerciseFromLibrary(row.exerciseId, row.sets, row.superset));

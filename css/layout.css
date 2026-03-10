@@ -372,6 +372,53 @@ body {
     display: block;
 }
 
+.workout-version-tabs {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    gap: 0;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-lg);
+    padding: 0;
+    margin-bottom: var(--spacing-xs);
+    overflow: hidden;
+}
+
+.workout-version-tab-btn {
+    border: none;
+    background: transparent;
+    flex: 1 1 33.333%;
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    padding: 0.5rem 0.5rem;
+    border-radius: 0;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.workout-version-tab-btn + .workout-version-tab-btn {
+    border-left: 1px solid var(--border-light);
+}
+
+.workout-version-tab-btn:hover {
+    color: var(--text-primary);
+}
+
+.workout-version-tab-btn.active {
+    background: var(--primary-gradient);
+    color: var(--text-inverse);
+}
+
+.workout-version-pane {
+    display: none;
+}
+
+.workout-version-pane.active {
+    display: block;
+}
+
 .workout-design-section {
     height: calc(100vh - 170px);
     min-height: 560px;

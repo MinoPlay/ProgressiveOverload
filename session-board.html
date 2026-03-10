@@ -283,7 +283,7 @@ body {
 .sets-body { padding: 0 10px 8px; }
 .set-header-row {
   display: grid;
-  grid-template-columns: 32px 1fr 1fr 40px 32px;
+  grid-template-columns: 32px minmax(124px, 1.35fr) minmax(88px, 1fr) 40px 32px;
   gap: 6px;
   align-items: center;
   padding: 0 2px 4px;
@@ -294,21 +294,21 @@ body {
   letter-spacing: .04em;
 }
 .set-header-row.bodyweight {
-  grid-template-columns: 32px 1fr 40px 32px;
+  grid-template-columns: 32px minmax(124px, 1fr) 40px 32px;
 }
 .set-header-row.bodyweight span:nth-child(3) {
   display: none;
 }
 .set-row {
   display: grid;
-  grid-template-columns: 32px 1fr 1fr 40px 32px;
+  grid-template-columns: 32px minmax(124px, 1.35fr) minmax(88px, 1fr) 40px 32px;
   gap: 6px;
   align-items: center;
   padding: 4px 0;
   transition: opacity .2s;
 }
 .set-row.bodyweight {
-  grid-template-columns: 32px 1fr 40px 32px;
+  grid-template-columns: 32px minmax(124px, 1fr) 40px 32px;
 }
 .set-row.bodyweight .weight-input,
 .set-row.bodyweight .set-input.bw {
@@ -367,13 +367,18 @@ body {
 
 .reps-cell {
   display: grid;
-  grid-template-columns: 28px 1fr 28px;
+  grid-template-columns: 30px minmax(56px, 1fr) 30px;
   gap: 4px;
   align-items: center;
 }
+.reps-cell .reps-input {
+  min-width: 0;
+  padding-left: 6px;
+  padding-right: 6px;
+}
 .rep-btn {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   border: 1.5px solid var(--border);
   background: var(--surface2);
@@ -1897,6 +1902,14 @@ function applySavedDesign1State() {
   const savedCards = Array.isArray(saved.cards) ? saved.cards : [];
   const savedExercises = Array.isArray(saved.exercises) ? saved.exercises.filter(Boolean) : [];
   const savedTemplate = typeof saved.template === 'string' ? saved.template : '';
+  const parentExercisesHydrated = !EMBED_MODE || Object.keys(_parentExerciseMap).length > 0;
+  const hasRestorableState = Boolean(savedRows.length || savedCards.length || savedExercises.length || savedTemplate);
+
+  // In embed mode, defer restore until parent exercise catalog arrives.
+  // Restoring too early can clear cards and overwrite storage with an empty state.
+  if (EMBED_MODE && hasRestorableState && !parentExercisesHydrated) {
+    return;
+  }
 
   const toCardStateFromRow = (row) => {
     const exerciseId = row.exerciseId || getExerciseIdByName(row.name || '');
@@ -1921,22 +1934,28 @@ function applySavedDesign1State() {
     setTemplateSelection(savedTemplate && templates[savedTemplate] ? savedTemplate : '');
     loadTemplate('');
     tickedCount = 0;
+    let restoredCards = 0;
     savedRows.forEach((row) => {
       if (row.type === 'superset' && Array.isArray(row.exercises)) {
         row.exercises.forEach((exerciseRow) => {
           const cardState = toCardStateFromRow(exerciseRow);
-          const cardId = addExercise(cardState.exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false });
+          const cardId = addExercise(cardState.exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false, silentWhenUnavailable: true });
           if (!cardId) return;
+          restoredCards += 1;
           applyCardState(cardId, cardState);
         });
         return;
       }
       if (row.type !== 'single') return;
       const cardState = toCardStateFromRow(row);
-      const cardId = addExercise(cardState.exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false });
+      const cardId = addExercise(cardState.exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false, silentWhenUnavailable: true });
       if (!cardId) return;
+      restoredCards += 1;
       applyCardState(cardId, cardState);
     });
+    if (EMBED_MODE && restoredCards === 0) {
+      return;
+    }
     tickedCount = document.querySelectorAll('#planView .tick-btn.ticked').length;
     updateSubmit();
     refreshExerciseSelectOptions();
@@ -1948,13 +1967,18 @@ function applySavedDesign1State() {
     setTemplateSelection(savedTemplate && templates[savedTemplate] ? savedTemplate : '');
     loadTemplate('');
     tickedCount = 0;
+    let restoredCards = 0;
     savedCards.forEach((cardState) => {
       // If cardState.name is an id, convert to name
       const exerciseId = cardState.exerciseId || getExerciseIdByName(cardState.name);
-      const cardId = addExercise(exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false });
+      const cardId = addExercise(exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false, silentWhenUnavailable: true });
       if (!cardId) return;
+      restoredCards += 1;
       applyCardState(cardId, { ...cardState, exerciseId });
     });
+    if (EMBED_MODE && restoredCards === 0) {
+      return;
+    }
     tickedCount = document.querySelectorAll('#planView .tick-btn.ticked').length;
     updateSubmit();
     refreshExerciseSelectOptions();
@@ -1971,9 +1995,14 @@ function applySavedDesign1State() {
   if (!savedExercises.length) {
     return;
   }
+  let restoredCards = 0;
   savedExercises.forEach((exerciseId) => {
-    addExercise(exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: false });
+    const cardId = addExercise(exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: false, silentWhenUnavailable: true });
+    if (cardId) restoredCards += 1;
   });
+  if (EMBED_MODE && restoredCards === 0) {
+    return;
+  }
   refreshExerciseSelectOptions();
   saveDesign1State();
 }
@@ -2145,7 +2174,13 @@ function changeRepInput(btn, delta) {
 }
 
 function enhanceRepsControls(scope = document) {
-  const rows = scope.querySelectorAll ? scope.querySelectorAll('.set-row') : [];
+  const rows = [];
+  if (scope?.classList?.contains('set-row')) {
+    rows.push(scope);
+  }
+  if (scope?.querySelectorAll) {
+    rows.push(...scope.querySelectorAll('.set-row'));
+  }
   rows.forEach((row) => {
     const existing = row.querySelector('.reps-cell');
     if (existing) return;
@@ -2217,7 +2252,7 @@ function renumberSets(cardId) {
 
 /* ── Add Exercise ── */
 function addExercise(defaultExerciseId = null, markAsCustom = true, options = {}) {
-  const { suppressSave = false, suppressScroll = false, allowDuplicate = false, ensureThreeSets = true } = options;
+  const { suppressSave = false, suppressScroll = false, allowDuplicate = false, ensureThreeSets = true, silentWhenUnavailable = false } = options;
   const planView = document.getElementById('planView');
   const scrollArea = document.getElementById('scrollArea');
   if (markAsCustom && activeTemplateName) {
@@ -2229,7 +2264,9 @@ function addExercise(defaultExerciseId = null, markAsCustom = true, options = {}
     selectedId = availableIds[0] || null;
   }
   if (!selectedId) {
-    alert('All exercises are already in this workout.');
+    if (!silentWhenUnavailable) {
+      alert('All exercises are already in this workout.');
+    }
     return null;
   }
   const id = 'card-new' + Date.now() + '-' + Math.floor(Math.random() * 10000);

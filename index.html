@@ -39,12 +39,6 @@
                             <button class="nav-btn dropdown-item" data-section="workout">
                                 <i data-lucide="plus-circle" class="nav-icon"></i> Workout
                             </button>
-                            <button class="nav-btn dropdown-item" data-section="design1">
-                                <i data-lucide="layout-list" class="nav-icon"></i> Workout v2
-                            </button>
-                            <button class="nav-btn dropdown-item" data-section="design3">
-                                <i data-lucide="layers" class="nav-icon"></i> Workout v3
-                            </button>
                             <div class="dropdown-divider"></div>
                             <button class="nav-btn dropdown-item" data-section="history">
                                 <i data-lucide="calendar" class="nav-icon"></i> History
@@ -235,6 +229,17 @@
             <!-- Workout Section -->
             <section id="workoutSection" class="content-section active" role="region" aria-label="Workout">
 
+                <div class="workout-version-tabs" role="tablist" aria-label="Workout versions">
+                    <button id="workoutVersionTabV1" class="workout-version-tab-btn active" type="button" role="tab"
+                        aria-selected="true" data-workout-version="v1">v1</button>
+                    <button id="workoutVersionTabV2" class="workout-version-tab-btn" type="button" role="tab"
+                        aria-selected="false" data-workout-version="v2">v2</button>
+                    <button id="workoutVersionTabV3" class="workout-version-tab-btn" type="button" role="tab"
+                        aria-selected="false" data-workout-version="v3">v3</button>
+                </div>
+
+                <div id="workoutVersionV1" class="workout-version-pane active" data-workout-version="v1" role="tabpanel" aria-label="Workout version 1">
+
                 <div id="workoutLogView" class="workout-view">
 
                 <div class="form-container">
@@ -333,6 +338,16 @@
                 <!-- Last Workout Summary -->
                 <div id="lastWorkoutSummary" class="last-workout-summary hidden">
                     <!-- Content will be injected by JavaScript -->
+                </div>
+
+                </div>
+
+                <div id="workoutVersionV2" class="workout-version-pane workout-design-section" data-workout-version="v2" role="tabpanel" aria-label="Workout version 2">
+                    <iframe src="session-board.html" title="Session Board" class="workout-design-frame" loading="lazy"></iframe>
+                </div>
+
+                <div id="workoutVersionV3" class="workout-version-pane workout-design-section" data-workout-version="v3" role="tabpanel" aria-label="Workout version 3">
+                    <iframe src="workout-builder.html" title="Workout Builder" class="workout-design-frame" loading="lazy"></iframe>
                 </div>
 
 
@@ -485,14 +500,6 @@
                 </div>
             </section>
 
-            <!-- Workout Design Sections (embedded without modifying design files) -->
-            <section id="design1Section" class="content-section workout-design-section" role="region" aria-label="Design 1 - Active Session Board">
-                <iframe src="session-board.html" title="Session Board" class="workout-design-frame" loading="lazy"></iframe>
-            </section>
-
-            <section id="design3Section" class="content-section workout-design-section" role="region" aria-label="Design 3 - Workout Builder">
-                <iframe src="workout-builder.html" title="Workout Builder" class="workout-design-frame" loading="lazy"></iframe>
-            </section>
         </main>
 
         <!-- Save As Template Modal -->

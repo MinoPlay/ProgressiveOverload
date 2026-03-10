@@ -22,10 +22,6 @@
         <!-- Header -->
         <header class="app-header">
             <div class="header-content">
-                <h1 id="main-header" style="display: flex; align-items: center; gap: 10px;">
-                    <i data-lucide="dumbbell"></i> Progressive Tracker
-                </h1>
-
                 <nav class="header-nav" role="navigation" aria-label="Main navigation">
                     <!-- Theme Toggle -->
                     <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">
@@ -103,6 +99,9 @@
                         </div>
                     </div>
                 </nav>
+                <h1 id="main-header" style="display: flex; align-items: center; gap: 10px;">
+                    <i data-lucide="dumbbell"></i> Progressive Tracker
+                </h1>
             </div>
         </header>
 
@@ -121,111 +120,113 @@
 
             <!-- Exercises Section -->
             <section id="exercisesSection" class="content-section" role="region" aria-label="Manage Exercises">
-                <div class="section-header">
-                    <button id="addExerciseBtn" class="btn btn-primary" aria-label="Add new exercise">
-                        <i data-lucide="plus"></i> Add New Exercise
-                    </button>
+                <div class="manage-view-toggle" role="tablist" aria-label="Manage view">
+                    <button id="manageTabExercises" class="manage-tab-btn active" type="button" role="tab"
+                        aria-selected="true">Exercises</button>
+                    <button id="manageTabTemplates" class="manage-tab-btn" type="button" role="tab"
+                        aria-selected="false">Templates</button>
                 </div>
 
-                <!-- Add/Edit Exercise Form -->
-                <div id="exerciseForm" class="form-container" style="display: none;">
-                    <h3 id="exerciseFormTitle">Add New Exercise</h3>
-                    <form id="exerciseFormElement">
-                        <input type="hidden" id="exerciseId">
-
-                        <div class="form-group">
-                            <label for="exerciseName">
-                                Exercise Name <span class="required" aria-label="required">*</span>
-                            </label>
-                            <input type="text" id="exerciseName" placeholder="e.g., Bench Press" required
-                                aria-required="true" maxlength="100">
-                        </div>
-
-                        <div class="form-group">
-                            <label for="equipmentType">
-                                Equipment Type <span class="required" aria-label="required">*</span>
-                            </label>
-                            <select id="equipmentType" required aria-required="true">
-                                <option value="">-- Select Equipment --</option>
-                                <option value="barbell">Barbell</option>
-                                <option value="dumbbell">Dumbbell</option>
-                                <option value="kettlebell">Kettlebell</option>
-                                <option value="machines">Machines</option>
-                                <option value="bodyweight">Bodyweight</option>
-                                <option value="bodyweight+">Bodyweight+ (with added weight)</option>
-                            </select>
-                        </div>
-
-                        <div class="form-group">
-                            <label for="muscle">
-                                Target Muscle <span class="required" aria-label="required">*</span>
-                            </label>
-                            <select id="muscle" required aria-required="true">
-                                <option value="">-- Select Muscle --</option>
-                                <option value="chest">Chest</option>
-                                <option value="back">Back</option>
-                                <option value="shoulders">Shoulders</option>
-                                <option value="legs">Legs</option>
-                                <option value="biceps">Biceps</option>
-                                <option value="triceps">Triceps</option>
-                                <option value="core">Core</option>
-                                <option value="neck">Neck</option>
-                            </select>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="submit" class="btn btn-primary">Save Exercise</button>
-                            <button type="button" id="cancelExerciseBtn" class="btn btn-secondary">Cancel</button>
-                        </div>
-                    </form>
-                </div>
-
-                <!-- Exercise List -->
-                <div id="exerciseList" class="exercise-list"></div>
-
-                <!-- Templates Section -->
-                <div class="section-divider">
-                    <span>Session Templates</span>
-                </div>
-
-                <div class="section-header">
-                    <button id="addTemplateBtn" class="btn btn-primary" aria-label="Add new template">
-                        <i data-lucide="plus"></i> Add New Template
-                    </button>
-                </div>
-
-                <!-- Template List -->
-                <div id="templateList" class="template-list"></div>
-
-                <!-- Add/Edit Template Form -->
-                <div id="templateForm" class="form-container" style="display: none;">
-                    <h3 id="templateFormTitle">New Template</h3>
-
-                    <div class="form-group">
-                        <label for="templateName">Template Name <span class="required">*</span></label>
-                        <input type="text" id="templateName" placeholder="e.g., Push Day A" maxlength="100" autocomplete="off">
-                    </div>
-
-                    <div class="planner-controls" style="margin-bottom: var(--spacing-sm);">
-                        <button type="button" id="templateAddExerciseBtn"
-                            class="btn-icon btn-secondary btn-small planner-add-btn"
-                            title="Add exercise" aria-label="Add exercise">
+                <div id="manageExercisesPane" class="manage-pane active" role="tabpanel" aria-label="Exercises">
+                    <div class="section-header manage-actions-header">
+                        <button id="addExerciseBtn" class="btn-icon btn-primary manage-add-btn" aria-label="Add new exercise"
+                            title="Add new exercise">
                             <i data-lucide="plus"></i>
                         </button>
-                        <button type="button" id="templateAddSupersetBtn"
-                            class="btn-icon btn-secondary btn-small planner-add-btn"
-                            title="Add superset block" aria-label="Add superset block">
-                            <i data-lucide="link-2"></i>
+                    </div>
+
+                    <!-- Add/Edit Exercise Form -->
+                    <div id="exerciseForm" class="form-container" style="display: none;">
+                        <h3 id="exerciseFormTitle">Add New Exercise</h3>
+                        <form id="exerciseFormElement">
+                            <input type="hidden" id="exerciseId">
+                            <input type="hidden" id="equipmentType" required aria-required="true">
+                            <input type="hidden" id="muscle" required aria-required="true">
+
+                            <div class="form-group">
+                                <label for="exerciseName">
+                                    Exercise Name <span class="required" aria-label="required">*</span>
+                                </label>
+                                <input type="text" id="exerciseName" placeholder="e.g., Bench Press" required
+                                    aria-required="true" maxlength="100">
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    Equipment Type <span class="required" aria-label="required">*</span>
+                                </label>
+                                <div id="equipmentTypeToggle" class="toggle-chip-grid" aria-label="Select equipment type"></div>
+                            </div>
+
+                            <div class="form-group">
+                                <label>
+                                    Target Muscle <span class="required" aria-label="required">*</span>
+                                </label>
+                                <div id="muscleToggle" class="toggle-chip-grid" aria-label="Select target muscle"></div>
+                            </div>
+
+                            <div class="form-actions">
+                                <button type="submit" class="btn btn-primary">Save Exercise</button>
+                                <button type="button" id="cancelExerciseBtn" class="btn btn-secondary">Cancel</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="form-container exercise-filter-panel">
+                        <div class="form-group">
+                            <label>Equipment Filter</label>
+                            <div id="exerciseFilterEquipment" class="toggle-chip-grid" aria-label="Filter by equipment"></div>
+                        </div>
+                        <div class="form-group" style="margin-bottom: 0;">
+                            <label>Target Muscle Filter</label>
+                            <div id="exerciseFilterMuscle" class="toggle-chip-grid" aria-label="Filter by target muscle"></div>
+                        </div>
+                    </div>
+
+                    <!-- Exercise List -->
+                    <div id="exerciseList" class="exercise-list"></div>
+                </div>
+
+                <div id="manageTemplatesPane" class="manage-pane" role="tabpanel" aria-label="Templates">
+                    <div class="section-header">
+                        <button id="addTemplateBtn" class="btn btn-primary" aria-label="Add new template">
+                            <i data-lucide="plus"></i> Add New Template
                         </button>
                     </div>
 
-                    <div id="templateRowList" class="planned-session-list template-row-list" aria-live="polite"></div>
+                    <!-- Template List -->
+                    <div id="templateList" class="template-list"></div>
 
-                    <div class="form-actions">
-                        <button type="button" id="saveTemplateBtn" class="btn btn-primary">
-                            <i data-lucide="save"></i> Save Template
-                        </button>
-                        <button type="button" id="cancelTemplateBtn" class="btn btn-secondary">Cancel</button>
+                    <!-- Add/Edit Template Form -->
+                    <div id="templateForm" class="form-container" style="display: none;">
+                        <h3 id="templateFormTitle">New Template</h3>
+
+                        <div class="form-group">
+                            <label for="templateName">Template Name <span class="required">*</span></label>
+                            <input type="text" id="templateName" placeholder="e.g., Push Day A" maxlength="100" autocomplete="off">
+                        </div>
+
+                        <div class="planner-controls" style="margin-bottom: var(--spacing-sm);">
+                            <button type="button" id="templateAddExerciseBtn"
+                                class="btn-icon btn-secondary btn-small planner-add-btn"
+                                title="Add exercise" aria-label="Add exercise">
+                                <i data-lucide="plus"></i>
+                            </button>
+                            <button type="button" id="templateAddSupersetBtn"
+                                class="btn-icon btn-secondary btn-small planner-add-btn"
+                                title="Add superset block" aria-label="Add superset block">
+                                <i data-lucide="link-2"></i>
+                            </button>
+                        </div>
+
+                        <div id="templateRowList" class="planned-session-list template-row-list" aria-live="polite"></div>
+
+                        <div class="form-actions">
+                            <button type="button" id="saveTemplateBtn" class="btn btn-primary">
+                                <i data-lucide="save"></i> Save Template
+                            </button>
+                            <button type="button" id="cancelTemplateBtn" class="btn btn-secondary">Cancel</button>
+                        </div>
                     </div>
                 </div>
 

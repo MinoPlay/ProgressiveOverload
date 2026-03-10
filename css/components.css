@@ -240,6 +240,16 @@
     color: #0277bd;
 }
 
+.muscle-badge {
+    display: inline-block;
+    margin-left: var(--spacing-sm);
+    font-size: 0.8rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: var(--radius-xl);
+    background: var(--secondary-color);
+    color: var(--text-secondary);
+}
+
 /* Workout Items */
 .workout-item {
     background: var(--bg-primary);
@@ -3446,8 +3456,8 @@
 
 /* Adjusting existing history-date-group for nesting */
 .history-date-group {
-    border: 1px solid #eee !important;
-    background: white !important;
+    border: 1px solid var(--border-light) !important;
+    background: var(--bg-primary) !important;
     box-shadow: none !important;
     padding: 0 !important;
     margin-bottom: 0 !important;
@@ -3455,8 +3465,8 @@
 
 .history-date-header {
     padding: var(--spacing-xs) var(--spacing-sm) !important;
-    background: #fafafa !important;
-    border-bottom: 1px solid #efefef !important;
+    background: var(--bg-secondary) !important;
+    border-bottom: 1px solid var(--border-light) !important;
     margin-bottom: 0 !important;
 }
 
@@ -3479,12 +3489,12 @@
 
 .history-exercise-group {
     border-left: 2px solid var(--primary-color) !important;
-    background: #fdfdfd !important;
+    background: var(--bg-primary) !important;
     padding: var(--spacing-xs) var(--spacing-sm) !important;
 }
 
 .history-exercise-group:hover {
-    background: white !important;
+    background: var(--bg-secondary) !important;
 }
 
 .exercise-group-header h4 {
@@ -3716,6 +3726,88 @@
     flex: 1;
     height: 1px;
     background: var(--border-color);
+}
+
+/* ─── Manage View Toggles ───────────────────────────────────────────────────── */
+.manage-view-toggle {
+    display: inline-flex;
+    gap: var(--spacing-xs);
+    padding: 4px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-xl);
+    margin-bottom: var(--spacing-md);
+}
+
+.manage-tab-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: var(--radius-xl);
+    padding: 0.45rem 0.9rem;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.manage-tab-btn.active {
+    background: var(--primary-color);
+    color: #fff;
+    box-shadow: var(--shadow-sm);
+}
+
+.manage-pane {
+    display: none;
+}
+
+.manage-pane.active {
+    display: block;
+}
+
+.manage-actions-header {
+    justify-content: flex-start;
+    margin-bottom: var(--spacing-md);
+}
+
+.manage-add-btn {
+    min-width: 46px;
+    min-height: 46px;
+}
+
+.exercise-filter-panel {
+    margin-bottom: var(--spacing-lg);
+}
+
+.toggle-chip-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--spacing-sm);
+}
+
+.toggle-chip-btn {
+    border: 1px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border-radius: var(--radius-xl);
+    padding: 0.45rem 0.75rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.toggle-chip-btn.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    color: #fff;
+}
+
+.manage-pane .exercise-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: var(--spacing-md);
+    margin-top: 0;
 }
 
 /* ─── Template List ─────────────────────────────────────────────────────────── */

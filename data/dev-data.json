@@ -209,6 +209,41 @@
       "equipmentType": "machines",
       "muscle": "chest",
       "requiresWeight": true
+    },
+    {
+      "id": "1770128780584_yvc249ggy",
+      "name": "Around the world",
+      "equipmentType": "kettlebell",
+      "muscle": "shoulders",
+      "requiresWeight": true
+    },
+    {
+      "id": "1770129543414_0ta8erxpi",
+      "name": "Goblet squats",
+      "equipmentType": "kettlebell",
+      "muscle": "legs",
+      "requiresWeight": true
+    },
+    {
+      "id": "1770182681432_b4c3ijz9x",
+      "name": "Inclined barbell press",
+      "equipmentType": "barbell",
+      "muscle": "chest",
+      "requiresWeight": true
+    },
+    {
+      "id": "1770183066002_whlo1n7y7",
+      "name": "Low row",
+      "equipmentType": "machines",
+      "muscle": "back",
+      "requiresWeight": true
+    },
+    {
+      "id": "1770183966156_6whslwg5f",
+      "name": "Bent over shoulder raises",
+      "equipmentType": "dumbbell",
+      "muscle": "shoulders",
+      "requiresWeight": true
     }
   ],
   "workouts": [
@@ -1372,63 +1407,63 @@
       "date": "2026-02-04",
       "exerciseId": "1769598356908_flvdqzdhf",
       "reps": 12,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w167",
       "date": "2026-02-04",
       "exerciseId": "1769598356908_flvdqzdhf",
       "reps": 10,
-      "weight": 65.0
+      "weight": 65
     },
     {
       "id": "w168",
       "date": "2026-02-04",
       "exerciseId": "1769598356908_flvdqzdhf",
       "reps": 8,
-      "weight": 70.0
+      "weight": 70
     },
     {
       "id": "w169",
       "date": "2026-02-04",
       "exerciseId": "1770010828876_iomixwb3f",
       "reps": 12,
-      "weight": 120.0
+      "weight": 120
     },
     {
       "id": "w170",
       "date": "2026-02-04",
       "exerciseId": "1770010828876_iomixwb3f",
       "reps": 10,
-      "weight": 125.0
+      "weight": 125
     },
     {
       "id": "w171",
       "date": "2026-02-04",
       "exerciseId": "1770010828876_iomixwb3f",
       "reps": 8,
-      "weight": 130.0
+      "weight": 130
     },
     {
       "id": "w172",
       "date": "2026-02-04",
       "exerciseId": "1769598356919_lateralraise",
       "reps": 12,
-      "weight": 10.0
+      "weight": 10
     },
     {
       "id": "w173",
       "date": "2026-02-04",
       "exerciseId": "1769598356919_lateralraise",
       "reps": 10,
-      "weight": 15.0
+      "weight": 15
     },
     {
       "id": "w174",
       "date": "2026-02-04",
       "exerciseId": "1769598356919_lateralraise",
       "reps": 8,
-      "weight": 20.0
+      "weight": 20
     },
     {
       "id": "w175",
@@ -1449,98 +1484,98 @@
       "date": "2026-02-06",
       "exerciseId": "1769598356912_bentoverrows",
       "reps": 12,
-      "weight": 45.0
+      "weight": 45
     },
     {
       "id": "w178",
       "date": "2026-02-06",
       "exerciseId": "1769598356912_bentoverrows",
       "reps": 10,
-      "weight": 50.0
+      "weight": 50
     },
     {
       "id": "w179",
       "date": "2026-02-06",
       "exerciseId": "1769598356912_bentoverrows",
       "reps": 8,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w180",
       "date": "2026-02-06",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 12,
-      "weight": 20.0
+      "weight": 20
     },
     {
       "id": "w181",
       "date": "2026-02-06",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 10,
-      "weight": 25.0
+      "weight": 25
     },
     {
       "id": "w182",
       "date": "2026-02-06",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 8,
-      "weight": 30.0
+      "weight": 30
     },
     {
       "id": "w183",
       "date": "2026-02-06",
       "exerciseId": "1769598356908_63m870ao9",
       "reps": 12,
-      "weight": 80.0
+      "weight": 80
     },
     {
       "id": "w184",
       "date": "2026-02-06",
       "exerciseId": "1769598356908_63m870ao9",
       "reps": 10,
-      "weight": 85.0
+      "weight": 85
     },
     {
       "id": "w185",
       "date": "2026-02-06",
       "exerciseId": "1769598356908_63m870ao9",
       "reps": 8,
-      "weight": 90.0
+      "weight": 90
     },
     {
       "id": "w186",
       "date": "2026-02-06",
       "exerciseId": "1769598356919_lateralraise",
       "reps": 12,
-      "weight": 10.0
+      "weight": 10
     },
     {
       "id": "w187",
       "date": "2026-02-06",
       "exerciseId": "1769598356919_lateralraise",
       "reps": 10,
-      "weight": 15.0
+      "weight": 15
     },
     {
       "id": "w188",
       "date": "2026-02-06",
       "exerciseId": "1769598356919_lateralraise",
       "reps": 8,
-      "weight": 20.0
+      "weight": 20
     },
     {
       "id": "w189",
       "date": "2026-02-06",
       "exerciseId": "1769759085099_6xqb1io2v",
       "reps": 15,
-      "weight": 5.0
+      "weight": 5
     },
     {
       "id": "w190",
       "date": "2026-02-06",
       "exerciseId": "1769759085099_6xqb1io2v",
       "reps": 15,
-      "weight": 5.0
+      "weight": 5
     },
     {
       "id": "w191",
@@ -1589,84 +1624,84 @@
       "date": "2026-02-08",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 12,
-      "weight": 50.0
+      "weight": 50
     },
     {
       "id": "w198",
       "date": "2026-02-08",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 10,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w199",
       "date": "2026-02-08",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 8,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w200",
       "date": "2026-02-08",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 12,
-      "weight": 20.0
+      "weight": 20
     },
     {
       "id": "w201",
       "date": "2026-02-08",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 10,
-      "weight": 25.0
+      "weight": 25
     },
     {
       "id": "w202",
       "date": "2026-02-08",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 8,
-      "weight": 30.0
+      "weight": 30
     },
     {
       "id": "w203",
       "date": "2026-02-08",
       "exerciseId": "1769598356920_hipthrust",
       "reps": 12,
-      "weight": 80.0
+      "weight": 80
     },
     {
       "id": "w204",
       "date": "2026-02-08",
       "exerciseId": "1769598356920_hipthrust",
       "reps": 10,
-      "weight": 85.0
+      "weight": 85
     },
     {
       "id": "w205",
       "date": "2026-02-08",
       "exerciseId": "1769598356920_hipthrust",
       "reps": 8,
-      "weight": 90.0
+      "weight": 90
     },
     {
       "id": "w206",
       "date": "2026-02-08",
       "exerciseId": "1769598356919_lateralraise",
       "reps": 12,
-      "weight": 10.0
+      "weight": 10
     },
     {
       "id": "w207",
       "date": "2026-02-08",
       "exerciseId": "1769598356919_lateralraise",
       "reps": 10,
-      "weight": 15.0
+      "weight": 15
     },
     {
       "id": "w208",
       "date": "2026-02-08",
       "exerciseId": "1769598356919_lateralraise",
       "reps": 8,
-      "weight": 20.0
+      "weight": 20
     },
     {
       "id": "w209",
@@ -2016,161 +2051,161 @@
       "date": "2026-02-18",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 12,
-      "weight": 25.0
+      "weight": 25
     },
     {
       "id": "w259",
       "date": "2026-02-18",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 10,
-      "weight": 30.0
+      "weight": 30
     },
     {
       "id": "w260",
       "date": "2026-02-18",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 8,
-      "weight": 35.0
+      "weight": 35
     },
     {
       "id": "w261",
       "date": "2026-02-18",
       "exerciseId": "1769598356908_63m870ao9",
       "reps": 12,
-      "weight": 85.0
+      "weight": 85
     },
     {
       "id": "w262",
       "date": "2026-02-18",
       "exerciseId": "1769598356908_63m870ao9",
       "reps": 10,
-      "weight": 90.0
+      "weight": 90
     },
     {
       "id": "w263",
       "date": "2026-02-18",
       "exerciseId": "1769598356908_63m870ao9",
       "reps": 8,
-      "weight": 95.0
+      "weight": 95
     },
     {
       "id": "w264",
       "date": "2026-02-18",
       "exerciseId": "1769598356908_zy0w3s09g",
       "reps": 12,
-      "weight": 45.0
+      "weight": 45
     },
     {
       "id": "w265",
       "date": "2026-02-18",
       "exerciseId": "1769598356908_zy0w3s09g",
       "reps": 10,
-      "weight": 50.0
+      "weight": 50
     },
     {
       "id": "w266",
       "date": "2026-02-18",
       "exerciseId": "1769598356908_zy0w3s09g",
       "reps": 8,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w267",
       "date": "2026-02-18",
       "exerciseId": "1769759085099_6xqb1io2v",
       "reps": 15,
-      "weight": 6.0
+      "weight": 6
     },
     {
       "id": "w268",
       "date": "2026-02-18",
       "exerciseId": "1769759085099_6xqb1io2v",
       "reps": 15,
-      "weight": 6.0
+      "weight": 6
     },
     {
       "id": "w269",
       "date": "2026-02-20",
       "exerciseId": "1769598356912_bentoverrows",
       "reps": 12,
-      "weight": 50.0
+      "weight": 50
     },
     {
       "id": "w270",
       "date": "2026-02-20",
       "exerciseId": "1769598356912_bentoverrows",
       "reps": 10,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w271",
       "date": "2026-02-20",
       "exerciseId": "1769598356912_bentoverrows",
       "reps": 8,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w272",
       "date": "2026-02-20",
       "exerciseId": "1769598356914_inclinedumbpress",
       "reps": 12,
-      "weight": 23.0
+      "weight": 23
     },
     {
       "id": "w273",
       "date": "2026-02-20",
       "exerciseId": "1769598356914_inclinedumbpress",
       "reps": 10,
-      "weight": 28.0
+      "weight": 28
     },
     {
       "id": "w274",
       "date": "2026-02-20",
       "exerciseId": "1769598356914_inclinedumbpress",
       "reps": 8,
-      "weight": 33.0
+      "weight": 33
     },
     {
       "id": "w275",
       "date": "2026-02-20",
       "exerciseId": "1769598356909_frontsquat",
       "reps": 12,
-      "weight": 65.0
+      "weight": 65
     },
     {
       "id": "w276",
       "date": "2026-02-20",
       "exerciseId": "1769598356909_frontsquat",
       "reps": 10,
-      "weight": 70.0
+      "weight": 70
     },
     {
       "id": "w277",
       "date": "2026-02-20",
       "exerciseId": "1769598356909_frontsquat",
       "reps": 8,
-      "weight": 75.0
+      "weight": 75
     },
     {
       "id": "w278",
       "date": "2026-02-20",
       "exerciseId": "1769598356921_facepulls",
       "reps": 12,
-      "weight": 35.0
+      "weight": 35
     },
     {
       "id": "w279",
       "date": "2026-02-20",
       "exerciseId": "1769598356921_facepulls",
       "reps": 10,
-      "weight": 40.0
+      "weight": 40
     },
     {
       "id": "w280",
       "date": "2026-02-20",
       "exerciseId": "1769598356921_facepulls",
       "reps": 8,
-      "weight": 45.0
+      "weight": 45
     },
     {
       "id": "w281",
@@ -2233,84 +2268,84 @@
       "date": "2026-02-22",
       "exerciseId": "1769598356912_bentoverrows",
       "reps": 12,
-      "weight": 50.0
+      "weight": 50
     },
     {
       "id": "w290",
       "date": "2026-02-22",
       "exerciseId": "1769598356912_bentoverrows",
       "reps": 10,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w291",
       "date": "2026-02-22",
       "exerciseId": "1769598356912_bentoverrows",
       "reps": 8,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w292",
       "date": "2026-02-22",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 12,
-      "weight": 25.0
+      "weight": 25
     },
     {
       "id": "w293",
       "date": "2026-02-22",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 10,
-      "weight": 30.0
+      "weight": 30
     },
     {
       "id": "w294",
       "date": "2026-02-22",
       "exerciseId": "1769598356913_dumbbellpress",
       "reps": 8,
-      "weight": 35.0
+      "weight": 35
     },
     {
       "id": "w295",
       "date": "2026-02-22",
       "exerciseId": "1769598356908_a2079ga75",
       "reps": 12,
-      "weight": 105.0
+      "weight": 105
     },
     {
       "id": "w296",
       "date": "2026-02-22",
       "exerciseId": "1769598356908_a2079ga75",
       "reps": 10,
-      "weight": 110.0
+      "weight": 110
     },
     {
       "id": "w297",
       "date": "2026-02-22",
       "exerciseId": "1769598356908_a2079ga75",
       "reps": 8,
-      "weight": 115.0
+      "weight": 115
     },
     {
       "id": "w298",
       "date": "2026-02-22",
       "exerciseId": "1769598356908_zy0w3s09g",
       "reps": 12,
-      "weight": 45.0
+      "weight": 45
     },
     {
       "id": "w299",
       "date": "2026-02-22",
       "exerciseId": "1769598356908_zy0w3s09g",
       "reps": 10,
-      "weight": 50.0
+      "weight": 50
     },
     {
       "id": "w300",
       "date": "2026-02-22",
       "exerciseId": "1769598356908_zy0w3s09g",
       "reps": 8,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w301",
@@ -2639,182 +2674,182 @@
       "date": "2026-03-04",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 12,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w348",
       "date": "2026-03-04",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 10,
-      "weight": 65.0
+      "weight": 65
     },
     {
       "id": "w349",
       "date": "2026-03-04",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 8,
-      "weight": 70.0
+      "weight": 70
     },
     {
       "id": "w350",
       "date": "2026-03-04",
       "exerciseId": "1769598356914_inclinedumbpress",
       "reps": 12,
-      "weight": 28.0
+      "weight": 28
     },
     {
       "id": "w351",
       "date": "2026-03-04",
       "exerciseId": "1769598356914_inclinedumbpress",
       "reps": 10,
-      "weight": 33.0
+      "weight": 33
     },
     {
       "id": "w352",
       "date": "2026-03-04",
       "exerciseId": "1769598356914_inclinedumbpress",
       "reps": 8,
-      "weight": 38.0
+      "weight": 38
     },
     {
       "id": "w353",
       "date": "2026-03-04",
       "exerciseId": "1769598356920_hipthrust",
       "reps": 12,
-      "weight": 90.0
+      "weight": 90
     },
     {
       "id": "w354",
       "date": "2026-03-04",
       "exerciseId": "1769598356920_hipthrust",
       "reps": 10,
-      "weight": 95.0
+      "weight": 95
     },
     {
       "id": "w355",
       "date": "2026-03-04",
       "exerciseId": "1769598356920_hipthrust",
       "reps": 8,
-      "weight": 100.0
+      "weight": 100
     },
     {
       "id": "w356",
       "date": "2026-03-04",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 12,
-      "weight": 50.0
+      "weight": 50
     },
     {
       "id": "w357",
       "date": "2026-03-04",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 10,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w358",
       "date": "2026-03-04",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 8,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w359",
       "date": "2026-03-04",
       "exerciseId": "1769759085099_6xqb1io2v",
       "reps": 15,
-      "weight": 7.0
+      "weight": 7
     },
     {
       "id": "w360",
       "date": "2026-03-04",
       "exerciseId": "1769759085099_6xqb1io2v",
       "reps": 15,
-      "weight": 7.0
+      "weight": 7
     },
     {
       "id": "w361",
       "date": "2026-03-06",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 12,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w362",
       "date": "2026-03-06",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 10,
-      "weight": 65.0
+      "weight": 65
     },
     {
       "id": "w363",
       "date": "2026-03-06",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 8,
-      "weight": 70.0
+      "weight": 70
     },
     {
       "id": "w364",
       "date": "2026-03-06",
       "exerciseId": "1769598356914_inclinedumbpress",
       "reps": 12,
-      "weight": 28.0
+      "weight": 28
     },
     {
       "id": "w365",
       "date": "2026-03-06",
       "exerciseId": "1769598356914_inclinedumbpress",
       "reps": 10,
-      "weight": 33.0
+      "weight": 33
     },
     {
       "id": "w366",
       "date": "2026-03-06",
       "exerciseId": "1769598356914_inclinedumbpress",
       "reps": 8,
-      "weight": 38.0
+      "weight": 38
     },
     {
       "id": "w367",
       "date": "2026-03-06",
       "exerciseId": "1769598356908_63m870ao9",
       "reps": 12,
-      "weight": 90.0
+      "weight": 90
     },
     {
       "id": "w368",
       "date": "2026-03-06",
       "exerciseId": "1769598356908_63m870ao9",
       "reps": 10,
-      "weight": 95.0
+      "weight": 95
     },
     {
       "id": "w369",
       "date": "2026-03-06",
       "exerciseId": "1769598356908_63m870ao9",
       "reps": 8,
-      "weight": 100.0
+      "weight": 100
     },
     {
       "id": "w370",
       "date": "2026-03-06",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 12,
-      "weight": 50.0
+      "weight": 50
     },
     {
       "id": "w371",
       "date": "2026-03-06",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 10,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w372",
       "date": "2026-03-06",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 8,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w373",
@@ -2877,21 +2912,21 @@
       "date": "2026-03-08",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 12,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w382",
       "date": "2026-03-08",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 10,
-      "weight": 65.0
+      "weight": 65
     },
     {
       "id": "w383",
       "date": "2026-03-08",
       "exerciseId": "1769598356922_pulldowns",
       "reps": 8,
-      "weight": 70.0
+      "weight": 70
     },
     {
       "id": "w384",
@@ -2919,42 +2954,42 @@
       "date": "2026-03-08",
       "exerciseId": "1769598356909_frontsquat",
       "reps": 12,
-      "weight": 70.0
+      "weight": 70
     },
     {
       "id": "w388",
       "date": "2026-03-08",
       "exerciseId": "1769598356909_frontsquat",
       "reps": 10,
-      "weight": 75.0
+      "weight": 75
     },
     {
       "id": "w389",
       "date": "2026-03-08",
       "exerciseId": "1769598356909_frontsquat",
       "reps": 8,
-      "weight": 80.0
+      "weight": 80
     },
     {
       "id": "w390",
       "date": "2026-03-08",
       "exerciseId": "1769598356921_facepulls",
       "reps": 12,
-      "weight": 40.0
+      "weight": 40
     },
     {
       "id": "w391",
       "date": "2026-03-08",
       "exerciseId": "1769598356921_facepulls",
       "reps": 10,
-      "weight": 45.0
+      "weight": 45
     },
     {
       "id": "w392",
       "date": "2026-03-08",
       "exerciseId": "1769598356921_facepulls",
       "reps": 8,
-      "weight": 50.0
+      "weight": 50
     },
     {
       "id": "w393",
@@ -3283,84 +3318,84 @@
       "date": "2026-03-18",
       "exerciseId": "1769598356908_6t3ss20am",
       "reps": 12,
-      "weight": 65.0
+      "weight": 65
     },
     {
       "id": "w440",
       "date": "2026-03-18",
       "exerciseId": "1769598356908_6t3ss20am",
       "reps": 10,
-      "weight": 70.0
+      "weight": 70
     },
     {
       "id": "w441",
       "date": "2026-03-18",
       "exerciseId": "1769598356908_6t3ss20am",
       "reps": 8,
-      "weight": 75.0
+      "weight": 75
     },
     {
       "id": "w442",
       "date": "2026-03-18",
       "exerciseId": "1769598356908_flvdqzdhf",
       "reps": 12,
-      "weight": 75.0
+      "weight": 75
     },
     {
       "id": "w443",
       "date": "2026-03-18",
       "exerciseId": "1769598356908_flvdqzdhf",
       "reps": 10,
-      "weight": 80.0
+      "weight": 80
     },
     {
       "id": "w444",
       "date": "2026-03-18",
       "exerciseId": "1769598356908_flvdqzdhf",
       "reps": 8,
-      "weight": 85.0
+      "weight": 85
     },
     {
       "id": "w445",
       "date": "2026-03-18",
       "exerciseId": "1770010828876_iomixwb3f",
       "reps": 12,
-      "weight": 135.0
+      "weight": 135
     },
     {
       "id": "w446",
       "date": "2026-03-18",
       "exerciseId": "1770010828876_iomixwb3f",
       "reps": 10,
-      "weight": 140.0
+      "weight": 140
     },
     {
       "id": "w447",
       "date": "2026-03-18",
       "exerciseId": "1770010828876_iomixwb3f",
       "reps": 8,
-      "weight": 145.0
+      "weight": 145
     },
     {
       "id": "w448",
       "date": "2026-03-18",
       "exerciseId": "1769598356921_facepulls",
       "reps": 12,
-      "weight": 45.0
+      "weight": 45
     },
     {
       "id": "w449",
       "date": "2026-03-18",
       "exerciseId": "1769598356921_facepulls",
       "reps": 10,
-      "weight": 50.0
+      "weight": 50
     },
     {
       "id": "w450",
       "date": "2026-03-18",
       "exerciseId": "1769598356921_facepulls",
       "reps": 8,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w451",
@@ -3381,84 +3416,84 @@
       "date": "2026-03-20",
       "exerciseId": "1769598356910_assistpullup",
       "reps": 12,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w454",
       "date": "2026-03-20",
       "exerciseId": "1769598356910_assistpullup",
       "reps": 10,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w455",
       "date": "2026-03-20",
       "exerciseId": "1769598356910_assistpullup",
       "reps": 8,
-      "weight": 65.0
+      "weight": 65
     },
     {
       "id": "w456",
       "date": "2026-03-20",
       "exerciseId": "1769598356908_flvdqzdhf",
       "reps": 12,
-      "weight": 75.0
+      "weight": 75
     },
     {
       "id": "w457",
       "date": "2026-03-20",
       "exerciseId": "1769598356908_flvdqzdhf",
       "reps": 10,
-      "weight": 80.0
+      "weight": 80
     },
     {
       "id": "w458",
       "date": "2026-03-20",
       "exerciseId": "1769598356908_flvdqzdhf",
       "reps": 8,
-      "weight": 85.0
+      "weight": 85
     },
     {
       "id": "w459",
       "date": "2026-03-20",
       "exerciseId": "1769598356920_hipthrust",
       "reps": 12,
-      "weight": 95.0
+      "weight": 95
     },
     {
       "id": "w460",
       "date": "2026-03-20",
       "exerciseId": "1769598356920_hipthrust",
       "reps": 10,
-      "weight": 100.0
+      "weight": 100
     },
     {
       "id": "w461",
       "date": "2026-03-20",
       "exerciseId": "1769598356920_hipthrust",
       "reps": 8,
-      "weight": 105.0
+      "weight": 105
     },
     {
       "id": "w462",
       "date": "2026-03-20",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 12,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w463",
       "date": "2026-03-20",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 10,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w464",
       "date": "2026-03-20",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 8,
-      "weight": 65.0
+      "weight": 65
     },
     {
       "id": "w465",
@@ -3521,21 +3556,21 @@
       "date": "2026-03-22",
       "exerciseId": "1769598356908_6t3ss20am",
       "reps": 12,
-      "weight": 65.0
+      "weight": 65
     },
     {
       "id": "w474",
       "date": "2026-03-22",
       "exerciseId": "1769598356908_6t3ss20am",
       "reps": 10,
-      "weight": 70.0
+      "weight": 70
     },
     {
       "id": "w475",
       "date": "2026-03-22",
       "exerciseId": "1769598356908_6t3ss20am",
       "reps": 8,
-      "weight": 75.0
+      "weight": 75
     },
     {
       "id": "w476",
@@ -3563,42 +3598,42 @@
       "date": "2026-03-22",
       "exerciseId": "1769598356908_a2079ga75",
       "reps": 12,
-      "weight": 115.0
+      "weight": 115
     },
     {
       "id": "w480",
       "date": "2026-03-22",
       "exerciseId": "1769598356908_a2079ga75",
       "reps": 10,
-      "weight": 120.0
+      "weight": 120
     },
     {
       "id": "w481",
       "date": "2026-03-22",
       "exerciseId": "1769598356908_a2079ga75",
       "reps": 8,
-      "weight": 125.0
+      "weight": 125
     },
     {
       "id": "w482",
       "date": "2026-03-22",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 12,
-      "weight": 55.0
+      "weight": 55
     },
     {
       "id": "w483",
       "date": "2026-03-22",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 10,
-      "weight": 60.0
+      "weight": 60
     },
     {
       "id": "w484",
       "date": "2026-03-22",
       "exerciseId": "1769598356911_barbshldpress",
       "reps": 8,
-      "weight": 65.0
+      "weight": 65
     },
     {
       "id": "w485",
@@ -3921,6 +3956,1245 @@
       "exerciseId": "1769598356919_lateralraise",
       "reps": 8,
       "weight": 37.5
+    },
+    {
+      "id": "w531",
+      "date": "2025-12-01",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 11,
+      "weight": 12
+    },
+    {
+      "id": "w532",
+      "date": "2025-12-01",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 13,
+      "weight": 14
+    },
+    {
+      "id": "w533",
+      "date": "2025-12-01",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 16,
+      "weight": 16
+    },
+    {
+      "id": "w534",
+      "date": "2026-01-03",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 9,
+      "weight": 14
+    },
+    {
+      "id": "w535",
+      "date": "2026-01-03",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 11,
+      "weight": 16
+    },
+    {
+      "id": "w536",
+      "date": "2026-01-03",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 14,
+      "weight": 18
+    },
+    {
+      "id": "w537",
+      "date": "2026-02-04",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 10,
+      "weight": 16
+    },
+    {
+      "id": "w538",
+      "date": "2026-02-04",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 11,
+      "weight": 18
+    },
+    {
+      "id": "w539",
+      "date": "2026-02-04",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 16,
+      "weight": 20
+    },
+    {
+      "id": "w540",
+      "date": "2026-03-08",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 11,
+      "weight": 18
+    },
+    {
+      "id": "w541",
+      "date": "2026-03-08",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 11,
+      "weight": 20
+    },
+    {
+      "id": "w542",
+      "date": "2026-03-08",
+      "exerciseId": "1770128780584_yvc249ggy",
+      "reps": 16,
+      "weight": 20
+    },
+    {
+      "id": "w543",
+      "date": "2025-12-04",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 11,
+      "weight": 10
+    },
+    {
+      "id": "w544",
+      "date": "2025-12-04",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 11,
+      "weight": 12.5
+    },
+    {
+      "id": "w545",
+      "date": "2025-12-04",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 14,
+      "weight": 15
+    },
+    {
+      "id": "w546",
+      "date": "2025-12-27",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 11,
+      "weight": 12.5
+    },
+    {
+      "id": "w547",
+      "date": "2025-12-27",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 11,
+      "weight": 15
+    },
+    {
+      "id": "w548",
+      "date": "2025-12-27",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 16,
+      "weight": 17.5
+    },
+    {
+      "id": "w549",
+      "date": "2026-01-27",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 10,
+      "weight": 15
+    },
+    {
+      "id": "w550",
+      "date": "2026-01-27",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 11,
+      "weight": 17.5
+    },
+    {
+      "id": "w551",
+      "date": "2026-01-27",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 15,
+      "weight": 20
+    },
+    {
+      "id": "w552",
+      "date": "2026-02-11",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 11,
+      "weight": 17.5
+    },
+    {
+      "id": "w553",
+      "date": "2026-02-11",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 11,
+      "weight": 20
+    },
+    {
+      "id": "w554",
+      "date": "2026-02-11",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 16,
+      "weight": 20
+    },
+    {
+      "id": "w555",
+      "date": "2026-03-06",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 9,
+      "weight": 20
+    },
+    {
+      "id": "w556",
+      "date": "2026-03-06",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 12,
+      "weight": 20
+    },
+    {
+      "id": "w557",
+      "date": "2026-03-06",
+      "exerciseId": "1770012654787_hjl6qszi3",
+      "reps": 14,
+      "weight": 20
+    },
+    {
+      "id": "w558",
+      "date": "2025-12-04",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 7,
+      "weight": 15
+    },
+    {
+      "id": "w559",
+      "date": "2025-12-04",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 9,
+      "weight": 17.5
+    },
+    {
+      "id": "w560",
+      "date": "2025-12-04",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 12,
+      "weight": 20
+    },
+    {
+      "id": "w561",
+      "date": "2025-12-27",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 8,
+      "weight": 17.5
+    },
+    {
+      "id": "w562",
+      "date": "2025-12-27",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 9,
+      "weight": 20
+    },
+    {
+      "id": "w563",
+      "date": "2025-12-27",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 12,
+      "weight": 22.5
+    },
+    {
+      "id": "w564",
+      "date": "2026-01-24",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 7,
+      "weight": 20
+    },
+    {
+      "id": "w565",
+      "date": "2026-01-24",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 9,
+      "weight": 22.5
+    },
+    {
+      "id": "w566",
+      "date": "2026-01-24",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 11,
+      "weight": 25
+    },
+    {
+      "id": "w567",
+      "date": "2026-02-13",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 9,
+      "weight": 22.5
+    },
+    {
+      "id": "w568",
+      "date": "2026-02-13",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 11,
+      "weight": 25
+    },
+    {
+      "id": "w569",
+      "date": "2026-02-13",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 13,
+      "weight": 25
+    },
+    {
+      "id": "w570",
+      "date": "2026-03-08",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 9,
+      "weight": 25
+    },
+    {
+      "id": "w571",
+      "date": "2026-03-08",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 9,
+      "weight": 25
+    },
+    {
+      "id": "w572",
+      "date": "2026-03-08",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "reps": 11,
+      "weight": 25
+    },
+    {
+      "id": "w573",
+      "date": "2025-12-01",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 7,
+      "weight": 20
+    },
+    {
+      "id": "w574",
+      "date": "2025-12-01",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 9,
+      "weight": 22.5
+    },
+    {
+      "id": "w575",
+      "date": "2025-12-01",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 13,
+      "weight": 25
+    },
+    {
+      "id": "w576",
+      "date": "2026-01-03",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 8,
+      "weight": 22.5
+    },
+    {
+      "id": "w577",
+      "date": "2026-01-03",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 10,
+      "weight": 25
+    },
+    {
+      "id": "w578",
+      "date": "2026-01-03",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 12,
+      "weight": 27.5
+    },
+    {
+      "id": "w579",
+      "date": "2026-02-06",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 7,
+      "weight": 25
+    },
+    {
+      "id": "w580",
+      "date": "2026-02-06",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 9,
+      "weight": 27.5
+    },
+    {
+      "id": "w581",
+      "date": "2026-02-06",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 13,
+      "weight": 30
+    },
+    {
+      "id": "w582",
+      "date": "2026-03-04",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 9,
+      "weight": 27.5
+    },
+    {
+      "id": "w583",
+      "date": "2026-03-04",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 11,
+      "weight": 30
+    },
+    {
+      "id": "w584",
+      "date": "2026-03-04",
+      "exerciseId": "1769598356915_declinedumbpress",
+      "reps": 12,
+      "weight": 30
+    },
+    {
+      "id": "w585",
+      "date": "2025-12-06",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 9,
+      "weight": 10
+    },
+    {
+      "id": "w586",
+      "date": "2025-12-06",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 12,
+      "weight": 12.5
+    },
+    {
+      "id": "w587",
+      "date": "2025-12-06",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 14,
+      "weight": 15
+    },
+    {
+      "id": "w588",
+      "date": "2025-12-22",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 10,
+      "weight": 12.5
+    },
+    {
+      "id": "w589",
+      "date": "2025-12-22",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 11,
+      "weight": 15
+    },
+    {
+      "id": "w590",
+      "date": "2025-12-22",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 16,
+      "weight": 17.5
+    },
+    {
+      "id": "w591",
+      "date": "2026-01-27",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 9,
+      "weight": 15
+    },
+    {
+      "id": "w592",
+      "date": "2026-01-27",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 11,
+      "weight": 17.5
+    },
+    {
+      "id": "w593",
+      "date": "2026-01-27",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 14,
+      "weight": 20
+    },
+    {
+      "id": "w594",
+      "date": "2026-02-13",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 10,
+      "weight": 17.5
+    },
+    {
+      "id": "w595",
+      "date": "2026-02-13",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 11,
+      "weight": 20
+    },
+    {
+      "id": "w596",
+      "date": "2026-02-13",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 16,
+      "weight": 20
+    },
+    {
+      "id": "w597",
+      "date": "2026-03-04",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 10,
+      "weight": 20
+    },
+    {
+      "id": "w598",
+      "date": "2026-03-04",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 13,
+      "weight": 20
+    },
+    {
+      "id": "w599",
+      "date": "2026-03-04",
+      "exerciseId": "1769598356916_dumbbellflies",
+      "reps": 16,
+      "weight": 20
+    },
+    {
+      "id": "w600",
+      "date": "2025-12-04",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 10,
+      "weight": 20
+    },
+    {
+      "id": "w601",
+      "date": "2025-12-04",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 11,
+      "weight": 24
+    },
+    {
+      "id": "w602",
+      "date": "2025-12-04",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 16,
+      "weight": 28
+    },
+    {
+      "id": "w603",
+      "date": "2026-01-05",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 9,
+      "weight": 24
+    },
+    {
+      "id": "w604",
+      "date": "2026-01-05",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 13,
+      "weight": 28
+    },
+    {
+      "id": "w605",
+      "date": "2026-01-05",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 16,
+      "weight": 32
+    },
+    {
+      "id": "w606",
+      "date": "2026-02-06",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 11,
+      "weight": 28
+    },
+    {
+      "id": "w607",
+      "date": "2026-02-06",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 11,
+      "weight": 32
+    },
+    {
+      "id": "w608",
+      "date": "2026-02-06",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 16,
+      "weight": 36
+    },
+    {
+      "id": "w609",
+      "date": "2026-03-04",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 11,
+      "weight": 32
+    },
+    {
+      "id": "w610",
+      "date": "2026-03-04",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 11,
+      "weight": 36
+    },
+    {
+      "id": "w611",
+      "date": "2026-03-04",
+      "exerciseId": "1770129543414_0ta8erxpi",
+      "reps": 16,
+      "weight": 36
+    },
+    {
+      "id": "w612",
+      "date": "2025-12-01",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 5,
+      "weight": 40
+    },
+    {
+      "id": "w613",
+      "date": "2025-12-01",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 7,
+      "weight": 45
+    },
+    {
+      "id": "w614",
+      "date": "2025-12-01",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 9,
+      "weight": 50
+    },
+    {
+      "id": "w615",
+      "date": "2025-12-22",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 5,
+      "weight": 45
+    },
+    {
+      "id": "w616",
+      "date": "2025-12-22",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 9,
+      "weight": 50
+    },
+    {
+      "id": "w617",
+      "date": "2025-12-22",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 11,
+      "weight": 55
+    },
+    {
+      "id": "w618",
+      "date": "2026-01-27",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 6,
+      "weight": 50
+    },
+    {
+      "id": "w619",
+      "date": "2026-01-27",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 9,
+      "weight": 55
+    },
+    {
+      "id": "w620",
+      "date": "2026-01-27",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 11,
+      "weight": 60
+    },
+    {
+      "id": "w621",
+      "date": "2026-02-11",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 5,
+      "weight": 55
+    },
+    {
+      "id": "w622",
+      "date": "2026-02-11",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 7,
+      "weight": 60
+    },
+    {
+      "id": "w623",
+      "date": "2026-02-11",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 11,
+      "weight": 60
+    },
+    {
+      "id": "w624",
+      "date": "2026-03-06",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 6,
+      "weight": 60
+    },
+    {
+      "id": "w625",
+      "date": "2026-03-06",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 7,
+      "weight": 60
+    },
+    {
+      "id": "w626",
+      "date": "2026-03-06",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "reps": 11,
+      "weight": 60
+    },
+    {
+      "id": "w627",
+      "date": "2025-12-06",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 11,
+      "weight": 8
+    },
+    {
+      "id": "w628",
+      "date": "2025-12-06",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 13,
+      "weight": 10
+    },
+    {
+      "id": "w629",
+      "date": "2025-12-06",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 15,
+      "weight": 12.5
+    },
+    {
+      "id": "w630",
+      "date": "2026-01-08",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 9,
+      "weight": 10
+    },
+    {
+      "id": "w631",
+      "date": "2026-01-08",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 11,
+      "weight": 12.5
+    },
+    {
+      "id": "w632",
+      "date": "2026-01-08",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 16,
+      "weight": 15
+    },
+    {
+      "id": "w633",
+      "date": "2026-02-06",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 10,
+      "weight": 12.5
+    },
+    {
+      "id": "w634",
+      "date": "2026-02-06",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 13,
+      "weight": 15
+    },
+    {
+      "id": "w635",
+      "date": "2026-02-06",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 14,
+      "weight": 17.5
+    },
+    {
+      "id": "w636",
+      "date": "2026-03-06",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 9,
+      "weight": 15
+    },
+    {
+      "id": "w637",
+      "date": "2026-03-06",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 13,
+      "weight": 17.5
+    },
+    {
+      "id": "w638",
+      "date": "2026-03-06",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "reps": 15,
+      "weight": 17.5
+    },
+    {
+      "id": "w639",
+      "date": "2025-12-06",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 9,
+      "weight": 40
+    },
+    {
+      "id": "w640",
+      "date": "2025-12-06",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 10,
+      "weight": 45
+    },
+    {
+      "id": "w641",
+      "date": "2025-12-06",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 13,
+      "weight": 50
+    },
+    {
+      "id": "w642",
+      "date": "2025-12-27",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 7,
+      "weight": 45
+    },
+    {
+      "id": "w643",
+      "date": "2025-12-27",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 9,
+      "weight": 50
+    },
+    {
+      "id": "w644",
+      "date": "2025-12-27",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 12,
+      "weight": 55
+    },
+    {
+      "id": "w645",
+      "date": "2026-01-27",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 7,
+      "weight": 50
+    },
+    {
+      "id": "w646",
+      "date": "2026-01-27",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 11,
+      "weight": 55
+    },
+    {
+      "id": "w647",
+      "date": "2026-01-27",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 12,
+      "weight": 60
+    },
+    {
+      "id": "w648",
+      "date": "2026-02-15",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 9,
+      "weight": 55
+    },
+    {
+      "id": "w649",
+      "date": "2026-02-15",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 10,
+      "weight": 60
+    },
+    {
+      "id": "w650",
+      "date": "2026-02-15",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 11,
+      "weight": 60
+    },
+    {
+      "id": "w651",
+      "date": "2026-03-08",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 8,
+      "weight": 60
+    },
+    {
+      "id": "w652",
+      "date": "2026-03-08",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 10,
+      "weight": 60
+    },
+    {
+      "id": "w653",
+      "date": "2026-03-08",
+      "exerciseId": "1770183066002_whlo1n7y7",
+      "reps": 11,
+      "weight": 60
+    },
+    {
+      "id": "w654",
+      "date": "2025-12-06",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 8,
+      "weight": 12
+    },
+    {
+      "id": "w655",
+      "date": "2025-12-06",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 9,
+      "weight": 14
+    },
+    {
+      "id": "w656",
+      "date": "2025-12-06",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 13,
+      "weight": 16
+    },
+    {
+      "id": "w657",
+      "date": "2026-01-05",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 9,
+      "weight": 14
+    },
+    {
+      "id": "w658",
+      "date": "2026-01-05",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 11,
+      "weight": 16
+    },
+    {
+      "id": "w659",
+      "date": "2026-01-05",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 12,
+      "weight": 18
+    },
+    {
+      "id": "w660",
+      "date": "2026-02-08",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 7,
+      "weight": 16
+    },
+    {
+      "id": "w661",
+      "date": "2026-02-08",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 9,
+      "weight": 18
+    },
+    {
+      "id": "w662",
+      "date": "2026-02-08",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 13,
+      "weight": 20
+    },
+    {
+      "id": "w663",
+      "date": "2026-03-08",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 7,
+      "weight": 18
+    },
+    {
+      "id": "w664",
+      "date": "2026-03-08",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 11,
+      "weight": 20
+    },
+    {
+      "id": "w665",
+      "date": "2026-03-08",
+      "exerciseId": "1770011336623_x5imb6ehs",
+      "reps": 11,
+      "weight": 20
+    },
+    {
+      "id": "w666",
+      "date": "2025-12-04",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 8,
+      "weight": 35
+    },
+    {
+      "id": "w667",
+      "date": "2025-12-04",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 9,
+      "weight": 40
+    },
+    {
+      "id": "w668",
+      "date": "2025-12-04",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 11,
+      "weight": 45
+    },
+    {
+      "id": "w669",
+      "date": "2025-12-27",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 8,
+      "weight": 40
+    },
+    {
+      "id": "w670",
+      "date": "2025-12-27",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 9,
+      "weight": 45
+    },
+    {
+      "id": "w671",
+      "date": "2025-12-27",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 13,
+      "weight": 50
+    },
+    {
+      "id": "w672",
+      "date": "2026-01-27",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 8,
+      "weight": 45
+    },
+    {
+      "id": "w673",
+      "date": "2026-01-27",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 9,
+      "weight": 50
+    },
+    {
+      "id": "w674",
+      "date": "2026-01-27",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 11,
+      "weight": 55
+    },
+    {
+      "id": "w675",
+      "date": "2026-02-13",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 7,
+      "weight": 50
+    },
+    {
+      "id": "w676",
+      "date": "2026-02-13",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 10,
+      "weight": 55
+    },
+    {
+      "id": "w677",
+      "date": "2026-02-13",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 11,
+      "weight": 55
+    },
+    {
+      "id": "w678",
+      "date": "2026-03-08",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 7,
+      "weight": 55
+    },
+    {
+      "id": "w679",
+      "date": "2026-03-08",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 10,
+      "weight": 55
+    },
+    {
+      "id": "w680",
+      "date": "2026-03-08",
+      "exerciseId": "1769748072765_qu8ca2o2p",
+      "reps": 11,
+      "weight": 55
+    },
+    {
+      "id": "w681",
+      "date": "2025-12-06",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 7,
+      "weight": 14
+    },
+    {
+      "id": "w682",
+      "date": "2025-12-06",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 9,
+      "weight": 16
+    },
+    {
+      "id": "w683",
+      "date": "2025-12-06",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 13,
+      "weight": 18
+    },
+    {
+      "id": "w684",
+      "date": "2025-12-22",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 7,
+      "weight": 16
+    },
+    {
+      "id": "w685",
+      "date": "2025-12-22",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 9,
+      "weight": 18
+    },
+    {
+      "id": "w686",
+      "date": "2025-12-22",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 12,
+      "weight": 20
+    },
+    {
+      "id": "w687",
+      "date": "2026-01-27",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 9,
+      "weight": 18
+    },
+    {
+      "id": "w688",
+      "date": "2026-01-27",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 11,
+      "weight": 20
+    },
+    {
+      "id": "w689",
+      "date": "2026-01-27",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 13,
+      "weight": 22.5
+    },
+    {
+      "id": "w690",
+      "date": "2026-02-11",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 9,
+      "weight": 20
+    },
+    {
+      "id": "w691",
+      "date": "2026-02-11",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 9,
+      "weight": 22.5
+    },
+    {
+      "id": "w692",
+      "date": "2026-02-11",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 11,
+      "weight": 22.5
+    },
+    {
+      "id": "w693",
+      "date": "2026-03-04",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 9,
+      "weight": 22.5
+    },
+    {
+      "id": "w694",
+      "date": "2026-03-04",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 11,
+      "weight": 22.5
+    },
+    {
+      "id": "w695",
+      "date": "2026-03-04",
+      "exerciseId": "1769598356918_seatedumbpress",
+      "reps": 13,
+      "weight": 22.5
+    },
+    {
+      "id": "w696",
+      "date": "2025-12-01",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 10,
+      "weight": 6
+    },
+    {
+      "id": "w697",
+      "date": "2025-12-01",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 13,
+      "weight": 8
+    },
+    {
+      "id": "w698",
+      "date": "2025-12-01",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 16,
+      "weight": 10
+    },
+    {
+      "id": "w699",
+      "date": "2026-01-05",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 10,
+      "weight": 8
+    },
+    {
+      "id": "w700",
+      "date": "2026-01-05",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 11,
+      "weight": 10
+    },
+    {
+      "id": "w701",
+      "date": "2026-01-05",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 15,
+      "weight": 12
+    },
+    {
+      "id": "w702",
+      "date": "2026-02-06",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 9,
+      "weight": 10
+    },
+    {
+      "id": "w703",
+      "date": "2026-02-06",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 11,
+      "weight": 12
+    },
+    {
+      "id": "w704",
+      "date": "2026-02-06",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 16,
+      "weight": 14
+    },
+    {
+      "id": "w705",
+      "date": "2026-03-08",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 11,
+      "weight": 12
+    },
+    {
+      "id": "w706",
+      "date": "2026-03-08",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 13,
+      "weight": 14
+    },
+    {
+      "id": "w707",
+      "date": "2026-03-08",
+      "exerciseId": "1770183966156_6whslwg5f",
+      "reps": 14,
+      "weight": 14
     }
   ],
   "templates": [
@@ -3934,9 +5208,21 @@
           "type": "single",
           "exerciseId": "1769598356908_flvdqzdhf",
           "sets": [
-            { "id": "tpl-row-push-bench-set-1", "reps": "10", "weight": "95" },
-            { "id": "tpl-row-push-bench-set-2", "reps": "8",  "weight": "100" },
-            { "id": "tpl-row-push-bench-set-3", "reps": "6",  "weight": "105" }
+            {
+              "id": "tpl-row-push-bench-set-1",
+              "reps": "10",
+              "weight": "95"
+            },
+            {
+              "id": "tpl-row-push-bench-set-2",
+              "reps": "8",
+              "weight": "100"
+            },
+            {
+              "id": "tpl-row-push-bench-set-3",
+              "reps": "6",
+              "weight": "105"
+            }
           ]
         },
         {
@@ -3944,9 +5230,21 @@
           "type": "single",
           "exerciseId": "1769598356908_zy0w3s09g",
           "sets": [
-            { "id": "tpl-row-push-ohp-set-1", "reps": "10", "weight": "57.5" },
-            { "id": "tpl-row-push-ohp-set-2", "reps": "8",  "weight": "60" },
-            { "id": "tpl-row-push-ohp-set-3", "reps": "6",  "weight": "62.5" }
+            {
+              "id": "tpl-row-push-ohp-set-1",
+              "reps": "10",
+              "weight": "57.5"
+            },
+            {
+              "id": "tpl-row-push-ohp-set-2",
+              "reps": "8",
+              "weight": "60"
+            },
+            {
+              "id": "tpl-row-push-ohp-set-3",
+              "reps": "6",
+              "weight": "62.5"
+            }
           ]
         },
         {
@@ -3954,9 +5252,21 @@
           "type": "single",
           "exerciseId": "1769598356919_lateralraise",
           "sets": [
-            { "id": "tpl-row-push-lateral-set-1", "reps": "12", "weight": "14" },
-            { "id": "tpl-row-push-lateral-set-2", "reps": "12", "weight": "14" },
-            { "id": "tpl-row-push-lateral-set-3", "reps": "12", "weight": "14" }
+            {
+              "id": "tpl-row-push-lateral-set-1",
+              "reps": "12",
+              "weight": "14"
+            },
+            {
+              "id": "tpl-row-push-lateral-set-2",
+              "reps": "12",
+              "weight": "14"
+            },
+            {
+              "id": "tpl-row-push-lateral-set-3",
+              "reps": "12",
+              "weight": "14"
+            }
           ]
         },
         {
@@ -3964,9 +5274,21 @@
           "type": "single",
           "exerciseId": "1769598356908_xjkjvzp40",
           "sets": [
-            { "id": "tpl-row-push-dips-set-1", "reps": "12", "weight": "" },
-            { "id": "tpl-row-push-dips-set-2", "reps": "12", "weight": "" },
-            { "id": "tpl-row-push-dips-set-3", "reps": "10", "weight": "" }
+            {
+              "id": "tpl-row-push-dips-set-1",
+              "reps": "12",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-push-dips-set-2",
+              "reps": "12",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-push-dips-set-3",
+              "reps": "10",
+              "weight": ""
+            }
           ]
         }
       ]
@@ -3981,9 +5303,21 @@
           "type": "single",
           "exerciseId": "1769598356908_6t3ss20am",
           "sets": [
-            { "id": "tpl-row-pull-rows-set-1", "reps": "10", "weight": "85" },
-            { "id": "tpl-row-pull-rows-set-2", "reps": "8",  "weight": "90" },
-            { "id": "tpl-row-pull-rows-set-3", "reps": "6",  "weight": "92.5" }
+            {
+              "id": "tpl-row-pull-rows-set-1",
+              "reps": "10",
+              "weight": "85"
+            },
+            {
+              "id": "tpl-row-pull-rows-set-2",
+              "reps": "8",
+              "weight": "90"
+            },
+            {
+              "id": "tpl-row-pull-rows-set-3",
+              "reps": "6",
+              "weight": "92.5"
+            }
           ]
         },
         {
@@ -3991,9 +5325,21 @@
           "type": "single",
           "exerciseId": "1769598356908_audtljs1j",
           "sets": [
-            { "id": "tpl-row-pull-pullups-set-1", "reps": "10", "weight": "" },
-            { "id": "tpl-row-pull-pullups-set-2", "reps": "9",  "weight": "" },
-            { "id": "tpl-row-pull-pullups-set-3", "reps": "8",  "weight": "" }
+            {
+              "id": "tpl-row-pull-pullups-set-1",
+              "reps": "10",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-pull-pullups-set-2",
+              "reps": "9",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-pull-pullups-set-3",
+              "reps": "8",
+              "weight": ""
+            }
           ]
         },
         {
@@ -4005,18 +5351,42 @@
               "id": "tpl-ss-pull-arms-a",
               "exerciseId": "1769598356908_vaei2f8dr",
               "sets": [
-                { "id": "tpl-ss-pull-arms-a-set-1", "reps": "12", "weight": "22.5" },
-                { "id": "tpl-ss-pull-arms-a-set-2", "reps": "12", "weight": "22.5" },
-                { "id": "tpl-ss-pull-arms-a-set-3", "reps": "10", "weight": "22.5" }
+                {
+                  "id": "tpl-ss-pull-arms-a-set-1",
+                  "reps": "12",
+                  "weight": "22.5"
+                },
+                {
+                  "id": "tpl-ss-pull-arms-a-set-2",
+                  "reps": "12",
+                  "weight": "22.5"
+                },
+                {
+                  "id": "tpl-ss-pull-arms-a-set-3",
+                  "reps": "10",
+                  "weight": "22.5"
+                }
               ]
             },
             {
               "id": "tpl-ss-pull-arms-b",
               "exerciseId": "1769598356921_facepulls",
               "sets": [
-                { "id": "tpl-ss-pull-arms-b-set-1", "reps": "15", "weight": "30" },
-                { "id": "tpl-ss-pull-arms-b-set-2", "reps": "15", "weight": "30" },
-                { "id": "tpl-ss-pull-arms-b-set-3", "reps": "15", "weight": "30" }
+                {
+                  "id": "tpl-ss-pull-arms-b-set-1",
+                  "reps": "15",
+                  "weight": "30"
+                },
+                {
+                  "id": "tpl-ss-pull-arms-b-set-2",
+                  "reps": "15",
+                  "weight": "30"
+                },
+                {
+                  "id": "tpl-ss-pull-arms-b-set-3",
+                  "reps": "15",
+                  "weight": "30"
+                }
               ]
             }
           ]
@@ -4033,9 +5403,21 @@
           "type": "single",
           "exerciseId": "1769598356908_63m870ao9",
           "sets": [
-            { "id": "tpl-row-legs-squat-set-1", "reps": "10", "weight": "105" },
-            { "id": "tpl-row-legs-squat-set-2", "reps": "8",  "weight": "112.5" },
-            { "id": "tpl-row-legs-squat-set-3", "reps": "6",  "weight": "117.5" }
+            {
+              "id": "tpl-row-legs-squat-set-1",
+              "reps": "10",
+              "weight": "105"
+            },
+            {
+              "id": "tpl-row-legs-squat-set-2",
+              "reps": "8",
+              "weight": "112.5"
+            },
+            {
+              "id": "tpl-row-legs-squat-set-3",
+              "reps": "6",
+              "weight": "117.5"
+            }
           ]
         },
         {
@@ -4043,9 +5425,21 @@
           "type": "single",
           "exerciseId": "1770010828876_iomixwb3f",
           "sets": [
-            { "id": "tpl-row-legs-legpress-set-1", "reps": "12", "weight": "185" },
-            { "id": "tpl-row-legs-legpress-set-2", "reps": "10", "weight": "195" },
-            { "id": "tpl-row-legs-legpress-set-3", "reps": "8",  "weight": "205" }
+            {
+              "id": "tpl-row-legs-legpress-set-1",
+              "reps": "12",
+              "weight": "185"
+            },
+            {
+              "id": "tpl-row-legs-legpress-set-2",
+              "reps": "10",
+              "weight": "195"
+            },
+            {
+              "id": "tpl-row-legs-legpress-set-3",
+              "reps": "8",
+              "weight": "205"
+            }
           ]
         },
         {
@@ -4053,9 +5447,21 @@
           "type": "single",
           "exerciseId": "1769598356920_hipthrust",
           "sets": [
-            { "id": "tpl-row-legs-hipthrust-set-1", "reps": "12", "weight": "115" },
-            { "id": "tpl-row-legs-hipthrust-set-2", "reps": "10", "weight": "125" },
-            { "id": "tpl-row-legs-hipthrust-set-3", "reps": "8",  "weight": "135" }
+            {
+              "id": "tpl-row-legs-hipthrust-set-1",
+              "reps": "12",
+              "weight": "115"
+            },
+            {
+              "id": "tpl-row-legs-hipthrust-set-2",
+              "reps": "10",
+              "weight": "125"
+            },
+            {
+              "id": "tpl-row-legs-hipthrust-set-3",
+              "reps": "8",
+              "weight": "135"
+            }
           ]
         }
       ]
@@ -4074,18 +5480,42 @@
               "id": "tpl-ss-only-push-1-a",
               "exerciseId": "1769598356908_flvdqzdhf",
               "sets": [
-                { "id": "tpl-ss-only-push-1-a-set-1", "reps": "10", "weight": "90" },
-                { "id": "tpl-ss-only-push-1-a-set-2", "reps": "8",  "weight": "95" },
-                { "id": "tpl-ss-only-push-1-a-set-3", "reps": "6",  "weight": "100" }
+                {
+                  "id": "tpl-ss-only-push-1-a-set-1",
+                  "reps": "10",
+                  "weight": "90"
+                },
+                {
+                  "id": "tpl-ss-only-push-1-a-set-2",
+                  "reps": "8",
+                  "weight": "95"
+                },
+                {
+                  "id": "tpl-ss-only-push-1-a-set-3",
+                  "reps": "6",
+                  "weight": "100"
+                }
               ]
             },
             {
               "id": "tpl-ss-only-push-1-b",
               "exerciseId": "1769598356919_lateralraise",
               "sets": [
-                { "id": "tpl-ss-only-push-1-b-set-1", "reps": "12", "weight": "12" },
-                { "id": "tpl-ss-only-push-1-b-set-2", "reps": "12", "weight": "12" },
-                { "id": "tpl-ss-only-push-1-b-set-3", "reps": "12", "weight": "12" }
+                {
+                  "id": "tpl-ss-only-push-1-b-set-1",
+                  "reps": "12",
+                  "weight": "12"
+                },
+                {
+                  "id": "tpl-ss-only-push-1-b-set-2",
+                  "reps": "12",
+                  "weight": "12"
+                },
+                {
+                  "id": "tpl-ss-only-push-1-b-set-3",
+                  "reps": "12",
+                  "weight": "12"
+                }
               ]
             }
           ]
@@ -4099,18 +5529,42 @@
               "id": "tpl-ss-only-push-2-a",
               "exerciseId": "1769598356908_zy0w3s09g",
               "sets": [
-                { "id": "tpl-ss-only-push-2-a-set-1", "reps": "10", "weight": "55" },
-                { "id": "tpl-ss-only-push-2-a-set-2", "reps": "8",  "weight": "57.5" },
-                { "id": "tpl-ss-only-push-2-a-set-3", "reps": "6",  "weight": "60" }
+                {
+                  "id": "tpl-ss-only-push-2-a-set-1",
+                  "reps": "10",
+                  "weight": "55"
+                },
+                {
+                  "id": "tpl-ss-only-push-2-a-set-2",
+                  "reps": "8",
+                  "weight": "57.5"
+                },
+                {
+                  "id": "tpl-ss-only-push-2-a-set-3",
+                  "reps": "6",
+                  "weight": "60"
+                }
               ]
             },
             {
               "id": "tpl-ss-only-push-2-b",
               "exerciseId": "1769598356908_xjkjvzp40",
               "sets": [
-                { "id": "tpl-ss-only-push-2-b-set-1", "reps": "12", "weight": "" },
-                { "id": "tpl-ss-only-push-2-b-set-2", "reps": "10", "weight": "" },
-                { "id": "tpl-ss-only-push-2-b-set-3", "reps": "8",  "weight": "" }
+                {
+                  "id": "tpl-ss-only-push-2-b-set-1",
+                  "reps": "12",
+                  "weight": ""
+                },
+                {
+                  "id": "tpl-ss-only-push-2-b-set-2",
+                  "reps": "10",
+                  "weight": ""
+                },
+                {
+                  "id": "tpl-ss-only-push-2-b-set-3",
+                  "reps": "8",
+                  "weight": ""
+                }
               ]
             }
           ]
@@ -4127,9 +5581,21 @@
           "type": "single",
           "exerciseId": "1769598356908_6t3ss20am",
           "sets": [
-            { "id": "tpl-row-mix-rows-set-1", "reps": "10", "weight": "80" },
-            { "id": "tpl-row-mix-rows-set-2", "reps": "8",  "weight": "85" },
-            { "id": "tpl-row-mix-rows-set-3", "reps": "6",  "weight": "90" }
+            {
+              "id": "tpl-row-mix-rows-set-1",
+              "reps": "10",
+              "weight": "80"
+            },
+            {
+              "id": "tpl-row-mix-rows-set-2",
+              "reps": "8",
+              "weight": "85"
+            },
+            {
+              "id": "tpl-row-mix-rows-set-3",
+              "reps": "6",
+              "weight": "90"
+            }
           ]
         },
         {
@@ -4141,18 +5607,42 @@
               "id": "tpl-ss-mix-arms-a",
               "exerciseId": "1769598356908_vaei2f8dr",
               "sets": [
-                { "id": "tpl-ss-mix-arms-a-set-1", "reps": "12", "weight": "20" },
-                { "id": "tpl-ss-mix-arms-a-set-2", "reps": "12", "weight": "20" },
-                { "id": "tpl-ss-mix-arms-a-set-3", "reps": "10", "weight": "20" }
+                {
+                  "id": "tpl-ss-mix-arms-a-set-1",
+                  "reps": "12",
+                  "weight": "20"
+                },
+                {
+                  "id": "tpl-ss-mix-arms-a-set-2",
+                  "reps": "12",
+                  "weight": "20"
+                },
+                {
+                  "id": "tpl-ss-mix-arms-a-set-3",
+                  "reps": "10",
+                  "weight": "20"
+                }
               ]
             },
             {
               "id": "tpl-ss-mix-arms-b",
               "exerciseId": "1769598356921_facepulls",
               "sets": [
-                { "id": "tpl-ss-mix-arms-b-set-1", "reps": "15", "weight": "27.5" },
-                { "id": "tpl-ss-mix-arms-b-set-2", "reps": "15", "weight": "27.5" },
-                { "id": "tpl-ss-mix-arms-b-set-3", "reps": "15", "weight": "27.5" }
+                {
+                  "id": "tpl-ss-mix-arms-b-set-1",
+                  "reps": "15",
+                  "weight": "27.5"
+                },
+                {
+                  "id": "tpl-ss-mix-arms-b-set-2",
+                  "reps": "15",
+                  "weight": "27.5"
+                },
+                {
+                  "id": "tpl-ss-mix-arms-b-set-3",
+                  "reps": "15",
+                  "weight": "27.5"
+                }
               ]
             }
           ]
@@ -4162,9 +5652,21 @@
           "type": "single",
           "exerciseId": "1769598356908_audtljs1j",
           "sets": [
-            { "id": "tpl-row-mix-pullups-set-1", "reps": "8", "weight": "" },
-            { "id": "tpl-row-mix-pullups-set-2", "reps": "8", "weight": "" },
-            { "id": "tpl-row-mix-pullups-set-3", "reps": "6", "weight": "" }
+            {
+              "id": "tpl-row-mix-pullups-set-1",
+              "reps": "8",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-mix-pullups-set-2",
+              "reps": "8",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-mix-pullups-set-3",
+              "reps": "6",
+              "weight": ""
+            }
           ]
         }
       ]

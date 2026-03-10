@@ -6,12 +6,22 @@ import { showToast } from './app.js';
 import { CONFIG } from './config.js';
 import { validateExerciseName, validateEquipmentType, formatEquipmentType } from './utils.js';
 
+const MUSCLE_OPTIONS = ['chest', 'back', 'shoulders', 'legs', 'biceps', 'triceps', 'core', 'neck'];
+
 export const Exercises = {
+    manageView: 'exercises',
+    selectedEquipmentType: '',
+    selectedMuscle: '',
+    activeEquipmentFilter: '',
+    activeMuscleFilter: '',
+
     /**
      * Initialize exercise management UI
      */
     init() {
         this.bindEvents();
+        this.initToggleGroups();
+        this.setManageView('exercises');
         this.render();
     },
 
@@ -22,10 +32,121 @@ export const Exercises = {
         const addBtn = document.getElementById('addExerciseBtn');
         const cancelBtn = document.getElementById('cancelExerciseBtn');
         const form = document.getElementById('exerciseFormElement');
+        const exercisesTab = document.getElementById('manageTabExercises');
+        const templatesTab = document.getElementById('manageTabTemplates');
 
-        addBtn.addEventListener('click', () => this.showForm());
-        cancelBtn.addEventListener('click', () => this.hideForm());
-        form.addEventListener('submit', (e) => this.handleSubmit(e));
+        if (addBtn) addBtn.addEventListener('click', () => this.showForm());
+        if (cancelBtn) cancelBtn.addEventListener('click', () => this.hideForm());
+        if (form) form.addEventListener('submit', (e) => this.handleSubmit(e));
+        if (exercisesTab) exercisesTab.addEventListener('click', () => this.setManageView('exercises'));
+        if (templatesTab) templatesTab.addEventListener('click', () => this.setManageView('templates'));
+    },
+
+    initToggleGroups() {
+        this.renderFormToggleGroups();
+        this.renderFilterToggleGroups();
+    },
+
+    renderFormToggleGroups() {
+        this.renderToggleButtons(
+            'equipmentTypeToggle',
+            this.getEquipmentOptions(),
+            this.selectedEquipmentType,
+            (value) => {
+                this.selectedEquipmentType = value;
+                const input = document.getElementById('equipmentType');
+                if (input) input.value = value;
+                this.renderFormToggleGroups();
+            }
+        );
+
+        this.renderToggleButtons(
+            'muscleToggle',
+            this.getMuscleOptions(),
+            this.selectedMuscle,
+            (value) => {
+                this.selectedMuscle = value;
+                const input = document.getElementById('muscle');
+                if (input) input.value = value;
+                this.renderFormToggleGroups();
+            }
+        );
+    },
+
+    renderFilterToggleGroups() {
+        this.renderToggleButtons(
+            'exerciseFilterEquipment',
+            [{ value: '', label: 'All' }, ...this.getEquipmentOptions()],
+            this.activeEquipmentFilter,
+            (value) => {
+                this.activeEquipmentFilter = value;
+                this.renderFilterToggleGroups();
+                this.render();
+            }
+        );
+
+        this.renderToggleButtons(
+            'exerciseFilterMuscle',
+            [{ value: '', label: 'All' }, ...this.getMuscleOptions()],
+            this.activeMuscleFilter,
+            (value) => {
+                this.activeMuscleFilter = value;
+                this.renderFilterToggleGroups();
+                this.render();
+            }
+        );
+    },
+
+    renderToggleButtons(containerId, options, selectedValue, onSelect) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = '';
+        options.forEach((option) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `toggle-chip-btn${selectedValue === option.value ? ' active' : ''}`;
+            button.textContent = option.label;
+            button.setAttribute('aria-pressed', selectedValue === option.value ? 'true' : 'false');
+            button.addEventListener('click', () => onSelect(option.value));
+            container.appendChild(button);
+        });
+    },
+
+    getEquipmentOptions() {
+        return Object.keys(CONFIG.equipmentTypes).map((type) => ({
+            value: type,
+            label: formatEquipmentType(type)
+        }));
+    },
+
+    getMuscleOptions() {
+        return MUSCLE_OPTIONS.map((muscle) => ({
+            value: muscle,
+            label: muscle.charAt(0).toUpperCase() + muscle.slice(1)
+        }));
+    },
+
+    setManageView(view) {
+        this.manageView = view === 'templates' ? 'templates' : 'exercises';
+
+        const exercisesTab = document.getElementById('manageTabExercises');
+        const templatesTab = document.getElementById('manageTabTemplates');
+        const exercisesPane = document.getElementById('manageExercisesPane');
+        const templatesPane = document.getElementById('manageTemplatesPane');
+
+        const isExercises = this.manageView === 'exercises';
+
+        if (exercisesTab) {
+            exercisesTab.classList.toggle('active', isExercises);
+            exercisesTab.setAttribute('aria-selected', isExercises ? 'true' : 'false');
+        }
+        if (templatesTab) {
+            templatesTab.classList.toggle('active', !isExercises);
+            templatesTab.setAttribute('aria-selected', !isExercises ? 'true' : 'false');
+        }
+        if (exercisesPane) exercisesPane.classList.toggle('active', isExercises);
+        if (templatesPane) templatesPane.classList.toggle('active', !isExercises);
     },
 
     /**
@@ -37,24 +158,29 @@ export const Exercises = {
         const title = document.getElementById('exerciseFormTitle');
         const idInput = document.getElementById('exerciseId');
         const nameInput = document.getElementById('exerciseName');
-        const equipmentSelect = document.getElementById('equipmentType');
-        const muscleSelect = document.getElementById('muscle');
+        const equipmentInput = document.getElementById('equipmentType');
+        const muscleInput = document.getElementById('muscle');
 
         if (exercise) {
             // Edit mode
             title.textContent = 'Edit Exercise';
             idInput.value = exercise.id;
             nameInput.value = exercise.name;
-            equipmentSelect.value = exercise.equipmentType;
-            muscleSelect.value = exercise.muscle || '';
+            this.selectedEquipmentType = exercise.equipmentType || '';
+            this.selectedMuscle = exercise.muscle || '';
         } else {
             // Add mode
             title.textContent = 'Add New Exercise';
             idInput.value = '';
             nameInput.value = '';
-            equipmentSelect.value = '';
-            muscleSelect.value = '';
+            this.selectedEquipmentType = '';
+            this.selectedMuscle = '';
         }
+
+        if (equipmentInput) equipmentInput.value = this.selectedEquipmentType;
+        if (muscleInput) muscleInput.value = this.selectedMuscle;
+
+        this.renderFormToggleGroups();
 
         form.style.display = 'block';
         nameInput.focus();
@@ -67,6 +193,13 @@ export const Exercises = {
         const form = document.getElementById('exerciseForm');
         form.style.display = 'none';
         document.getElementById('exerciseFormElement').reset();
+        this.selectedEquipmentType = '';
+        this.selectedMuscle = '';
+        const equipmentInput = document.getElementById('equipmentType');
+        const muscleInput = document.getElementById('muscle');
+        if (equipmentInput) equipmentInput.value = '';
+        if (muscleInput) muscleInput.value = '';
+        this.renderFormToggleGroups();
     },
 
     /**
@@ -92,6 +225,11 @@ export const Exercises = {
         const typeValidation = validateEquipmentType(equipmentType, validTypes);
         if (!typeValidation.valid) {
             showToast(typeValidation.error, 'error');
+            return;
+        }
+
+        if (!muscle) {
+            showToast('Please select a target muscle', 'error');
             return;
         }
 
@@ -144,19 +282,34 @@ export const Exercises = {
      */
     render() {
         const container = document.getElementById('exerciseList');
-        const exercises = Storage.getExercises();
+        if (!container) return;
+
+        let exercises = Storage.getExercises().slice();
+
+        if (this.activeEquipmentFilter) {
+            exercises = exercises.filter((exercise) => exercise.equipmentType === this.activeEquipmentFilter);
+        }
+
+        if (this.activeMuscleFilter) {
+            exercises = exercises.filter((exercise) => exercise.muscle === this.activeMuscleFilter);
+        }
+
+        exercises.sort((a, b) => a.name.localeCompare(b.name));
 
         // Clear container
         container.innerHTML = '';
 
-        // Group exercises by equipment type
-        const groupedExercises = this.groupByEquipmentType(exercises);
-
-        // Create collapsible section for each equipment type
-        Object.keys(groupedExercises).sort().forEach(equipmentType => {
-            const section = this.createCollapsibleSection(equipmentType, groupedExercises[equipmentType]);
-            container.appendChild(section);
-        });
+        if (exercises.length === 0) {
+            const empty = document.createElement('div');
+            empty.className = 'template-empty';
+            empty.textContent = 'No exercises match the selected filters.';
+            container.appendChild(empty);
+        } else {
+            exercises.forEach((exercise) => {
+                const card = this.createExerciseCard(exercise);
+                container.appendChild(card);
+            });
+        }
 
         // Initialize icons
         if (window.lucide) {
@@ -164,92 +317,9 @@ export const Exercises = {
         }
     },
 
-    /**
-     * Group exercises by equipment type
-     * @param {Array} exercises - Array of exercise objects
-     * @returns {Object} Exercises grouped by equipment type
-     */
-    groupByEquipmentType(exercises) {
-        return exercises.reduce((groups, exercise) => {
-            const type = exercise.equipmentType || 'other';
-            if (!groups[type]) {
-                groups[type] = [];
-            }
-            groups[type].push(exercise);
-            return groups;
-        }, {});
-    },
-
-    /**
-     * Create collapsible section for equipment type
-     * @param {string} equipmentType - Equipment type
-     * @param {Array} exercises - Exercises of this type
-     * @returns {HTMLElement} Section element
-     */
-    createCollapsibleSection(equipmentType, exercises) {
-        const section = document.createElement('div');
-        section.className = 'equipment-group';
-
-        // Create header
-        const header = document.createElement('div');
-        header.className = 'equipment-group-header collapsed';
-        header.onclick = () => this.toggleSection(header);
-
-        const titleWrapper = document.createElement('div');
-        titleWrapper.className = 'equipment-group-title';
-
-        const title = document.createElement('h3');
-        title.textContent = formatEquipmentType(equipmentType);
-
-        const count = document.createElement('span');
-        count.className = 'exercise-count';
-        count.textContent = `(${exercises.length})`;
-
-        titleWrapper.appendChild(title);
-        titleWrapper.appendChild(count);
-
-        const chevron = document.createElement('span');
-        chevron.className = 'equipment-chevron';
-        chevron.innerHTML = '▼';
-
-        header.appendChild(titleWrapper);
-        header.appendChild(chevron);
-
-        // Create content container
-        const content = document.createElement('div');
-        content.className = 'equipment-group-content';
-        content.style.display = 'none'; // Collapsed by default
-
-        exercises.forEach(exercise => {
-            const card = this.createExerciseCard(exercise);
-            content.appendChild(card);
-        });
-
-        section.appendChild(header);
-        section.appendChild(content);
-
-        return section;
-    },
-
-    /**
-     * Toggle collapsible section
-     * @param {HTMLElement} header - Header element
-     */
-    toggleSection(header) {
-        const content = header.nextElementSibling;
-        const chevron = header.querySelector('.equipment-chevron');
-
-        if (header.classList.contains('collapsed')) {
-            // Expand
-            header.classList.remove('collapsed');
-            content.style.display = 'grid';
-            chevron.innerHTML = '▲';
-        } else {
-            // Collapse
-            header.classList.add('collapsed');
-            content.style.display = 'none';
-            chevron.innerHTML = '▼';
-        }
+    getEquipmentBadgeClass(equipmentType) {
+        if (equipmentType === 'bodyweight+') return 'bodyweight-plus';
+        return equipmentType || 'other';
     },
 
     /**
@@ -270,18 +340,12 @@ export const Exercises = {
         title.textContent = exercise.name; // Safe from XSS
 
         const badge = document.createElement('span');
-        badge.className = `equipment-badge ${exercise.equipmentType}`;
+        badge.className = `equipment-badge ${this.getEquipmentBadgeClass(exercise.equipmentType)}`;
         badge.textContent = formatEquipmentType(exercise.equipmentType);
 
         const muscleBadge = document.createElement('span');
         muscleBadge.className = 'muscle-badge';
         muscleBadge.textContent = exercise.muscle ? exercise.muscle.charAt(0).toUpperCase() + exercise.muscle.slice(1) : 'Unknown';
-        muscleBadge.style.marginLeft = '8px';
-        muscleBadge.style.fontSize = '0.8em';
-        muscleBadge.style.padding = '2px 8px';
-        muscleBadge.style.borderRadius = '12px';
-        muscleBadge.style.background = '#e2e8f0';
-        muscleBadge.style.color = '#4a5568';
 
         info.appendChild(title);
         info.appendChild(badge);

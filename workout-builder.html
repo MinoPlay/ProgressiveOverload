@@ -286,6 +286,40 @@ body {
   color: var(--text);
   margin-bottom: 8px;
 }
+.exercise-picker-list {
+  max-height: 240px;
+  overflow-y: auto;
+  margin: 8px 0;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface2);
+}
+.exercise-picker-item {
+  padding: 9px 12px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.exercise-picker-item:last-child { border-bottom: none; }
+.exercise-picker-item:hover { background: var(--accent-light); }
+.exercise-picker-item.selected { background: var(--accent-light); color: var(--accent); }
+.exercise-picker-item .ep-muscle {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text3);
+  margin-left: auto;
+}
+.exercise-picker-empty {
+  padding: 16px;
+  text-align: center;
+  color: var(--text3);
+  font-size: 13px;
+}
 .picker-actions {
   display: flex;
   gap: 8px;
@@ -650,8 +684,63 @@ body {
 .prev-hint {
   display: flex; gap: 6px; padding: 4px 0 10px;
   font-size: 12px; color: var(--text3); align-items: center;
+  cursor: pointer; border-radius: 4px; transition: background .15s;
 }
+.prev-hint:hover { background: rgba(99,102,241,.06); }
 .prev-hint i { width: 12px; height: 12px; color: var(--accent); flex-shrink: 0; }
+
+/* Exercise History Modal */
+.history-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 110;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.history-overlay.open { opacity: 1; pointer-events: auto; }
+.history-dialog {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  width: min(92vw, 380px);
+  max-height: 70vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 8px 30px rgba(0,0,0,.25);
+}
+.history-dialog-title {
+  font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.history-dialog-title i { width: 16px; height: 16px; color: var(--accent); }
+.history-sessions {
+  overflow-y: auto; flex: 1;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.history-session {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+}
+.history-session-date {
+  font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.history-session-date i { width: 12px; height: 12px; }
+.history-set-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.history-set-tag {
+  background: var(--surface); padding: 3px 8px;
+  border-radius: 4px; font-size: 12px; color: var(--text);
+  border: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+.history-empty { padding: 16px; text-align: center; color: var(--text3); font-size: 13px; }
+.history-close-btn {
+  margin-top: 12px; padding: 10px; border-radius: var(--radius-sm);
+  background: var(--surface2); color: var(--text); font-weight: 600;
+  font-size: 14px; cursor: pointer; border: none; width: 100%;
+}
 
 .nav-backdrop {
   position: absolute;
@@ -717,6 +806,16 @@ body {
   </header>
 
   <div class="nav-backdrop" id="navBackdrop" onclick="closeNavMenu()"></div>
+
+  <!-- Exercise History Modal -->
+  <div class="history-overlay" id="exerciseHistoryOverlay">
+    <div class="history-dialog">
+      <div class="history-dialog-title"><i data-lucide="history"></i> <span id="historyExerciseName">Exercise</span></div>
+      <div class="history-sessions" id="historySessionsList"></div>
+      <button class="history-close-btn" onclick="closeExerciseHistory()">Close</button>
+    </div>
+  </div>
+
   <div class="nav-menu" id="navMenu">
     <button class="nav-link" onclick="window.location.href='index.html'">Main App</button>
     <button class="nav-link" onclick="window.location.href='session-board.html'">Session Board</button>
@@ -753,8 +852,8 @@ body {
         <div class="exercise-picker" id="exercisePicker" onclick="closeExercisePicker()">
           <div class="exercise-picker-dialog" onclick="event.stopPropagation()">
             <div class="exercise-picker-title">Select exercise</div>
-            <label class="form-label" for="exercisePickerSelect">Exercise</label>
-            <select class="form-select" id="exercisePickerSelect"></select>
+            <input type="text" class="form-input" id="exercisePickerSearch" placeholder="Search exercises…" oninput="filterExercisePickerList()" autocomplete="off">
+            <div class="exercise-picker-list" id="exercisePickerList"></div>
             <div class="picker-actions">
               <button class="picker-btn" type="button" onclick="closeExercisePicker()">Cancel</button>
               <button class="picker-btn primary" type="button" onclick="confirmExercisePicker()">Apply</button>
@@ -940,6 +1039,165 @@ window.addEventListener('storage', (event) => {
     applyStoredTheme();
   }
 });
+
+/* ── Parent Bridge (receive exercises + templates from parent via postMessage) ── */
+const _parentExerciseMap = {}; // parentId → { name, muscle, requiresWeight, equipmentType }
+const _exerciseHistory = {};   // exerciseName → [{ date, sets: [{ reps, weight }] }]
+
+function _mergeParentExercisesBuilder(exercises) {
+  if (!Array.isArray(exercises) || !exercises.length) return;
+  // Build ID→meta lookup for template resolution
+  exercises.forEach(ex => { _parentExerciseMap[ex.id] = ex; });
+  const existingNames = new Set();
+  Object.values(EXERCISE_LIBRARY).forEach(entry => {
+    existingNames.add(entry.name.toLowerCase());
+  });
+  let added = 0;
+  exercises.forEach(ex => {
+    if (existingNames.has(ex.name.toLowerCase())) return;
+    const key = ex.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/(^_|_$)/g, '');
+    if (EXERCISE_LIBRARY[key]) return;
+    const isBodyweight = ex.requiresWeight === false;
+    EXERCISE_LIBRARY[key] = {
+      id: key,
+      name: ex.name,
+      muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1),
+      equipment: ex.equipmentType || 'barbell',
+      mode: isBodyweight ? 'bodyweight' : 'weight',
+      prev: '',
+      reps: '8',
+      weight: isBodyweight ? 'BW' : '20'
+    };
+    existingNames.add(ex.name.toLowerCase());
+    added++;
+  });
+  console.log(`[Workout Builder] Received ${exercises.length} exercises from parent, added ${added} new`);
+}
+
+function _findLocalKeyByName(name) {
+  const lower = name.toLowerCase();
+  for (const [key, entry] of Object.entries(EXERCISE_LIBRARY)) {
+    if (entry.name.toLowerCase() === lower) return key;
+  }
+  return null;
+}
+
+function _mergeParentTemplatesBuilder(parentTemplates) {
+  if (!Array.isArray(parentTemplates) || !parentTemplates.length) return;
+  let added = 0;
+  parentTemplates.forEach(tpl => {
+    if (!tpl.name || TEMPLATES[tpl.name]) return; // skip duplicates
+    const rows = [];
+    let supersetLabel = 'A';
+    (tpl.rows || []).forEach(row => {
+      if (row.type === 'single') {
+        const ex = _parentExerciseMap[row.exerciseId];
+        if (!ex) return;
+        const localKey = _findLocalKeyByName(ex.name);
+        if (!localKey) return;
+        const setCount = Array.isArray(row.sets) && row.sets.length ? row.sets.length : 3;
+        rows.push({ exerciseId: localKey, sets: setCount, superset: null });
+      } else if (row.type === 'superset') {
+        const items = (row.exercises || []).map(item => {
+          const ex = _parentExerciseMap[item.exerciseId];
+          if (!ex) return null;
+          const localKey = _findLocalKeyByName(ex.name);
+          if (!localKey) return null;
+          const setCount = Array.isArray(item.sets) && item.sets.length ? item.sets.length : 3;
+          return { exerciseId: localKey, sets: setCount, superset: supersetLabel };
+        }).filter(Boolean);
+        if (items.length >= 2) {
+          rows.push(...items);
+          // Advance superset label
+          supersetLabel = String.fromCharCode(supersetLabel.charCodeAt(0) + 1);
+        } else {
+          // Less than 2 items, add as singles
+          items.forEach(it => { it.superset = null; rows.push(it); });
+        }
+      }
+    });
+    if (rows.length) {
+      TEMPLATES[tpl.name] = rows;
+      added++;
+    }
+  });
+  console.log(`[Workout Builder] Received ${parentTemplates.length} templates from parent, added ${added} new`);
+}
+
+function _mergeParentWorkoutsBuilder(workouts) {
+  if (!Array.isArray(workouts) || !workouts.length) return;
+  // Group by exerciseId, sort by date desc, take most recent session
+  const byExercise = {};
+  workouts.forEach(w => {
+    if (!byExercise[w.exerciseId]) byExercise[w.exerciseId] = [];
+    byExercise[w.exerciseId].push(w);
+  });
+  let updated = 0;
+  Object.entries(byExercise).forEach(([parentId, entries]) => {
+    const parentEx = _parentExerciseMap[parentId];
+    if (!parentEx) return;
+    const localKey = _findLocalKeyByName(parentEx.name);
+    if (!localKey || !EXERCISE_LIBRARY[localKey]) return;
+    const exName = EXERCISE_LIBRARY[localKey].name;
+
+    // Sort by date desc, then take the most recent date's entries
+    entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const latestDate = entries[0].date;
+    const latestSets = entries.filter(w => w.date === latestDate)
+      .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+
+    if (!latestSets.length) return;
+
+    // Build prev hint string
+    const isBw = EXERCISE_LIBRARY[localKey].mode === 'bodyweight';
+    const prevParts = latestSets.map(s =>
+      isBw ? `${s.reps} reps` : `${s.reps}×${s.weight} kg`
+    );
+    EXERCISE_LIBRARY[localKey].prev = prevParts.join(' · ');
+
+    // Update default reps/weight from the first set of latest session
+    const firstSet = latestSets[0];
+    EXERCISE_LIBRARY[localKey].reps = String(firstSet.reps);
+    if (!isBw) EXERCISE_LIBRARY[localKey].weight = String(firstSet.weight);
+
+    updated++;
+
+    /* ── Populate full exercise history (last 10 sessions) ── */
+    const byDate = {};
+    entries.forEach(w => {
+      if (!byDate[w.date]) byDate[w.date] = [];
+      byDate[w.date].push(w);
+    });
+    const dates = Object.keys(byDate).sort((a, b) => new Date(b) - new Date(a)).slice(0, 10);
+    _exerciseHistory[exName] = dates.map(d => ({
+      date: d,
+      sets: byDate[d]
+        .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
+        .map(s => ({ reps: s.reps, weight: s.weight }))
+    }));
+  });
+  console.log(`[Workout Builder] Processed workout history, updated ${updated} exercises with prev data`);
+}
+
+if (EMBED_MODE) {
+  window.addEventListener('message', (e) => {
+    const msg = e.data;
+    if (!msg || typeof msg.type !== 'string') return;
+    if (msg.type === 'po-exercises') {
+      _mergeParentExercisesBuilder(msg.exercises);
+    } else if (msg.type === 'po-templates') {
+      _mergeParentTemplatesBuilder(msg.templates);
+    } else if (msg.type === 'po-workouts') {
+      _mergeParentWorkoutsBuilder(msg.workouts);
+    }
+  });
+  // Request exercises + templates + workouts in case iframe loaded before parent sent them
+  try {
+    window.parent.postMessage({ type: 'po-request-exercises' }, '*');
+    window.parent.postMessage({ type: 'po-request-templates' }, '*');
+    window.parent.postMessage({ type: 'po-request-workouts' }, '*');
+  } catch (_) {}
+}
 
 /* ── Theme ── */
 function toggleTheme() {
@@ -1222,6 +1480,7 @@ function renderExecutionBlock(index) {
         <span>${exercise.name}</span>
       </div>
       <div class="exec-section-meta">${exercise.muscle}</div>
+      ${exercise.prev ? `<div class="prev-hint" data-exercise-name="${exercise.name}"><i data-lucide="history"></i><span>${exercise.prev}</span></div>` : ''}
       <div class="exec-set-header${isBodyweight ? ' bodyweight' : ''}">
         <span>Set</span><span>Reps</span><span>Weight</span><span></span>
       </div>
@@ -1387,31 +1646,69 @@ function initBuildDrag() {
   });
 }
 
+let _pickerAvailableIds = [];
+let _pickerSelectedId = null;
+
 function openExercisePicker(mode, index = -1) {
   pickerState = { mode, index };
   const picker = document.getElementById('exercisePicker');
-  const select = document.getElementById('exercisePickerSelect');
+  const search = document.getElementById('exercisePickerSearch');
   const usedIds = new Set(buildExercises.map((exercise) => exercise.exerciseId));
-  const availableIds = Object.keys(EXERCISE_LIBRARY).filter((id) => !usedIds.has(id));
+  _pickerAvailableIds = Object.keys(EXERCISE_LIBRARY).filter((id) => !usedIds.has(id));
 
-  if (!availableIds.length) {
+  if (!_pickerAvailableIds.length) {
     alert('All exercises are already in the plan.');
     closeExercisePicker();
     return;
   }
 
-  select.innerHTML = availableIds.map((id) => `<option value="${id}">${EXERCISE_LIBRARY[id].name}</option>`).join('');
-  select.value = availableIds[0];
+  search.value = '';
+  _pickerSelectedId = _pickerAvailableIds[0];
+  renderExercisePickerList('');
   picker.classList.add('open');
+  requestAnimationFrame(() => search.focus());
+}
+
+function renderExercisePickerList(query) {
+  const list = document.getElementById('exercisePickerList');
+  const q = query.toLowerCase();
+  const filtered = _pickerAvailableIds.filter((id) => {
+    const ex = EXERCISE_LIBRARY[id];
+    return !q || ex.name.toLowerCase().includes(q) || (ex.muscle || '').toLowerCase().includes(q);
+  });
+  if (!filtered.length) {
+    list.innerHTML = '<div class="exercise-picker-empty">No matching exercises</div>';
+    _pickerSelectedId = null;
+    return;
+  }
+  if (!filtered.includes(_pickerSelectedId)) _pickerSelectedId = filtered[0];
+  list.innerHTML = filtered.map((id) => {
+    const ex = EXERCISE_LIBRARY[id];
+    return `<div class="exercise-picker-item${id === _pickerSelectedId ? ' selected' : ''}" data-id="${id}" onclick="selectPickerItem('${id}')">
+      ${ex.name}<span class="ep-muscle">${ex.muscle || ''}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectPickerItem(id) {
+  _pickerSelectedId = id;
+  document.querySelectorAll('.exercise-picker-item').forEach((el) => {
+    el.classList.toggle('selected', el.dataset.id === id);
+  });
+}
+
+function filterExercisePickerList() {
+  const query = document.getElementById('exercisePickerSearch').value;
+  renderExercisePickerList(query);
 }
 
 function closeExercisePicker() {
   document.getElementById('exercisePicker').classList.remove('open');
+  document.getElementById('exercisePickerSearch').value = '';
 }
 
 function confirmExercisePicker() {
-  const select = document.getElementById('exercisePickerSelect');
-  const selectedId = select.value;
+  const selectedId = _pickerSelectedId;
   if (!selectedId) {
     return;
   }
@@ -1473,7 +1770,7 @@ function updateBuildHeader() {
 }
 
 function changeTmpl() {
-  const names = ['', 'Push Day A','Pull Day B','Leg Day','Full Body'];
+  const names = ['', ...Object.keys(TEMPLATES)];
   const next = names[(names.indexOf(activeTemplate)+1) % names.length];
   loadTemplate(next);
 }
@@ -1569,6 +1866,56 @@ function switchTab(tab, options = {}) {
     saveDesign3State();
   }
 }
+
+/* ── Exercise History Modal ── */
+function showExerciseHistory(exerciseName) {
+  const overlay = document.getElementById('exerciseHistoryOverlay');
+  document.getElementById('historyExerciseName').textContent = exerciseName;
+  const list = document.getElementById('historySessionsList');
+  list.innerHTML = '';
+
+  const sessions = _exerciseHistory[exerciseName];
+  if (!sessions || !sessions.length) {
+    list.innerHTML = '<div class="history-empty">No history available for this exercise.</div>';
+  } else {
+    sessions.forEach(session => {
+      const div = document.createElement('div');
+      div.className = 'history-session';
+      const dateStr = new Date(session.date).toLocaleDateString('en-GB', {
+        weekday: 'short', day: 'numeric', month: 'short', year: 'numeric'
+      });
+      const setTags = session.sets.map(s =>
+        s.weight ? `<span class="history-set-tag">${s.reps}&times;${s.weight} kg</span>`
+                 : `<span class="history-set-tag">${s.reps}&times;BW</span>`
+      ).join('');
+      div.innerHTML = `
+        <div class="history-session-date"><i data-lucide="calendar"></i> ${dateStr}</div>
+        <div class="history-set-tags">${setTags}</div>
+      `;
+      list.appendChild(div);
+    });
+  }
+
+  overlay.classList.add('open');
+  lucide.createIcons();
+}
+
+function closeExerciseHistory() {
+  document.getElementById('exerciseHistoryOverlay').classList.remove('open');
+}
+
+// Close history modal when clicking overlay background
+document.getElementById('exerciseHistoryOverlay')?.addEventListener('click', (e) => {
+  if (e.target.classList.contains('history-overlay')) closeExerciseHistory();
+});
+
+// Event delegation: prev-hint clicks in execution view
+document.getElementById('execSetList')?.addEventListener('click', (e) => {
+  const hint = e.target.closest('.prev-hint');
+  if (!hint) return;
+  const name = hint.dataset.exerciseName;
+  if (name) showExerciseHistory(name);
+});
 
 /* Init */
 applySavedDesign3State();

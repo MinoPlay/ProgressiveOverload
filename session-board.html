@@ -394,9 +394,66 @@ body {
   font-size: 11px;
   color: var(--text3);
   align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background .15s;
 }
+.prev-hint:hover { background: rgba(99,102,241,.06); }
 .prev-hint i { width: 11px; height: 11px; flex-shrink: 0; }
 .prev-hint span { font-style: italic; }
+
+/* Exercise History Modal */
+.history-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 110;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.history-overlay.open { opacity: 1; pointer-events: auto; }
+.history-dialog {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  width: min(92vw, 380px);
+  max-height: 70vh;
+  display: flex; flex-direction: column;
+  box-shadow: 0 8px 30px rgba(0,0,0,.25);
+}
+.history-dialog-title {
+  font-size: 15px; font-weight: 700; margin-bottom: 12px; color: var(--text);
+  display: flex; align-items: center; gap: 8px;
+}
+.history-dialog-title i { width: 16px; height: 16px; color: var(--accent); }
+.history-sessions {
+  overflow-y: auto; flex: 1;
+  display: flex; flex-direction: column; gap: 10px;
+}
+.history-session {
+  background: var(--surface2);
+  border-radius: var(--radius-sm);
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+}
+.history-session-date {
+  font-size: 12px; font-weight: 600; color: var(--text2); margin-bottom: 6px;
+  display: flex; align-items: center; gap: 6px;
+}
+.history-session-date i { width: 12px; height: 12px; }
+.history-set-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.history-set-tag {
+  background: var(--surface); padding: 3px 8px;
+  border-radius: 4px; font-size: 12px; color: var(--text);
+  border: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+}
+.history-empty { padding: 16px; text-align: center; color: var(--text3); font-size: 13px; }
+.history-close-btn {
+  margin-top: 12px; padding: 10px; border-radius: var(--radius-sm);
+  background: var(--surface2); color: var(--text); font-weight: 600;
+  font-size: 14px; cursor: pointer; border: none; width: 100%;
+}
 
 /* Add set btn */
 .add-set-btn {
@@ -531,6 +588,7 @@ body {
   margin: 4px 0 8px;
 }
 .exercise-select,
+.exercise-picker-btn,
 .superset-select {
   width: 100%;
   border: 1.5px solid var(--border);
@@ -541,9 +599,64 @@ body {
   font-size: 13px;
   font-weight: 600;
 }
-.header-exercise-picker .exercise-select {
+.exercise-picker-btn {
+  cursor: pointer;
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.header-exercise-picker .exercise-select,
+.header-exercise-picker .exercise-picker-btn {
   width: 100%;
 }
+
+/* Session Exercise Picker Modal */
+.session-picker-overlay {
+  position: fixed; inset: 0;
+  background: rgba(0,0,0,.45);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 100;
+  opacity: 0; pointer-events: none;
+  transition: opacity .2s;
+}
+.session-picker-overlay.open { opacity: 1; pointer-events: auto; }
+.session-picker-dialog {
+  background: var(--surface);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  width: min(92vw, 380px);
+  box-shadow: 0 8px 30px rgba(0,0,0,.25);
+}
+.session-picker-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
+.session-picker-search {
+  width: 100%; padding: 10px 12px;
+  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface2); color: var(--text); font-size: 14px;
+  margin-bottom: 8px; box-sizing: border-box;
+}
+.session-picker-list {
+  max-height: 240px; overflow-y: auto;
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface2);
+}
+.session-picker-item {
+  padding: 9px 12px; cursor: pointer;
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 14px; border-bottom: 1px solid var(--border);
+}
+.session-picker-item:last-child { border-bottom: none; }
+.session-picker-item:hover { background: rgba(99,102,241,.08); }
+.session-picker-item.selected { background: rgba(99,102,241,.15); font-weight: 600; }
+.session-picker-item .sp-muscle { font-size: 11px; color: var(--text3); }
+.session-picker-empty { padding: 16px; text-align: center; color: var(--text3); font-size: 13px; }
+.session-picker-actions { display: flex; gap: 8px; margin-top: 12px; }
+.session-picker-actions button {
+  flex: 1; padding: 10px; border-radius: var(--radius-sm);
+  font-weight: 600; font-size: 14px; cursor: pointer; border: none;
+}
+.sp-cancel { background: var(--surface2); color: var(--text); }
+.sp-confirm { background: var(--accent); color: #fff; }
 .remove-ex-btn {
   width: 28px;
   height: 28px;
@@ -770,7 +883,7 @@ body {
         <div class="card-header" onclick="toggleCard('card-bench')">
           <div class="exercise-name" id="name-bench">Bench Press</div>
           <div class="header-exercise-picker" onclick="event.stopPropagation()">
-            <select class="exercise-select" onchange="applyExercisePreset(this,'card-bench')"></select>
+            <button class="exercise-picker-btn" onclick="openSessionPicker('card-bench')">Change</button>
           </div>
           <button class="link-next-btn" onclick="toggleLinkWithNext('card-bench', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
           <button class="collapse-btn open" id="btn-bench"><i data-lucide="chevron-down"></i></button>
@@ -815,7 +928,7 @@ body {
         <div class="card-header" onclick="toggleCard('card-ohp')">
           <div class="exercise-name" id="name-ohp">Overhead Press</div>
           <div class="header-exercise-picker" onclick="event.stopPropagation()">
-            <select class="exercise-select" onchange="applyExercisePreset(this,'card-ohp')"></select>
+            <button class="exercise-picker-btn" onclick="openSessionPicker('card-ohp')">Change</button>
           </div>
           <button class="link-next-btn" onclick="toggleLinkWithNext('card-ohp', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
           <button class="collapse-btn open" id="btn-ohp"><i data-lucide="chevron-down"></i></button>
@@ -860,7 +973,7 @@ body {
         <div class="card-header" onclick="toggleCard('card-dips')">
           <div class="exercise-name" id="name-dips">Tricep Dips</div>
           <div class="header-exercise-picker" onclick="event.stopPropagation()">
-            <select class="exercise-select" onchange="applyExercisePreset(this,'card-dips')"></select>
+            <button class="exercise-picker-btn" onclick="openSessionPicker('card-dips')">Change</button>
           </div>
           <button class="link-next-btn" onclick="toggleLinkWithNext('card-dips', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
           <button class="collapse-btn open" id="btn-dips"><i data-lucide="chevron-down"></i></button>
@@ -975,6 +1088,28 @@ body {
   <i data-lucide="plus"></i>
 </button>
 
+<!-- Session Exercise Picker Modal -->
+<div class="session-picker-overlay" id="sessionPicker" onclick="if(event.target===this) closeSessionPicker()">
+  <div class="session-picker-dialog">
+    <div class="session-picker-title">Choose Exercise</div>
+    <input type="text" class="session-picker-search" id="sessionPickerSearch" placeholder="Search exercises…" oninput="filterSessionPickerList()">
+    <div class="session-picker-list" id="sessionPickerList"></div>
+    <div class="session-picker-actions">
+      <button class="sp-cancel" onclick="closeSessionPicker()">Cancel</button>
+      <button class="sp-confirm" onclick="confirmSessionPicker()">Confirm</button>
+    </div>
+  </div>
+</div>
+
+<!-- Exercise History Modal -->
+<div class="history-overlay" id="exerciseHistoryOverlay" onclick="if(event.target===this) closeExerciseHistory()">
+  <div class="history-dialog">
+    <div class="history-dialog-title"><i data-lucide="history"></i><span id="historyExerciseName">Exercise</span></div>
+    <div class="history-sessions" id="historySessionsList"></div>
+    <button class="history-close-btn" onclick="closeExerciseHistory()">Close</button>
+  </div>
+</div>
+
 <script>
 lucide.createIcons();
 
@@ -1006,6 +1141,219 @@ window.addEventListener('storage', (event) => {
     applyStoredTheme();
   }
 });
+
+/* ── Parent Bridge (receive exercises + templates from parent via postMessage) ── */
+const _parentExerciseMap = {}; // parentId → { name, muscle, requiresWeight, equipmentType }
+
+function _mergeParentExercises(exercises) {
+  if (!Array.isArray(exercises) || !exercises.length) return;
+  // Build ID→meta lookup for template resolution
+  exercises.forEach(ex => { _parentExerciseMap[ex.id] = ex; });
+  const existingNames = new Set(Object.keys(EXERCISE_PRESETS).map(n => n.toLowerCase()));
+  let added = 0;
+  exercises.forEach(ex => {
+    if (existingNames.has(ex.name.toLowerCase())) return;
+    EXERCISE_PRESETS[ex.name] = {
+      muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1),
+      equipment: ex.equipmentType || 'barbell',
+      reps: '8',
+      weight: ex.requiresWeight === false ? 'BW' : '20',
+      bodyweight: ex.requiresWeight === false
+    };
+    existingNames.add(ex.name.toLowerCase());
+    added++;
+  });
+  console.log(`[Session Board] Received ${exercises.length} exercises from parent, added ${added} new`);
+}
+
+function _mergeParentTemplates(parentTemplates) {
+  if (!Array.isArray(parentTemplates) || !parentTemplates.length) return;
+  let added = 0;
+  parentTemplates.forEach(tpl => {
+    if (!tpl.name || templates[tpl.name]) return; // skip duplicates
+    const rows = [];
+    (tpl.rows || []).forEach(row => {
+      if (row.type === 'single') {
+        const ex = _parentExerciseMap[row.exerciseId];
+        if (!ex) return;
+        const isBodyweight = ex.requiresWeight === false;
+        const sets = (row.sets || []).map(s => ({
+          reps: parseInt(s.reps, 10) || 8,
+          weight: isBodyweight ? 'BW' : (parseFloat(s.weight) || 20)
+        }));
+        if (!sets.length) sets.push({ reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 });
+        rows.push({
+          name: ex.name,
+          muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1),
+          sets
+        });
+      } else if (row.type === 'superset') {
+        (row.exercises || []).forEach(item => {
+          const ex = _parentExerciseMap[item.exerciseId];
+          if (!ex) return;
+          const isBodyweight = ex.requiresWeight === false;
+          const sets = (item.sets || []).map(s => ({
+            reps: parseInt(s.reps, 10) || 8,
+            weight: isBodyweight ? 'BW' : (parseFloat(s.weight) || 20)
+          }));
+          if (!sets.length) sets.push({ reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 });
+          rows.push({ name: ex.name, muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1), sets });
+        });
+      }
+    });
+    if (rows.length) {
+      templates[tpl.name] = rows;
+      added++;
+    }
+  });
+  if (added) _rebuildTemplateMenu();
+  console.log(`[Session Board] Received ${parentTemplates.length} templates from parent, added ${added} new`);
+}
+
+function _rebuildTemplateMenu() {
+  const menu = document.getElementById('templateMenu');
+  if (!menu) return;
+  const allNames = Object.keys(templates);
+  menu.innerHTML = `<button class="template-option${!activeTemplateName ? ' active' : ''}" data-template="" onclick="chooseTemplate('')">No template</button>` +
+    allNames.map(n => `<button class="template-option${n === activeTemplateName ? ' active' : ''}" data-template="${n}" onclick="chooseTemplate('${n.replace(/'/g, "\\'")}')">${n}</button>`).join('');
+}
+
+// Per-exercise workout history storage: { exerciseName: [{date, sets: [{reps, weight}]}] }
+const _exerciseHistory = {};
+
+function _mergeParentWorkouts(workouts) {
+  if (!Array.isArray(workouts) || !workouts.length) return;
+  // Group by exerciseId, find latest session per exercise
+  const byExercise = {};
+  workouts.forEach(w => {
+    if (!byExercise[w.exerciseId]) byExercise[w.exerciseId] = [];
+    byExercise[w.exerciseId].push(w);
+  });
+  let updated = 0;
+  Object.entries(byExercise).forEach(([parentId, entries]) => {
+    const parentEx = _parentExerciseMap[parentId];
+    if (!parentEx) return;
+    const name = parentEx.name;
+    if (!EXERCISE_PRESETS[name]) return;
+
+    // Sort by date desc, take most recent date's entries
+    entries.sort((a, b) => new Date(b.date) - new Date(a.date));
+    const latestDate = entries[0].date;
+    const latestSets = entries.filter(w => w.date === latestDate)
+      .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+
+    if (!latestSets.length) return;
+
+    // Update preset defaults from latest session
+    const first = latestSets[0];
+    EXERCISE_PRESETS[name].reps = String(first.reps);
+    if (!EXERCISE_PRESETS[name].bodyweight) {
+      EXERCISE_PRESETS[name].weight = String(first.weight);
+    }
+
+    // Also update template entries that reference this exercise
+    Object.values(templates).forEach(exList => {
+      exList.forEach(ex => {
+        if (ex.name === name) {
+          ex.sets = latestSets.map(s => ({ reps: s.reps, weight: s.weight }));
+        }
+      });
+    });
+
+    // Store full history grouped by date for per-exercise history view
+    const byDate = {};
+    entries.forEach(w => {
+      if (!byDate[w.date]) byDate[w.date] = [];
+      byDate[w.date].push(w);
+    });
+    _exerciseHistory[name] = Object.entries(byDate)
+      .sort(([a], [b]) => b.localeCompare(a))
+      .slice(0, 10) // Keep last 10 sessions
+      .map(([date, sets]) => ({
+        date,
+        sets: sets.sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
+          .map(s => ({ reps: s.reps, weight: s.weight }))
+      }));
+
+    updated++;
+  });
+  console.log(`[Session Board] Processed workout history, updated ${updated} exercises with prev data`);
+}
+
+/* ── Exercise History Popup ── */
+function showExerciseHistory(exerciseName) {
+  const overlay = document.getElementById('exerciseHistoryOverlay');
+  const titleEl = document.getElementById('historyExerciseName');
+  const listEl = document.getElementById('historySessionsList');
+  if (!overlay || !listEl) return;
+
+  titleEl.textContent = exerciseName;
+
+  // Combine parent history + local lastWorkout data
+  const sessions = _exerciseHistory[exerciseName] || [];
+  const localLast = getLastWorkoutForExercise(exerciseName);
+  // If local data exists but isn't already in sessions (different from parent data), prepend it
+  if (localLast && localLast.sets?.length && !sessions.length) {
+    sessions.unshift({ date: 'Previous session', sets: localLast.sets });
+  }
+
+  if (!sessions.length) {
+    listEl.innerHTML = '<div class="history-empty">No workout history available for this exercise.</div>';
+  } else {
+    listEl.innerHTML = sessions.map(session => {
+      const dateLabel = session.date === 'Previous session'
+        ? 'Previous session'
+        : new Date(session.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+      const setTags = session.sets.map(s => {
+        const w = String(s.weight).toUpperCase();
+        return `<span class="history-set-tag">${s.reps}×${w === 'BW' ? 'BW' : s.weight + ' kg'}</span>`;
+      }).join('');
+      return `<div class="history-session">
+        <div class="history-session-date"><i data-lucide="calendar"></i>${dateLabel}</div>
+        <div class="history-set-tags">${setTags}</div>
+      </div>`;
+    }).join('');
+  }
+
+  overlay.classList.add('open');
+  lucide.createIcons();
+}
+
+function closeExerciseHistory() {
+  const overlay = document.getElementById('exerciseHistoryOverlay');
+  if (overlay) overlay.classList.remove('open');
+}
+
+// Make prev-hint rows clickable for history — attach via event delegation
+document.getElementById('planView')?.addEventListener('click', (e) => {
+  const hint = e.target.closest('.prev-hint');
+  if (!hint) return;
+  const card = hint.closest('.exercise-card');
+  if (!card) return;
+  const nameEl = card.querySelector('.exercise-name');
+  const name = nameEl?.textContent?.trim();
+  if (name) showExerciseHistory(name);
+});
+
+if (EMBED_MODE) {
+  window.addEventListener('message', (e) => {
+    const msg = e.data;
+    if (!msg || typeof msg.type !== 'string') return;
+    if (msg.type === 'po-exercises') {
+      _mergeParentExercises(msg.exercises);
+    } else if (msg.type === 'po-templates') {
+      _mergeParentTemplates(msg.templates);
+    } else if (msg.type === 'po-workouts') {
+      _mergeParentWorkouts(msg.workouts);
+    }
+  });
+  // Request exercises + templates + workouts in case iframe loaded before parent sent them
+  try {
+    window.parent.postMessage({ type: 'po-request-exercises' }, '*');
+    window.parent.postMessage({ type: 'po-request-templates' }, '*');
+    window.parent.postMessage({ type: 'po-request-workouts' }, '*');
+  } catch (_) {}
+}
 
 /* ── Theme ── */
 function toggleTheme() {
@@ -1057,6 +1405,129 @@ const EXERCISE_PRESETS = {
   'Calf Raise': { muscle: 'Legs', equipment: 'machines', reps: '15', weight: '40', bodyweight: false },
   'Deadlift': { muscle: 'Back', equipment: 'barbell', reps: '5', weight: '120', bodyweight: false }
 };
+
+/* ── Session Exercise Picker ── */
+let _sessionPickerCardId = null;
+let _sessionPickerSelectedName = null;
+
+function openSessionPicker(cardId) {
+  _sessionPickerCardId = cardId;
+  const search = document.getElementById('sessionPickerSearch');
+  const available = getAvailableExerciseNames(cardId);
+  if (!available.length) {
+    alert('All exercises are already in this workout.');
+    return;
+  }
+  _sessionPickerSelectedName = available[0];
+  search.value = '';
+  renderSessionPickerList('');
+  document.getElementById('sessionPicker').classList.add('open');
+  requestAnimationFrame(() => search.focus());
+}
+
+function closeSessionPicker() {
+  document.getElementById('sessionPicker').classList.remove('open');
+  document.getElementById('sessionPickerSearch').value = '';
+  _sessionPickerCardId = null;
+}
+
+function renderSessionPickerList(query) {
+  const list = document.getElementById('sessionPickerList');
+  const q = query.toLowerCase();
+  const available = getAvailableExerciseNames(_sessionPickerCardId);
+  const filtered = available.filter((name) => {
+    const preset = EXERCISE_PRESETS[name];
+    return !q || name.toLowerCase().includes(q) || (preset?.muscle || '').toLowerCase().includes(q);
+  });
+  if (!filtered.length) {
+    list.innerHTML = '<div class="session-picker-empty">No matching exercises</div>';
+    _sessionPickerSelectedName = null;
+    return;
+  }
+  if (!filtered.includes(_sessionPickerSelectedName)) _sessionPickerSelectedName = filtered[0];
+  list.innerHTML = filtered.map((name) => {
+    const preset = EXERCISE_PRESETS[name];
+    const escapedName = name.replace(/'/g, "\\'");
+    return `<div class="session-picker-item${name === _sessionPickerSelectedName ? ' selected' : ''}" data-name="${name}" onclick="selectSessionPickerItem('${escapedName}')">
+      ${name}<span class="sp-muscle">${preset?.muscle || ''}</span>
+    </div>`;
+  }).join('');
+}
+
+function selectSessionPickerItem(name) {
+  _sessionPickerSelectedName = name;
+  document.querySelectorAll('.session-picker-item').forEach((el) => {
+    el.classList.toggle('selected', el.dataset.name === name);
+  });
+}
+
+function filterSessionPickerList() {
+  const query = document.getElementById('sessionPickerSearch').value;
+  renderSessionPickerList(query);
+}
+
+function confirmSessionPicker() {
+  if (!_sessionPickerSelectedName || !_sessionPickerCardId) return;
+  applyExercisePresetByName(_sessionPickerSelectedName, _sessionPickerCardId);
+  closeSessionPicker();
+}
+
+function applyExercisePresetByName(name, cardId) {
+  const previousName = document.getElementById(cardId)?.dataset.exerciseName || '';
+  if (hasExerciseInWorkout(name, cardId)) {
+    alert('This exercise is already in the workout.');
+    return;
+  }
+  const ex = EXERCISE_PRESETS[name];
+  if (!ex) return;
+  const lastWorkout = getLastWorkoutForExercise(name);
+  const bodyKey = cardId.replace('card-', '');
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  card.dataset.bodyweight = ex.bodyweight ? '1' : '0';
+  card.dataset.exerciseName = name;
+  document.getElementById('name-' + bodyKey).textContent = name;
+  const muscleChip = card.querySelector('.muscle-chip');
+  if (muscleChip) muscleChip.textContent = ex.muscle;
+  ensureCardEquipmentIcon(cardId);
+
+  const rows = Array.from(card.querySelectorAll('.set-row'));
+  if (!rows.length) return;
+
+  if (ex.bodyweight) {
+    updateCardWeightMode(cardId, true, 'BW');
+  } else {
+    updateCardWeightMode(cardId, false, ex.weight);
+  }
+
+  const updatedRows = Array.from(card.querySelectorAll('.set-row'));
+  updatedRows.forEach((row, index) => {
+    const sourceSet = Array.isArray(lastWorkout?.sets) && lastWorkout.sets.length
+      ? (lastWorkout.sets[index] || lastWorkout.sets[lastWorkout.sets.length - 1])
+      : null;
+    const repsDefault = sourceSet?.reps || ex.reps;
+    const repsInput = row.querySelector('.reps-input') || row.querySelector('input.set-input');
+    if (repsInput) {
+      repsInput.placeholder = repsDefault;
+      repsInput.value = sourceSet?.reps ? String(sourceSet.reps) : '';
+    }
+
+    if (!ex.bodyweight) {
+      const weightInput = row.querySelector('.weight-input') || row.querySelectorAll('input')[1] || null;
+      if (weightInput) {
+        const historyWeight = sourceSet?.weight && sourceSet.weight !== 'BW' ? String(sourceSet.weight) : '';
+        weightInput.placeholder = historyWeight || ex.weight;
+        weightInput.value = historyWeight;
+      }
+    }
+  });
+
+  enhanceRepsControls(card);
+  refreshExerciseSelectOptions();
+  refreshLinkButtons();
+  updateLinkVisuals();
+  saveDesign1State();
+}
 
 function getEquipmentIcon(equipment) {
   const icons = {
@@ -1199,13 +1670,7 @@ function buildExerciseOptionsHtml(currentValue, excludeCardId = null) {
 }
 
 function refreshExerciseSelectOptions() {
-  document.querySelectorAll('#planView .exercise-card').forEach((card) => {
-    const select = card.querySelector('.exercise-select');
-    if (!select) return;
-    const currentName = (card.querySelector('.exercise-name')?.textContent || '').trim();
-    select.innerHTML = buildExerciseOptionsHtml(currentName, card.id);
-    select.value = currentName;
-  });
+  /* No-op: cards now use picker buttons instead of <select> elements */
 }
 
 function serializeDesign1Cards() {
@@ -1630,9 +2095,7 @@ function addExercise(defaultExerciseName = null, markAsCustom = true, options = 
       <i class="exercise-icon" data-lucide="dumbbell" aria-hidden="true"></i>
       <div class="exercise-name" id="name-${bodyKey}">New Exercise</div>
       <div class="header-exercise-picker" onclick="event.stopPropagation()">
-        <select class="exercise-select" onchange="applyExercisePreset(this,'${id}')">
-          ${buildExerciseOptionsHtml(selectedName)}
-        </select>
+        <button class="exercise-picker-btn" onclick="openSessionPicker('${id}')">Change</button>
       </div>
       <button class="link-next-btn" onclick="toggleLinkWithNext('${id}', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
       <button class="collapse-btn open" id="btn-${bodyKey}"><i data-lucide="chevron-down"></i></button>
@@ -1650,11 +2113,7 @@ function addExercise(defaultExerciseName = null, markAsCustom = true, options = 
     </div>
     <div class="card-summary" id="summary-${bodyKey}"><div class="set-tags"></div></div>`;
   planView.appendChild(card);
-  const select = card.querySelector('.exercise-select');
-  if (selectedName && Array.from(select.options).some((option) => option.value === selectedName)) {
-    select.value = selectedName;
-  }
-  applyExercisePreset(select, id);
+  applyExercisePresetByName(selectedName, id);
   ensureCardEquipmentIcon(id);
   if (ensureThreeSets) {
     while (document.querySelectorAll(`#body-${bodyKey} .set-row`).length < 3) {
@@ -1768,63 +2227,7 @@ function refreshLinkButtons() {
 }
 
 function applyExercisePreset(select, cardId) {
-  const previousName = document.getElementById(cardId)?.dataset.exerciseName || '';
-  if (hasExerciseInWorkout(select.value, cardId)) {
-    alert('This exercise is already in the workout.');
-    if (previousName) {
-      select.value = previousName;
-    }
-    return;
-  }
-  const ex = EXERCISE_PRESETS[select.value];
-  if (!ex) return;
-  const lastWorkout = getLastWorkoutForExercise(select.value);
-  const bodyKey = cardId.replace('card-','');
-  const card = document.getElementById(cardId);
-  if (!card) return;
-  card.dataset.bodyweight = ex.bodyweight ? '1' : '0';
-  card.dataset.exerciseName = select.value;
-  document.getElementById('name-' + bodyKey).textContent = select.value;
-  const muscleChip = card.querySelector('.muscle-chip');
-  if (muscleChip) muscleChip.textContent = ex.muscle;
-  ensureCardEquipmentIcon(cardId);
-
-  const rows = Array.from(card.querySelectorAll('.set-row'));
-  if (!rows.length) return;
-
-  if (ex.bodyweight) {
-    updateCardWeightMode(cardId, true, 'BW');
-  } else {
-    updateCardWeightMode(cardId, false, ex.weight);
-  }
-
-  const updatedRows = Array.from(card.querySelectorAll('.set-row'));
-  updatedRows.forEach((row, index) => {
-    const sourceSet = Array.isArray(lastWorkout?.sets) && lastWorkout.sets.length
-      ? (lastWorkout.sets[index] || lastWorkout.sets[lastWorkout.sets.length - 1])
-      : null;
-    const repsDefault = sourceSet?.reps || ex.reps;
-    const repsInput = row.querySelector('.reps-input') || row.querySelector('input.set-input');
-    if (repsInput) {
-      repsInput.placeholder = repsDefault;
-      repsInput.value = sourceSet?.reps ? String(sourceSet.reps) : '';
-    }
-
-    if (!ex.bodyweight) {
-      const weightInput = row.querySelector('.weight-input') || row.querySelectorAll('input')[1] || null;
-      if (weightInput) {
-        const historyWeight = sourceSet?.weight && sourceSet.weight !== 'BW' ? String(sourceSet.weight) : '';
-        weightInput.placeholder = historyWeight || ex.weight;
-        weightInput.value = historyWeight;
-      }
-    }
-  });
-
-  enhanceRepsControls(card);
-  refreshExerciseSelectOptions();
-  refreshLinkButtons();
-  updateLinkVisuals();
-  saveDesign1State();
+  applyExercisePresetByName(select.value, cardId);
 }
 
 /* ── Load Template ── */
@@ -1902,9 +2305,7 @@ function loadTemplate(name) {
         <i class='exercise-icon' data-lucide='${getEquipmentIcon(EXERCISE_PRESETS[ex.name]?.equipment)}' aria-hidden='true'></i>
         <div class='exercise-name' id='name-${bodyKey}'>${ex.name}</div>
         <div class='header-exercise-picker' onclick='event.stopPropagation()'>
-          <select class='exercise-select' onchange="applyExercisePreset(this,'${cardId}')">
-            ${buildExerciseOptionsHtml(ex.name, cardId)}
-          </select>
+          <button class='exercise-picker-btn' onclick="openSessionPicker('${cardId}')">Change</button>
         </div>
         <button class='link-next-btn' onclick="toggleLinkWithNext('${cardId}', event)" title='Link with exercise below'><i data-lucide='link'></i></button>
         <button class='collapse-btn open' id='btn-${bodyKey}'><i data-lucide='chevron-down'></i></button>

@@ -92,7 +92,7 @@ body {
     display: none;
     position: absolute;
     top: calc(100% + 8px);
-    right: 0;
+    left: 0;
     min-width: 200px;
     background: #fff;
     border-radius: var(--radius-lg);
@@ -186,8 +186,8 @@ body {
 /* Config dropdown panel */
 .config-dropdown-content {
     min-width: 300px;
-    right: 0;
-    left: auto;
+    left: 0;
+    right: auto;
 }
 
 .config-dropdown-body {

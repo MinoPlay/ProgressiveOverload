@@ -151,6 +151,9 @@ const App = {
             // Initialize storage
             await Storage.initialize();
 
+            // Initialize iframe bridge (send exercise data to embedded iframes)
+            IframeBridge.init();
+
             console.log('Initializing UI modules...');
             // Initialize all modules
             Exercises.init();
@@ -380,6 +383,102 @@ function escapeHtml(str) {
     div.textContent = str;
     return div.innerHTML;
 }
+
+/**
+ * Iframe Bridge
+ * Sends exercise data and templates from parent Storage to embedded iframes via postMessage.
+ * Listens for iframe requests and forwards exercisesUpdated / templatesUpdated events.
+ */
+const IframeBridge = {
+    frames: [],
+
+    init() {
+        const sessionFrame = document.querySelector('#design1Section iframe');
+        const builderFrame = document.querySelector('#design3Section iframe');
+        this.frames = [sessionFrame, builderFrame].filter(Boolean);
+
+        if (!this.frames.length) return;
+
+        // Listen for messages from iframes
+        window.addEventListener('message', (e) => this.handleMessage(e));
+
+        // Send data when each iframe (re)loads
+        this.frames.forEach(frame => {
+            frame.addEventListener('load', () => this.sendAllData(frame));
+        });
+
+        // Forward parent events to iframes
+        window.addEventListener('exercisesUpdated', () => this.broadcastExercises());
+        window.addEventListener('templatesUpdated', () => this.broadcastTemplates());
+
+        console.log('Iframe bridge initialized');
+    },
+
+    /** Send exercises + templates + workouts to a single iframe */
+    sendAllData(frame) {
+        try {
+            this.sendExercises(frame);
+            this.sendTemplates(frame);
+            this.sendWorkouts(frame);
+        } catch (err) {
+            console.warn('IframeBridge: could not send data to iframe', err);
+        }
+    },
+
+    sendExercises(frame) {
+        const exercises = Storage.getExercises();
+        frame.contentWindow?.postMessage({ type: 'po-exercises', exercises }, '*');
+    },
+
+    sendTemplates(frame) {
+        const templates = Storage.sessionTemplates || [];
+        frame.contentWindow?.postMessage({ type: 'po-templates', templates }, '*');
+    },
+
+    sendWorkouts(frame) {
+        const workouts = Storage.currentMonthWorkouts || [];
+        frame.contentWindow?.postMessage({ type: 'po-workouts', workouts }, '*');
+    },
+
+    /** Broadcast exercises to every iframe */
+    broadcastExercises() {
+        this.frames.forEach(f => this.sendExercises(f));
+    },
+
+    /** Broadcast templates to every iframe */
+    broadcastTemplates() {
+        this.frames.forEach(f => this.sendTemplates(f));
+    },
+
+    /** Broadcast workouts to every iframe */
+    broadcastWorkouts() {
+        this.frames.forEach(f => this.sendWorkouts(f));
+    },
+
+    /** Handle incoming postMessage from iframes */
+    handleMessage(event) {
+        const msg = event.data;
+        if (!msg || typeof msg.type !== 'string' || !msg.type.startsWith('po-')) return;
+
+        // Find the frame that sent the message
+        const sourceFrame = this.frames.find(f => f.contentWindow === event.source);
+        if (!sourceFrame) return;
+
+        switch (msg.type) {
+            case 'po-request-exercises':
+                this.sendExercises(sourceFrame);
+                break;
+            case 'po-request-templates':
+                this.sendTemplates(sourceFrame);
+                break;
+            case 'po-request-workouts':
+                this.sendWorkouts(sourceFrame);
+                break;
+            default:
+                break;
+        }
+    }
+};
 
 // Initialize app when DOM is ready
 if (document.readyState === 'loading') {

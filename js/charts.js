@@ -189,6 +189,13 @@ export const Charts = {
                 weekPanel.classList.toggle('inactive', period !== 'weekly');
                 monthPanel.classList.toggle('inactive', period !== 'monthly');
                 if (overallPanel) overallPanel.classList.toggle('inactive', period !== 'overall');
+
+                // Re-render weekly stats charts when Overall panel becomes visible
+                // (they render at 0×0 if the panel was hidden on first render)
+                if (period === 'overall' && this._cachedAllWorkouts) {
+                    requestAnimationFrame(() => this.renderWeeklyStats(this._cachedAllWorkouts));
+                }
+
                 window.dispatchEvent(new Event('resize'));
             };
 
@@ -708,8 +715,8 @@ export const Charts = {
                         beginAtZero: true,
                         ticks: { display: false, stepSize: 1, font: { size: 9 }, backdropColor: 'transparent' },
                         pointLabels: { font: { size: 10, weight: '600' } },
-                        grid: { color: 'rgba(128,128,128,0.2)' },
-                        angleLines: { color: 'rgba(128,128,128,0.2)' }
+                        grid: { color: 'rgba(128,128,128,0.4)' },
+                        angleLines: { color: 'rgba(128,128,128,0.4)' }
                     }
                 }
             }
@@ -872,7 +879,7 @@ export const Charts = {
                         }
                     },
                     tooltip: {
-                        enabled: false,
+                        enabled: true,
                         mode: 'index',
                         intersect: false,
                         callbacks: {
@@ -1255,7 +1262,7 @@ export const Charts = {
                         }
                     },
                     tooltip: {
-                        enabled: false,
+                        enabled: true,
                         mode: 'index',
                         intersect: false,
                         callbacks: {
@@ -1278,7 +1285,7 @@ export const Charts = {
                 scales: {
                     y: {
                         beginAtZero: false,
-                        title: { display: false }
+                        title: { display: true, text: this.selectedMetric === 'relative' ? 'Progress (%)' : (this.selectedMetric === 'weight' ? 'Weight (kg)' : 'Reps') }
                     },
                     x: {
                         title: { display: true, text: 'Week' }

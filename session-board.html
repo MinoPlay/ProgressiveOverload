@@ -1159,10 +1159,9 @@ function _mergeParentExercises(exercises) {
   if (!Array.isArray(exercises) || !exercises.length) return;
   // Build ID→meta lookup for template resolution
   exercises.forEach(ex => { _parentExerciseMap[ex.id] = ex; });
-  const existingNames = new Set(Object.keys(EXERCISE_PRESETS).map(n => n.toLowerCase()));
-  let added = 0;
+  // Always overwrite/add exercises from parent — parent data is authoritative
+  let count = 0;
   exercises.forEach(ex => {
-    if (existingNames.has(ex.name.toLowerCase())) return;
     EXERCISE_PRESETS[ex.name] = {
       muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1),
       equipment: ex.equipmentType || 'barbell',
@@ -1170,17 +1169,18 @@ function _mergeParentExercises(exercises) {
       weight: ex.requiresWeight === false ? 'BW' : '20',
       bodyweight: ex.requiresWeight === false
     };
-    existingNames.add(ex.name.toLowerCase());
-    added++;
+    count++;
   });
-  console.log(`[Session Board] Received ${exercises.length} exercises from parent, added ${added} new`);
+  console.log(`[Session Board] Received ${exercises.length} exercises from parent, applied ${count}`);
+  // Refresh UI now that exercises are populated
+  refreshExerciseSelectOptions();
 }
 
 function _mergeParentTemplates(parentTemplates) {
   if (!Array.isArray(parentTemplates) || !parentTemplates.length) return;
   let added = 0;
   parentTemplates.forEach(tpl => {
-    if (!tpl.name || templates[tpl.name]) return; // skip duplicates
+    if (!tpl.name) return; // always overwrite — parent data is authoritative
     const rows = [];
     (tpl.rows || []).forEach(row => {
       if (row.type === 'single') {
@@ -1351,6 +1351,8 @@ if (EMBED_MODE) {
     if (!msg || typeof msg.type !== 'string') return;
     if (msg.type === 'po-exercises') {
       _mergeParentExercises(msg.exercises);
+      // Re-apply saved state now that exercises are available from parent
+      applySavedDesign1State();
     } else if (msg.type === 'po-templates') {
       _mergeParentTemplates(msg.templates);
     } else if (msg.type === 'po-workouts') {
@@ -1403,7 +1405,7 @@ function closeTemplateMenu() {
 
 let activeTemplateName = '';
 
-const EXERCISE_PRESETS = {
+const _FALLBACK_EXERCISE_PRESETS = {
   'Bench Press': { muscle: 'Chest', equipment: 'barbell', reps: '4', weight: '82.5', bodyweight: false },
   'Overhead Press': { muscle: 'Shoulders', equipment: 'barbell', reps: '5', weight: '50', bodyweight: false },
   'Tricep Dips': { muscle: 'Triceps', equipment: 'bodyweight', reps: '10', weight: 'BW', bodyweight: true },
@@ -1415,6 +1417,9 @@ const EXERCISE_PRESETS = {
   'Calf Raise': { muscle: 'Legs', equipment: 'machines', reps: '15', weight: '40', bodyweight: false },
   'Deadlift': { muscle: 'Back', equipment: 'barbell', reps: '5', weight: '120', bodyweight: false }
 };
+
+// In embed mode, start empty and let parent data populate; standalone uses fallback presets
+const EXERCISE_PRESETS = EMBED_MODE ? {} : Object.assign({}, _FALLBACK_EXERCISE_PRESETS);
 
 /* ── Session Exercise Picker ── */
 let _sessionPickerCardId = null;
@@ -2241,8 +2246,8 @@ function applyExercisePreset(select, cardId) {
 }
 
 /* ── Load Template ── */
-// Template data
-const templates = {
+// Template data — in embed mode start empty, parent data populates via bridge
+const _FALLBACK_TEMPLATES = {
   'Push Day A': [
     { name: 'Bench Press', muscle: 'Chest', sets: [ { reps: 4, weight: 80 }, { reps: 4, weight: 82.5 }, { reps: 3, weight: 82.5 } ] },
     { name: 'Overhead Press', muscle: 'Shoulders', sets: [ { reps: 5, weight: 50 }, { reps: 5, weight: 50 }, { reps: 4, weight: 50 } ] },
@@ -2264,6 +2269,8 @@ const templates = {
     { name: 'Squat', muscle: 'Legs', sets: [ { reps: 5, weight: 100 }, { reps: 5, weight: 105 }, { reps: 4, weight: 105 } ] }
   ]
 };
+
+const templates = EMBED_MODE ? {} : JSON.parse(JSON.stringify(_FALLBACK_TEMPLATES));
 
 function chooseTemplate(name) {
   setTemplateSelection(name);

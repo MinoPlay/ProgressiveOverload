@@ -1051,15 +1051,10 @@ function _mergeParentExercisesBuilder(exercises) {
   if (!Array.isArray(exercises) || !exercises.length) return;
   // Build ID→meta lookup for template resolution
   exercises.forEach(ex => { _parentExerciseMap[ex.id] = ex; });
-  const existingNames = new Set();
-  Object.values(EXERCISE_LIBRARY).forEach(entry => {
-    existingNames.add(entry.name.toLowerCase());
-  });
-  let added = 0;
+  // Always overwrite/add exercises from parent — parent data is authoritative
+  let count = 0;
   exercises.forEach(ex => {
-    if (existingNames.has(ex.name.toLowerCase())) return;
     const key = ex.name.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/(^_|_$)/g, '');
-    if (EXERCISE_LIBRARY[key]) return;
     const isBodyweight = ex.requiresWeight === false;
     EXERCISE_LIBRARY[key] = {
       id: key,
@@ -1071,10 +1066,9 @@ function _mergeParentExercisesBuilder(exercises) {
       reps: '8',
       weight: isBodyweight ? 'BW' : '20'
     };
-    existingNames.add(ex.name.toLowerCase());
-    added++;
+    count++;
   });
-  console.log(`[Workout Builder] Received ${exercises.length} exercises from parent, added ${added} new`);
+  console.log(`[Workout Builder] Received ${exercises.length} exercises from parent, applied ${count}`);
 }
 
 function _findLocalKeyByName(name) {
@@ -1089,7 +1083,7 @@ function _mergeParentTemplatesBuilder(parentTemplates) {
   if (!Array.isArray(parentTemplates) || !parentTemplates.length) return;
   let added = 0;
   parentTemplates.forEach(tpl => {
-    if (!tpl.name || TEMPLATES[tpl.name]) return; // skip duplicates
+    if (!tpl.name) return; // always overwrite — parent data is authoritative
     const rows = [];
     let supersetLabel = 'A';
     (tpl.rows || []).forEach(row => {
@@ -1188,6 +1182,8 @@ if (EMBED_MODE) {
     if (!msg || typeof msg.type !== 'string') return;
     if (msg.type === 'po-exercises') {
       _mergeParentExercisesBuilder(msg.exercises);
+      // Re-apply saved state now that exercises are available from parent
+      applySavedDesign3State();
     } else if (msg.type === 'po-templates') {
       _mergeParentTemplatesBuilder(msg.templates);
     } else if (msg.type === 'po-workouts') {
@@ -1249,7 +1245,7 @@ function changeQuickLogReps(delta) {
 }
 
 /* ── Execute data ── */
-const EXERCISE_LIBRARY = {
+const _FALLBACK_EXERCISE_LIBRARY = {
   bench: { id: 'bench', name: 'Bench Press', muscle: 'Chest', equipment: 'barbell', mode: 'weight', prev: '4×80 kg · 4×82.5 kg · 3×82.5 kg', reps: '4', weight: '80' },
   ohp: { id: 'ohp', name: 'Overhead Press', muscle: 'Shoulders', equipment: 'barbell', mode: 'weight', prev: '5×50 kg · 5×50 kg · 4×50 kg', reps: '5', weight: '50' },
   dips: { id: 'dips', name: 'Tricep Dips', muscle: 'Triceps', equipment: 'bodyweight', mode: 'bodyweight', prev: '10 reps · 10 reps · 8 reps', reps: '10', weight: 'BW' },
@@ -1260,6 +1256,9 @@ const EXERCISE_LIBRARY = {
   pullup: { id: 'pullup', name: 'Pull-Up', muscle: 'Back', equipment: 'bodyweight', mode: 'bodyweight', prev: '8 reps · 7 reps · 6 reps', reps: '8', weight: 'BW' },
   squat: { id: 'squat', name: 'Back Squat', muscle: 'Legs', equipment: 'barbell', mode: 'weight', prev: '5×100 kg · 5×100 kg · 4×100 kg', reps: '5', weight: '100' }
 };
+
+// In embed mode, start empty and let parent data populate; standalone uses fallback library
+const EXERCISE_LIBRARY = EMBED_MODE ? {} : JSON.parse(JSON.stringify(_FALLBACK_EXERCISE_LIBRARY));
 
 function getEquipmentIcon(equipment) {
   const icons = {
@@ -1273,7 +1272,7 @@ function getEquipmentIcon(equipment) {
   return icons[equipment] || 'dumbbell';
 }
 
-const TEMPLATES = {
+const _FALLBACK_TEMPLATES = {
   'Push Day A': [
     { exerciseId: 'bench', sets: 3, superset: 'A' },
     { exerciseId: 'ohp', sets: 3, superset: 'A' },
@@ -1294,6 +1293,9 @@ const TEMPLATES = {
     { exerciseId: 'row', sets: 3, superset: null }
   ]
 };
+
+// In embed mode, start empty and let parent data populate; standalone uses fallback templates
+const TEMPLATES = EMBED_MODE ? {} : JSON.parse(JSON.stringify(_FALLBACK_TEMPLATES));
 
 let activeTemplate = '';
 let buildExercises = [];
@@ -1362,7 +1364,9 @@ function applySavedDesign3State() {
 }
 
 function cloneExerciseFromLibrary(exerciseId, sets, superset) {
-  const source = EXERCISE_LIBRARY[exerciseId] || EXERCISE_LIBRARY.bench;
+  const firstKey = Object.keys(EXERCISE_LIBRARY)[0];
+  const source = EXERCISE_LIBRARY[exerciseId] || (firstKey ? EXERCISE_LIBRARY[firstKey] : null);
+  if (!source) return { exerciseId: exerciseId, name: exerciseId, muscle: '', equipment: 'barbell', mode: 'weight', prev: '', superset, sets: Array.from({ length: 3 }, () => ({ r: '8', w: '20', done: false })) };
   return {
     exerciseId: source.id,
     name: source.name,

@@ -878,11 +878,7 @@ body {
           <i data-lucide="chevron-down" class="chev"></i>
         </button>
         <div class="template-menu" id="templateMenu">
-          <button class="template-option active" data-template="" onclick="chooseTemplate('')">No template</button>
-          <button class="template-option" data-template="Push Day A" onclick="chooseTemplate('Push Day A')">Push Day A</button>
-          <button class="template-option" data-template="Pull Day B" onclick="chooseTemplate('Pull Day B')">Pull Day B</button>
-          <button class="template-option" data-template="Leg Day" onclick="chooseTemplate('Leg Day')">Leg Day</button>
-          <button class="template-option" data-template="Full Body" onclick="chooseTemplate('Full Body')">Full Body</button>
+          <!-- Template options injected dynamically -->
         </div>
       </div>
 
@@ -1216,7 +1212,7 @@ function _mergeParentTemplates(parentTemplates) {
       added++;
     }
   });
-  if (added) _rebuildTemplateMenu();
+  _rebuildTemplateMenu();
   console.log(`[Session Board] Received ${parentTemplates.length} templates from parent, added ${added} new`);
 }
 
@@ -2344,7 +2340,7 @@ function loadTemplate(name) {
   enhanceRepsControls(planView);
   lucide.createIcons();
 }
-
+_rebuildTemplateMenu();
 applySavedDesign1State();
 refreshExerciseIcons();
 

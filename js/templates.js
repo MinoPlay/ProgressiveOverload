@@ -222,6 +222,14 @@ export const Templates = {
         const actions = document.createElement('div');
         actions.className = 'planner-row-actions';
 
+        const collapseBtn = document.createElement('button');
+        collapseBtn.type = 'button';
+        collapseBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-collapse-btn';
+        collapseBtn.dataset.action = 'toggle-collapse';
+        collapseBtn.dataset.rowId = row.id;
+        collapseBtn.innerHTML = '<i data-lucide="chevron-down"></i>';
+        collapseBtn.title = 'Toggle collapse';
+
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn';
@@ -230,6 +238,7 @@ export const Templates = {
         removeBtn.innerHTML = '<i data-lucide="trash-2"></i>';
         removeBtn.title = 'Remove row';
 
+        actions.appendChild(collapseBtn);
         actions.appendChild(removeBtn);
         header.appendChild(title);
         header.appendChild(actions);
@@ -263,6 +272,14 @@ export const Templates = {
         const actions = document.createElement('div');
         actions.className = 'planner-row-actions';
 
+        const collapseBtn = document.createElement('button');
+        collapseBtn.type = 'button';
+        collapseBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-collapse-btn';
+        collapseBtn.dataset.action = 'toggle-collapse';
+        collapseBtn.dataset.rowId = row.id;
+        collapseBtn.innerHTML = '<i data-lucide="chevron-down"></i>';
+        collapseBtn.title = 'Toggle collapse';
+
         const removeBtn = document.createElement('button');
         removeBtn.type = 'button';
         removeBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn';
@@ -271,6 +288,7 @@ export const Templates = {
         removeBtn.innerHTML = '<i data-lucide="trash-2"></i>';
         removeBtn.title = 'Remove superset';
 
+        actions.appendChild(collapseBtn);
         actions.appendChild(removeBtn);
         header.appendChild(title);
         header.appendChild(actions);
@@ -361,6 +379,21 @@ export const Templates = {
             titleSpan.className = 'planner-set-title';
             titleSpan.textContent = `Set ${idx + 1}`;
             header.appendChild(titleSpan);
+
+            // Add copy-down button for all sets except the last one
+            if (idx < normalizedSets.length - 1) {
+                const copyBtn = document.createElement('button');
+                copyBtn.type = 'button';
+                copyBtn.className = 'template-set-copy-btn';
+                copyBtn.dataset.action = 'copy-set-down';
+                copyBtn.dataset.rowId = rowId;
+                copyBtn.dataset.setId = setEntry.id;
+                copyBtn.dataset.setIndex = String(idx);
+                if (itemId) copyBtn.dataset.itemId = itemId;
+                copyBtn.innerHTML = '<i data-lucide="arrow-down"></i>';
+                copyBtn.title = 'Copy to next set';
+                header.appendChild(copyBtn);
+            }
 
             const fields = document.createElement('div');
             fields.className = 'planner-set-fields';
@@ -484,11 +517,43 @@ export const Templates = {
         const button = event.target.closest('button[data-action]');
         if (!button || !this.editorSession) return;
 
-        const { action, rowId, itemId, setId, delta } = button.dataset;
+        const { action, rowId, itemId, setId, delta, setIndex } = button.dataset;
+
+        if (action === 'toggle-collapse') {
+            const wrapper = button.closest('.planned-row, .superset-block');
+            if (wrapper) {
+                wrapper.classList.toggle('collapsed');
+            }
+            return;
+        }
 
         if (action === 'remove-row') {
             this.editorSession.rows = this.editorSession.rows.filter(r => r.id !== rowId);
             this.renderEditorRows();
+            return;
+        }
+
+        if (action === 'copy-set-down') {
+            const row = this.editorSession.rows.find(r => r.id === rowId);
+            if (!row) return;
+
+            const target = row.type === 'superset'
+                ? (row.exercises || []).find(e => e.id === itemId)
+                : row;
+            if (!target || !target.sets) return;
+
+            const idx = parseInt(setIndex || '0', 10);
+            if (idx >= target.sets.length - 1) return; // Can't copy from last set
+
+            // Copy reps and weight from current set to next set
+            const currentSet = target.sets[idx];
+            const nextSet = target.sets[idx + 1];
+            if (currentSet && nextSet) {
+                nextSet.reps = currentSet.reps;
+                nextSet.weight = currentSet.weight;
+                // Re-render to update the UI
+                this.renderEditorRows();
+            }
             return;
         }
 

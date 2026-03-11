@@ -3858,6 +3858,29 @@
 }
 
 /* ─── Template Editor ───────────────────────────────────────────────────────── */
+#templateForm {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 200px);
+}
+
+#templateForm .template-form-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-bottom: var(--spacing-md);
+}
+
+#templateForm .form-actions {
+    position: sticky;
+    bottom: 0;
+    background: var(--bg-primary);
+    padding: var(--spacing-md) 0;
+    border-top: 1px solid var(--border-light);
+    margin-top: 0;
+    z-index: 10;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+}
+
 .template-row-list {
     margin-bottom: var(--spacing-md);
 }
@@ -3872,6 +3895,34 @@
 
 .template-sets-grid .template-set-card .planner-set-header {
     margin-bottom: var(--spacing-xs);
+}
+
+/* Set copy buttons in template editor */
+.template-set-copy-btn {
+    width: 20px;
+    height: 20px;
+    min-height: 20px;
+    padding: 0;
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    background: var(--bg-primary);
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: auto;
+}
+
+.template-set-copy-btn:hover {
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+    background: var(--bg-secondary);
+}
+
+.template-set-copy-btn .lucide {
+    width: 12px;
+    height: 12px;
 }
 
 /* ─── Planner Template Dropdown ─────────────────────────────────────────────── */

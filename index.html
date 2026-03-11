@@ -193,27 +193,29 @@
 
                     <!-- Add/Edit Template Form -->
                     <div id="templateForm" class="form-container" style="display: none;">
-                        <h3 id="templateFormTitle">New Template</h3>
+                        <div class="template-form-content">
+                            <h3 id="templateFormTitle">New Template</h3>
 
-                        <div class="form-group">
-                            <label for="templateName">Template Name <span class="required">*</span></label>
-                            <input type="text" id="templateName" placeholder="e.g., Push Day A" maxlength="100" autocomplete="off">
+                            <div class="form-group">
+                                <label for="templateName">Template Name <span class="required">*</span></label>
+                                <input type="text" id="templateName" placeholder="e.g., Push Day A" maxlength="100" autocomplete="off">
+                            </div>
+
+                            <div class="planner-controls" style="margin-bottom: var(--spacing-sm);">
+                                <button type="button" id="templateAddExerciseBtn"
+                                    class="btn-icon btn-secondary btn-small planner-add-btn"
+                                    title="Add exercise" aria-label="Add exercise">
+                                    <i data-lucide="plus"></i>
+                                </button>
+                                <button type="button" id="templateAddSupersetBtn"
+                                    class="btn-icon btn-secondary btn-small planner-add-btn"
+                                    title="Add superset block" aria-label="Add superset block">
+                                    <i data-lucide="link-2"></i>
+                                </button>
+                            </div>
+
+                            <div id="templateRowList" class="planned-session-list template-row-list" aria-live="polite"></div>
                         </div>
-
-                        <div class="planner-controls" style="margin-bottom: var(--spacing-sm);">
-                            <button type="button" id="templateAddExerciseBtn"
-                                class="btn-icon btn-secondary btn-small planner-add-btn"
-                                title="Add exercise" aria-label="Add exercise">
-                                <i data-lucide="plus"></i>
-                            </button>
-                            <button type="button" id="templateAddSupersetBtn"
-                                class="btn-icon btn-secondary btn-small planner-add-btn"
-                                title="Add superset block" aria-label="Add superset block">
-                                <i data-lucide="link-2"></i>
-                            </button>
-                        </div>
-
-                        <div id="templateRowList" class="planned-session-list template-row-list" aria-live="polite"></div>
 
                         <div class="form-actions">
                             <button type="button" id="saveTemplateBtn" class="btn btn-primary">

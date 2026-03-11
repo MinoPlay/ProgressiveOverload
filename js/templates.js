@@ -656,7 +656,10 @@ export const Templates = {
 
             if (row.type === 'single') {
                 if (fieldName === 'exerciseId') {
-                    row.exerciseId = field.value;
+                    // Only update if a real exercise is selected.
+                    // A blank value means the <option> wasn't found (e.g. exercise ID
+                    // mismatch) — don't clobber the valid exerciseId already in editorSession.
+                    if (field.value) row.exerciseId = field.value;
                 } else {
                     const set = (row.sets || []).find(s => s.id === setId);
                     if (set) set[fieldName] = field.value;
@@ -665,7 +668,7 @@ export const Templates = {
                 const item = (row.exercises || []).find(e => e.id === itemId);
                 if (!item) return;
                 if (fieldName === 'exerciseId') {
-                    item.exerciseId = field.value;
+                    if (field.value) item.exerciseId = field.value;
                 } else {
                     const set = (item.sets || []).find(s => s.id === setId);
                     if (set) set[fieldName] = field.value;

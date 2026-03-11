@@ -687,52 +687,6 @@ body {
 .remove-ex-btn i { width: 14px; height: 14px; }
 .remove-ex-btn:hover { color: #ef4444; border-color: #ef4444; }
 
-/* ── FAB ──────────────────────────────────────────────────────────── */
-.fab {
-  position: absolute;
-  bottom: calc(var(--tab-h) + 76px);
-  right: 14px;
-  width: 52px; height: 52px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: 50%;
-  box-shadow: 0 4px 16px rgba(102,126,234,.45);
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  z-index: 50;
-  transition: transform .15s;
-}
-.fab:active { transform: scale(.92); }
-.fab i { width: 22px; height: 22px; }
-
-/* ── Sticky Submit ────────────────────────────────────────────────── */
-.sticky-submit {
-  position: absolute;
-  bottom: var(--tab-h);
-  left: 0; right: 0;
-  padding: 10px 12px;
-  background: var(--surface);
-  border-top: 1px solid var(--border);
-  z-index: 40;
-}
-.submit-btn {
-  width: 100%;
-  padding: 14px;
-  background: var(--accent);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius-sm);
-  font-size: 16px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
-  gap: 8px;
-  transition: opacity .2s;
-}
-.submit-btn:disabled { opacity: .4; cursor: not-allowed; }
-.submit-btn i { width: 18px; height: 18px; }
-
 /* ── Bottom Tab Bar ───────────────────────────────────────────────── */
 .tab-bar {
   height: var(--tab-h);
@@ -763,6 +717,7 @@ body {
 .tab-item i { width: 22px; height: 22px; }
 .tab-item span { font-size: 11px; font-weight: 600; letter-spacing: .01em; }
 .tab-item.active { color: var(--accent); }
+.tab-item:disabled { opacity: .4; cursor: not-allowed; }
 
 /* ── Views ────────────────────────────────────────────────────────── */
 .view { display: none; }
@@ -1074,30 +1029,22 @@ body {
 
   </div><!-- /scroll-area -->
 
-  <!-- Sticky Submit (Plan view only) -->
-  <div class="sticky-submit" id="stickySubmit">
-    <button class="submit-btn" id="submitBtn" disabled>
-      <i data-lucide="send"></i> Submit Session
-    </button>
-  </div>
-
   <!-- Bottom Tab Bar -->
   <nav class="tab-bar">
     <button class="tab-item active" id="tab-plan" onclick="switchTab('plan')">
       <i data-lucide="layout-list"></i>
       <span>Plan</span>
     </button>
-    <button class="tab-item" id="tab-log" onclick="switchTab('log')">
+    <button class="tab-item" id="tab-add" onclick="openAddExercisePicker()">
       <i data-lucide="plus-circle"></i>
-      <span>Quick Log</span>
+      <span>Add Exercise</span>
+    </button>
+    <button class="tab-item" id="submitBtn" disabled>
+      <i data-lucide="send"></i>
+      <span>Submit Session</span>
     </button>
   </nav>
 </div>
-
-<!-- FAB (Plan view only) -->
-<button class="fab" id="fab" onclick="addExercise()" title="Add exercise">
-  <i data-lucide="plus"></i>
-</button>
 
 <!-- Session Exercise Picker Modal -->
 <div class="session-picker-overlay" id="sessionPicker" onclick="if(event.target===this) closeSessionPicker()">
@@ -1493,6 +1440,21 @@ function openSessionPicker(cardId) {
   requestAnimationFrame(() => search.focus());
 }
 
+function openAddExercisePicker() {
+  _sessionPickerCardId = null;
+  const search = document.getElementById('sessionPickerSearch');
+  const available = getAvailableExerciseIds();
+  if (!available.length) {
+    alert('All exercises are already in this workout.');
+    return;
+  }
+  _sessionPickerSelectedId = available[0];
+  search.value = '';
+  renderSessionPickerList('');
+  document.getElementById('sessionPicker').classList.add('open');
+  requestAnimationFrame(() => search.focus());
+}
+
 function closeSessionPicker() {
   document.getElementById('sessionPicker').classList.remove('open');
   document.getElementById('sessionPickerSearch').value = '';
@@ -1536,8 +1498,12 @@ function filterSessionPickerList() {
 }
 
 function confirmSessionPicker() {
-  if (!_sessionPickerSelectedId || !_sessionPickerCardId) return;
-  applyExercisePresetById(_sessionPickerSelectedId, _sessionPickerCardId);
+  if (!_sessionPickerSelectedId) return;
+  if (_sessionPickerCardId) {
+    applyExercisePresetById(_sessionPickerSelectedId, _sessionPickerCardId);
+  } else {
+    addExercise(_sessionPickerSelectedId, true, { allowDuplicate: false });
+  }
   closeSessionPicker();
 }
 
@@ -2034,8 +2000,6 @@ function switchTab(tab) {
   document.getElementById('planView').classList.toggle('active', tab === 'plan');
   document.getElementById('logView').classList.toggle('active', tab === 'log');
   document.getElementById('tab-plan').classList.toggle('active', tab === 'plan');
-  document.getElementById('tab-log').classList.toggle('active', tab === 'log');
-  document.getElementById('fab').style.display = tab === 'plan' ? '' : 'none';
 }
 
 /* ── Toggle Card ── */

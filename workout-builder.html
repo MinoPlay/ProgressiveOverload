@@ -342,32 +342,7 @@ body {
   color: var(--accent);
 }
 
-/* Start Workout sticky */
-.start-sticky {
-  position: absolute;
-  bottom: var(--tab-h);
-  left: 0; right: 0;
-  padding: 12px 14px;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-  z-index: 40;
-  display: none;
-}
-.start-sticky.visible { display: block; }
-.start-btn {
-  width: 100%;
-  padding: 15px;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-  color: #fff;
-  border: none;
-  border-radius: var(--radius);
-  font-size: 17px;
-  font-weight: 800;
-  cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  box-shadow: 0 4px 18px var(--accent-glow);
-  letter-spacing: .01em;
-}
+
 .start-btn i { width: 20px; height: 20px; }
 
 /* ── EXECUTE VIEW ─────────────────────────────────────────────────── */
@@ -636,70 +611,7 @@ body {
   cursor: not-allowed;
 }
 
-/* Log view (quick log) */
-.log-view-card {
-  background: var(--surface);
-  border-radius: var(--radius);
-  border: 1px solid var(--border);
-  padding: 16px;
-  box-shadow: var(--shadow);
-}
-.log-view-card h3 { font-size: 15px; font-weight: 700; color: var(--text); margin-bottom: 14px; }
-.form-group { margin-bottom: 10px; }
-.form-label { font-size: 12px; font-weight: 600; color: var(--text3); text-transform: uppercase; letter-spacing: .04em; margin-bottom: 5px; display: block; }
-.form-select, .form-input {
-  width: 100%; padding: 11px 12px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface2); color: var(--text);
-  font-size: 15px; outline: none; appearance: none;
-  transition: border-color .15s;
-}
-.form-select:focus, .form-input:focus { border-color: var(--accent); }
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.quick-reps-control {
-  display: grid;
-  grid-template-columns: clamp(1.7rem, 18%, 2.2rem) minmax(0, 1fr) clamp(1.7rem, 18%, 2.2rem);
-  gap: .5rem;
-  align-items: center;
-}
-.quick-reps-control .form-input {
-  min-width: 0;
-}
-.quick-reps-input {
-  text-align: center;
-  font-size: clamp(1.1rem, 3.8vw, 1.375rem);
-  font-weight: 700;
-  padding: .75rem .4em;
-}
-.quick-reps-btn {
-  width: 100%;
-  aspect-ratio: 1 / 1;
-  border-radius: 10px;
-  border: 1.5px solid var(--border);
-  background: var(--surface2);
-  color: var(--text2);
-  font-size: 18px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  line-height: 1;
-}
-.quick-reps-btn:active { transform: scale(.97); }
-.log-btn {
-  width: 100%; padding: 14px;
-  background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 100%);
-  color: #fff; border: none; border-radius: var(--radius-sm);
-  font-size: 16px; font-weight: 700; cursor: pointer;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  margin-top: 4px;
-}
-.log-btn i { width: 18px; height: 18px; }
-.log-view-card.locked {
-  opacity: .55;
-}
+
 
 /* Prev hint */
 .prev-hint {
@@ -948,49 +860,6 @@ body {
 
       </div><!-- /execView -->
 
-      <!-- LOG VIEW -->
-      <div class="view" id="logView">
-        <div class="log-view-card">
-          <h3>Quick Log a Set</h3>
-          <div class="form-group">
-            <label class="form-label">Muscle Group</label>
-            <select class="form-select">
-              <option>All Muscles</option>
-              <option selected>Chest</option>
-              <option>Shoulders</option>
-              <option>Back</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Exercise</label>
-            <select class="form-select">
-              <option selected>Bench Press</option>
-              <option>Incline Press</option>
-              <option>Cable Fly</option>
-            </select>
-          </div>
-          <div class="prev-hint">
-            <i data-lucide="history"></i>
-            <span>Last: 4 reps × 80 kg — Mon, Mar 2</span>
-          </div>
-          <div class="row2">
-            <div class="form-group">
-              <label class="form-label">Reps</label>
-              <div class="quick-reps-control">
-                <button class="quick-reps-btn" type="button" onclick="changeQuickLogReps(-1)">−</button>
-                <input class="form-input quick-reps-input" id="quickLogReps" type="number" placeholder="4" inputmode="numeric">
-                <button class="quick-reps-btn" type="button" onclick="changeQuickLogReps(1)">+</button>
-              </div>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Weight</label>
-              <input class="form-input" type="number" placeholder="80" inputmode="decimal" style="text-align:center;font-size:22px;font-weight:700;padding:14px 6px;">
-            </div>
-          </div>
-          <button class="log-btn"><i data-lucide="check-circle-2"></i> Log Set</button>
-        </div>
-      </div>
-
     </div><!-- /scroll-inner -->
   </div><!-- /scroll-area -->
 
@@ -1006,26 +875,15 @@ body {
     </div>
   </div>
 
-  <!-- Start sticky (build view) -->
-  <div class="start-sticky" id="startSticky">
-    <button class="start-btn" onclick="startWorkout()">
-      <i data-lucide="play"></i> Start Workout
-    </button>
-  </div>
-
   <!-- Bottom tab bar -->
   <nav class="tab-bar">
     <button class="tab-item active" id="tab-build" onclick="switchTab('build')">
       <i data-lucide="layers"></i>
       <span>Plan</span>
     </button>
-    <button class="tab-item" id="tab-exec" onclick="switchTab('exec')">
+    <button class="tab-item" id="tab-exec" onclick="startWorkout()">
       <i data-lucide="play-circle"></i>
       <span>Execute</span>
-    </button>
-    <button class="tab-item" id="tab-log" onclick="switchTab('log')">
-      <i data-lucide="plus-circle"></i>
-      <span>Quick Log</span>
     </button>
   </nav>
 
@@ -1251,17 +1109,7 @@ function changeExecReps(btn, delta) {
   input.value = Math.max(1, current + delta);
 }
 
-function changeQuickLogReps(delta) {
-  if (executionActive) {
-    return;
-  }
-  const input = document.getElementById('quickLogReps');
-  if (!input) {
-    return;
-  }
-  const current = parseInt(input.value || input.placeholder || '0', 10) || 0;
-  input.value = Math.max(1, current + delta);
-}
+
 
 /* ── Execute data ── */
 const _FALLBACK_EXERCISE_LIBRARY = {
@@ -1407,10 +1255,7 @@ function applySavedDesign3State() {
   }
   currentBlockIndex = Number.isFinite(saved.currentBlockIndex) ? Math.max(0, saved.currentBlockIndex) : 0;
   executionActive = Boolean(saved.executionActive);
-  currentTab = ['build', 'exec', 'log'].includes(saved.activeTab) ? saved.activeTab : 'build';
-  if (executionActive && currentTab === 'log') {
-    currentTab = 'exec';
-  }
+  currentTab = ['build', 'exec'].includes(saved.activeTab) ? saved.activeTab : 'build';
   if (Array.isArray(saved.exercises) || Array.isArray(saved.rows)) {
     // Translate name/parent-id to local V3 exerciseId if needed
     function getExerciseId(nameOrId) {
@@ -1521,7 +1366,6 @@ function applySavedDesign3State() {
   renderBuildList();
   renderExecutionFromBuild();
   updateBuildHeader();
-  updateQuickLogLock();
 }
 
 function cloneExerciseFromLibrary(exerciseId, sets, superset) {
@@ -1567,7 +1411,6 @@ function loadTemplate(templateName) {
   renderBuildList();
   renderExecutionFromBuild();
   updateBuildHeader();
-  updateQuickLogLock();
   saveDesign3State();
 }
 
@@ -1949,7 +1792,6 @@ function changeTmpl() {
 /* ── Start workout ── */
 function startWorkout() {
   executionActive = true;
-  updateQuickLogLock();
   renderExecutionFromBuild();
   switchTab('exec');
   saveDesign3State();
@@ -1963,21 +1805,10 @@ function finishSession() {
   }
   alert('Session finished! 🎉\n\nIn the real app this saves your workout data.');
   executionActive = false;
-  updateQuickLogLock();
   saveDesign3State();
 }
 
-function updateQuickLogLock() {
-  const logTab = document.getElementById('tab-log');
-  const logCard = document.querySelector('.log-view-card');
-  const controls = document.querySelectorAll('#logView input, #logView select, #logView button.log-btn');
-  const locked = executionActive;
-  logTab.classList.toggle('disabled', locked);
-  logCard.classList.toggle('locked', locked);
-  controls.forEach((node) => {
-    node.disabled = locked;
-  });
-}
+
 
 function renderBuildList() {
   const list = document.getElementById('buildList');
@@ -2013,27 +1844,18 @@ function renderBuildList() {
 
 /* ── Tab switch ── */
 function switchTab(tab, options = {}) {
-  const { force = false, persist = true } = options;
-  if (tab === 'log' && executionActive) {
-    if (force) {
-      tab = 'exec';
-    } else {
-      alert('Quick Log is disabled while executing a workout.');
-      return;
-    }
-  }
-  ['build','exec','log'].forEach(t => {
+  const { persist = true } = options;
+  ['build','exec'].forEach(t => {
     document.getElementById(t + 'View').classList.toggle('active', t === tab);
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
   currentTab = tab;
-  document.getElementById('startSticky').classList.toggle('visible', tab === 'build');
   document.getElementById('execFooter').classList.toggle('visible', tab === 'exec');
   if (tab === 'exec' && executionBlocks.length === 0 && buildExercises.length > 0) {
     renderExecutionFromBuild();
   }
   // Update header
-  const titles = { build: ['Plan Session', 'layers'], exec: ['Execute', 'play-circle'], log: ['Quick Log', 'plus-circle'] };
+  const titles = { build: ['Plan Session', 'layers'], exec: ['Execute', 'play-circle'] };
   const [titleText, iconName] = titles[tab];
   document.getElementById('headerTitle').innerHTML = `<i data-lucide="${iconName}"></i>${titleText}`;
   lucide.createIcons();
@@ -2095,8 +1917,7 @@ document.getElementById('execSetList')?.addEventListener('click', (e) => {
 /* Init */
 ensureDesign3SharedStateListener();
 applySavedDesign3State();
-switchTab(currentTab, { force: true, persist: false });
-updateQuickLogLock();
+switchTab(currentTab, { persist: false });
 
 </script>
 </body>

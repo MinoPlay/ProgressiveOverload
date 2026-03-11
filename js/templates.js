@@ -610,14 +610,21 @@ export const Templates = {
         this.syncEditorFromDom();
 
         const payload = { name, rows: this.editorSession.rows };
+        console.log('[Templates.saveTemplate] editorSession.id:', this.editorSession.id);
+        console.log('[Templates.saveTemplate] payload rows count:', payload.rows?.length);
+        console.log('[Templates.saveTemplate] payload:', JSON.parse(JSON.stringify(payload)));
 
         try {
             if (this.editorSession.id) {
+                console.log('[Templates.saveTemplate] Calling Storage.updateSessionTemplate...');
                 await Storage.updateSessionTemplate(this.editorSession.id, payload);
+                console.log('[Templates.saveTemplate] updateSessionTemplate resolved OK');
                 showToast('Template updated', 'success');
             } else {
+                console.log('[Templates.saveTemplate] Calling Storage.addSessionTemplate...');
                 const result = await Storage.addSessionTemplate(payload);
                 this.editorSession.id = result.id;
+                console.log('[Templates.saveTemplate] addSessionTemplate resolved, new id:', result.id);
                 showToast('Template saved', 'success');
             }
 

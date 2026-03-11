@@ -822,7 +822,11 @@ export const Storage = {
      * @returns {Promise<object>}
      */
     async updateSessionTemplate(id, changes) {
+        console.log('[Storage.updateSessionTemplate] id:', id);
+        console.log('[Storage.updateSessionTemplate] changes.rows count:', changes.rows?.length);
+        console.log('[Storage.updateSessionTemplate] current sessionTemplatesSha:', this.sessionTemplatesSha);
         const index = this.sessionTemplates.findIndex(t => t.id === id);
+        console.log('[Storage.updateSessionTemplate] found template at index:', index);
         if (index === -1) throw new Error('Template not found');
 
         if (changes.name) {
@@ -841,7 +845,9 @@ export const Storage = {
             updatedAt: new Date().toISOString()
         };
 
+        console.log('[Storage.updateSessionTemplate] Calling GitHubAPI.saveSessionTemplates with sha:', this.sessionTemplatesSha);
         const result = await GitHubAPI.saveSessionTemplates(this.sessionTemplates, this.sessionTemplatesSha);
+        console.log('[Storage.updateSessionTemplate] saveSessionTemplates result.content.sha:', result?.content?.sha);
         this.sessionTemplatesSha = result.content.sha;
         return this.sessionTemplates[index];
     },

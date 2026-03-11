@@ -108,6 +108,7 @@ export const GitHubAPI = {
      * @returns {Promise<object>} Response from GitHub
      */
     async putFile(path, content, message, sha = null) {
+        console.log('[GitHubAPI.putFile] path:', path, '| sha:', sha);
         try {
             const { owner, repo } = this.getRepoInfo();
             // Encode content to base64
@@ -132,7 +133,10 @@ export const GitHubAPI = {
                 }
             );
 
+            console.log('[GitHubAPI.putFile] response status:', response.status, response.statusText);
             if (!response.ok) {
+                const errorBody = await response.text().catch(() => '');
+                console.error('[GitHubAPI.putFile] error body:', errorBody);
                 if (response.status === 401 || response.status === 403) {
                     throw new Error('GitHub authentication failed. Your PAT may be expired or missing required repo access. Open Configuration in the menu and save a new token.');
                 }
@@ -326,12 +330,15 @@ export const GitHubAPI = {
      * @returns {Promise<object>}
      */
     async saveSessionTemplates(templates, sha = null) {
+        console.log('[GitHubAPI.saveSessionTemplates] templates.length:', templates.length, '| sha:', sha);
         const content = { templates };
         const message = sha
             ? `Update session templates (${templates.length} total)`
             : 'Initialize session templates';
 
-        return await this.putFile(CONFIG.paths.sessionTemplates, content, message, sha);
+        const result = await this.putFile(CONFIG.paths.sessionTemplates, content, message, sha);
+        console.log('[GitHubAPI.saveSessionTemplates] putFile returned, new sha:', result?.content?.sha);
+        return result;
     },
 
     /**

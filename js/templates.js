@@ -33,8 +33,14 @@ export const Templates = {
         if (addSupersetBtn) addSupersetBtn.addEventListener('click', () => this.addEditorSuperset());
 
         if (rowList) {
+            // Use 'change' for both selects and inputs to avoid double-firing on selects
             rowList.addEventListener('change', (e) => this.handleEditorFieldChange(e));
-            rowList.addEventListener('input', (e) => this.handleEditorFieldChange(e));
+            rowList.addEventListener('input', (e) => {
+                // Only handle input events for text/number inputs, not selects
+                if (e.target.tagName !== 'SELECT') {
+                    this.handleEditorFieldChange(e);
+                }
+            });
             rowList.addEventListener('click', (e) => this.handleEditorAction(e));
         }
     },
@@ -390,7 +396,7 @@ export const Templates = {
                 copyBtn.dataset.setId = setEntry.id;
                 copyBtn.dataset.setIndex = String(idx);
                 if (itemId) copyBtn.dataset.itemId = itemId;
-                copyBtn.innerHTML = '<i data-lucide="copy"></i>';
+                copyBtn.innerHTML = '<i data-lucide="arrow-down"></i>';
                 copyBtn.title = `Copy from Set ${idx}`;
                 header.appendChild(copyBtn);
             }
@@ -534,6 +540,9 @@ export const Templates = {
         }
 
         if (action === 'copy-from-previous') {
+            // Sync all DOM values to editorSession first to preserve any uncommitted changes
+            this.syncEditorFromDom();
+
             const row = this.editorSession.rows.find(r => r.id === rowId);
             if (!row) return;
 

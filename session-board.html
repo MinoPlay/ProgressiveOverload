@@ -1814,17 +1814,70 @@ function getPlanExerciseIds() {
 
 function saveDesign1State() {
   const cards = serializeDesign1Cards();
-  const rows = cards.map((card, index) => ({
-    id: `row-design1-${index + 1}`,
-    type: 'single',
-    exerciseId: card.exerciseId,
-    sets: (card.sets || []).map((setState, setIndex) => ({
-      id: `row-design1-${index + 1}-set-${setIndex + 1}`,
-      reps: setState.repsValue || setState.repsPlaceholder || '',
-      weight: setState.isBodyweight ? '' : (setState.weightValue || setState.weightPlaceholder || ''),
-      completed: Boolean(setState.ticked)
-    }))
-  }));
+  const cardElements = Array.from(document.querySelectorAll('#planView .exercise-card'));
+  
+  // Group linked cards into supersets
+  const processed = new Set();
+  const rows = [];
+  
+  cardElements.forEach((cardEl, index) => {
+    if (processed.has(index)) return;
+    
+    const nextCardEl = cardElements[index + 1];
+    const isLinked = nextCardEl && 
+                     cardEl.dataset.linkedWith === nextCardEl.id && 
+                     nextCardEl.dataset.linkedWith === cardEl.id;
+    
+    if (isLinked) {
+      // Create superset row
+      const card1 = cards[index];
+      const card2 = cards[index + 1];
+      rows.push({
+        id: `row-design1-superset-${rows.length + 1}`,
+        type: 'superset',
+        exercises: [
+          {
+            id: `row-design1-superset-${rows.length + 1}-ex-1`,
+            exerciseId: card1.exerciseId,
+            sets: (card1.sets || []).map((setState, setIndex) => ({
+              id: `row-design1-superset-${rows.length + 1}-ex-1-set-${setIndex + 1}`,
+              reps: setState.repsValue || setState.repsPlaceholder || '',
+              weight: setState.isBodyweight ? '' : (setState.weightValue || setState.weightPlaceholder || ''),
+              completed: Boolean(setState.ticked)
+            }))
+          },
+          {
+            id: `row-design1-superset-${rows.length + 1}-ex-2`,
+            exerciseId: card2.exerciseId,
+            sets: (card2.sets || []).map((setState, setIndex) => ({
+              id: `row-design1-superset-${rows.length + 1}-ex-2-set-${setIndex + 1}`,
+              reps: setState.repsValue || setState.repsPlaceholder || '',
+              weight: setState.isBodyweight ? '' : (setState.weightValue || setState.weightPlaceholder || ''),
+              completed: Boolean(setState.ticked)
+            }))
+          }
+        ]
+      });
+      processed.add(index);
+      processed.add(index + 1);
+    } else {
+      // Create single row
+      const card = cards[index];
+      rows.push({
+        id: `row-design1-${rows.length + 1}`,
+        type: 'single',
+        exerciseId: card.exerciseId,
+        sets: (card.sets || []).map((setState, setIndex) => ({
+          id: `row-design1-${rows.length + 1}-set-${setIndex + 1}`,
+          reps: setState.repsValue || setState.repsPlaceholder || '',
+          weight: setState.isBodyweight ? '' : (setState.weightValue || setState.weightPlaceholder || ''),
+          completed: Boolean(setState.ticked)
+        }))
+      });
+      processed.add(index);
+    }
+  });
+  
   const state = {
     cards,
     exercises: getPlanExerciseIds(),
@@ -1907,13 +1960,25 @@ function applySavedDesign1State() {
     let restoredCards = 0;
     savedRows.forEach((row) => {
       if (row.type === 'superset' && Array.isArray(row.exercises)) {
+        const supersetCardIds = [];
         row.exercises.forEach((exerciseRow) => {
           const cardState = toCardStateFromRow(exerciseRow);
           const cardId = addExercise(cardState.exerciseId, false, { suppressSave: true, suppressScroll: true, allowDuplicate: true, ensureThreeSets: false, silentWhenUnavailable: true });
           if (!cardId) return;
           restoredCards += 1;
           applyCardState(cardId, cardState);
+          supersetCardIds.push(cardId);
         });
+        // Restore linkedWith attributes for superset exercises
+        if (supersetCardIds.length === 2) {
+          const [card1Id, card2Id] = supersetCardIds;
+          const card1 = document.getElementById(card1Id);
+          const card2 = document.getElementById(card2Id);
+          if (card1 && card2) {
+            card1.dataset.linkedWith = card2Id;
+            card2.dataset.linkedWith = card1Id;
+          }
+        }
         return;
       }
       if (row.type !== 'single') return;
@@ -1929,6 +1994,8 @@ function applySavedDesign1State() {
     tickedCount = document.querySelectorAll('#planView .tick-btn.ticked').length;
     updateSubmit();
     refreshExerciseSelectOptions();
+    updateLinkVisuals();
+    refreshLinkButtons();
     saveDesign1State();
     return;
   }

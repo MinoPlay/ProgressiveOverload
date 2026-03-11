@@ -350,7 +350,7 @@ export const Storage = {
             sequence
         };
 
-        const optionalFields = ['sessionId', 'plannedSetId', 'supersetGroupId', 'supersetRound', 'source'];
+        const optionalFields = ['sessionId', 'plannedSetId', 'supersetGroupId', 'supersetRound', 'source', 'supersetExercises'];
         optionalFields.forEach(field => {
             if (workout[field] !== undefined && workout[field] !== null && workout[field] !== '') {
                 record[field] = workout[field];

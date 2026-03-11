@@ -1861,6 +1861,11 @@ export const Workouts = {
                     batch.push(normalized.value);
                 }
             } else {
+                // Collect all exercise IDs in this superset for preservation
+                const supersetExerciseIds = row.exercises
+                    .map(item => item.exerciseId)
+                    .filter(id => id);
+
                 for (const supersetItem of row.exercises) {
                     for (let setIndex = 0; setIndex < supersetItem.sets.length; setIndex += 1) {
                         const setEntry = supersetItem.sets[setIndex];
@@ -1873,7 +1878,8 @@ export const Workouts = {
                             setEntry,
                             date,
                             row.id,
-                            `Set ${setIndex + 1}`
+                            `Set ${setIndex + 1}`,
+                            supersetExerciseIds
                         );
                         if (!normalized.valid) {
                             showToast(normalized.error, 'error');
@@ -1902,7 +1908,7 @@ export const Workouts = {
         }
     },
 
-    validatePlannedEntry(exerciseId, setEntry, date, supersetGroupId = null, setLabel = '') {
+    validatePlannedEntry(exerciseId, setEntry, date, supersetGroupId = null, setLabel = '', supersetExercises = null) {
         if (!exerciseId) {
             return { valid: false, error: 'Every planned row needs an exercise' };
         }
@@ -1936,18 +1942,25 @@ export const Workouts = {
             normalizedWeight = weightValidation.value;
         }
 
+        const workoutData = {
+            exerciseId,
+            reps: repsValidation.value,
+            weight: normalizedWeight,
+            date,
+            sessionId: this.plannedSession.id,
+            plannedSetId: setEntry.id,
+            supersetGroupId,
+            source: 'planner'
+        };
+
+        // Add superset exercises array if this is part of a superset
+        if (supersetExercises && Array.isArray(supersetExercises) && supersetExercises.length > 0) {
+            workoutData.supersetExercises = supersetExercises;
+        }
+
         return {
             valid: true,
-            value: {
-                exerciseId,
-                reps: repsValidation.value,
-                weight: normalizedWeight,
-                date,
-                sessionId: this.plannedSession.id,
-                plannedSetId: setEntry.id,
-                supersetGroupId,
-                source: 'planner'
-            }
+            value: workoutData
         };
     },
 

@@ -612,19 +612,26 @@ export const Templates = {
         const payload = { name, rows: this.editorSession.rows };
 
         try {
-            let savedId;
             if (this.editorSession.id) {
                 await Storage.updateSessionTemplate(this.editorSession.id, payload);
-                savedId = this.editorSession.id;
                 showToast('Template updated', 'success');
             } else {
                 const result = await Storage.addSessionTemplate(payload);
-                savedId = result.id;
+                this.editorSession.id = result.id;
                 showToast('Template saved', 'success');
             }
 
+            // Reload the editor session from storage to reflect saved state
+            const saved = Storage.getSessionTemplateById(this.editorSession.id);
+            if (saved) {
+                this.editorSession = {
+                    id: saved.id,
+                    name: saved.name,
+                    rows: JSON.parse(JSON.stringify(saved.rows))
+                };
+            }
+
             this.renderTemplateList();
-            this.openTemplateEditor(savedId);
             window.dispatchEvent(new CustomEvent('templatesUpdated'));
         } catch (error) {
             showToast(error.message, 'error');

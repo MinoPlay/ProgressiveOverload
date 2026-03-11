@@ -383,8 +383,7 @@ export const DevStorage = {
         const newTemplate = {
             id: `dev-tpl-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
             name: trimmedName,
-            rows: template.rows || [],
-            createdAt: new Date().toISOString()
+            rows: template.rows || []
         };
         this.sessionTemplates.push(newTemplate);
         await this.saveToFile();
@@ -406,8 +405,7 @@ export const DevStorage = {
         }
         this.sessionTemplates[index] = {
             ...this.sessionTemplates[index],
-            ...changes,
-            updatedAt: new Date().toISOString()
+            ...changes
         };
         await this.saveToFile();
         return this.sessionTemplates[index];

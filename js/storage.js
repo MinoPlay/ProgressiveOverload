@@ -805,8 +805,7 @@ export const Storage = {
         const newTemplate = {
             id: generateId(),
             name: trimmedName,
-            rows: template.rows || [],
-            createdAt: new Date().toISOString()
+            rows: template.rows || []
         };
 
         this.sessionTemplates.push(newTemplate);
@@ -841,8 +840,7 @@ export const Storage = {
 
         this.sessionTemplates[index] = {
             ...this.sessionTemplates[index],
-            ...changes,
-            updatedAt: new Date().toISOString()
+            ...changes
         };
 
         console.log('[Storage.updateSessionTemplate] Calling GitHubAPI.saveSessionTemplates with sha:', this.sessionTemplatesSha);

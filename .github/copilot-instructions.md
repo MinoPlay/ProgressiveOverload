@@ -13,7 +13,9 @@
 After completing each prompt, offer a ready-to-run git command block:
 
 ```
-git add . && git commit -m "<concise description of what changed>" && git push
+git add .<only the files that were changed>
+git commit -m "<concise description of what changed>"
+
 ```
 
 - The commit message must accurately describe the change (e.g., `"Add rest timer to session board"`, `"Fix PR calculation for bodyweight exercises"`).

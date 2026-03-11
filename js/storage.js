@@ -762,12 +762,46 @@ export const Storage = {
     // ─── Session Templates ───────────────────────────────────────────────────
 
     /**
+     * Normalize template rows loaded from storage to ensure required fields
+     * (type, set IDs) are present, regardless of when the data was created.
+     * @param {array} rows
+     * @returns {array}
+     */
+    normalizeTemplateRows(rows) {
+        return (rows || []).map(row => {
+            const r = { ...row };
+            if (!r.type) r.type = 'single';
+
+            if (r.type === 'single') {
+                r.sets = (r.sets || []).map((set, i) => ({
+                    id: set.id || `${r.id}-set-${i + 1}`,
+                    reps: set.reps ?? '',
+                    weight: set.weight ?? ''
+                }));
+            } else {
+                r.exercises = (r.exercises || []).map(ex => ({
+                    ...ex,
+                    sets: (ex.sets || []).map((set, i) => ({
+                        id: set.id || `${ex.id}-set-${i + 1}`,
+                        reps: set.reps ?? '',
+                        weight: set.weight ?? ''
+                    }))
+                }));
+            }
+            return r;
+        });
+    },
+
+    /**
      * Load session templates from GitHub
      * @returns {Promise<void>}
      */
     async loadSessionTemplates() {
         const data = await GitHubAPI.getSessionTemplates();
-        this.sessionTemplates = data.templates;
+        this.sessionTemplates = data.templates.map(t => ({
+            ...t,
+            rows: this.normalizeTemplateRows(t.rows)
+        }));
         this.sessionTemplatesSha = data.sha;
     },
 

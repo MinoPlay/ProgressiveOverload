@@ -21,7 +21,7 @@ export const Exercises = {
     init() {
         this.bindEvents();
         this.initToggleGroups();
-        this.setManageView('exercises');
+        this.setManageView(localStorage.getItem('activeManageTab') || 'exercises');
         this.render();
     },
 
@@ -129,6 +129,7 @@ export const Exercises = {
 
     setManageView(view) {
         this.manageView = view === 'templates' ? 'templates' : 'exercises';
+        localStorage.setItem('activeManageTab', this.manageView);
 
         const exercisesTab = document.getElementById('manageTabExercises');
         const templatesTab = document.getElementById('manageTabTemplates');

@@ -851,35 +851,25 @@ export const Storage = {
     /**
      * Update existing session template
      * @param {string} id
-     * @param {object} changes - { name?, rows? }
+     * @param {object} template - { name, rows }
      * @returns {Promise<object>}
      */
-    async updateSessionTemplate(id, changes) {
-        console.log('[Storage.updateSessionTemplate] id:', id);
-        console.log('[Storage.updateSessionTemplate] changes.rows count:', changes.rows?.length);
-        console.log('[Storage.updateSessionTemplate] current sessionTemplatesSha:', this.sessionTemplatesSha);
+    async updateSessionTemplate(id, template) {
         const index = this.sessionTemplates.findIndex(t => t.id === id);
-        console.log('[Storage.updateSessionTemplate] found template at index:', index);
         if (index === -1) throw new Error('Template not found');
 
-        if (changes.name) {
-            const trimmedName = changes.name.trim();
-            if (trimmedName !== this.sessionTemplates[index].name) {
-                if (this.sessionTemplates.some(t => t.id !== id && t.name.toLowerCase() === trimmedName.toLowerCase())) {
-                    throw new Error('A template with this name already exists');
-                }
-            }
-            changes.name = trimmedName;
+        const trimmedName = template.name.trim();
+        if (this.sessionTemplates.some(t => t.id !== id && t.name.toLowerCase() === trimmedName.toLowerCase())) {
+            throw new Error('A template with this name already exists');
         }
 
         this.sessionTemplates[index] = {
-            ...this.sessionTemplates[index],
-            ...changes
+            id: this.sessionTemplates[index].id,
+            name: trimmedName,
+            rows: template.rows
         };
 
-        console.log('[Storage.updateSessionTemplate] Calling GitHubAPI.saveSessionTemplates with sha:', this.sessionTemplatesSha);
         const result = await GitHubAPI.saveSessionTemplates(this.sessionTemplates, this.sessionTemplatesSha);
-        console.log('[Storage.updateSessionTemplate] saveSessionTemplates result.content.sha:', result?.content?.sha);
         this.sessionTemplatesSha = result.content.sha;
         return this.sessionTemplates[index];
     },

@@ -768,8 +768,9 @@ export const Storage = {
      * @returns {array}
      */
     normalizeTemplateRows(rows) {
-        return (rows || []).map(row => {
+        return (rows || []).map((row, rowIdx) => {
             const r = { ...row };
+            if (!r.id) r.id = `tpl-row-norm-${rowIdx}-${Date.now()}`;
             if (!r.type) r.type = 'single';
 
             if (r.type === 'single') {
@@ -779,14 +780,18 @@ export const Storage = {
                     weight: set.weight ?? ''
                 }));
             } else {
-                r.exercises = (r.exercises || []).map(ex => ({
-                    ...ex,
-                    sets: (ex.sets || []).map((set, i) => ({
-                        id: set.id || `${ex.id}-set-${i + 1}`,
-                        reps: set.reps ?? '',
-                        weight: set.weight ?? ''
-                    }))
-                }));
+                r.exercises = (r.exercises || []).map((ex, exIdx) => {
+                    const exId = ex.id || `${r.id}-ex-${exIdx}`;
+                    return {
+                        ...ex,
+                        id: exId,
+                        sets: (ex.sets || []).map((set, i) => ({
+                            id: set.id || `${exId}-set-${i + 1}`,
+                            reps: set.reps ?? '',
+                            weight: set.weight ?? ''
+                        }))
+                    };
+                });
             }
             return r;
         });

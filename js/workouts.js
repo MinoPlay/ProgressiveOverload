@@ -2008,28 +2008,37 @@ export const Workouts = {
         }
 
         // Strip runtime-only planner fields (activeSetId, copyCursor, expanded)
-        // but keep exerciseId, sets (with reps/weight)
-        const rows = this.plannedSession.rows.map(row => {
+        // but keep exerciseId, sets (with reps/weight), and persist stable IDs
+        const rows = this.plannedSession.rows.map((row, rowIdx) => {
+            const rowId = row.id || `tpl-row-${Date.now()}-${rowIdx}`;
             if (row.type === 'single') {
                 return {
+                    id: rowId,
                     type: 'single',
                     exerciseId: row.exerciseId || '',
-                    sets: (row.sets || []).map(s => ({
+                    sets: (row.sets || []).map((s, i) => ({
+                        id: s.id || `${rowId}-set-${i + 1}`,
                         reps: s.reps ?? '',
                         weight: s.weight ?? ''
                     }))
                 };
             } else {
                 return {
+                    id: rowId,
                     type: 'superset',
                     label: row.label || 'Superset',
-                    exercises: (row.exercises || []).map(item => ({
-                        exerciseId: item.exerciseId || '',
-                        sets: (item.sets || []).map(s => ({
-                            reps: s.reps ?? '',
-                            weight: s.weight ?? ''
-                        }))
-                    }))
+                    exercises: (row.exercises || []).map((item, exIdx) => {
+                        const exId = item.id || `${rowId}-ex-${exIdx}`;
+                        return {
+                            id: exId,
+                            exerciseId: item.exerciseId || '',
+                            sets: (item.sets || []).map((s, i) => ({
+                                id: s.id || `${exId}-set-${i + 1}`,
+                                reps: s.reps ?? '',
+                                weight: s.weight ?? ''
+                            }))
+                        };
+                    })
                 };
             }
         });

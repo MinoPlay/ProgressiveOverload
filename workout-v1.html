@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Workout v1 — Classic Planner</title>
+<link rel="stylesheet" href="css/layout.css">
+<link rel="stylesheet" href="css/components.css">
+<link rel="stylesheet" href="css/styles.css">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+/* Embedded mode - hide header when inside iframe */
+.embedded-mode .app-header { display: none; }
+.embedded-mode body { padding-top: 0; }
+
+/* V1-specific container styles */
+.v1-container {
+    width: 100%;
+    height: 100vh;
+    overflow: auto;
+    background: var(--bg);
+}
+</style>
+</head>
+<body>
+
+<div class="v1-container">
+
+<div id="workoutLogView" class="workout-view">
+
+<div class="form-container">
+    <form id="workoutFormElement" class="compact-workout-form">
+        <!-- Row 1: Muscle -->
+        <div class="form-group">
+            <select id="workoutMuscle" aria-label="Filter by muscle">
+                <option value="">All Muscles</option>
+            </select>
+        </div>
+
+        <!-- Row 2: Exercise -->
+        <div class="form-group">
+            <select id="workoutExercise" required aria-required="true" aria-label="Select exercise">
+                <option value="">Select Exercise...</option>
+            </select>
+            <div id="lastWorkoutInfo" class="last-workout-info hidden"></div>
+        </div>
+
+        <!-- Row 3: Reps/Weight -->
+        <div class="form-group-row">
+            <div class="form-group">
+                <div class="quick-reps-control">
+                    <button type="button" id="workoutRepsDown" class="quick-rep-btn" aria-label="Decrease reps">−</button>
+                    <input type="number" id="workoutReps" min="1" max="999" placeholder="Reps" required
+                        aria-required="true" aria-label="Number of repetitions">
+                    <button type="button" id="workoutRepsUp" class="quick-rep-btn" aria-label="Increase reps">+</button>
+                </div>
+            </div>
+
+            <div class="form-group" id="weightGroup">
+                <input type="number" id="workoutWeight" min="0" step="any" placeholder="Weight"
+                    aria-label="Weight in kilograms">
+            </div>
+        </div>
+
+        <!-- Row 4: Actions (Date, Log, Clear) -->
+        <div class="form-actions-inline">
+            <div class="date-input-container" title="Workout Date">
+                <span id="workoutDateDisplay" class="date-display"></span>
+                <input type="date" id="workoutDate" required aria-required="true"
+                    aria-label="Workout date">
+            </div>
+            <button type="submit" class="btn-icon btn-primary" title="Log Workout"
+                aria-label="Log workout">
+                <i data-lucide="check"></i>
+            </button>
+            <button type="button" id="clearWorkoutBtn" class="btn-icon btn-secondary" title="Clear Form"
+                aria-label="Clear form">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+    </form>
+</div>
+
+</div>
+
+<div id="workoutPlanView" class="workout-view active" role="region" aria-label="Workout planner">
+
+<div class="form-container planner-container">
+    <div class="planner-header">
+        <select id="plannerTemplateSelect" class="planner-template-select" aria-label="Load a session template">
+            <option value="">Load template…</option>
+        </select>
+    </div>
+
+    <div id="plannerContent" class="planner-content">
+        <div class="planner-controls">
+            <button type="button" id="plannerAddExerciseBtn" class="btn-icon btn-secondary btn-small planner-add-btn"
+                title="Add exercise" aria-label="Add exercise">
+                <i data-lucide="plus"></i>
+            </button>
+        </div>
+
+        <div id="plannedSessionList" class="planned-session-list" aria-live="polite"></div>
+
+        <div class="form-actions-inline planner-actions-inline">
+            <button type="button" id="plannerSaveAsTemplateBtn" class="btn-icon btn-secondary" title="Save current plan as a template"
+                aria-label="Save as template">
+                <i data-lucide="bookmark-plus"></i>
+            </button>
+            <button type="button" id="plannerSubmitBtn" class="btn-icon btn-primary" title="Fill in exercise and at least one set for every entry before submitting"
+                aria-label="Submit planned session" disabled>
+                <i data-lucide="check"></i>
+            </button>
+            <button type="button" id="plannerClearBtn" class="btn-icon btn-secondary" title="Clear plan"
+                aria-label="Clear plan">
+                <i data-lucide="x"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- Last Workout Summary -->
+<div id="lastWorkoutSummary" class="last-workout-summary hidden">
+    <!-- Content will be injected by JavaScript -->
+</div>
+
+</div>
+
+<script type="module">
+import { Storage } from './js/storage.js';
+import { Exercises } from './js/exercises.js';
+import { Workouts } from './js/workouts.js';
+import { formatDate } from './js/utils.js';
+
+const EMBED_MODE = window.self !== window.top;
+const THEME_KEY = 'theme';
+
+// Apply embedded mode styling
+function applyEmbeddedMode() {
+    if (!EMBED_MODE) return;
+    document.documentElement.classList.add('embedded-mode');
+}
+
+// Apply stored theme
+function applyStoredTheme() {
+    const storedTheme = localStorage.getItem(THEME_KEY) || 'light';
+    document.documentElement.setAttribute('data-theme', storedTheme);
+}
+
+applyStoredTheme();
+applyEmbeddedMode();
+
+// Listen for theme changes from localStorage
+window.addEventListener('storage', (event) => {
+    if (event.key === THEME_KEY) {
+        applyStoredTheme();
+    }
+});
+
+// Parent bridge - receive data from parent via postMessage
+let parentExercises = [];
+let parentTemplates = [];
+let parentWorkouts = [];
+let workoutsInitialized = false;
+
+if (EMBED_MODE) {
+    window.addEventListener('message', (e) => {
+        const msg = e.data;
+        if (!msg || typeof msg.type !== 'string') return;
+        
+        if (msg.type === 'po-exercises') {
+            parentExercises = msg.exercises || [];
+            console.log(`[v1] Received ${parentExercises.length} exercises from parent`);
+            // Update Storage module cache so Workouts module can access exercises
+            Storage.exercises = parentExercises;
+            initializeWorkoutUI();
+            
+            // Now that exercises are loaded, initialize Workouts module to restore saved session
+            if (!workoutsInitialized) {
+                workoutsInitialized = true;
+                console.log('[v1] Initializing Workouts module with exercises...');
+                Workouts.init();
+            }
+            
+            // Trigger exercisesUpdated event to re-render planner with new exercises
+            window.dispatchEvent(new Event('exercisesUpdated'));
+        } else if (msg.type === 'po-templates') {
+            parentTemplates = msg.templates || [];
+            console.log(`[v1] Received ${parentTemplates.length} templates from parent`);
+            // Update Storage module cache so Workouts module can access templates
+            Storage.sessionTemplates = parentTemplates;
+            populateTemplateSelect();
+            // Trigger templatesUpdated event to refresh template dropdown
+            window.dispatchEvent(new Event('templatesUpdated'));
+        } else if (msg.type === 'po-workouts') {
+            parentWorkouts = msg.workouts || [];
+            console.log(`[v1] Received ${parentWorkouts.length} workouts from parent`);
+        }
+    });
+
+    // Request data from parent after a small delay to ensure parent is ready
+    console.log('[v1] Iframe loaded, requesting data from parent...');
+    setTimeout(() => {
+        try {
+            window.parent.postMessage({ type: 'po-request-exercises' }, '*');
+            window.parent.postMessage({ type: 'po-request-templates' }, '*');
+            window.parent.postMessage({ type: 'po-request-workouts' }, '*');
+        } catch (err) {
+            console.error('[v1] Failed to request data from parent:', err);
+        }
+    }, 100);
+} else {
+    // Standalone mode - load from Storage module
+    initializeStandaloneMode();
+}
+
+// Initialize v1 workout UI
+let listenersInitialized = false;
+
+function initializeWorkoutUI() {
+    const exercises = EMBED_MODE ? parentExercises : Storage.getExercises();
+    console.log(`[v1] initializeWorkoutUI called with ${exercises.length} exercises`);
+    
+    // Populate muscle filter
+    const muscleSelect = document.getElementById('workoutMuscle');
+    if (!muscleSelect) {
+        console.error('[v1] workoutMuscle select not found!');
+        return;
+    }
+    
+    // Clear existing options except the first (placeholder)
+    while (muscleSelect.options.length > 1) {
+        muscleSelect.remove(1);
+    }
+    
+    const muscles = ['chest', 'back', 'legs', 'shoulders', 'biceps', 'triceps', 'core'];
+    muscles.forEach(muscle => {
+        const option = document.createElement('option');
+        option.value = muscle;
+        option.textContent = muscle.charAt(0).toUpperCase() + muscle.slice(1);
+        muscleSelect.appendChild(option);
+    });
+
+    // Populate exercise select
+    const exerciseSelect = document.getElementById('workoutExercise');
+    if (!exerciseSelect) {
+        console.error('[v1] workoutExercise select not found!');
+        return;
+    }
+    
+    // Clear existing options except the first (placeholder)
+    while (exerciseSelect.options.length > 1) {
+        exerciseSelect.remove(1);
+    }
+    
+    exercises.forEach(exercise => {
+        const option = document.createElement('option');
+        option.value = exercise.id;
+        option.textContent = exercise.name;
+        option.dataset.muscle = exercise.muscle;
+        option.dataset.requiresWeight = exercise.requiresWeight;
+        exerciseSelect.appendChild(option);
+    });
+    
+    console.log(`[v1] Populated ${exerciseSelect.options.length - 1} exercises in dropdown`);
+    
+    // Only attach event listeners once
+    if (!listenersInitialized) {
+        listenersInitialized = true;
+
+        // Filter exercises by muscle
+        muscleSelect.addEventListener('change', () => {
+            const selectedMuscle = muscleSelect.value;
+            Array.from(exerciseSelect.options).forEach(option => {
+                if (option.value === '') {
+                    option.style.display = '';
+                    return;
+                }
+                if (!selectedMuscle || option.dataset.muscle === selectedMuscle) {
+                    option.style.display = '';
+                } else {
+                    option.style.display = 'none';
+                }
+            });
+            exerciseSelect.value = '';
+        });
+
+        // Handle exercise change
+        exerciseSelect.addEventListener('change', () => {
+            const selectedOption = exerciseSelect.options[exerciseSelect.selectedIndex];
+            const requiresWeight = selectedOption.dataset.requiresWeight === 'true';
+            const weightGroup = document.getElementById('weightGroup');
+            const weightInput = document.getElementById('workoutWeight');
+            
+            if (!requiresWeight) {
+                weightGroup.style.display = 'none';
+                weightInput.value = '';
+                weightInput.removeAttribute('required');
+            } else {
+                weightGroup.style.display = '';
+                weightInput.setAttribute('required', 'true');
+            }
+        });
+
+        // Set today's date
+        const dateInput = document.getElementById('workoutDate');
+        const dateDisplay = document.getElementById('workoutDateDisplay');
+        dateInput.valueAsDate = new Date();
+        dateDisplay.textContent = formatDate(new Date());
+
+        dateInput.addEventListener('change', () => {
+            dateDisplay.textContent = formatDate(new Date(dateInput.value));
+        });
+
+        // Reps increment/decrement
+        const repsInput = document.getElementById('workoutReps');
+        const repsUpBtn = document.getElementById('workoutRepsUp');
+        const repsDownBtn = document.getElementById('workoutRepsDown');
+
+        repsUpBtn.addEventListener('click', () => {
+            repsInput.value = (parseInt(repsInput.value) || 0) + 1;
+        });
+
+        repsDownBtn.addEventListener('click', () => {
+            const current = parseInt(repsInput.value) || 0;
+            if (current > 1) repsInput.value = current - 1;
+        });
+
+        // Form submission
+        const form = document.getElementById('workoutFormElement');
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const exerciseId = exerciseSelect.value;
+            const reps = parseInt(repsInput.value);
+            const weight = parseFloat(document.getElementById('workoutWeight').value) || 0;
+            const date = dateInput.value;
+
+            try {
+                await Storage.saveWorkout({
+                    exerciseId,
+                    reps,
+                    weight,
+                    date,
+                    sequence: 1
+                });
+                
+                // Clear form
+                form.reset();
+                dateInput.valueAsDate = new Date();
+                dateDisplay.textContent = formatDate(new Date());
+                
+                console.log('[v1] Workout logged successfully');
+            } catch (err) {
+                console.error('[v1] Failed to log workout:', err);
+                alert('Failed to log workout. Please try again.');
+            }
+        });
+
+        // Clear button
+        document.getElementById('clearWorkoutBtn').addEventListener('click', () => {
+            form.reset();
+            dateInput.valueAsDate = new Date();
+            dateDisplay.textContent = formatDate(new Date());
+        });
+    }
+
+    lucide.createIcons();
+}
+
+// Populate template select
+function populateTemplateSelect() {
+    const templateSelect = document.getElementById('plannerTemplateSelect');
+    templateSelect.innerHTML = '<option value="">Load template…</option>';
+    
+    const templates = EMBED_MODE ? parentTemplates : Storage.getTemplates();
+    templates.forEach(template => {
+        const option = document.createElement('option');
+        option.value = template.id;
+        option.textContent = template.name;
+        templateSelect.appendChild(option);
+    });
+}
+
+// Initialize standalone mode (when not embedded)
+async function initializeStandaloneMode() {
+    // Load exercises from storage
+    await Storage.initialize();
+    await Exercises.init();
+    await Workouts.init();
+    
+    initializeWorkoutUI();
+    populateTemplateSelect();
+}
+
+// Initialize Lucide icons
+lucide.createIcons();
+
+</script>
+
+</body>
+</html>

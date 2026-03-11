@@ -1347,7 +1347,6 @@ function saveDesign3State() {
     }
   }
   const state = {
-    template: activeTemplate || '',
     rows,
     exercises: buildExercises,
     executionActive,
@@ -1406,7 +1405,6 @@ function applySavedDesign3State() {
     loadTemplate('');
     return;
   }
-  activeTemplate = typeof saved.template === 'string' ? saved.template : '';
   currentBlockIndex = Number.isFinite(saved.currentBlockIndex) ? Math.max(0, saved.currentBlockIndex) : 0;
   executionActive = Boolean(saved.executionActive);
   currentTab = ['build', 'exec', 'log'].includes(saved.activeTab) ? saved.activeTab : 'build';

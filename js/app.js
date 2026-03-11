@@ -153,9 +153,19 @@ const App = {
 
             // Initialize storage
             await Storage.initialize();
+            
+            // Debug: Check if exercises loaded
+            console.log(`Loaded ${Storage.getExercises().length} exercises`);
 
             // Initialize iframe bridge (send exercise data to embedded iframes)
             IframeBridge.init();
+            
+            // Give iframes a moment to set up their message listeners, then broadcast data
+            setTimeout(() => {
+                IframeBridge.broadcastExercises();
+                IframeBridge.broadcastTemplates();
+                IframeBridge.broadcastWorkouts();
+            }, 100);
 
             console.log('Initializing UI modules...');
             // Initialize all modules
@@ -469,9 +479,10 @@ const IframeBridge = {
     frames: [],
 
     init() {
+        const v1Frame = document.querySelector('#workoutVersionV1 iframe');
         const sessionFrame = document.querySelector('#workoutVersionV2 iframe');
         const builderFrame = document.querySelector('#workoutVersionV3 iframe');
-        this.frames = [sessionFrame, builderFrame].filter(Boolean);
+        this.frames = [v1Frame, sessionFrame, builderFrame].filter(Boolean);
 
         if (!this.frames.length) return;
 
@@ -503,6 +514,7 @@ const IframeBridge = {
 
     sendExercises(frame) {
         const exercises = Storage.getExercises();
+        console.log(`[IframeBridge] Sending ${exercises.length} exercises to iframe`);
         frame.contentWindow?.postMessage({ type: 'po-exercises', exercises }, '*');
     },
 

@@ -56,9 +56,7 @@ export const Workouts = {
                         this.plannedSession = {
                             id: parsed.id || `session-${Date.now()}`,
                             date: parsed.date || formatDate(new Date()),
-                            rows: parsed.rows.map((row, index) => this.normalizePlannedRow(row, index)),
-                            loadedTemplateId: typeof parsed.loadedTemplateId === 'string' ? parsed.loadedTemplateId : '',
-                            loadedTemplateName: typeof parsed.loadedTemplateName === 'string' ? parsed.loadedTemplateName : ''
+                            rows: parsed.rows.map((row, index) => this.normalizePlannedRow(row, index))
                         };
                         this.renderPlannedSession();
                     }
@@ -88,25 +86,32 @@ export const Workouts = {
         const plannerPickerCancelBtn = document.getElementById('plannerExercisePickerCancelBtn');
         const plannerPickerModal = document.getElementById('plannerExercisePickerModal');
 
-        form.addEventListener('submit', (e) => this.handleSubmit(e));
+        // V1 workout form is now in an iframe, skip if not found
+        if (form) {
+            form.addEventListener('submit', (e) => this.handleSubmit(e));
+        }
 
         // Filter exercises based on muscle selection
-        muscleSelect.addEventListener('change', () => {
-            this.populateExerciseDropdown(muscleSelect.value);
-            // Trigger exercise selection logic
-            this.updateWeightField();
-        });
+        if (muscleSelect) {
+            muscleSelect.addEventListener('change', () => {
+                this.populateExerciseDropdown(muscleSelect.value);
+                // Trigger exercise selection logic
+                this.updateWeightField();
+            });
+        }
 
         // Show/hide weight field and clear reps/weight based on exercise selection
-        exerciseSelect.addEventListener('change', () => {
-            const repsInput = document.getElementById('workoutReps');
-            const weightInput = document.getElementById('workoutWeight');
+        if (exerciseSelect) {
+            exerciseSelect.addEventListener('change', () => {
+                const repsInput = document.getElementById('workoutReps');
+                const weightInput = document.getElementById('workoutWeight');
 
-            if (repsInput) repsInput.value = '';
-            if (weightInput) weightInput.value = '';
+                if (repsInput) repsInput.value = '';
+                if (weightInput) weightInput.value = '';
 
-            this.updateWeightField();
-        });
+                this.updateWeightField();
+            });
+        }
 
         // Clear form button
         if (clearBtn) {
@@ -343,6 +348,8 @@ export const Workouts = {
      */
     populateExerciseDropdown(muscleFilter = '') {
         const select = document.getElementById('workoutExercise');
+        if (!select) return;
+        
         let exercises = Storage.getExercises();
 
         // Apply filter if provided
@@ -400,9 +407,7 @@ export const Workouts = {
         this.plannedSession = {
             id: `session-${Date.now()}`,
             date: currentDate,
-            rows: [],
-            loadedTemplateId: '',
-            loadedTemplateName: ''
+            rows: []
         };
 
         this.restorePlannerDraft();
@@ -1672,9 +1677,7 @@ export const Workouts = {
             this.plannedSession = {
                 id: parsed.id || `session-${Date.now()}`,
                 date: currentDate,
-                rows: parsed.rows.map(normalizeRow),
-                loadedTemplateId: typeof parsed.loadedTemplateId === 'string' ? parsed.loadedTemplateId : '',
-                loadedTemplateName: typeof parsed.loadedTemplateName === 'string' ? parsed.loadedTemplateName : ''
+                rows: parsed.rows.map(normalizeRow)
             };
         } catch (error) {
             console.warn('Could not restore planner draft:', error);
@@ -1815,9 +1818,7 @@ export const Workouts = {
         this.plannedSession = {
             id: `session-${Date.now()}`,
             date: dateInput?.value || formatDate(new Date()),
-            rows: [],
-            loadedTemplateId: '',
-            loadedTemplateName: ''
+            rows: []
         };
 
         localStorage.removeItem(SESSION_KEY);
@@ -2045,20 +2046,13 @@ export const Workouts = {
             select.appendChild(opt);
         });
 
-        // Restore current selection, else restore from persisted planner draft
-        const persistedTemplateId = this.plannedSession?.loadedTemplateId || '';
-        const selectedTemplateId = currentValue || persistedTemplateId;
-        if (selectedTemplateId && select.querySelector(`option[value="${selectedTemplateId}"]`)) {
-            select.value = selectedTemplateId;
+        // Restore current selection if valid
+        if (currentValue && select.querySelector(`option[value="${currentValue}"]`)) {
+            select.value = currentValue;
         }
     },
 
     resetLoadedTemplate() {
-        if (this.plannedSession) {
-            this.plannedSession.loadedTemplateId = '';
-            this.plannedSession.loadedTemplateName = '';
-        }
-
         const select = document.getElementById('plannerTemplateSelect');
         if (select && select.value !== '') {
             select.value = '';
@@ -2123,8 +2117,6 @@ export const Workouts = {
         }
 
         this.plannedSession.rows = newRows;
-        this.plannedSession.loadedTemplateId = template.id;
-        this.plannedSession.loadedTemplateName = template.name || '';
 
         const select = document.getElementById('plannerTemplateSelect');
         if (select && select.querySelector(`option[value="${template.id}"]`)) {
@@ -2489,6 +2481,8 @@ export const Workouts = {
      */
     setDefaultDate() {
         const dateInput = document.getElementById('workoutDate');
+        if (!dateInput) return;
+        
         const today = new Date();
         dateInput.value = formatDate(today);
         this.updateDateDisplay();

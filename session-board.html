@@ -1860,7 +1860,6 @@ function saveDesign1State() {
     }))
   }));
   const state = {
-    template: activeTemplateName || '',
     cards,
     exercises: getPlanExerciseIds(),
     rows
@@ -1907,9 +1906,8 @@ function applySavedDesign1State() {
   const savedRows = Array.isArray(saved.rows) ? saved.rows : [];
   const savedCards = Array.isArray(saved.cards) ? saved.cards : [];
   const savedExercises = Array.isArray(saved.exercises) ? saved.exercises.filter(Boolean) : [];
-  const savedTemplate = typeof saved.template === 'string' ? saved.template : '';
   const parentExercisesHydrated = !EMBED_MODE || Object.keys(_parentExerciseMap).length > 0;
-  const hasRestorableState = Boolean(savedRows.length || savedCards.length || savedExercises.length || savedTemplate);
+  const hasRestorableState = Boolean(savedRows.length || savedCards.length || savedExercises.length);
 
   // In embed mode, defer restore until parent exercise catalog arrives.
   // Restoring too early can clear cards and overwrite storage with an empty state.
@@ -1937,7 +1935,7 @@ function applySavedDesign1State() {
   };
 
   if (savedRows.length) {
-    setTemplateSelection(savedTemplate && templates[savedTemplate] ? savedTemplate : '');
+    setTemplateSelection('');
     loadTemplate('');
     tickedCount = 0;
     let restoredCards = 0;
@@ -1970,7 +1968,7 @@ function applySavedDesign1State() {
   }
 
   if (savedCards.length) {
-    setTemplateSelection(savedTemplate && templates[savedTemplate] ? savedTemplate : '');
+    setTemplateSelection('');
     loadTemplate('');
     tickedCount = 0;
     let restoredCards = 0;
@@ -1989,11 +1987,6 @@ function applySavedDesign1State() {
     updateSubmit();
     refreshExerciseSelectOptions();
     saveDesign1State();
-    return;
-  }
-
-  if (savedTemplate && templates[savedTemplate]) {
-    chooseTemplate(savedTemplate);
     return;
   }
 

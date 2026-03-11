@@ -380,18 +380,18 @@ export const Templates = {
             titleSpan.textContent = `Set ${idx + 1}`;
             header.appendChild(titleSpan);
 
-            // Add copy-down button for all sets except the last one
-            if (idx < normalizedSets.length - 1) {
+            // Add copy button for all sets except the first one (copy FROM previous set TO current)
+            if (idx > 0) {
                 const copyBtn = document.createElement('button');
                 copyBtn.type = 'button';
                 copyBtn.className = 'template-set-copy-btn';
-                copyBtn.dataset.action = 'copy-set-down';
+                copyBtn.dataset.action = 'copy-from-previous';
                 copyBtn.dataset.rowId = rowId;
                 copyBtn.dataset.setId = setEntry.id;
                 copyBtn.dataset.setIndex = String(idx);
                 if (itemId) copyBtn.dataset.itemId = itemId;
-                copyBtn.innerHTML = '<i data-lucide="arrow-down"></i>';
-                copyBtn.title = 'Copy to next set';
+                copyBtn.innerHTML = '<i data-lucide="copy"></i>';
+                copyBtn.title = `Copy from Set ${idx}`;
                 header.appendChild(copyBtn);
             }
 
@@ -533,7 +533,7 @@ export const Templates = {
             return;
         }
 
-        if (action === 'copy-set-down') {
+        if (action === 'copy-from-previous') {
             const row = this.editorSession.rows.find(r => r.id === rowId);
             if (!row) return;
 
@@ -543,14 +543,14 @@ export const Templates = {
             if (!target || !target.sets) return;
 
             const idx = parseInt(setIndex || '0', 10);
-            if (idx >= target.sets.length - 1) return; // Can't copy from last set
+            if (idx === 0) return; // Can't copy to first set
 
-            // Copy reps and weight from current set to next set
+            // Copy reps and weight from previous set to current set
+            const previousSet = target.sets[idx - 1];
             const currentSet = target.sets[idx];
-            const nextSet = target.sets[idx + 1];
-            if (currentSet && nextSet) {
-                nextSet.reps = currentSet.reps;
-                nextSet.weight = currentSet.weight;
+            if (previousSet && currentSet) {
+                currentSet.reps = previousSet.reps;
+                currentSet.weight = previousSet.weight;
                 // Re-render to update the UI
                 this.renderEditorRows();
             }

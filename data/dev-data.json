@@ -5210,7 +5210,7 @@
           "sets": [
             {
               "id": "tpl-row-push-bench-set-1",
-              "reps": "10",
+              "reps": "11",
               "weight": "95"
             },
             {
@@ -5291,7 +5291,8 @@
             }
           ]
         }
-      ]
+      ],
+      "updatedAt": "2026-03-11T11:35:15.939Z"
     },
     {
       "id": "tpl_pull_a",
@@ -5605,7 +5606,7 @@
           "exercises": [
             {
               "id": "tpl-ss-mix-arms-a",
-              "exerciseId": "1769598356908_vaei2f8dr",
+              "exerciseId": "1770183966156_6whslwg5f",
               "sets": [
                 {
                   "id": "tpl-ss-mix-arms-a-set-1",
@@ -5669,7 +5670,8 @@
             }
           ]
         }
-      ]
+      ],
+      "updatedAt": "2026-03-11T11:35:37.572Z"
     }
   ]
 }

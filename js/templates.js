@@ -34,6 +34,7 @@ export const Templates = {
 
         if (rowList) {
             rowList.addEventListener('change', (e) => this.handleEditorFieldChange(e));
+            rowList.addEventListener('input', (e) => this.handleEditorFieldChange(e));
             rowList.addEventListener('click', (e) => this.handleEditorAction(e));
         }
     },
@@ -438,6 +439,9 @@ export const Templates = {
 
         if (row.type === 'single') {
             if (fieldName === 'exerciseId') {
+                // Sync all DOM values to editorSession before re-rendering
+                this.syncEditorFromDom();
+                // Now update the exercise selection
                 row.exerciseId = field.value;
                 const exercise = field.value ? Storage.getExerciseById(field.value) : null;
                 const requiresWeight = Boolean(exercise?.requiresWeight);
@@ -456,6 +460,9 @@ export const Templates = {
             const item = (row.exercises || []).find(e => e.id === itemId);
             if (!item) return;
             if (fieldName === 'exerciseId') {
+                // Sync all DOM values to editorSession before re-rendering
+                this.syncEditorFromDom();
+                // Now update the exercise selection
                 item.exerciseId = field.value;
                 const exercise = field.value ? Storage.getExerciseById(field.value) : null;
                 const requiresWeight = Boolean(exercise?.requiresWeight);

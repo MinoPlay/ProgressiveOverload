@@ -228,6 +228,17 @@ export const Templates = {
         const actions = document.createElement('div');
         actions.className = 'planner-row-actions';
 
+        const hasNextRow = Boolean(this.editorSession.rows[index + 1]);
+
+        const linkBtn = document.createElement('button');
+        linkBtn.type = 'button';
+        linkBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-link-btn';
+        linkBtn.dataset.action = 'toggle-link-next';
+        linkBtn.dataset.rowId = row.id;
+        linkBtn.innerHTML = '<i data-lucide="link-2"></i>';
+        linkBtn.disabled = !hasNextRow;
+        linkBtn.title = hasNextRow ? 'Link with the exercise below as superset' : 'No row below to link';
+
         const collapseBtn = document.createElement('button');
         collapseBtn.type = 'button';
         collapseBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-collapse-btn';
@@ -244,6 +255,7 @@ export const Templates = {
         removeBtn.innerHTML = '<i data-lucide="trash-2"></i>';
         removeBtn.title = 'Remove row';
 
+        actions.appendChild(linkBtn);
         actions.appendChild(collapseBtn);
         actions.appendChild(removeBtn);
         header.appendChild(title);
@@ -278,6 +290,14 @@ export const Templates = {
         const actions = document.createElement('div');
         actions.className = 'planner-row-actions';
 
+        const linkBtn = document.createElement('button');
+        linkBtn.type = 'button';
+        linkBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-link-btn active';
+        linkBtn.dataset.action = 'toggle-link-next';
+        linkBtn.dataset.rowId = row.id;
+        linkBtn.innerHTML = '<i data-lucide="link-2"></i>';
+        linkBtn.title = 'Unlink superset into two single exercises';
+
         const collapseBtn = document.createElement('button');
         collapseBtn.type = 'button';
         collapseBtn.className = 'btn-icon btn-secondary btn-small planner-row-btn planner-collapse-btn';
@@ -294,6 +314,7 @@ export const Templates = {
         removeBtn.innerHTML = '<i data-lucide="trash-2"></i>';
         removeBtn.title = 'Remove superset';
 
+        actions.appendChild(linkBtn);
         actions.appendChild(collapseBtn);
         actions.appendChild(removeBtn);
         header.appendChild(title);
@@ -530,6 +551,80 @@ export const Templates = {
             if (wrapper) {
                 wrapper.classList.toggle('collapsed');
             }
+            return;
+        }
+
+        if (action === 'toggle-link-next') {
+            this.syncEditorFromDom();
+            const index = this.editorSession.rows.findIndex(r => r.id === rowId);
+            if (index === -1) return;
+            const row = this.editorSession.rows[index];
+
+            if (row.type === 'superset') {
+                // Unlink: split superset into two single rows
+                const [first, second] = row.exercises || [];
+                const firstId = `tpl-row-${Date.now()}-a`;
+                const secondId = `tpl-row-${Date.now()}-b`;
+                const firstRow = {
+                    id: firstId,
+                    type: 'single',
+                    exerciseId: first?.exerciseId || '',
+                    sets: (first?.sets || this.createDefaultSets(firstId)).map((s, i) => ({
+                        id: `${firstId}-set-${i + 1}`,
+                        reps: s.reps,
+                        weight: s.weight
+                    }))
+                };
+                const secondRow = {
+                    id: secondId,
+                    type: 'single',
+                    exerciseId: second?.exerciseId || '',
+                    sets: (second?.sets || this.createDefaultSets(secondId)).map((s, i) => ({
+                        id: `${secondId}-set-${i + 1}`,
+                        reps: s.reps,
+                        weight: s.weight
+                    }))
+                };
+                this.editorSession.rows.splice(index, 1, firstRow, secondRow);
+            } else {
+                // Link: merge this single row and the next into a superset
+                const next = this.editorSession.rows[index + 1];
+                if (!next || next.type !== 'single') {
+                    showToast('Link works with this exercise and the one below it', 'info');
+                    return;
+                }
+                const blockId = `tpl-ss-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+                const exAId = `${blockId}-a`;
+                const exBId = `${blockId}-b`;
+                const supersetBlock = {
+                    id: blockId,
+                    type: 'superset',
+                    label: 'Superset',
+                    exercises: [
+                        {
+                            id: exAId,
+                            exerciseId: row.exerciseId || '',
+                            sets: (row.sets || this.createDefaultSets(exAId)).map((s, i) => ({
+                                id: `${exAId}-set-${i + 1}`,
+                                reps: s.reps,
+                                weight: s.weight
+                            }))
+                        },
+                        {
+                            id: exBId,
+                            exerciseId: next.exerciseId || '',
+                            sets: (next.sets || this.createDefaultSets(exBId)).map((s, i) => ({
+                                id: `${exBId}-set-${i + 1}`,
+                                reps: s.reps,
+                                weight: s.weight
+                            }))
+                        }
+                    ]
+                };
+                this.editorSession.rows.splice(index, 2, supersetBlock);
+            }
+
+            this.renderEditorRows();
             return;
         }
 

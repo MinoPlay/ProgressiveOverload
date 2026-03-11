@@ -612,16 +612,19 @@ export const Templates = {
         const payload = { name, rows: this.editorSession.rows };
 
         try {
+            let savedId;
             if (this.editorSession.id) {
                 await Storage.updateSessionTemplate(this.editorSession.id, payload);
+                savedId = this.editorSession.id;
                 showToast('Template updated', 'success');
             } else {
-                await Storage.addSessionTemplate(payload);
+                const result = await Storage.addSessionTemplate(payload);
+                savedId = result.id;
                 showToast('Template saved', 'success');
             }
 
-            this.closeTemplateEditor();
             this.renderTemplateList();
+            this.openTemplateEditor(savedId);
             window.dispatchEvent(new CustomEvent('templatesUpdated'));
         } catch (error) {
             showToast(error.message, 'error');

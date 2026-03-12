@@ -2,11 +2,17 @@
 
 ## Change Philosophy
 
+- **Do exactly what is asked, nothing more.** If the request is "change A to B", change A to B and stop. Do not fix nearby issues, add improvements, or make any other edits.
 - **Minimal changes only.** Apply the smallest diff that satisfies the request. Do not refactor, reorganize, or "improve" code that is unrelated to the task.
 - **Do not touch unrelated code.** If a change can be scoped to one file, keep it there. Do not cascade edits into files that are not part of the request.
 - **No code duplication.** Before adding new code, check if equivalent logic already exists and reuse it. Extract shared logic into helpers only when it eliminates real duplication, not speculatively.
 - **No dead code.** Do not leave behind unused variables, functions, imports, or commented-out code. If something is replaced, remove the old version.
 - **Preserve existing style.** Match the formatting, naming, and patterns of the surrounding code exactly.
+
+## UI Guidelines
+
+- **Mobile-first.** All UI changes must work well on small screens (320px+). Use responsive units, flexible layouts, and avoid fixed widths that break on mobile.
+- **Compact.** Keep UI dense and efficient. Avoid excessive padding, large empty spaces, or verbose labels. Prefer concise text and tight spacing.
 
 ## Git Workflow
 

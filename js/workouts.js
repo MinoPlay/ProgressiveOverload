@@ -2103,7 +2103,7 @@ export const Workouts = {
      * All row/set IDs are regenerated to avoid conflicts with saved drafts.
      * @param {string} templateId
      */
-    async loadTemplateIntoPlanner(templateId) {
+    loadTemplateIntoPlanner(templateId) {
         const template = Storage.getSessionTemplateById(templateId);
         if (!template) {
             showToast('Template not found', 'error');
@@ -2118,7 +2118,7 @@ export const Workouts = {
             if (row.type === 'single') {
                 const rowId = `row-${stamp()}`;
                 const exerciseId = row.exerciseId || '';
-                const sets = await this.resolveTemplateLoadSets(exerciseId, row.sets, rowId);
+                const sets = this.remapSets(row.sets, rowId);
                 newRows.push({
                     id: rowId,
                     type: 'single',
@@ -2136,7 +2136,7 @@ export const Workouts = {
             for (const [idx, item] of (row.exercises || []).entries()) {
                 const itemId = `${blockId}-${String.fromCharCode(97 + idx)}`;
                 const exerciseId = item.exerciseId || '';
-                const sets = await this.resolveTemplateLoadSets(exerciseId, item.sets, itemId);
+                const sets = this.remapSets(item.sets, itemId);
                 exercises.push({
                     id: itemId,
                     exerciseId,

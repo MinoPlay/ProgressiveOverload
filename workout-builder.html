@@ -1175,23 +1175,38 @@ let executionActive = false;
 let currentTab = 'build';
 let pickerState = { mode: 'add', index: -1 };
 
+// Translate a local short key to the parent UUID when in embed mode so that
+// the shared SESSION_KEY format is compatible with v1 (workouts.js) and v2
+// (session-board.html) which always use UUID-based exercise IDs.
+function _getCanonicalExerciseId(localKey) {
+  if (!EMBED_MODE) return localKey;
+  const entry = EXERCISE_LIBRARY[localKey];
+  if (!entry) return localKey;
+  for (const [uuid, ex] of Object.entries(_parentExerciseMap)) {
+    if (ex.name === entry.name) return uuid;
+  }
+  return localKey;
+}
+
 function saveDesign3State() {
   const activeTab = currentTab;
-  // Derive canonical rows array shared with all views
+  // Derive canonical rows array shared with all views.
+  // Always store UUID exercise IDs (via _getCanonicalExerciseId) so that v1
+  // and v2 can restore the state without knowing v3's internal short keys.
   const rows = [];
   let i = 0;
   const mapSet = s => ({ reps: s.r ?? '', weight: s.w ?? '', completed: Boolean(s.done) });
   while (i < buildExercises.length) {
     const item = buildExercises[i];
     if (!item.superset) {
-      rows.push({ type: 'single', exerciseId: item.exerciseId, sets: (item.sets || []).map(mapSet) });
+      rows.push({ type: 'single', exerciseId: _getCanonicalExerciseId(item.exerciseId), sets: (item.sets || []).map(mapSet) });
       i++;
     } else {
       const label = item.superset;
       const superExercises = [];
       while (i < buildExercises.length && buildExercises[i].superset === label) {
         const ex = buildExercises[i];
-        superExercises.push({ exerciseId: ex.exerciseId, sets: (ex.sets || []).map(mapSet) });
+        superExercises.push({ exerciseId: _getCanonicalExerciseId(ex.exerciseId), sets: (ex.sets || []).map(mapSet) });
         i++;
       }
       rows.push({ type: 'superset', exercises: superExercises });

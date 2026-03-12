@@ -1654,21 +1654,38 @@ export const Workouts = {
                 return nameOrId;
             }
 
+            // Ensure each set has an id, reps, weight, and completed fields
+            function normalizeSet(setEntry, baseId, setIndex) {
+                return {
+                    id: setEntry?.id || `${baseId}-set-${setIndex + 1}`,
+                    reps: setEntry?.reps ?? '',
+                    weight: setEntry?.weight ?? '',
+                    completed: Boolean(setEntry?.completed)
+                };
+            }
+
             function normalizeRow(row, index) {
+                const rowId = row?.id || `row-${Date.now()}-${index}`;
                 if (row.type === 'single') {
                     return {
                         ...row,
+                        id: rowId,
                         exerciseId: getExerciseId(row.exerciseId || row.name),
-                        sets: Array.isArray(row.sets) ? row.sets.map(set => ({ ...set })) : []
+                        sets: Array.isArray(row.sets) ? row.sets.map((s, i) => normalizeSet(s, rowId, i)) : []
                     };
                 } else if (row.type === 'superset') {
                     return {
                         ...row,
-                        exercises: Array.isArray(row.exercises) ? row.exercises.map(item => ({
-                            ...item,
-                            exerciseId: getExerciseId(item.exerciseId || item.name),
-                            sets: Array.isArray(item.sets) ? item.sets.map(set => ({ ...set })) : []
-                        })) : []
+                        id: rowId,
+                        exercises: Array.isArray(row.exercises) ? row.exercises.map((item, itemIndex) => {
+                            const itemId = item?.id || `${rowId}-${itemIndex + 1}`;
+                            return {
+                                ...item,
+                                id: itemId,
+                                exerciseId: getExerciseId(item.exerciseId || item.name),
+                                sets: Array.isArray(item.sets) ? item.sets.map((s, i) => normalizeSet(s, itemId, i)) : []
+                            };
+                        }) : []
                     };
                 }
                 return row;

@@ -214,16 +214,39 @@ export const Templates = {
         if (window.lucide) window.lucide.createIcons();
     },
 
+    getEditorRowTitle(row, index) {
+        if (row.type === 'superset') {
+            const names = (row.exercises || []).map(item => {
+                const ex = item.exerciseId ? Storage.getExerciseById(item.exerciseId) : null;
+                return ex ? ex.name : 'Select Exercise';
+            });
+            return `Superset: ${names.join(' / ')}`;
+        }
+        const ex = row.exerciseId ? Storage.getExerciseById(row.exerciseId) : null;
+        const exName = ex ? ex.name : `Exercise ${index + 1}`;
+        const sets = row.sets || [];
+        if (sets.length === 0) return exName;
+        const setsSummary = sets
+            .filter(s => s.reps || s.weight)
+            .map(s => {
+                if (s.reps && s.weight) return `${s.reps}×${s.weight}`;
+                if (s.reps) return `${s.reps} reps`;
+                return `×${s.weight}`;
+            })
+            .join(', ');
+        return setsSummary ? `${exName} · ${setsSummary}` : exName;
+    },
+
     buildSingleRow(row, index) {
         const wrapper = document.createElement('div');
-        wrapper.className = 'planned-row';
+        wrapper.className = 'planned-row collapsed';
 
         const header = document.createElement('div');
         header.className = 'planned-row-header';
 
         const title = document.createElement('span');
         title.className = 'planned-row-title';
-        title.textContent = `Exercise ${index + 1}`;
+        title.textContent = this.getEditorRowTitle(row, index);
 
         const actions = document.createElement('div');
         actions.className = 'planner-row-actions';
@@ -278,14 +301,14 @@ export const Templates = {
 
     buildSupersetRow(row, index) {
         const wrapper = document.createElement('div');
-        wrapper.className = 'superset-block';
+        wrapper.className = 'superset-block collapsed';
 
         const header = document.createElement('div');
         header.className = 'superset-header';
 
         const title = document.createElement('span');
         title.className = 'superset-title';
-        title.textContent = `${row.label || 'Superset'} ${index + 1}`;
+        title.textContent = this.getEditorRowTitle(row, index);
 
         const actions = document.createElement('div');
         actions.className = 'planner-row-actions';

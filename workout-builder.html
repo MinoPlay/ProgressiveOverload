@@ -1059,8 +1059,11 @@ if (EMBED_MODE) {
     if (!msg || typeof msg.type !== 'string') return;
     if (msg.type === 'po-exercises') {
       _mergeParentExercisesBuilder(msg.exercises);
-      // Re-apply saved state now that exercises are available from parent
-      applySavedDesign3State();
+      // Re-apply saved state now that exercises are available from parent,
+      // but skip if the user is actively executing to avoid resetting their position.
+      if (!executionActive) {
+        applySavedDesign3State();
+      }
     } else if (msg.type === 'po-templates') {
       _mergeParentTemplatesBuilder(msg.templates);
     } else if (msg.type === 'po-workouts') {
@@ -1792,6 +1795,7 @@ function changeTmpl() {
 /* ── Start workout ── */
 function startWorkout() {
   executionActive = true;
+  currentBlockIndex = 0;
   renderExecutionFromBuild();
   switchTab('exec');
   saveDesign3State();

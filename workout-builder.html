@@ -349,13 +349,13 @@ body {
 
 /* Progress bar */
 .progress-bar-wrap {
-  padding: 14px 14px 0;
+  padding: 10px 14px 0;
 }
 .progress-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
 }
 .progress-label { font-size: 13px; font-weight: 600; color: var(--text3); }
 .progress-fraction { font-size: 14px; font-weight: 800; color: var(--accent); }
@@ -374,40 +374,33 @@ body {
 
 /* Exercise header in execute */
 .exec-header {
-  padding: 14px 14px 0;
+  padding: 10px 14px 0;
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 10px;
 }
 .exec-icon {
-  width: 52px; height: 52px;
-  border-radius: 14px;
+  width: 40px; height: 40px;
+  border-radius: 10px;
   background: var(--accent-light);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0;
 }
-.exec-icon i { width: 26px; height: 26px; color: var(--accent); }
+.exec-icon i { width: 20px; height: 20px; color: var(--accent); }
 .exec-icon .equipment-icon {
-  width: 26px;
-  height: 26px;
+  width: 20px;
+  height: 20px;
   color: var(--accent);
 }
-.exec-name { font-size: 22px; font-weight: 900; color: var(--text); line-height: 1.15; }
-.exec-name { font-size: 20px; }
-.exec-muscle {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
-  font-size: 12px; font-weight: 600;
-  color: var(--accent);
-  background: var(--accent-light);
-  border-radius: 20px;
-  padding: 3px 10px;
+.exec-info { min-width: 0; flex: 1; }
+.exec-name {
+  font-size: 18px; font-weight: 900; color: var(--text); line-height: 1.2;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
+.exec-muscle { display: none; }
 
 /* Execute sets */
-.exec-sets-wrap { padding: 1rem .875rem 10.625rem; }
+.exec-sets-wrap { padding: .625rem .875rem 10.625rem; }
 .exec-set-header {
   display: grid;
   grid-template-columns: 2rem minmax(0, 1.35fr) minmax(0, 1fr) clamp(2.25rem, 12%, 2.75rem);
@@ -428,7 +421,7 @@ body {
   grid-template-columns: 2rem minmax(0, 1.35fr) minmax(0, 1fr) clamp(2.25rem, 12%, 2.75rem);
   gap: .375rem;
   align-items: center;
-  padding: .3125rem 0;
+  padding: .1875rem 0;
   transition: opacity .2s;
 }
 .exec-set-row.bodyweight {
@@ -454,7 +447,7 @@ body {
   background: var(--surface);
   border: .09375rem solid var(--border);
   border-radius: var(--radius-sm);
-  padding: .625rem .5rem;
+  padding: .5rem .5rem;
   font-size: 1.0625rem; font-weight: 700;
   color: var(--text);
   text-align: center;
@@ -529,31 +522,41 @@ body {
   color: var(--text);
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  gap: 6px;
   margin-bottom: .375rem;
 }
-.exec-section-meta {
+.exec-section-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.exec-section-muscle-inline {
   font-size: .75rem;
+  font-weight: 400;
   color: var(--text3);
-  margin-bottom: .5rem;
 }
-/* Nav buttons */
-.exec-footer {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: var(--tab-h);
-  z-index: 25;
-  background: var(--bg);
-  border-top: 1px solid var(--border);
-  padding: 10px 12px 8px;
-  display: none;
-}
-.exec-footer.visible { display: block; }
-.exec-nav {
-  display: flex;
-  gap: 10px;
+.exec-info-btn {
+  flex-shrink: 0;
+  background: none;
+  border: none;
   padding: 0;
+  cursor: pointer;
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  line-height: 1;
+}
+.exec-info-btn i { width: 14px; height: 14px; }
+.exec-section-meta { display: none; }
+/* Nav buttons */
+/* Prev/Next inside tab bar */
+.tab-nav-btn {
+  border-radius: 0;
+  border: none;
+  box-shadow: none;
+  padding: 0 8px;
 }
 .nav-prev-btn, .nav-next-btn {
   flex: 1;
@@ -613,14 +616,7 @@ body {
 
 
 
-/* Prev hint */
-.prev-hint {
-  display: flex; gap: 6px; padding: 4px 0 10px;
-  font-size: 12px; color: var(--text3); align-items: center;
-  cursor: pointer; border-radius: 4px; transition: background .15s;
-}
-.prev-hint:hover { background: rgba(99,102,241,.06); }
-.prev-hint i { width: 12px; height: 12px; color: var(--accent); flex-shrink: 0; }
+/* Prev hint — used only for JS delegation, visual handled by .exec-info-btn */
 
 /* Exercise History Modal */
 .history-overlay {
@@ -811,9 +807,9 @@ body {
         </div>
 
         <!-- Exercise heading -->
-        <div class="exec-header" style="margin-top:14px;">
+        <div class="exec-header" style="margin-top:8px;">
           <div class="exec-icon"><i data-lucide="dumbbell" class="equipment-icon" id="execIcon" aria-hidden="true"></i></div>
-          <div>
+          <div class="exec-info">
             <div class="exec-name" id="execName">Bench Press</div>
             <div class="exec-muscle" id="execMuscle"><i data-lucide="target"></i> Chest</div>
           </div>
@@ -863,18 +859,6 @@ body {
     </div><!-- /scroll-inner -->
   </div><!-- /scroll-area -->
 
-  <!-- Exec footer (execute view) -->
-  <div class="exec-footer" id="execFooter">
-    <div class="exec-nav">
-      <button class="nav-prev-btn" id="prevBtn" onclick="navExercise(-1)" disabled>
-        <i data-lucide="chevron-left"></i> Prev
-      </button>
-      <button class="nav-next-btn" id="nextBtn" onclick="navExercise(1)">
-        Next <i data-lucide="chevron-right"></i>
-      </button>
-    </div>
-  </div>
-
   <!-- Bottom tab bar -->
   <nav class="tab-bar">
     <button class="tab-item active" id="tab-build" onclick="switchTab('build')">
@@ -884,6 +868,12 @@ body {
     <button class="tab-item" id="tab-exec" onclick="startWorkout()">
       <i data-lucide="play-circle"></i>
       <span>Execute</span>
+    </button>
+    <button class="nav-prev-btn tab-nav-btn" id="prevBtn" onclick="navExercise(-1)" disabled style="display:none">
+      <i data-lucide="chevron-left"></i> Prev
+    </button>
+    <button class="nav-next-btn tab-nav-btn" id="nextBtn" onclick="navExercise(1)" style="display:none">
+      Next <i data-lucide="chevron-right"></i>
     </button>
   </nav>
 
@@ -1506,10 +1496,9 @@ function renderExecutionBlock(index) {
     const isBodyweight = exercise.mode === 'bodyweight';
     section.innerHTML = `
       <div class="exec-section-title">
-        <span>${exercise.name}</span>
+        <span class="exec-section-name">${exercise.name} <span class="exec-section-muscle-inline">(${exercise.muscle})</span></span>
+        <button class="prev-hint exec-info-btn" type="button" data-exercise-name="${exercise.name}" title="Last workout"><i data-lucide="info"></i></button>
       </div>
-      <div class="exec-section-meta">${exercise.muscle}</div>
-      ${exercise.prev ? `<div class="prev-hint" data-exercise-name="${exercise.name}"><i data-lucide="history"></i><span>${exercise.prev}</span></div>` : ''}
       <div class="exec-set-header${isBodyweight ? ' bodyweight' : ''}">
         <span>Set</span><span>Reps</span><span>Weight</span><span></span>
       </div>
@@ -1869,7 +1858,9 @@ function switchTab(tab, options = {}) {
     document.getElementById('tab-' + t).classList.toggle('active', t === tab);
   });
   currentTab = tab;
-  document.getElementById('execFooter').classList.toggle('visible', tab === 'exec');
+  document.getElementById('tab-exec').style.display = tab === 'exec' ? 'none' : '';
+  document.getElementById('prevBtn').style.display = tab === 'exec' ? 'flex' : 'none';
+  document.getElementById('nextBtn').style.display = tab === 'exec' ? 'flex' : 'none';
   if (tab === 'exec' && executionBlocks.length === 0 && buildExercises.length > 0) {
     renderExecutionFromBuild();
   }

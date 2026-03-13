@@ -461,6 +461,9 @@ export const Storage = {
         }
 
         // 2. If not enough sessions, look at other files in data directory
+        if (getConfig().mode !== 'github' || !Auth.isAuthenticated()) {
+            return sessions;
+        }
         try {
             const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/')) || 'data';
             const files = await GitHubAPI.listFiles(dataPath);

@@ -12,10 +12,12 @@ export const GitHubAPI = {
      */
     getRepoInfo() {
         const userConfig = getConfig();
-        return {
-            owner: userConfig.owner || CONFIG.github.owner,
-            repo: userConfig.repo || CONFIG.github.repo
-        };
+        const owner = userConfig.owner;
+        const repo = userConfig.repo;
+        if (!owner || !repo) {
+            throw new Error('GitHub repository is not configured. Open Configuration in the menu and set your owner and repo.');
+        }
+        return { owner, repo };
     },
 
     /**

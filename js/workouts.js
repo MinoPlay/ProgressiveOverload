@@ -488,7 +488,7 @@ export const Workouts = {
         this.plannerPickerContext = null;
     },
 
-    confirmPlannerExercisePicker() {
+    async confirmPlannerExercisePicker() {
         const select = document.getElementById('plannerExercisePickerSelect');
         const selectedExerciseId = select?.value;
         if (!selectedExerciseId || !this.plannerPickerContext) {
@@ -500,12 +500,13 @@ export const Workouts = {
 
         if (context.mode === 'add') {
             const rowId = `row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            const sets = await this.resolveTemplateLoadSets(selectedExerciseId, [], rowId);
             this.collapseAllPlannedRowsExcept(rowId);
             this.plannedSession.rows.push({
                 id: rowId,
                 type: 'single',
                 exerciseId: selectedExerciseId,
-                sets: this.createDefaultPlannerSets(rowId),
+                sets,
                 copyCursor: 1,
                 activeSetId: `${rowId}-set-1`,
                 expanded: true
@@ -2024,8 +2025,8 @@ export const Workouts = {
             return;
         }
 
-        // Strip runtime-only planner fields (activeSetId, copyCursor, expanded)
-        // but keep exerciseId, sets (with reps/weight), and persist stable IDs
+        // Strip runtime-only planner fields (activeSetId, copyCursor, expanded, reps, weight).
+        // Templates store structure only; reps/weight are always resolved from workout history on load.
         const rows = this.plannedSession.rows.map((row, rowIdx) => {
             const rowId = row.id || `tpl-row-${Date.now()}-${rowIdx}`;
             if (row.type === 'single') {
@@ -2034,9 +2035,7 @@ export const Workouts = {
                     type: 'single',
                     exerciseId: row.exerciseId || '',
                     sets: (row.sets || []).map((s, i) => ({
-                        id: s.id || `${rowId}-set-${i + 1}`,
-                        reps: s.reps ?? '',
-                        weight: s.weight ?? ''
+                        id: s.id || `${rowId}-set-${i + 1}`
                     }))
                 };
             } else {
@@ -2050,9 +2049,7 @@ export const Workouts = {
                             id: exId,
                             exerciseId: item.exerciseId || '',
                             sets: (item.sets || []).map((s, i) => ({
-                                id: s.id || `${exId}-set-${i + 1}`,
-                                reps: s.reps ?? '',
-                                weight: s.weight ?? ''
+                                id: s.id || `${exId}-set-${i + 1}`
                             }))
                         };
                     })
@@ -2103,7 +2100,7 @@ export const Workouts = {
      * All row/set IDs are regenerated to avoid conflicts with saved drafts.
      * @param {string} templateId
      */
-    loadTemplateIntoPlanner(templateId) {
+    async loadTemplateIntoPlanner(templateId) {
         const template = Storage.getSessionTemplateById(templateId);
         if (!template) {
             showToast('Template not found', 'error');
@@ -2118,7 +2115,7 @@ export const Workouts = {
             if (row.type === 'single') {
                 const rowId = `row-${stamp()}`;
                 const exerciseId = row.exerciseId || '';
-                const sets = this.remapSets(row.sets, rowId);
+                const sets = await this.resolveTemplateLoadSets(exerciseId, row.sets, rowId);
                 newRows.push({
                     id: rowId,
                     type: 'single',
@@ -2136,7 +2133,7 @@ export const Workouts = {
             for (const [idx, item] of (row.exercises || []).entries()) {
                 const itemId = `${blockId}-${String.fromCharCode(97 + idx)}`;
                 const exerciseId = item.exerciseId || '';
-                const sets = this.remapSets(item.sets, itemId);
+                const sets = await this.resolveTemplateLoadSets(exerciseId, item.sets, itemId);
                 exercises.push({
                     id: itemId,
                     exerciseId,
@@ -2173,18 +2170,19 @@ export const Workouts = {
     remapSets(templateSets, baseId) {
         const source = Array.isArray(templateSets) && templateSets.length > 0
             ? templateSets
-            : Array.from({ length: DEFAULT_PLANNER_SET_COUNT }, () => ({ reps: '', weight: '', completed: false }));
+            : Array.from({ length: DEFAULT_PLANNER_SET_COUNT }, () => ({}));
 
-        return source.slice(0, DEFAULT_PLANNER_SET_COUNT).map((s, i) => ({
+        return source.slice(0, DEFAULT_PLANNER_SET_COUNT).map((_, i) => ({
             id: `${baseId}-set-${i + 1}`,
-            reps: s.reps ?? '',
-            weight: s.weight ?? '',
+            reps: '',
+            weight: '',
             completed: false
         }));
     },
 
     async resolveTemplateLoadSets(exerciseId, templateSets, baseId) {
         const fallbackSets = this.remapSets(templateSets, baseId);
+
         if (!exerciseId) {
             return fallbackSets;
         }

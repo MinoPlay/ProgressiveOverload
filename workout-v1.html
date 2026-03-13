@@ -196,6 +196,7 @@ if (EMBED_MODE) {
             window.dispatchEvent(new Event('templatesUpdated'));
         } else if (msg.type === 'po-workouts') {
             parentWorkouts = msg.workouts || [];
+            Storage.currentMonthWorkouts = parentWorkouts;
             console.log(`[v1] Received ${parentWorkouts.length} workouts from parent`);
         }
     });

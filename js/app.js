@@ -194,8 +194,6 @@ const App = {
      */
     initNavigation() {
         const navElements = document.querySelectorAll('.nav-btn[data-section], .dropdown-item[data-section]');
-        const workoutVersionButtons = document.querySelectorAll('.workout-version-tab-btn[data-workout-version]');
-        const workoutVersionPanes = document.querySelectorAll('.workout-version-pane[data-workout-version]');
 
         // Section label map for the trigger button
         const sectionLabels = {
@@ -205,84 +203,27 @@ const App = {
             exercises: 'Manage'
         };
 
-        const sectionToWorkoutVersion = {
-            workout: 'v1',
-            design1: 'v2',
-            design3: 'v3'
-        };
-
         const activeNavLabel = document.getElementById('activeNavLabel');
         const dropdownTrigger = document.getElementById('mainNavTrigger');
         const dropdownContent = document.getElementById('mainNavContent');
         const appContent = document.querySelector('.app-content');
-        const designSections = document.querySelectorAll('.workout-design-section');
+        const workoutPane = document.getElementById('workoutPane');
 
-        const getSavedWorkoutVersion = () => {
-            const saved = localStorage.getItem('activeWorkoutVersion');
-            return ['v1', 'v2', 'v3'].includes(saved) ? saved : 'v1';
-        };
-
-        const clearDesignSectionHeightLock = () => {
-            const workoutSection = document.getElementById('workoutSection');
-            if (workoutSection) {
-                workoutSection.style.removeProperty('height');
-                workoutSection.style.removeProperty('min-height');
-                workoutSection.style.removeProperty('overflow');
-            }
-
-            designSections.forEach(section => {
-                section.style.removeProperty('height');
-            });
-        };
-
-        const setWorkoutVersion = (version) => {
-            const normalizedVersion = ['v1', 'v2', 'v3'].includes(version) ? version : 'v1';
-
-            workoutVersionButtons.forEach(btn => {
-                const isActive = btn.dataset.workoutVersion === normalizedVersion;
-                btn.classList.toggle('active', isActive);
-                btn.setAttribute('aria-selected', String(isActive));
-            });
-
-            workoutVersionPanes.forEach(pane => {
-                pane.classList.toggle('active', pane.dataset.workoutVersion === normalizedVersion);
-            });
-
-            localStorage.setItem('activeWorkoutVersion', normalizedVersion);
-
-            if (normalizedVersion !== 'v1') {
-                updateDesignSectionHeight();
-            } else {
-                clearDesignSectionHeightLock();
-            }
-        };
-
-        const updateDesignSectionHeight = () => {
-            if (!appContent || !designSections.length) return;
-            const appRect = appContent.getBoundingClientRect();
+        const updateWorkoutPaneHeight = () => {
+            if (!appContent || !workoutPane) return;
             const styles = window.getComputedStyle(appContent);
-            const paddingTop = parseFloat(styles.paddingTop) || 0;
             const paddingBottom = parseFloat(styles.paddingBottom) || 0;
             const workoutSection = document.getElementById('workoutSection');
-            const workoutTabs = document.querySelector('.workout-version-tabs');
             const viewportHeight = Math.floor(window.visualViewport?.height || window.innerHeight || document.documentElement.clientHeight);
-            const workoutTop = workoutSection?.getBoundingClientRect().top ?? (appRect.top + paddingTop);
-            const tabsStyles = workoutTabs ? window.getComputedStyle(workoutTabs) : null;
-            const tabsHeight = workoutTabs
-                ? Math.ceil(workoutTabs.getBoundingClientRect().height + (parseFloat(tabsStyles?.marginBottom || '0') || 0))
-                : 0;
-            const availableHeight = Math.max(320, Math.floor(viewportHeight - workoutTop - tabsHeight - paddingBottom));
+            const workoutTop = workoutSection?.getBoundingClientRect().top ?? appContent.getBoundingClientRect().top;
+            const availableHeight = Math.max(320, Math.floor(viewportHeight - workoutTop - paddingBottom));
 
             if (workoutSection) {
-                const sectionHeight = Math.max(320, tabsHeight + availableHeight);
-                workoutSection.style.height = `${sectionHeight}px`;
-                workoutSection.style.minHeight = `${sectionHeight}px`;
+                workoutSection.style.height = `${availableHeight}px`;
+                workoutSection.style.minHeight = `${availableHeight}px`;
                 workoutSection.style.overflow = 'hidden';
             }
-
-            designSections.forEach(section => {
-                section.style.height = `${availableHeight}px`;
-            });
+            workoutPane.style.height = `${availableHeight}px`;
         };
 
         const closeDropdown = () => {
@@ -294,12 +235,6 @@ const App = {
 
         const switchSection = (targetSection) => {
             if (!targetSection) return;
-
-            const mappedWorkoutVersion = sectionToWorkoutVersion[targetSection];
-            if (mappedWorkoutVersion) {
-                setWorkoutVersion(targetSection === 'workout' ? getSavedWorkoutVersion() : mappedWorkoutVersion);
-                targetSection = 'workout';
-            }
 
             const targetSectionElement = document.getElementById(`${targetSection}Section`);
             if (!targetSectionElement) {
@@ -328,8 +263,8 @@ const App = {
                 section.classList.toggle('active', section.id === `${targetSection}Section`);
             });
 
-            if (targetSection === 'workout' && getSavedWorkoutVersion() !== 'v1') {
-                updateDesignSectionHeight();
+            if (targetSection === 'workout') {
+                updateWorkoutPaneHeight();
             }
 
             // Save to localStorage for persistence
@@ -345,12 +280,6 @@ const App = {
                     switchSection(targetSection);
                     closeDropdown();
                 }
-            });
-        });
-
-        workoutVersionButtons.forEach(button => {
-            button.addEventListener('click', () => {
-                setWorkoutVersion(button.dataset.workoutVersion);
             });
         });
 
@@ -388,8 +317,8 @@ const App = {
 
         window.addEventListener('resize', () => {
             const activeSection = localStorage.getItem('activeSection') || 'workout';
-            if (activeSection === 'workout' && getSavedWorkoutVersion() !== 'v1') {
-                updateDesignSectionHeight();
+            if (activeSection === 'workout') {
+                updateWorkoutPaneHeight();
             }
         });
 
@@ -479,10 +408,8 @@ const IframeBridge = {
     frames: [],
 
     init() {
-        const v1Frame = document.querySelector('#workoutVersionV1 iframe');
-        const sessionFrame = document.querySelector('#workoutVersionV2 iframe');
-        const builderFrame = document.querySelector('#workoutVersionV3 iframe');
-        this.frames = [v1Frame, sessionFrame, builderFrame].filter(Boolean);
+        const workoutFrame = document.querySelector('#workoutPane iframe');
+        this.frames = [workoutFrame].filter(Boolean);
 
         if (!this.frames.length) return;
 

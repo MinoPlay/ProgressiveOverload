@@ -1119,6 +1119,16 @@ const SESSION_KEY = 'workout.activeSession';
 const DESIGN1_LAST_WORKOUT_KEY = 'workout1.lastWorkoutByExercise';
 const EMBED_MODE = window.self !== window.top;
 
+// Initialise the date display to today
+(function initDateDisplay() {
+  const d = document.getElementById('dateDisplay');
+  if (!d) return;
+  const today = new Date().toISOString().split('T')[0];
+  d.dataset.iso = today;
+  const parts = new Date(today + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+  d.textContent = parts;
+}());
+
 function applyStoredTheme() {
   const storedTheme = localStorage.getItem(THEME_KEY) || 'light';
   document.documentElement.setAttribute('data-theme', storedTheme);
@@ -1360,6 +1370,21 @@ if (EMBED_MODE) {
       _mergeParentTemplates(msg.templates);
     } else if (msg.type === 'po-workouts') {
       _mergeParentWorkouts(msg.workouts);
+    } else if (msg.type === 'po-workouts-saved') {
+      captureLastWorkoutFromCurrentBoard();
+      const btn = document.getElementById('submitBtn');
+      btn.querySelector('span').textContent = 'Saved ✓';
+      setTimeout(() => { btn.querySelector('span').textContent = 'Submit Session'; }, 2000);
+      if (document.getElementById('clearExercisesCheck').checked) {
+        setTemplateSelection('');
+        loadTemplate('');
+        localStorage.removeItem(SESSION_KEY);
+      }
+    } else if (msg.type === 'po-save-error') {
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = false;
+      btn.querySelector('span').textContent = 'Submit Session';
+      alert('Failed to save session: ' + (msg.error || 'Unknown error'));
     }
   });
   // Request exercises + templates + workouts in case iframe loaded before parent sent them
@@ -2096,6 +2121,7 @@ function pickDate() {
   input.style.cssText = 'position:absolute;opacity:0;pointer-events:none;';
   document.body.appendChild(input);
   input.addEventListener('change', () => {
+    d.dataset.iso = input.value;
     const parts = new Date(input.value + 'T12:00:00').toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
     d.textContent = parts;
     input.remove();
@@ -2664,13 +2690,48 @@ document.getElementById('planView').addEventListener('input', (event) => {
 
 /* ── Submit ── */
 document.getElementById('submitBtn').addEventListener('click', () => {
-  captureLastWorkoutFromCurrentBoard();
-  alert('Session submitted! ✅\n\nIn the real app this saves to your storage.');
-  if (document.getElementById('clearExercisesCheck').checked) {
-    setTemplateSelection('');
-    loadTemplate('');
-    localStorage.removeItem(SESSION_KEY);
+  if (!EMBED_MODE) {
+    alert('Session submitted! ✅\n\nIn the real app this saves to your storage.');
+    return;
   }
+
+  const dateDisplay = document.getElementById('dateDisplay');
+  const date = dateDisplay.dataset.iso || new Date().toISOString().split('T')[0];
+
+  const workouts = [];
+  const cards = document.querySelectorAll('#planView .exercise-card');
+  for (const card of cards) {
+    const exerciseId = card.dataset.exerciseId;
+    if (!exerciseId) continue;
+    const isBodyweight = card.dataset.bodyweight === '1';
+    const bodyKey = card.id.replace('card-', '');
+    const body = document.getElementById('body-' + bodyKey);
+    const setRows = body ? body.querySelectorAll('.set-row') : [];
+    for (const row of setRows) {
+      const tickBtn = row.querySelector('.tick-btn');
+      if (!tickBtn || !tickBtn.classList.contains('ticked')) continue;
+      const repsInput = row.querySelector('.reps-input') || row.querySelector('input.set-input');
+      const reps = parseInt(repsInput ? (repsInput.value || repsInput.placeholder) : '', 10);
+      if (!reps || reps <= 0) continue;
+      let weight = null;
+      if (!isBodyweight) {
+        const weightInput = row.querySelector('.weight-input');
+        const rawWeight = weightInput ? (weightInput.value || weightInput.placeholder) : '';
+        if (rawWeight && String(rawWeight).toUpperCase() !== 'BW') {
+          weight = parseFloat(rawWeight);
+        }
+      }
+      workouts.push({ exerciseId, date, reps, weight });
+    }
+  }
+
+  if (workouts.length === 0) return;
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.querySelector('span').textContent = 'Saving…';
+
+  window.parent.postMessage({ type: 'po-save-workouts', workouts }, '*');
 });
 </script>
 </body>

@@ -107,9 +107,12 @@ export function loadConfig() {
     const saved = localStorage.getItem(CONFIG_KEY);
     if (saved) {
         config = JSON.parse(saved);
-        document.getElementById('github-token').value = config.token || '';
-        document.getElementById('repo-owner').value = config.owner || '';
-        document.getElementById('repo-name').value = config.repo || '';
+        const tokenEl = document.getElementById('github-token');
+        const ownerEl = document.getElementById('repo-owner');
+        const repoEl  = document.getElementById('repo-name');
+        if (tokenEl) tokenEl.value = config.token || '';
+        if (ownerEl) ownerEl.value = config.owner || '';
+        if (repoEl)  repoEl.value  = config.repo  || '';
         config.mode = config.mode || 'local';
     } else {
         config.mode = 'local';
@@ -172,15 +175,19 @@ window.setMode = function (mode) {
 function updateModeUI() {
     const isLocal = config.mode === 'local';
 
-    // Update mode buttons
-    document.getElementById('mode-local').classList.toggle('active', isLocal);
-    document.getElementById('mode-github').classList.toggle('active', !isLocal);
+    const modeLocal    = document.getElementById('mode-local');
+    const modeGithub   = document.getElementById('mode-github');
+    const githubConfig = document.getElementById('github-config');
+    const localControls = document.getElementById('local-controls');
+    const githubHelp   = document.getElementById('github-help');
+    const localHelp    = document.getElementById('local-help');
 
-    // Show/hide appropriate controls
-    document.getElementById('github-config').style.display = isLocal ? 'none' : 'block';
-    document.getElementById('local-controls').style.display = isLocal ? 'flex' : 'none';
-    document.getElementById('github-help').style.display = isLocal ? 'none' : 'block';
-    document.getElementById('local-help').style.display = isLocal ? 'block' : 'none';
+    if (modeLocal)     modeLocal.classList.toggle('active', isLocal);
+    if (modeGithub)    modeGithub.classList.toggle('active', !isLocal);
+    if (githubConfig)  githubConfig.style.display  = isLocal ? 'none' : 'block';
+    if (localControls) localControls.style.display = isLocal ? 'flex'  : 'none';
+    if (githubHelp)    githubHelp.style.display    = isLocal ? 'none' : 'block';
+    if (localHelp)     localHelp.style.display     = isLocal ? 'block' : 'none';
 }
 
 /**

@@ -433,6 +433,7 @@ export function showLoading(show) {
  */
 export function showToast(message, type = 'info') {
     const container = document.getElementById('toastContainer');
+    if (!container) return;
 
     const toast = document.createElement('div');
     toast.className = `toast ${type}`;
@@ -561,17 +562,29 @@ const IframeBridge = {
             case 'po-request-workouts':
                 this.sendWorkouts(sourceFrame);
                 break;
+            case 'po-save-workouts':
+                Storage.addWorkoutsBatch(msg.workouts)
+                    .then(() => {
+                        event.source.postMessage({ type: 'po-workouts-saved' }, '*');
+                        this.broadcastWorkouts();
+                    })
+                    .catch(err => {
+                        event.source.postMessage({ type: 'po-save-error', error: err.message }, '*');
+                    });
+                break;
             default:
                 break;
         }
     }
 };
 
-// Initialize app when DOM is ready
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => App.init());
-} else {
-    App.init();
+// Initialize app when DOM is ready — only on the main app page (index.html)
+if (document.getElementById('app')) {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => App.init());
+    } else {
+        App.init();
+    }
 }
 
 // Make showToast available globally

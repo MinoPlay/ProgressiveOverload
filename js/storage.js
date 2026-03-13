@@ -115,7 +115,16 @@ export const Storage = {
                 this.currentMonthSha = result.content.sha;
             } catch (error) {
                 console.warn('Could not initialize workout file:', error);
-                // Continue anyway - file will be created when first workout is added
+                // File may already exist (created by another session) — re-fetch to get its SHA
+                try {
+                    const existing = await GitHubAPI.getWorkouts(now);
+                    if (existing.sha) {
+                        this.currentMonthWorkouts = existing.workouts;
+                        this.currentMonthSha = existing.sha;
+                    }
+                } catch (fetchErr) {
+                    console.warn('Could not fetch existing workout file:', fetchErr);
+                }
             }
         }
     },

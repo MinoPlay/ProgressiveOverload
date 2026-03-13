@@ -128,6 +128,56 @@
 
 </div>
 
+<!-- Save As Template Modal -->
+<div id="saveAsTemplateModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="saveAsTemplateModalTitle">
+    <div class="modal-content" style="max-width: 360px;">
+        <div class="modal-header">
+            <h2 id="saveAsTemplateModalTitle">Save as Template</h2>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="saveAsTemplateNameInput">Template Name <span class="required">*</span></label>
+                <input type="text" id="saveAsTemplateNameInput" placeholder="e.g., Push Day A"
+                    maxlength="100" autocomplete="off">
+            </div>
+            <div class="form-actions">
+                <button type="button" id="saveAsTemplateConfirmBtn" class="btn btn-primary" title="Save template" aria-label="Save template">
+                    <i data-lucide="save"></i>
+                </button>
+                <button type="button" id="saveAsTemplateCancelBtn" class="btn btn-secondary" title="Cancel" aria-label="Cancel">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Planner Exercise Picker Modal -->
+<div id="plannerExercisePickerModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="plannerExercisePickerTitle">
+    <div class="modal-content" style="max-width: 360px;">
+        <div class="modal-header">
+            <h2 id="plannerExercisePickerTitle">Select Exercise</h2>
+        </div>
+        <div class="modal-body">
+            <div class="form-group">
+                <label for="plannerExercisePickerSelect">Exercise <span class="required">*</span></label>
+                <select id="plannerExercisePickerSelect"></select>
+            </div>
+            <div class="form-actions">
+                <button type="button" id="plannerExercisePickerConfirmBtn" class="btn btn-primary" title="Apply" aria-label="Apply selection">
+                    <i data-lucide="check"></i>
+                </button>
+                <button type="button" id="plannerExercisePickerCancelBtn" class="btn btn-secondary" title="Cancel" aria-label="Cancel selection">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Toast Notifications -->
+<div id="toastContainer" class="toast-container" role="region" aria-live="polite" aria-label="Notifications"></div>
+
 <script type="module">
 import { Storage } from './js/storage.js';
 import { Exercises } from './js/exercises.js';

@@ -40,10 +40,9 @@ export const GitHubAPI = {
     async listFiles(path) {
         try {
             const { owner, repo } = this.getRepoInfo();
-            const response = await fetch(
-                `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`,
-                { headers: this.getHeaders() }
-            );
+            const url = `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`;
+            console.log('[GitHubAPI] GET (listFiles):', url);
+            const response = await fetch(url, { headers: this.getHeaders() });
 
             if (!response.ok) {
                 throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
@@ -65,10 +64,9 @@ export const GitHubAPI = {
     async getFile(path, silent = false) {
         try {
             const { owner, repo } = this.getRepoInfo();
-            const response = await fetch(
-                `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`,
-                { headers: this.getHeaders() }
-            );
+            const url = `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`;
+            console.log('[GitHubAPI] GET (getFile):', url);
+            const response = await fetch(url, { headers: this.getHeaders() });
 
             if (response.status === 404) {
                 // File doesn't exist yet - this is normal for months without workouts
@@ -110,9 +108,10 @@ export const GitHubAPI = {
      * @returns {Promise<object>} Response from GitHub
      */
     async putFile(path, content, message, sha = null) {
-        console.log('[GitHubAPI.putFile] path:', path, '| sha:', sha);
         try {
             const { owner, repo } = this.getRepoInfo();
+            const url = `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`;
+            console.log('[GitHubAPI] PUT (putFile):', url, '| sha:', sha);
             // Encode content to base64
             const encodedContent = btoa(JSON.stringify(content, null, 2));
 
@@ -126,19 +125,15 @@ export const GitHubAPI = {
                 body.sha = sha;
             }
 
-            const response = await fetch(
-                `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`,
-                {
-                    method: 'PUT',
-                    headers: this.getHeaders(),
-                    body: JSON.stringify(body)
-                }
-            );
+            const response = await fetch(url, {
+                method: 'PUT',
+                headers: this.getHeaders(),
+                body: JSON.stringify(body)
+            });
 
-            console.log('[GitHubAPI.putFile] response status:', response.status, response.statusText);
             if (!response.ok) {
                 const errorBody = await response.text().catch(() => '');
-                console.error('[GitHubAPI.putFile] error body:', errorBody);
+                console.error('[GitHubAPI] PUT error', response.status, response.statusText, errorBody);
                 if (response.status === 401 || response.status === 403) {
                     throw new Error('GitHub authentication failed. Your PAT may be expired or missing required repo access. Open Configuration in the menu and save a new token.');
                 }
@@ -332,15 +327,12 @@ export const GitHubAPI = {
      * @returns {Promise<object>}
      */
     async saveSessionTemplates(templates, sha = null) {
-        console.log('[GitHubAPI.saveSessionTemplates] templates.length:', templates.length, '| sha:', sha);
         const content = { templates };
         const message = sha
             ? `Update session templates (${templates.length} total)`
             : 'Initialize session templates';
 
-        const result = await this.putFile(CONFIG.paths.sessionTemplates, content, message, sha);
-        console.log('[GitHubAPI.saveSessionTemplates] putFile returned, new sha:', result?.content?.sha);
-        return result;
+        return await this.putFile(CONFIG.paths.sessionTemplates, content, message, sha);
     },
 
     /**

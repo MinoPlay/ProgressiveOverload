@@ -364,6 +364,20 @@ body {
   border-color: var(--success);
   color: #fff;
 }
+.copy-down-btn {
+  width: 28px; height: 28px;
+  border-radius: 50%;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--text3);
+  transition: all .15s;
+  flex-shrink: 0;
+  padding: 0;
+}
+.copy-down-btn svg { width: 14px; height: 14px; }
+.copy-down-btn:hover { border-color: var(--accent); color: var(--accent); }
 
 .reps-cell {
   display: grid;
@@ -2186,6 +2200,58 @@ function checkCardDone(cardId) {
   }
 }
 
+/* ── Copy Down Set ── */
+function copyDownSet(btn) {
+  const row = btn.closest('.set-row');
+  const nextRow = row.nextElementSibling;
+  if (!nextRow || !nextRow.classList.contains('set-row')) return;
+  const repsInput = row.querySelector('.reps-input');
+  const weightInput = row.querySelector('.weight-input');
+  const nextReps = nextRow.querySelector('.reps-input');
+  const nextWeight = nextRow.querySelector('.weight-input');
+  if (repsInput && nextReps) {
+    nextReps.value = repsInput.value || repsInput.placeholder;
+    nextReps.classList.remove('ghost');
+  }
+  if (weightInput && nextWeight) {
+    nextWeight.value = weightInput.value || weightInput.placeholder;
+    nextWeight.classList.remove('ghost');
+  }
+  saveDesign1State();
+}
+
+function refreshCopyDownButtons(cardId) {
+  const bodyKey = cardId.replace('card-', '');
+  const rows = Array.from(document.querySelectorAll(`#body-${bodyKey} .set-row`));
+  rows.forEach((row, index) => {
+    const isLast = index === rows.length - 1;
+    const last = row.lastElementChild;
+    if (!last) return;
+    if (isLast) {
+      if (last.tagName === 'BUTTON' && last.classList.contains('copy-down-btn')) {
+        last.replaceWith(document.createElement('span'));
+      }
+    } else {
+      if (!last.classList.contains('copy-down-btn')) {
+        const btn = document.createElement('button');
+        btn.className = 'copy-down-btn';
+        btn.type = 'button';
+        btn.setAttribute('onclick', 'copyDownSet(this)');
+        btn.title = 'Copy to next set';
+        btn.innerHTML = '<i data-lucide="arrow-down"></i>';
+        last.replaceWith(btn);
+      }
+    }
+  });
+  lucide.createIcons();
+}
+
+function refreshAllCopyDownButtons() {
+  document.querySelectorAll('#planView .exercise-card').forEach((card) => {
+    refreshCopyDownButtons(card.id);
+  });
+}
+
 /* ── Add Set ── */
 function addSet(cardId, suppressSave = false) {
   const bodyKey = cardId.replace('card-','');
@@ -2221,6 +2287,7 @@ function addSet(cardId, suppressSave = false) {
     saveDesign1State();
   }
   lucide.createIcons();
+  refreshCopyDownButtons(cardId);
 }
 
 function changeRepInput(btn, delta) {
@@ -2307,6 +2374,7 @@ function renumberSets(cardId) {
     const n = row.querySelector('.set-num');
     if (n) n.textContent = index + 1;
   });
+  refreshCopyDownButtons(cardId);
 }
 
 /* ── Add Exercise ── */
@@ -2576,6 +2644,7 @@ function loadTemplate(name) {
   refreshExerciseIcons();
   enhanceRepsControls(planView);
   lucide.createIcons();
+  refreshAllCopyDownButtons();
 }
 _rebuildTemplateMenu();
 ensureDesign1SharedStateListener();
@@ -2585,6 +2654,7 @@ refreshExerciseIcons();
 refreshLinkButtons();
 updateLinkVisuals();
 enhanceRepsControls();
+refreshAllCopyDownButtons();
 
 document.getElementById('planView').addEventListener('input', (event) => {
   if (event.target && event.target.classList && event.target.classList.contains('set-input')) {

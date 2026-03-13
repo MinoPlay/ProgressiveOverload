@@ -43,6 +43,7 @@ export const GitHubAPI = {
             const url = `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`;
             console.log('[GitHubAPI] GET (listFiles):', url);
             const response = await fetch(url, { headers: this.getHeaders() });
+            console.log('[GitHubAPI] GET (listFiles) response:', response.status, response.statusText, url);
 
             if (!response.ok) {
                 throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
@@ -67,6 +68,7 @@ export const GitHubAPI = {
             const url = `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`;
             console.log('[GitHubAPI] GET (getFile):', url);
             const response = await fetch(url, { headers: this.getHeaders() });
+            console.log('[GitHubAPI] GET (getFile) response:', response.status, response.statusText, url);
 
             if (response.status === 404) {
                 // File doesn't exist yet - this is normal for months without workouts
@@ -130,10 +132,11 @@ export const GitHubAPI = {
                 headers: this.getHeaders(),
                 body: JSON.stringify(body)
             });
+            console.log('[GitHubAPI] PUT (putFile) response:', response.status, response.statusText, url);
 
             if (!response.ok) {
                 const errorBody = await response.text().catch(() => '');
-                console.error('[GitHubAPI] PUT error', response.status, response.statusText, errorBody);
+                console.error('[GitHubAPI] PUT error body:', errorBody);
                 if (response.status === 401 || response.status === 403) {
                     throw new Error('GitHub authentication failed. Your PAT may be expired or missing required repo access. Open Configuration in the menu and save a new token.');
                 }

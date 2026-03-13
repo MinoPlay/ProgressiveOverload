@@ -3,7 +3,7 @@
 
 import { GitHubAPI } from './github-api.js';
 import { Auth } from './auth.js';
-import { CONFIG } from './config.js';
+import { CONFIG, getConfig } from './config.js';
 import { generateId, parseDate, formatDate } from './utils.js';
 
 export const Storage = {
@@ -552,7 +552,7 @@ export const Storage = {
         }
 
         // 2. If no workouts in current month, check previous months
-        if (workouts.length === 0 && Auth.isAuthenticated()) {
+        if (workouts.length === 0 && getConfig().mode === 'github' && Auth.isAuthenticated()) {
             try {
                 const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/')) || 'data';
                 const files = await GitHubAPI.listFiles(dataPath);

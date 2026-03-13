@@ -215,6 +215,10 @@ window.clearLocalData = function () {
  * Get current configuration
  */
 export function getConfig() {
+    const saved = localStorage.getItem(CONFIG_KEY);
+    if (saved) {
+        return { ...config, ...JSON.parse(saved) };
+    }
     return { ...config };
 }
 

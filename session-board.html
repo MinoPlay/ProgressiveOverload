@@ -2567,6 +2567,9 @@ document.getElementById('planView').addEventListener('input', (event) => {
 document.getElementById('submitBtn').addEventListener('click', () => {
   captureLastWorkoutFromCurrentBoard();
   alert('Session submitted! ✅\n\nIn the real app this saves to your storage.');
+  setTemplateSelection('');
+  loadTemplate('');
+  localStorage.removeItem(SESSION_KEY);
 });
 </script>
 </body>

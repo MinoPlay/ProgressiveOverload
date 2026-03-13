@@ -1812,8 +1812,13 @@ function finishSession() {
     return;
   }
   alert('Session finished! 🎉\n\nIn the real app this saves your workout data.');
+  buildExercises = [];
+  executionBlocks = [];
+  currentBlockIndex = 0;
   executionActive = false;
-  saveDesign3State();
+  localStorage.removeItem(SESSION_KEY);
+  switchTab('build', { persist: false });
+  renderBuildList();
 }
 
 

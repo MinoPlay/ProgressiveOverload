@@ -1209,7 +1209,7 @@ body {
       <i data-lucide="layout-list"></i>
       <span>Plan</span>
     </button>
-    <button class="tab-item" id="tab-execute" onclick="switchTab('execute')">
+    <button class="tab-item" id="tab-execute" onclick="switchTab('execute')" disabled>
       <i data-lucide="play-circle"></i>
       <span>Execute</span>
     </button>
@@ -2390,15 +2390,12 @@ function checkExecuteAutoAdvance(cardId) {
   if (!group || !group.cardIds.includes(cardId)) return;
   if (!isGroupComplete(group)) return;
   const isLast = executeState.current === executeState.groups.length - 1;
-  setTimeout(() => {
-    if (!executeState.active) return;
-    if (isLast) {
-      showExecuteDone();
-    } else {
-      renderExecuteGroup(executeState.current + 1);
-      document.getElementById('scrollArea').scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  }, 600);
+  if (isLast) {
+    showExecuteDone();
+  } else {
+    renderExecuteGroup(executeState.current + 1);
+    document.getElementById('scrollArea').scrollTo({ top: 0, behavior: 'smooth' });
+  }
 }
 
 /* ── Toggle Card ── */
@@ -2753,6 +2750,8 @@ function updateLinkVisuals() {
 
 function refreshLinkButtons() {
   const cards = Array.from(document.querySelectorAll('#planView .exercise-card'));
+  const exTab = document.getElementById('tab-execute');
+  if (exTab) exTab.disabled = cards.length === 0;
   cards.forEach((card, index) => {
     const btn = card.querySelector('.link-next-btn');
     if (!btn) return;

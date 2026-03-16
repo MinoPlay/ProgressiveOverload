@@ -825,8 +825,6 @@ body {
         </div>
       </div>
 
-      <div class="section-label">Exercises</div>
-
       <!-- Exercise Card 1: Bench Press -->
       <div class="exercise-card card-open" id="card-bench">
         <div class="card-header" onclick="toggleCard('card-bench')">
@@ -838,9 +836,6 @@ body {
           <div class="prev-hint">
             <i data-lucide="history"></i>
             <span>Last session: 4×80 kg · 4×82.5 kg · 3×82.5 kg</span>
-          </div>
-          <div class="set-header-row">
-            <span>Set</span><span>Reps</span><span>Weight</span><span></span>
           </div>
           <div class="set-row" id="set-bench-1">
             <span class="set-num">1</span>
@@ -878,9 +873,6 @@ body {
             <i data-lucide="history"></i>
             <span>Last session: 5×50 kg · 5×50 kg · 4×50 kg</span>
           </div>
-          <div class="set-header-row">
-            <span>Set</span><span>Reps</span><span>Weight</span><span></span>
-          </div>
           <div class="set-row">
             <span class="set-num">1</span>
             <input class="set-input" type="number" placeholder="5" inputmode="numeric">
@@ -916,9 +908,6 @@ body {
           <div class="prev-hint">
             <i data-lucide="history"></i>
             <span>Last session: 10 reps · 10 reps · 8 reps</span>
-          </div>
-          <div class="set-header-row bodyweight">
-            <span>Set</span><span>Reps</span><span>Weight</span><span></span>
           </div>
           <div class="set-row bodyweight">
             <span class="set-num">1</span>
@@ -2251,7 +2240,6 @@ function addExercise(defaultExerciseId = null, markAsCustom = true, options = {}
       <button class="remove-ex-btn" onclick="removeExercise('${id}', event)"><i data-lucide="trash-2"></i></button>
     </div>
     <div class="sets-body" id="body-${bodyKey}">
-      <div class="set-header-row"><span>Set</span><span>Reps</span><span>Weight</span><span></span></div>
       <div class="set-row">
         <span class="set-num">1</span>
         <input class="set-input reps-input" type="number" placeholder="—" inputmode="numeric">
@@ -2461,7 +2449,6 @@ function loadTemplate(name) {
       </div>
       <div class='sets-body' id='body-${bodyKey}'>
         ${prevHint}
-        <div class='set-header-row${meta?.bodyweight ? ' bodyweight' : ''}'><span>Set</span><span>Reps</span><span>Weight</span><span></span></div>
         ${setRows}
       </div>
       <div class='card-summary' id='summary-${bodyKey}'><div class='set-tags'></div></div>

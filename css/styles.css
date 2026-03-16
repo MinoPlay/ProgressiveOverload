@@ -646,3 +646,332 @@ html {
         page-break-inside: avoid;
     }
 }
+
+/* ─── Green / Terminal Theme ──────────────────────────────────────────────── */
+[data-theme="green"] {
+    /* Backgrounds — near-black with green tint */
+    --bg-primary: #0a0f0a;
+    --bg-secondary: #050805;
+    --bg-overlay: rgba(0, 0, 0, 0.85);
+
+    /* Text — terminal greens */
+    --text-primary: #00ff41;
+    --text-secondary: #00b82e;
+    --text-light: #006618;
+    /* text-inverse = black, used on bright accent backgrounds */
+    --text-inverse: #000000;
+
+    /* Borders */
+    --border-color: #0e3312;
+    --border-light: #0a2a0e;
+
+    /* Secondary buttons / surfaces */
+    --secondary-color: #0d2210;
+    --secondary-dark: #142e17;
+
+    /* Status colours */
+    --success-light: #0a1f0c;
+    --error-light: #1f0a0a;
+    --info-light: #0a121f;
+
+    /* Primary accent */
+    --primary-color: #00e676;
+    --primary-dark: #00c853;
+    --primary-light: rgba(0, 230, 118, 0.12);
+    --primary-gradient: linear-gradient(135deg, #00e676 0%, #009933 100%);
+
+    /* Surface depth layers */
+    --surface-tier-1-bg: rgba(13, 22, 13, 0.96);
+    --surface-tier-1-border: rgba(0, 230, 118, 0.2);
+    --surface-tier-1-shadow: 0 10px 28px rgba(0, 0, 0, 0.55);
+
+    --surface-tier-2-bg: rgba(9, 15, 9, 0.92);
+    --surface-tier-2-border: rgba(0, 230, 118, 0.15);
+    --surface-tier-2-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+
+    --surface-tier-3-bg: rgba(6, 10, 6, 0.85);
+    --surface-tier-3-border: rgba(0, 230, 118, 0.1);
+    --surface-tier-3-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+/* Scrollbar in green mode */
+[data-theme="green"] ::-webkit-scrollbar-track { background: #060d06; }
+[data-theme="green"] ::-webkit-scrollbar-thumb { background: #0e3312; }
+[data-theme="green"] ::-webkit-scrollbar-thumb:hover { background: #155220; }
+
+/* Dropdown panel */
+[data-theme="green"] .dropdown-content {
+    background: #0d160d;
+    border: 1px solid var(--border-color);
+}
+
+/* Modal */
+[data-theme="green"] .modal-content {
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+/* Inputs & selects */
+[data-theme="green"] input,
+[data-theme="green"] select,
+[data-theme="green"] textarea {
+    background: #0d160d;
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+[data-theme="green"] input::placeholder,
+[data-theme="green"] textarea::placeholder {
+    color: var(--text-light);
+}
+
+/* Config form inputs on the gradient header */
+[data-theme="green"] .config-form input {
+    background: rgba(0, 0, 0, 0.3);
+    color: #00ff41;
+}
+
+[data-theme="green"] .config-form input:focus {
+    background: rgba(0, 0, 0, 0.45);
+}
+
+/* Header — dark, not the bright accent gradient */
+[data-theme="green"] .app-header {
+    background: linear-gradient(135deg, #003d1a 0%, #001a0a 100%);
+}
+
+/* Config mode / save button active color */
+[data-theme="green"] .mode-btn.active { color: #00e676; }
+[data-theme="green"] .btn-save { color: #00e676; }
+
+/* Equipment badges */
+[data-theme="green"] .equipment-badge.barbell    { background: #1a0e00; color: #ffb74d; }
+[data-theme="green"] .equipment-badge.dumbbell   { background: #001a06; color: #00e676; }
+[data-theme="green"] .equipment-badge.kettlebell { background: #1a0008; color: #f48fb1; }
+[data-theme="green"] .equipment-badge.machines   { background: #10001a; color: #ce93d8; }
+[data-theme="green"] .equipment-badge.bodyweight { background: #001a0e; color: #00ff41; }
+[data-theme="green"] .equipment-badge            { background: #001a08; color: #00e676; }
+[data-theme="green"] .equipment-badge.bodyweight-plus { background: #001a10; color: #00ff41; }
+
+/* History entries */
+[data-theme="green"] .history-date-group {
+    background: #0a0f0a !important;
+    border-color: var(--border-color) !important;
+}
+[data-theme="green"] .history-date-header {
+    background: #0d160d !important;
+    border-bottom-color: var(--border-color) !important;
+}
+[data-theme="green"] .history-exercise-group  { background: #080d08 !important; }
+[data-theme="green"] .history-exercise-group:hover { background: #0d160d !important; }
+
+/* History: override high-specificity hardcoded backgrounds */
+[data-theme="green"] #historySection .history-section-sub-header {
+    background: #0d160d !important;
+    color: var(--text-secondary) !important;
+}
+[data-theme="green"] #historySection .history-section-sub-header:hover {
+    background: #142e17 !important;
+    color: var(--primary-color) !important;
+}
+[data-theme="green"] #historySection .history-date-group {
+    background: #0a0f0a !important;
+    border-color: var(--border-color) !important;
+}
+[data-theme="green"] #historySection .history-date-header {
+    background: #0d160d !important;
+    border-bottom-color: var(--border-color) !important;
+}
+[data-theme="green"] #historySection .history-exercise-group      { background: #080d08 !important; }
+[data-theme="green"] #historySection .history-exercise-group:hover { background: #0d160d !important; }
+[data-theme="green"] #historySection .history-summary-section,
+[data-theme="green"] #historySection .history-daily-section {
+    background: #080d08 !important;
+    border-color: var(--border-color) !important;
+}
+[data-theme="green"] .history-week-content { background: #050805; }
+
+/* Current-week badge */
+[data-theme="green"] .current-week-badge {
+    background: rgba(0, 255, 65, 0.15);
+    color: #00ff41;
+}
+
+/* Section cards */
+[data-theme="green"] .section-card,
+[data-theme="green"] .form-container,
+[data-theme="green"] .exercise-chart-section,
+[data-theme="green"] .kpi-card {
+    background: var(--surface-tier-1-bg);
+    border-color: var(--surface-tier-1-border);
+}
+[data-theme="green"] .stats-overview-grid .section-card,
+[data-theme="green"] .stats-panel-card,
+[data-theme="green"] .last-workout-summary {
+    background: var(--surface-tier-1-bg);
+    border-color: var(--surface-tier-1-border);
+}
+
+/* Planner */
+[data-theme="green"] .planner-container { background: var(--surface-tier-1-bg); }
+[data-theme="green"] .planned-set-row,
+[data-theme="green"] .planned-exercise-block,
+[data-theme="green"] .planned-row,
+[data-theme="green"] .superset-block {
+    background: var(--surface-tier-2-bg);
+    border-color: var(--border-color);
+}
+[data-theme="green"] .planner-set-card {
+    background: var(--surface-tier-3-bg);
+    border-color: var(--border-color);
+}
+[data-theme="green"] .suggestion-chip {
+    background: var(--surface-tier-3-bg);
+    border-color: var(--border-color);
+    color: var(--text-primary);
+}
+
+/* History sub-section headers */
+[data-theme="green"] .history-section-sub-header {
+    background: #0a0f0a !important;
+    color: var(--text-secondary) !important;
+    border-bottom-color: var(--border-color) !important;
+}
+
+/* Stats period active tab */
+[data-theme="green"] #statisticsSection .stats-period-tab-btn.active,
+[data-theme="green"] .stats-period-tab-btn.active {
+    color: #000;
+    background: var(--primary-gradient);
+    border-color: var(--primary-color);
+}
+
+/* Metric / toggle active buttons */
+[data-theme="green"] #statisticsSection .metric-btn.active,
+[data-theme="green"] #statisticsSection .toggle-btn.active,
+[data-theme="green"] .metric-btn.active,
+[data-theme="green"] .toggle-btn.active {
+    color: #000;
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    box-shadow: 0 2px 8px rgba(0, 230, 118, 0.4);
+}
+
+/* Category tab buttons */
+[data-theme="green"] .category-tab-btn {
+    background: var(--surface-tier-3-bg);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+}
+[data-theme="green"] .category-tab-btn.active {
+    background: var(--primary-gradient);
+    color: #000;
+    border-color: var(--primary-color);
+}
+
+/* View toggle / chart controls */
+[data-theme="green"] .view-toggle-group { background: var(--surface-tier-2-bg); }
+[data-theme="green"] .chart-controls,
+[data-theme="green"] .metric-btns {
+    background: var(--surface-tier-2-bg);
+    border-color: var(--border-color);
+}
+
+/* Exercise cards */
+[data-theme="green"] .exercise-card {
+    background: var(--surface-tier-1-bg);
+    border-color: var(--surface-tier-1-border);
+}
+
+/* Equipment group collapsible */
+[data-theme="green"] .equipment-group {
+    background: var(--surface-tier-1-bg);
+    border: 1px solid var(--surface-tier-1-border);
+}
+[data-theme="green"] .equipment-group-content { background: var(--bg-secondary); }
+[data-theme="green"] .equipment-group-header {
+    background: linear-gradient(135deg, #00e676 0%, #009933 100%);
+}
+[data-theme="green"] .equipment-group-header:hover {
+    background: linear-gradient(135deg, #00c853 0%, #007a28 100%);
+}
+
+/* Template cards */
+[data-theme="green"] .template-card {
+    background: var(--surface-tier-1-bg);
+    border-color: var(--border-color);
+}
+
+/* Workout stat badges / count pill */
+[data-theme="green"] .workout-stat,
+[data-theme="green"] .workout-count {
+    background: var(--secondary-color);
+    color: var(--text-primary);
+}
+
+/* Milestone badge */
+[data-theme="green"] .milestone-badge { background: #1a2a00; color: #c6ff00; }
+
+/* Security warning */
+[data-theme="green"] .security-warning {
+    background: #0a1a00;
+    border-color: #00b82e;
+    color: var(--text-primary);
+}
+
+/* Tables */
+[data-theme="green"] .weekly-stats-table th,
+[data-theme="green"] .stats-summary-table th {
+    color: var(--text-secondary);
+    border-bottom-color: var(--border-color);
+}
+[data-theme="green"] .weekly-stats-table td,
+[data-theme="green"] .stats-summary-table td {
+    border-bottom-color: var(--border-color);
+    color: var(--text-primary);
+}
+[data-theme="green"] .weekly-stats-table,
+[data-theme="green"] .stats-summary-table { background: var(--surface-tier-1-bg); }
+
+/* Set item separators */
+[data-theme="green"] .set-item { border-bottom-color: rgba(0, 255, 65, 0.07); }
+
+/* App content sections — transparent so body bg-secondary shows */
+[data-theme="green"] .app-content,
+[data-theme="green"] #workoutSection,
+[data-theme="green"] #historySection,
+[data-theme="green"] #statisticsSection,
+[data-theme="green"] #exercisesSection { background: transparent; }
+
+/* High-visibility section borders / workout view tabs */
+[data-theme="green"] #workoutSection .workout-view-tabs,
+[data-theme="green"] #historySection,
+[data-theme="green"] #statisticsSection {
+    background: transparent;
+    border-color: rgba(0, 230, 118, 0.2);
+}
+[data-theme="green"] #workoutSection .workout-view-tabs {
+    background: rgba(0, 230, 118, 0.07);
+    border: 1px solid rgba(0, 230, 118, 0.15);
+}
+[data-theme="green"] #workoutSection .workout-view-tab.active {
+    box-shadow: 0 8px 18px rgba(0, 230, 118, 0.35);
+}
+[data-theme="green"] #statisticsSection .kpi-card {
+    border: 1px solid rgba(0, 230, 118, 0.16);
+    border-top: 4px solid rgba(0, 230, 118, 0.65);
+}
+[data-theme="green"] #statisticsSection .stats-period-tab-nav {
+    background: rgba(0, 230, 118, 0.07);
+    border: 1px solid rgba(0, 230, 118, 0.15);
+}
+[data-theme="green"] #statisticsSection .stats-period-tab-btn.active {
+    box-shadow: 0 8px 18px rgba(0, 230, 118, 0.3);
+}
+[data-theme="green"] #historySection .history-week-group {
+    border: 1px solid rgba(0, 230, 118, 0.18);
+}
+[data-theme="green"] #historySection .history-date-group {
+    border: 1px solid rgba(0, 230, 118, 0.16) !important;
+}

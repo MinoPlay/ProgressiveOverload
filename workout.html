@@ -52,6 +52,22 @@ body {
   --shadow-lg: 0 8px 28px rgba(0,0,0,.45);
 }
 
+[data-theme="green"] {
+  --bg: #0a0f0a;
+  --surface: #0d160d;
+  --surface2: #0a120a;
+  --border: #0e3312;
+  --text: #00ff41;
+  --text2: #00b82e;
+  --text3: #006618;
+  --accent: #00e676;
+  --accent-dark: #00c853;
+  --accent-light: rgba(0, 230, 118, .12);
+  --success-bg: #0a1f0c;
+  --shadow: 0 2px 12px rgba(0,0,0,.5);
+  --shadow-lg: 0 8px 28px rgba(0,0,0,.6);
+}
+
 /* ── Dark mode: unify indicator/icon colours to white ─────────────── */
 [data-theme="dark"] .exercise-icon { color: var(--text); }
 [data-theme="dark"] .collapse-btn { color: var(--text); }
@@ -59,6 +75,14 @@ body {
 [data-theme="dark"] .tick-btn:not(.ticked) { color: var(--text); border-color: var(--text); }
 [data-theme="dark"] .rep-btn { color: var(--text); }
 [data-theme="dark"] .set-input.ghost { color: var(--text); }
+
+/* ── Green mode: terminal green icons ─────────────────────────────── */
+[data-theme="green"] .exercise-icon { color: var(--text); }
+[data-theme="green"] .collapse-btn { color: var(--text); }
+[data-theme="green"] .set-num { color: var(--text); }
+[data-theme="green"] .tick-btn:not(.ticked) { color: var(--text); border-color: var(--text); }
+[data-theme="green"] .rep-btn { color: var(--text); }
+[data-theme="green"] .set-input.ghost { color: var(--text); }
 
 /* ── Light mode: unify indicator/icon colours to black ────────────── */
 [data-theme="light"] .exercise-icon { color: var(--text); }
@@ -1066,7 +1090,8 @@ function applyStoredTheme() {
   document.documentElement.setAttribute('data-theme', storedTheme);
   const icon = document.getElementById('themeIcon');
   if (icon) {
-    icon.setAttribute('data-lucide', storedTheme === 'dark' ? 'sun' : 'moon');
+    const icons = { light: 'moon', dark: 'terminal', green: 'sun' };
+    icon.setAttribute('data-lucide', icons[storedTheme] || 'moon');
   }
   lucide.createIcons();
 }
@@ -1330,12 +1355,13 @@ if (EMBED_MODE) {
 /* ── Theme ── */
 function toggleTheme() {
   const html = document.documentElement;
-  const isDark = html.getAttribute('data-theme') === 'dark';
-  const nextTheme = isDark ? 'light' : 'dark';
-  html.setAttribute('data-theme', nextTheme);
-  localStorage.setItem(THEME_KEY, nextTheme);
+  const current = html.getAttribute('data-theme') || 'light';
+  const next = current === 'light' ? 'dark' : current === 'dark' ? 'green' : 'light';
+  html.setAttribute('data-theme', next);
+  localStorage.setItem(THEME_KEY, next);
   const icon = document.getElementById('themeIcon');
-  icon.setAttribute('data-lucide', isDark ? 'moon' : 'sun');
+  const icons = { light: 'moon', dark: 'terminal', green: 'sun' };
+  icon.setAttribute('data-lucide', icons[next] || 'moon');
   lucide.createIcons();
 }
 

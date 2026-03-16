@@ -821,7 +821,7 @@ export const Charts = {
             'shoulders': '#ffab40',
             'legs': '#7c4dff',
             'biceps': '#40c4ff',
-            'triceps': '#40c4ff',
+            'triceps': '#667eea',
             'arms': '#40c4ff',
             'core': '#69f0ae',
             'neck': '#bdbdbd',

@@ -38,7 +38,7 @@ const Theme = {
 
     toggle() {
         const current = document.documentElement.getAttribute('data-theme') || 'light';
-        const next = current === 'dark' ? 'light' : 'dark';
+        const next = current === 'light' ? 'dark' : current === 'dark' ? 'green' : 'light';
         document.documentElement.setAttribute('data-theme', next);
         localStorage.setItem(this.STORAGE_KEY, next);
         this._syncIcon(next);
@@ -50,10 +50,10 @@ const Theme = {
     /** Update Chart.js global defaults to match current theme */
     _applyChartDefaults(theme) {
         if (typeof window.Chart === 'undefined') return;
-        const isDark = theme === 'dark';
-        const textColor    = isDark ? '#9090aa' : '#666666';
-        const gridColor    = isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
-        const borderColor  = isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
+        const isDark = theme === 'dark' || theme === 'green';
+        const textColor   = theme === 'green' ? '#00b82e' : isDark ? '#9090aa' : '#666666';
+        const gridColor   = theme === 'green' ? 'rgba(0, 255, 65, 0.1)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+        const borderColor = theme === 'green' ? 'rgba(0, 230, 118, 0.15)' : isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
 
         window.Chart.defaults.color = textColor;
         window.Chart.defaults.borderColor = borderColor;
@@ -80,7 +80,8 @@ const Theme = {
     _syncIcon(theme) {
         const iconEl = document.getElementById('themeToggleIcon');
         if (!iconEl) return;
-        iconEl.setAttribute('data-lucide', theme === 'dark' ? 'sun' : 'moon');
+        const icons = { light: 'moon', dark: 'terminal', green: 'sun' };
+        iconEl.setAttribute('data-lucide', icons[theme] || 'moon');
         if (window.lucide) window.lucide.createIcons();
     }
 };

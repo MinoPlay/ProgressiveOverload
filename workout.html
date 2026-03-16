@@ -860,45 +860,8 @@ body {
   transition: width .4s ease;
   min-width: 4px;
 }
-.execute-nav {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-.execute-nav-btn {
-  flex: 1;
-  padding: 13px 10px;
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius-sm);
-  background: var(--surface);
-  color: var(--text);
-  font-size: 14px;
-  font-weight: 700;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all .15s;
-}
-.execute-nav-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  color: var(--accent);
-}
-.execute-nav-btn:disabled {
-  opacity: .35;
-  cursor: not-allowed;
-}
-.execute-nav-btn.primary {
-  background: var(--accent);
-  border-color: var(--accent);
-  color: #fff;
-}
-.execute-nav-btn.primary:hover:not(:disabled) {
-  background: var(--accent-dark);
-  border-color: var(--accent-dark);
-  color: #fff;
-}
+.tab-nav-btn i { width: 28px; height: 28px; }
+.tab-nav-btn.primary { color: var(--accent); }
 .execute-done {
   text-align: center;
   padding: 48px 24px;
@@ -1193,14 +1156,6 @@ body {
 
         <div id="executeCards"></div>
 
-        <div class="execute-nav">
-          <button class="execute-nav-btn" id="executeBackBtn" onclick="executeNav(-1)" disabled>
-            <i data-lucide="chevron-left"></i> Back
-          </button>
-          <button class="execute-nav-btn primary" id="executeNextBtn" onclick="executeNav(1)">
-            Next <i data-lucide="chevron-right"></i>
-          </button>
-        </div>
       </div>
 
     </div><!-- /executeView -->
@@ -1220,6 +1175,12 @@ body {
     <button class="tab-item" id="tab-add" onclick="openAddExercisePicker()">
       <i data-lucide="plus-circle"></i>
       <span>Add Exercise</span>
+    </button>
+    <button class="tab-item tab-nav-btn" id="executeBackBtn" onclick="executeNav(-1)" style="display:none" disabled>
+      <i data-lucide="chevron-left"></i>
+    </button>
+    <button class="tab-item tab-nav-btn primary" id="executeNextBtn" onclick="executeNav(1)" style="display:none">
+      <i data-lucide="chevron-right"></i>
     </button>
   </nav>
   <!-- Hidden submit button + clear checkbox kept for submit logic -->
@@ -2274,6 +2235,10 @@ function isGroupComplete(group) {
 }
 
 function enterExecuteMode() {
+  document.getElementById('tab-execute').style.display = 'none';
+  document.getElementById('tab-add').style.display = 'none';
+  document.getElementById('executeBackBtn').style.display = '';
+  document.getElementById('executeNextBtn').style.display = '';
   const cards = Array.from(document.querySelectorAll('#planView .exercise-card'));
   if (!cards.length) {
     document.getElementById('executeActive').style.display = 'none';
@@ -2294,6 +2259,10 @@ function enterExecuteMode() {
 
 function exitExecuteMode() {
   if (!executeState.active) return;
+  document.getElementById('tab-execute').style.display = '';
+  document.getElementById('tab-add').style.display = '';
+  document.getElementById('executeBackBtn').style.display = 'none';
+  document.getElementById('executeNextBtn').style.display = 'none';
   // Return all cards kept in executeCards back to planView
   const planView = document.getElementById('planView');
   const executeCards = document.getElementById('executeCards');
@@ -2350,14 +2319,19 @@ function renderExecuteGroup(index) {
   document.getElementById('executeProgressText').textContent = 'Exercise ' + done + ' / ' + total;
   document.getElementById('executeProgressPct').textContent = pct + '%';
   document.getElementById('executeProgressFill').style.width = pct + '%';
+  // Restore active view (in case navigating back from done screen)
+  document.getElementById('executeActive').style.display = 'block';
+  document.getElementById('executeDone').style.display = 'none';
   // Nav buttons
   const backBtn = document.getElementById('executeBackBtn');
   const nextBtn = document.getElementById('executeNextBtn');
   backBtn.disabled = index === 0;
+  backBtn.onclick = () => executeNav(-1);
+  nextBtn.disabled = !isGroupComplete(group);
   const isLast = index === total - 1;
   nextBtn.innerHTML = isLast
-    ? 'Finish <i data-lucide="check"></i>'
-    : 'Next <i data-lucide="chevron-right"></i>';
+    ? '<i data-lucide="check"></i>'
+    : '<i data-lucide="chevron-right"></i>';
   nextBtn.onclick = isLast
     ? () => showExecuteDone()
     : () => executeNav(1);
@@ -2402,6 +2376,15 @@ function showExecuteDone() {
   document.getElementById('executeProgressFill').style.width = '100%';
   document.getElementById('executeActive').style.display = 'none';
   document.getElementById('executeDone').style.display = 'flex';
+  // Update nav: disable Next (nothing ahead), enable Back to return to last exercise
+  const backBtn = document.getElementById('executeBackBtn');
+  const nextBtn = document.getElementById('executeNextBtn');
+  nextBtn.disabled = true;
+  backBtn.disabled = false;
+  backBtn.onclick = () => {
+    renderExecuteGroup(executeState.groups.length - 1);
+    document.getElementById('scrollArea').scrollTo({ top: 0, behavior: 'smooth' });
+  };
   lucide.createIcons();
 }
 
@@ -2409,7 +2392,9 @@ function checkExecuteAutoAdvance(cardId) {
   if (!executeState.active) return;
   const group = executeState.groups[executeState.current];
   if (!group || !group.cardIds.includes(cardId)) return;
-  if (!isGroupComplete(group)) return;
+  const complete = isGroupComplete(group);
+  document.getElementById('executeNextBtn').disabled = !complete;
+  if (!complete) return;
   const isLast = executeState.current === executeState.groups.length - 1;
   if (isLast) {
     showExecuteDone();

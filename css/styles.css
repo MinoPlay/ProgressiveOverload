@@ -90,7 +90,7 @@
     /* Text */
     --text-primary: #e0e0f0;
     --text-secondary: #9090aa;
-    --text-light: #55556a;
+    --text-light: #7272a4;
     /* text-inverse stays #ffffff — it's always used on top of gradient/coloured backgrounds */
 
     /* Borders */
@@ -199,6 +199,26 @@
 }
 
 [data-theme="dark"] .history-exercise-group:hover {
+    background: #22223a !important;
+}
+
+/* History: override high-specificity (#historySection .xxx) hardcoded light backgrounds */
+[data-theme="dark"] #historySection .history-section-sub-header {
+    background: #252538 !important;
+    color: var(--text-secondary) !important;
+}
+[data-theme="dark"] #historySection .history-date-group {
+    background: #1e1e2e !important;
+    border-color: var(--border-color) !important;
+}
+[data-theme="dark"] #historySection .history-date-header {
+    background: #252538 !important;
+    border-bottom-color: var(--border-color) !important;
+}
+[data-theme="dark"] #historySection .history-exercise-group {
+    background: #1a1a2c !important;
+}
+[data-theme="dark"] #historySection .history-exercise-group:hover {
     background: #22223a !important;
 }
 
@@ -388,6 +408,11 @@
 [data-theme="dark"] .weekly-stats-table,
 [data-theme="dark"] .stats-summary-table {
     background: var(--surface-tier-1-bg);
+}
+
+/* Set item separators: flip to light for dark backgrounds */
+[data-theme="dark"] .set-item {
+    border-bottom-color: rgba(255, 255, 255, 0.07);
 }
 
 /* App content (section wrapper) explicit dark background */

@@ -619,27 +619,12 @@ body {
   box-shadow: 0 8px 30px rgba(0,0,0,.25);
 }
 .session-picker-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
-.session-picker-search {
+.session-picker-select {
   width: 100%; padding: 10px 12px;
   border: 1.5px solid var(--border); border-radius: var(--radius-sm);
   background: var(--surface2); color: var(--text); font-size: 14px;
-  margin-bottom: 8px; box-sizing: border-box;
+  margin-bottom: 12px; box-sizing: border-box;
 }
-.session-picker-list {
-  max-height: 240px; overflow-y: auto;
-  border: 1px solid var(--border); border-radius: var(--radius-sm);
-  background: var(--surface2);
-}
-.session-picker-item {
-  padding: 9px 12px; cursor: pointer;
-  display: flex; justify-content: space-between; align-items: center;
-  font-size: 14px; border-bottom: 1px solid var(--border);
-}
-.session-picker-item:last-child { border-bottom: none; }
-.session-picker-item:hover { background: rgba(99,102,241,.08); }
-.session-picker-item.selected { background: rgba(99,102,241,.15); font-weight: 600; }
-.session-picker-item .sp-muscle { font-size: 11px; color: var(--text3); }
-.session-picker-empty { padding: 16px; text-align: center; color: var(--text3); font-size: 13px; }
 .session-picker-actions { display: flex; gap: 8px; margin-top: 12px; }
 .session-picker-actions button {
   flex: 1; padding: 10px; border-radius: var(--radius-sm);
@@ -845,7 +830,7 @@ body {
       <!-- Exercise Card 1: Bench Press -->
       <div class="exercise-card card-open" id="card-bench">
         <div class="card-header" onclick="toggleCard('card-bench')">
-          <div class="exercise-name" id="name-bench" onclick="openSessionPicker('card-bench'); event.stopPropagation()">Bench Press</div>
+          <div class="exercise-name" id="name-bench">Bench Press</div>
           <button class="link-next-btn" onclick="toggleLinkWithNext('card-bench', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
           <button class="collapse-btn open" id="btn-bench"><i data-lucide="chevron-down"></i></button>
         </div>
@@ -884,7 +869,7 @@ body {
       <!-- Exercise Card 2: Overhead Press -->
       <div class="exercise-card card-open" id="card-ohp">
         <div class="card-header" onclick="toggleCard('card-ohp')">
-          <div class="exercise-name" id="name-ohp" onclick="openSessionPicker('card-ohp'); event.stopPropagation()">Overhead Press</div>
+          <div class="exercise-name" id="name-ohp">Overhead Press</div>
           <button class="link-next-btn" onclick="toggleLinkWithNext('card-ohp', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
           <button class="collapse-btn open" id="btn-ohp"><i data-lucide="chevron-down"></i></button>
         </div>
@@ -923,7 +908,7 @@ body {
       <!-- Exercise Card 3: Tricep Dips -->
       <div class="exercise-card card-open" id="card-dips">
         <div class="card-header" onclick="toggleCard('card-dips')">
-          <div class="exercise-name" id="name-dips" onclick="openSessionPicker('card-dips'); event.stopPropagation()">Tricep Dips</div>
+          <div class="exercise-name" id="name-dips">Tricep Dips</div>
           <button class="link-next-btn" onclick="toggleLinkWithNext('card-dips', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
           <button class="collapse-btn open" id="btn-dips"><i data-lucide="chevron-down"></i></button>
         </div>
@@ -1036,8 +1021,7 @@ body {
 <div class="session-picker-overlay" id="sessionPicker" onclick="if(event.target===this) closeSessionPicker()">
   <div class="session-picker-dialog">
     <div class="session-picker-title">Choose Exercise</div>
-    <input type="text" class="session-picker-search" id="sessionPickerSearch" placeholder="Search exercises…" oninput="filterSessionPickerList()">
-    <div class="session-picker-list" id="sessionPickerList"></div>
+    <select class="session-picker-select" id="sessionPickerSelect"></select>
     <div class="session-picker-actions">
       <button class="sp-cancel" onclick="closeSessionPicker()">Cancel</button>
       <button class="sp-confirm" onclick="confirmSessionPicker()">Confirm</button>
@@ -1433,88 +1417,30 @@ function getExerciseIdByName(name) {
 ensureExerciseMetaById();
 
 /* ── Session Exercise Picker ── */
-let _sessionPickerCardId = null;
-let _sessionPickerSelectedId = null;
-
-function openSessionPicker(cardId) {
-  _sessionPickerCardId = cardId;
-  const search = document.getElementById('sessionPickerSearch');
-  const available = getAvailableExerciseIds(cardId);
-  if (!available.length) {
-    alert('All exercises are already in this workout.');
-    return;
-  }
-  _sessionPickerSelectedId = available[0];
-  search.value = '';
-  renderSessionPickerList('');
-  document.getElementById('sessionPicker').classList.add('open');
-  requestAnimationFrame(() => search.focus());
-}
-
 function openAddExercisePicker() {
-  _sessionPickerCardId = null;
-  const search = document.getElementById('sessionPickerSearch');
+  const select = document.getElementById('sessionPickerSelect');
   const available = getAvailableExerciseIds();
   if (!available.length) {
     alert('All exercises are already in this workout.');
     return;
   }
-  _sessionPickerSelectedId = available[0];
-  search.value = '';
-  renderSessionPickerList('');
+  select.innerHTML = available.map((exerciseId) => {
+    const preset = getExerciseMetaById(exerciseId);
+    return `<option value="${exerciseId}">${preset?.name || exerciseId}</option>`;
+  }).join('');
+  select.value = available[0];
   document.getElementById('sessionPicker').classList.add('open');
-  requestAnimationFrame(() => search.focus());
+  requestAnimationFrame(() => select.focus());
 }
 
 function closeSessionPicker() {
   document.getElementById('sessionPicker').classList.remove('open');
-  document.getElementById('sessionPickerSearch').value = '';
-  _sessionPickerCardId = null;
-}
-
-function renderSessionPickerList(query) {
-  const list = document.getElementById('sessionPickerList');
-  const q = query.toLowerCase();
-  const available = getAvailableExerciseIds(_sessionPickerCardId);
-  const filtered = available.filter((exerciseId) => {
-    const preset = getExerciseMetaById(exerciseId);
-    const name = preset?.name || '';
-    return !q || name.toLowerCase().includes(q) || (preset?.muscle || '').toLowerCase().includes(q);
-  });
-  if (!filtered.length) {
-    list.innerHTML = '<div class="session-picker-empty">No matching exercises</div>';
-    _sessionPickerSelectedId = null;
-    return;
-  }
-  if (!filtered.includes(_sessionPickerSelectedId)) _sessionPickerSelectedId = filtered[0];
-  list.innerHTML = filtered.map((exerciseId) => {
-    const preset = getExerciseMetaById(exerciseId);
-    const name = preset?.name || exerciseId;
-    return `<div class="session-picker-item${exerciseId === _sessionPickerSelectedId ? ' selected' : ''}" data-id="${exerciseId}" onclick="selectSessionPickerItem('${exerciseId}')">
-      ${name}<span class="sp-muscle">${preset?.muscle || ''}</span>
-    </div>`;
-  }).join('');
-}
-
-function selectSessionPickerItem(exerciseId) {
-  _sessionPickerSelectedId = exerciseId;
-  document.querySelectorAll('.session-picker-item').forEach((el) => {
-    el.classList.toggle('selected', el.dataset.id === exerciseId);
-  });
-}
-
-function filterSessionPickerList() {
-  const query = document.getElementById('sessionPickerSearch').value;
-  renderSessionPickerList(query);
 }
 
 function confirmSessionPicker() {
-  if (!_sessionPickerSelectedId) return;
-  if (_sessionPickerCardId) {
-    applyExercisePresetById(_sessionPickerSelectedId, _sessionPickerCardId);
-  } else {
-    addExercise(_sessionPickerSelectedId, true, { allowDuplicate: false });
-  }
+  const exerciseId = document.getElementById('sessionPickerSelect').value;
+  if (!exerciseId) return;
+  addExercise(exerciseId, true, { allowDuplicate: false });
   closeSessionPicker();
 }
 
@@ -2319,7 +2245,7 @@ function addExercise(defaultExerciseId = null, markAsCustom = true, options = {}
   card.innerHTML = `
     <div class="card-header" onclick="toggleCard('${id}')">
       <i class="exercise-icon" data-lucide="dumbbell" aria-hidden="true"></i>
-      <div class="exercise-name" id="name-${bodyKey}" onclick="openSessionPicker('${id}'); event.stopPropagation()">New Exercise</div>
+      <div class="exercise-name" id="name-${bodyKey}">New Exercise</div>
       <button class="link-next-btn" onclick="toggleLinkWithNext('${id}', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
       <button class="collapse-btn open" id="btn-${bodyKey}"><i data-lucide="chevron-down"></i></button>
       <button class="remove-ex-btn" onclick="removeExercise('${id}', event)"><i data-lucide="trash-2"></i></button>

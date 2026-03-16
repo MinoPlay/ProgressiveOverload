@@ -46,11 +46,19 @@ body {
   --border: #2e2e46;
   --text: #e0e0f0;
   --text2: #9090aa;
-  --text3: #55556a;
+  --text3: #7272a4;
   --success-bg: #14291e;
   --shadow: 0 2px 12px rgba(0,0,0,.35);
   --shadow-lg: 0 8px 28px rgba(0,0,0,.45);
 }
+
+/* ── Dark mode: unify indicator/icon colours to white ─────────────── */
+[data-theme="dark"] .exercise-icon { color: var(--text); }
+[data-theme="dark"] .collapse-btn { color: var(--text); }
+[data-theme="dark"] .set-num { color: var(--text); }
+[data-theme="dark"] .tick-btn:not(.ticked) { color: var(--text); border-color: var(--text); }
+[data-theme="dark"] .rep-btn { color: var(--text); }
+[data-theme="dark"] .set-input.ghost { color: var(--text); }
 
 /* ── Phone Shell ──────────────────────────────────────────────────── */
 .phone {

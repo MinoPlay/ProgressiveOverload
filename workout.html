@@ -819,6 +819,143 @@ body {
   background: var(--surface2);
   color: var(--accent);
 }
+
+/* ── Execute View ─────────────────────────────────────────────────── */
+.execute-progress {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.execute-progress-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 8px;
+}
+.execute-progress-label span:last-child {
+  font-size: 12px;
+  color: var(--text3);
+  font-weight: 600;
+}
+.execute-progress-track {
+  height: 6px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.execute-progress-fill {
+  height: 100%;
+  background: var(--accent);
+  border-radius: 99px;
+  transition: width .4s ease;
+  min-width: 4px;
+}
+.execute-nav {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+.execute-nav-btn {
+  flex: 1;
+  padding: 13px 10px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+  color: var(--text);
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  transition: all .15s;
+}
+.execute-nav-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.execute-nav-btn:disabled {
+  opacity: .35;
+  cursor: not-allowed;
+}
+.execute-nav-btn.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.execute-nav-btn.primary:hover:not(:disabled) {
+  background: var(--accent-dark);
+  border-color: var(--accent-dark);
+  color: #fff;
+}
+.execute-done {
+  text-align: center;
+  padding: 48px 24px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+.execute-done-icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--success-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--success);
+  margin-bottom: 4px;
+}
+.execute-done-icon i { width: 32px; height: 32px; }
+.execute-done h2 {
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text);
+}
+.execute-done p {
+  font-size: 14px;
+  color: var(--text2);
+}
+.execute-done-btn {
+  margin-top: 8px;
+  padding: 13px 28px;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.execute-done-btn i { width: 18px; height: 18px; }
+.execute-done-submit {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+.execute-done-clear-check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text2);
+  cursor: pointer;
+}
+.execute-done-clear-check input[type=checkbox] { width: 14px; height: 14px; cursor: pointer; margin: 0; }
 </style>
 </head>
 <body>
@@ -1021,6 +1158,49 @@ body {
       </div>
     </div><!-- /logView -->
 
+    <!-- EXECUTE VIEW -->
+    <div class="view" id="executeView">
+
+      <div id="executeDone" class="execute-done" style="display:none">
+        <div class="execute-done-icon"><i data-lucide="check-circle-2"></i></div>
+        <h2>All exercises done!</h2>
+        <p>Great session. Submit when you're ready.</p>
+        <div class="execute-done-submit">
+          <label class="execute-done-clear-check">
+            <input type="checkbox" id="executeDoneClearCheck" checked>
+            <span>Clear exercises after submit</span>
+          </label>
+          <button class="execute-done-btn" id="executeDoneSubmitBtn" onclick="executeSubmit()">
+            <i data-lucide="send"></i> Submit Session
+          </button>
+        </div>
+      </div>
+
+      <div id="executeActive">
+        <div class="execute-progress">
+          <div class="execute-progress-label">
+            <span id="executeProgressText">Exercise 1 / 1</span>
+            <span id="executeProgressPct">0%</span>
+          </div>
+          <div class="execute-progress-track">
+            <div class="execute-progress-fill" id="executeProgressFill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <div id="executeCards"></div>
+
+        <div class="execute-nav">
+          <button class="execute-nav-btn" id="executeBackBtn" onclick="executeNav(-1)" disabled>
+            <i data-lucide="chevron-left"></i> Back
+          </button>
+          <button class="execute-nav-btn primary" id="executeNextBtn" onclick="executeNav(1)">
+            Next <i data-lucide="chevron-right"></i>
+          </button>
+        </div>
+      </div>
+
+    </div><!-- /executeView -->
+
   </div><!-- /scroll-area -->
 
   <!-- Bottom Tab Bar -->
@@ -1029,21 +1209,20 @@ body {
       <i data-lucide="layout-list"></i>
       <span>Plan</span>
     </button>
+    <button class="tab-item" id="tab-execute" onclick="switchTab('execute')">
+      <i data-lucide="play-circle"></i>
+      <span>Execute</span>
+    </button>
     <button class="tab-item" id="tab-add" onclick="openAddExercisePicker()">
       <i data-lucide="plus-circle"></i>
       <span>Add Exercise</span>
     </button>
-    <div class="submit-slot">
-      <label class="clear-check" title="Clear exercises after submit">
-        <input type="checkbox" id="clearExercisesCheck" checked>
-        <span>Clear</span>
-      </label>
-      <button class="tab-item" id="submitBtn" disabled>
-        <i data-lucide="send"></i>
-        <span>Submit Session</span>
-      </button>
-    </div>
   </nav>
+  <!-- Hidden submit button + clear checkbox kept for submit logic -->
+  <div style="display:none">
+    <input type="checkbox" id="clearExercisesCheck" checked>
+    <button id="submitBtn"></button>
+  </div>
 </div>
 
 <!-- Session Exercise Picker Modal -->
@@ -1330,17 +1509,24 @@ if (EMBED_MODE) {
     } else if (msg.type === 'po-workouts-saved') {
       captureLastWorkoutFromCurrentBoard();
       const btn = document.getElementById('submitBtn');
-      btn.querySelector('span').textContent = 'Saved ✓';
-      setTimeout(() => { btn.querySelector('span').textContent = 'Submit Session'; }, 2000);
+      const doneBtn = document.getElementById('executeDoneSubmitBtn');
+      if (btn.querySelector('span')) btn.querySelector('span').textContent = 'Saved ✓';
+      if (doneBtn) { doneBtn.textContent = 'Saved ✓'; setTimeout(() => { doneBtn.innerHTML = '<i data-lucide="send"></i> Submit Session'; lucide.createIcons(); }, 2000); }
+      setTimeout(() => { if (btn.querySelector('span')) btn.querySelector('span').textContent = 'Submit Session'; }, 2000);
       if (document.getElementById('clearExercisesCheck').checked) {
         setTemplateSelection('');
         loadTemplate('');
         localStorage.removeItem(SESSION_KEY);
       }
+      if (executeState.active) {
+        switchTab('plan');
+      }
     } else if (msg.type === 'po-save-error') {
       const btn = document.getElementById('submitBtn');
       btn.disabled = false;
-      btn.querySelector('span').textContent = 'Submit Session';
+      if (btn.querySelector('span')) btn.querySelector('span').textContent = 'Submit Session';
+      const doneBtn = document.getElementById('executeDoneSubmitBtn');
+      if (doneBtn) doneBtn.disabled = false;
       alert('Failed to save session: ' + (msg.error || 'Unknown error'));
     }
   });
@@ -2033,9 +2219,186 @@ function pickDate() {
 
 /* ── Tab Switch ── */
 function switchTab(tab) {
+  if (tab !== 'execute' && executeState.active) {
+    exitExecuteMode();
+  }
   document.getElementById('planView').classList.toggle('active', tab === 'plan');
   document.getElementById('logView').classList.toggle('active', tab === 'log');
+  document.getElementById('executeView').classList.toggle('active', tab === 'execute');
   document.getElementById('tab-plan').classList.toggle('active', tab === 'plan');
+  const exTab = document.getElementById('tab-execute');
+  if (exTab) exTab.classList.toggle('active', tab === 'execute');
+  if (tab === 'execute') {
+    enterExecuteMode();
+  }
+}
+
+/* ── Execute Mode ── */
+const executeState = { active: false, groups: [], current: 0, cardOrder: [] };
+
+function buildExecuteGroups() {
+  const cards = Array.from(document.querySelectorAll('#planView .exercise-card'));
+  const groups = [];
+  let i = 0;
+  while (i < cards.length) {
+    const card = cards[i];
+    const next = cards[i + 1];
+    if (next && card.dataset.linkedWith === next.id && next.dataset.linkedWith === card.id) {
+      groups.push({ cardIds: [card.id, next.id] });
+      i += 2;
+    } else {
+      groups.push({ cardIds: [card.id] });
+      i += 1;
+    }
+  }
+  return groups;
+}
+
+function isGroupComplete(group) {
+  return group.cardIds.every(cardId => {
+    const bodyKey = cardId.replace('card-', '');
+    const body = document.getElementById('body-' + bodyKey);
+    if (!body) return true;
+    const ticks = body.querySelectorAll('.tick-btn');
+    return ticks.length > 0 && Array.from(ticks).every(t => t.classList.contains('ticked'));
+  });
+}
+
+function enterExecuteMode() {
+  const cards = Array.from(document.querySelectorAll('#planView .exercise-card'));
+  if (!cards.length) {
+    document.getElementById('executeActive').style.display = 'none';
+    document.getElementById('executeDone').style.display = 'flex';
+    return;
+  }
+  executeState.cardOrder = cards.map(c => c.id);
+  executeState.groups = buildExecuteGroups();
+  executeState.active = true;
+  // Find first incomplete group
+  let start = executeState.groups.findIndex(g => !isGroupComplete(g));
+  if (start === -1) start = 0;
+  executeState.current = start;
+  document.getElementById('executeDone').style.display = 'none';
+  document.getElementById('executeActive').style.display = 'block';
+  renderExecuteGroup(start);
+}
+
+function exitExecuteMode() {
+  if (!executeState.active) return;
+  // Return all cards kept in executeCards back to planView
+  const planView = document.getElementById('planView');
+  const executeCards = document.getElementById('executeCards');
+  // Move any cards still in executeCards back temporarily
+  Array.from(executeCards.children).forEach(card => planView.appendChild(card));
+  // Reorder planView cards to match original order
+  executeState.cardOrder.forEach(cardId => {
+    const card = document.getElementById(cardId);
+    if (card) planView.appendChild(card);
+  });
+  executeState.active = false;
+  executeState.groups = [];
+  executeState.cardOrder = [];
+  executeState.current = 0;
+}
+
+function renderExecuteGroup(index) {
+  const planView = document.getElementById('planView');
+  const executeCards = document.getElementById('executeCards');
+  // Return previously shown cards to planView
+  Array.from(executeCards.children).forEach(card => planView.appendChild(card));
+  // Reorder planView to preserve order (append all in cardOrder)
+  executeState.cardOrder.forEach(cardId => {
+    const card = document.getElementById(cardId);
+    if (card && card.parentElement === planView) planView.appendChild(card);
+  });
+  // Move current group's cards into executeCards
+  const group = executeState.groups[index];
+  group.cardIds.forEach(cardId => {
+    const card = document.getElementById(cardId);
+    if (card) {
+      executeCards.appendChild(card);
+      // Ensure card is open so sets are visible
+      const bodyKey = cardId.replace('card-', '');
+      const body = document.getElementById('body-' + bodyKey);
+      const btn = document.getElementById('btn-' + bodyKey);
+      if (body) body.style.display = '';
+      if (btn) {
+        btn.classList.add('open');
+        card.classList.add('card-open');
+      }
+    }
+  });
+  // Progress
+  const total = executeState.groups.length;
+  const done = index + 1;
+  const pct = Math.round((index / total) * 100);
+  document.getElementById('executeProgressText').textContent = 'Exercise ' + done + ' / ' + total;
+  document.getElementById('executeProgressPct').textContent = pct + '%';
+  document.getElementById('executeProgressFill').style.width = pct + '%';
+  // Nav buttons
+  const backBtn = document.getElementById('executeBackBtn');
+  const nextBtn = document.getElementById('executeNextBtn');
+  backBtn.disabled = index === 0;
+  const isLast = index === total - 1;
+  nextBtn.innerHTML = isLast
+    ? 'Finish <i data-lucide="check"></i>'
+    : 'Next <i data-lucide="chevron-right"></i>';
+  nextBtn.onclick = isLast
+    ? () => showExecuteDone()
+    : () => executeNav(1);
+  lucide.createIcons();
+  executeState.current = index;
+}
+
+function executeNav(dir) {
+  const next = executeState.current + dir;
+  if (next < 0 || next >= executeState.groups.length) return;
+  renderExecuteGroup(next);
+  document.getElementById('scrollArea').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function executeSubmit() {
+  const doneCheck = document.getElementById('executeDoneClearCheck');
+  const footerCheck = document.getElementById('clearExercisesCheck');
+  if (doneCheck && footerCheck) footerCheck.checked = doneCheck.checked;
+  document.getElementById('submitBtn').click();
+  if (!EMBED_MODE) switchTab('plan');
+}
+
+function showExecuteDone() {
+  // Return any cards in executeCards back to planView before hiding active section
+  const planView = document.getElementById('planView');
+  const executeCards = document.getElementById('executeCards');
+  Array.from(executeCards.children).forEach(card => planView.appendChild(card));
+  executeState.cardOrder.forEach(cardId => {
+    const card = document.getElementById(cardId);
+    if (card && card.parentElement === planView) planView.appendChild(card);
+  });
+  // Update progress to 100%
+  const total = executeState.groups.length;
+  document.getElementById('executeProgressText').textContent = 'Exercise ' + total + ' / ' + total;
+  document.getElementById('executeProgressPct').textContent = '100%';
+  document.getElementById('executeProgressFill').style.width = '100%';
+  document.getElementById('executeActive').style.display = 'none';
+  document.getElementById('executeDone').style.display = 'flex';
+  lucide.createIcons();
+}
+
+function checkExecuteAutoAdvance(cardId) {
+  if (!executeState.active) return;
+  const group = executeState.groups[executeState.current];
+  if (!group || !group.cardIds.includes(cardId)) return;
+  if (!isGroupComplete(group)) return;
+  const isLast = executeState.current === executeState.groups.length - 1;
+  setTimeout(() => {
+    if (!executeState.active) return;
+    if (isLast) {
+      showExecuteDone();
+    } else {
+      renderExecuteGroup(executeState.current + 1);
+      document.getElementById('scrollArea').scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  }, 600);
 }
 
 /* ── Toggle Card ── */
@@ -2067,6 +2430,7 @@ function tickSet(btn, cardId) {
   updateSubmit();
   checkCardDone(cardId);
   saveDesign1State();
+  if (executeState.active) checkExecuteAutoAdvance(cardId);
   lucide.createIcons();
 }
 
@@ -2093,7 +2457,7 @@ function checkCardDone(cardId) {
     pill.className = 'completed-pill';
     pill.textContent = '(Completed)';
     if (nameEl) nameEl.appendChild(pill);
-    if (btn && btn.classList.contains('open')) {
+    if (!executeState.active && btn && btn.classList.contains('open')) {
       toggleCard(cardId);
     }
     // Collect set tags
@@ -2562,7 +2926,9 @@ document.getElementById('submitBtn').addEventListener('click', () => {
 
   const btn = document.getElementById('submitBtn');
   btn.disabled = true;
-  btn.querySelector('span').textContent = 'Saving…';
+  if (btn.querySelector('span')) btn.querySelector('span').textContent = 'Saving…';
+  const doneBtn = document.getElementById('executeDoneSubmitBtn');
+  if (doneBtn) { doneBtn.disabled = true; doneBtn.textContent = 'Saving…'; }
 
   window.parent.postMessage({ type: 'po-save-workouts', workouts }, '*');
 });

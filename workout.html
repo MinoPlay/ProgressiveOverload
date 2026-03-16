@@ -516,32 +516,36 @@ body {
 .add-set-btn:hover { border-color: var(--accent); color: var(--accent); }
 .add-set-btn i { width: 14px; height: 14px; }
 
-.exercise-card.link-start::before,
-.exercise-card.link-end::before {
+.superset-group {
+  position: relative;
+  padding-left: 14px;
+  margin-bottom: 10px;
+}
+.superset-group > .exercise-card { margin-bottom: 6px; }
+.superset-group > .exercise-card:last-child { margin-bottom: 0; }
+.superset-group::before {
   content: '';
   position: absolute;
-  left: 6px;
+  left: 1px;
+  top: 8px;
+  bottom: 8px;
   width: 5px;
   background: var(--accent);
   border-radius: 4px;
 }
-.exercise-card.link-start::before { top: 8px; bottom: 0; }
-.exercise-card.link-end::before { top: 0; bottom: 8px; }
-.exercise-card.link-start::after,
-.exercise-card.link-end::after {
+.superset-group::after {
   content: '';
   position: absolute;
-  left: 6px;
-  width: 16px;
-  height: 5px;
-  background: var(--accent);
-  border-radius: 4px;
+  left: 1px;
+  top: 0;
+  bottom: 0;
+  width: 14px;
+  pointer-events: none;
+  background-image: linear-gradient(var(--accent), var(--accent)), linear-gradient(var(--accent), var(--accent));
+  background-size: 14px 5px;
+  background-position: 0 8px, 0 calc(100% - 8px);
+  background-repeat: no-repeat;
 }
-.exercise-card.link-start::after { top: 8px; }
-.exercise-card.link-end::after { bottom: 8px; }
-
-.exercise-card.link-start { margin-bottom: 6px; }
-.exercise-card.link-end { margin-top: -2px; }
 
 /* Collapsed summary */
 .card-summary {
@@ -2304,6 +2308,7 @@ function exitExecuteMode() {
   executeState.groups = [];
   executeState.cardOrder = [];
   executeState.current = 0;
+  updateLinkVisuals();
 }
 
 function renderExecuteGroup(index) {
@@ -2311,6 +2316,11 @@ function renderExecuteGroup(index) {
   const executeCards = document.getElementById('executeCards');
   // Return previously shown cards to planView
   Array.from(executeCards.children).forEach(card => planView.appendChild(card));
+  // Flatten any superset-group wrappers so cards are direct planView children
+  planView.querySelectorAll('.superset-group').forEach(group => {
+    while (group.firstChild) planView.insertBefore(group.firstChild, group);
+    group.remove();
+  });
   // Reorder planView to preserve order (append all in cardOrder)
   executeState.cardOrder.forEach(cardId => {
     const card = document.getElementById(cardId);
@@ -2375,10 +2385,16 @@ function showExecuteDone() {
   const planView = document.getElementById('planView');
   const executeCards = document.getElementById('executeCards');
   Array.from(executeCards.children).forEach(card => planView.appendChild(card));
+  // Flatten any superset-group wrappers so the reorder works correctly
+  planView.querySelectorAll('.superset-group').forEach(group => {
+    while (group.firstChild) planView.insertBefore(group.firstChild, group);
+    group.remove();
+  });
   executeState.cardOrder.forEach(cardId => {
     const card = document.getElementById(cardId);
     if (card && card.parentElement === planView) planView.appendChild(card);
   });
+  updateLinkVisuals();
   // Update progress to 100%
   const total = executeState.groups.length;
   document.getElementById('executeProgressText').textContent = 'Exercise ' + total + ' / ' + total;
@@ -2739,16 +2755,23 @@ function toggleLinkWithNext(cardId, event) {
 }
 
 function updateLinkVisuals() {
-  const cards = Array.from(document.querySelectorAll('#planView .exercise-card'));
-  cards.forEach((card) => {
-    card.classList.remove('link-start', 'link-end');
+  const planView = document.getElementById('planView');
+  // Unwrap any existing superset group wrappers
+  planView.querySelectorAll('.superset-group').forEach(group => {
+    while (group.firstChild) planView.insertBefore(group.firstChild, group);
+    group.remove();
   });
+  // Wrap linked consecutive pairs in a superset-group div
+  const cards = Array.from(planView.querySelectorAll('.exercise-card'));
   cards.forEach((card, index) => {
     const next = cards[index + 1];
     if (!next) return;
     if (card.dataset.linkedWith === next.id && next.dataset.linkedWith === card.id) {
-      card.classList.add('link-start');
-      next.classList.add('link-end');
+      const group = document.createElement('div');
+      group.className = 'superset-group';
+      planView.insertBefore(group, card);
+      group.appendChild(card);
+      group.appendChild(next);
     }
   });
 }

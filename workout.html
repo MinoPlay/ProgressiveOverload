@@ -1193,7 +1193,7 @@ function _mergeParentWorkouts(workouts) {
     Object.values(templates).forEach(exList => {
       exList.forEach(ex => {
         if ((ex.exerciseId || getExerciseIdByName(ex.name)) === exerciseId) {
-          ex.sets = latestSets.map(s => ({ reps: s.reps, weight: s.weight }));
+          ex.sets = latestSets.map(s => ({ reps: s.reps, weight: preset.bodyweight ? 'BW' : s.weight }));
         }
       });
     });
@@ -2428,13 +2428,13 @@ function loadTemplate(name) {
     if (ex.sets && ex.sets.length) {
       prevHint = `<div class='prev-hint'><i data-lucide="history"></i><span>Last session: ` + ex.sets.map(s => `${s.reps}×${s.weight} kg`).join(' · ') + `</span></div>`;
     }
+    const isBodyweight = Boolean(meta?.bodyweight);
     let setRows = '';
     ex.sets.forEach((s,i) => {
-      const isBw = String(s.weight).toUpperCase() === 'BW';
-      setRows += `<div class='set-row${isBw ? ' bodyweight' : ''}' id='set-${bodyKey}-${i+1}'>
+      setRows += `<div class='set-row${isBodyweight ? ' bodyweight' : ''}' id='set-${bodyKey}-${i+1}'>
         <span class='set-num'>${i+1}</span>
         <input class='set-input reps-input' type='number' placeholder='${s.reps}' inputmode='numeric'>
-        ${isBw
+        ${isBodyweight
           ? ``
           : `<input class='set-input prefilled weight-input' type='number' placeholder='${s.weight}' value='${s.weight}' inputmode='decimal'>`}
         <button class='tick-btn' onclick="tickSet(this, '${cardId}')"><i data-lucide='check'></i></button>

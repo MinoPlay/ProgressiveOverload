@@ -1345,6 +1345,7 @@ function _mergeParentTemplates(parentTemplates) {
           sets
         });
       } else if (row.type === 'superset') {
+        const supersetItems = [];
         (row.exercises || []).forEach(item => {
           const ex = _parentExerciseMap[item.exerciseId];
           if (!ex) return;
@@ -1354,7 +1355,11 @@ function _mergeParentTemplates(parentTemplates) {
             weight: isBodyweight ? 'BW' : (parseFloat(s.weight) || 20)
           }));
           if (!sets.length) sets.push({ reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 });
-          rows.push({ exerciseId: ex.id, name: ex.name, muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1), sets });
+          supersetItems.push({ exerciseId: ex.id, name: ex.name, muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1), sets });
+        });
+        supersetItems.forEach((item, i) => {
+          if (i < supersetItems.length - 1) item._linkedToNext = true;
+          rows.push(item);
         });
       }
     });
@@ -2861,6 +2866,19 @@ function loadTemplate(name) {
     card.dataset.exerciseId = exerciseId;
     card.dataset.bodyweight = meta?.bodyweight ? '1' : '0';
     planView.appendChild(card);
+  });
+  templateExercises.forEach((ex, idx) => {
+    if (!ex._linkedToNext) return;
+    const nextEx = templateExercises[idx + 1];
+    if (!nextEx) return;
+    const thisId = 'card-' + (ex.exerciseId || getExerciseIdByName(ex.name));
+    const nextId = 'card-' + (nextEx.exerciseId || getExerciseIdByName(nextEx.name));
+    const thisCard = document.getElementById(thisId);
+    const nextCard = document.getElementById(nextId);
+    if (thisCard && nextCard) {
+      thisCard.dataset.linkedWith = nextId;
+      nextCard.dataset.linkedWith = thisId;
+    }
   });
   refreshLinkButtons();
   updateLinkVisuals();

@@ -1421,6 +1421,12 @@
     border-radius: var(--radius-xl);
 }
 
+.history-date-header-right {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+}
+
 /* Collapsible History Groups */
 .history-date-group {
     transition: all var(--transition-base);

@@ -313,7 +313,10 @@ export const History = {
         // Date header
         const header = document.createElement('div');
         header.className = 'history-date-header';
-        header.onclick = () => group.classList.toggle('collapsed');
+        header.onclick = (e) => {
+            if (e.target.closest('button')) return;
+            group.classList.toggle('collapsed');
+        };
 
         const titleContainer = document.createElement('div');
         titleContainer.className = 'history-title-row';
@@ -341,15 +344,6 @@ export const History = {
         exerciseCount.className = 'workout-count';
         exerciseCount.textContent = `${exerciseGroups.size} exercise${exerciseGroups.size !== 1 ? 's' : ''}`;
 
-        header.appendChild(titleContainer);
-        header.appendChild(exerciseCount);
-        group.appendChild(header);
-
-        // Workouts list
-        const list = document.createElement('div');
-        list.className = 'history-workouts-list';
-        list.dataset.date = date;
-
         // Sort exercise groups by minimum sequence to maintain order
         const sortedExerciseGroups = Array.from(exerciseGroups.entries())
             .map(([exerciseId, exerciseWorkouts]) => ({
@@ -358,6 +352,30 @@ export const History = {
                 minSequence: Math.min(...exerciseWorkouts.map(w => w.sequence || 0))
             }))
             .sort((a, b) => a.minSequence - b.minSequence);
+
+        const templateBtn = document.createElement('button');
+        templateBtn.type = 'button';
+        templateBtn.className = 'btn-icon btn-secondary btn-small';
+        templateBtn.innerHTML = '<i data-lucide="bookmark-plus"></i>';
+        templateBtn.title = 'Save as template';
+        templateBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.openTemplateModal(date, sortedExerciseGroups.map(g => g.exerciseId));
+        });
+
+        const headerRight = document.createElement('div');
+        headerRight.className = 'history-date-header-right';
+        headerRight.appendChild(exerciseCount);
+        headerRight.appendChild(templateBtn);
+
+        header.appendChild(titleContainer);
+        header.appendChild(headerRight);
+        group.appendChild(header);
+
+        // Workouts list
+        const list = document.createElement('div');
+        list.className = 'history-workouts-list';
+        list.dataset.date = date;
 
         // Create grouped items with display order
         sortedExerciseGroups.forEach((group, index) => {
@@ -859,5 +877,124 @@ export const History = {
         document.querySelectorAll('.history-exercise-group').forEach(item => {
             item.classList.remove('dragging', 'drag-over');
         });
+    },
+
+    /**
+     * Open a modal to name and save a template from a day's exercises
+     * @param {string} date
+     * @param {string[]} exerciseIds
+     */
+    openTemplateModal(date, exerciseIds) {
+        const d = new Date(date + 'T00:00:00');
+        const defaultName = d.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+        const backdrop = document.createElement('div');
+        backdrop.className = 'modal';
+
+        const content = document.createElement('div');
+        content.className = 'modal-content';
+        content.style.maxWidth = '360px';
+
+        const modalHeader = document.createElement('div');
+        modalHeader.className = 'modal-header';
+        const title = document.createElement('h2');
+        title.textContent = 'Save as Template';
+        modalHeader.appendChild(title);
+
+        const body = document.createElement('div');
+        body.className = 'modal-body';
+
+        const formGroup = document.createElement('div');
+        formGroup.className = 'form-group';
+        const label = document.createElement('label');
+        label.textContent = 'Template Name';
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.placeholder = 'e.g., Push Day A';
+        input.maxLength = 100;
+        input.autocomplete = 'off';
+        input.value = defaultName;
+        formGroup.appendChild(label);
+        formGroup.appendChild(input);
+
+        const formActions = document.createElement('div');
+        formActions.className = 'form-actions';
+
+        const saveBtn = document.createElement('button');
+        saveBtn.type = 'button';
+        saveBtn.className = 'btn btn-primary';
+        saveBtn.innerHTML = '<i data-lucide="save"></i> Save';
+
+        const cancelBtn = document.createElement('button');
+        cancelBtn.type = 'button';
+        cancelBtn.className = 'btn btn-secondary';
+        cancelBtn.innerHTML = '<i data-lucide="x"></i> Cancel';
+
+        formActions.appendChild(saveBtn);
+        formActions.appendChild(cancelBtn);
+        body.appendChild(formGroup);
+        body.appendChild(formActions);
+        content.appendChild(modalHeader);
+        content.appendChild(body);
+        backdrop.appendChild(content);
+        document.body.appendChild(backdrop);
+
+        if (window.lucide) window.lucide.createIcons();
+        input.focus();
+        input.select();
+
+        const close = () => document.body.removeChild(backdrop);
+
+        cancelBtn.addEventListener('click', close);
+        backdrop.addEventListener('click', (e) => { if (e.target === backdrop) close(); });
+
+        const confirm = async () => {
+            await this.createTemplateFromDate(date, exerciseIds, input.value);
+            close();
+        };
+
+        saveBtn.addEventListener('click', confirm);
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') confirm();
+            if (e.key === 'Escape') close();
+        });
+    },
+
+    /**
+     * Create a template from a day's exercise list (exercises only, no reps/weights)
+     * @param {string} date - Date string (YYYY-MM-DD)
+     * @param {string[]} exerciseIds - Ordered exercise IDs from the day
+     * @param {string} name - Template name
+     */
+    async createTemplateFromDate(date, exerciseIds, name) {
+        const trimmedName = (name || '').trim();
+        if (!trimmedName) {
+            showToast('Template name cannot be empty', 'error');
+            return;
+        }
+
+        const rows = exerciseIds.map(exerciseId => {
+            const rowId = `tpl-row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+            return {
+                id: rowId,
+                type: 'single',
+                exerciseId,
+                sets: Array.from({ length: 3 }, (_, i) => ({
+                    id: `${rowId}-set-${i + 1}`,
+                    reps: '',
+                    weight: ''
+                }))
+            };
+        });
+
+        try {
+            showLoading(true);
+            await Storage.addSessionTemplate({ name: trimmedName, rows });
+            showToast(`Template "${trimmedName}" created`, 'success');
+        } catch (error) {
+            showToast(`Failed to create template: ${error.message}`, 'error');
+        } finally {
+            showLoading(false);
+        }
     }
 };

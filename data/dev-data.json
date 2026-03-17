@@ -5195,6 +5195,126 @@
       "exerciseId": "1770183966156_6whslwg5f",
       "reps": 14,
       "weight": 14
+    },
+    {
+      "exerciseId": "1769598356908_6t3ss20am",
+      "date": "2026-03-16",
+      "reps": 12,
+      "weight": 67.5,
+      "id": "dev-1773664948019-0-9bzwx0",
+      "sequence": 1
+    },
+    {
+      "exerciseId": "1769598356908_6t3ss20am",
+      "date": "2026-03-16",
+      "reps": 10,
+      "weight": 72.5,
+      "id": "dev-1773664948019-1-nauuv9",
+      "sequence": 2
+    },
+    {
+      "exerciseId": "1769598356908_6t3ss20am",
+      "date": "2026-03-16",
+      "reps": 8,
+      "weight": 77.5,
+      "id": "dev-1773664948019-2-h76fsl",
+      "sequence": 3
+    },
+    {
+      "exerciseId": "1770183966156_6whslwg5f",
+      "date": "2026-03-16",
+      "reps": 11,
+      "weight": 12,
+      "id": "dev-1773664948019-3-kkbp7q",
+      "sequence": 4
+    },
+    {
+      "exerciseId": "1770183966156_6whslwg5f",
+      "date": "2026-03-16",
+      "reps": 13,
+      "weight": 14,
+      "id": "dev-1773664948019-4-rprkwc",
+      "sequence": 5
+    },
+    {
+      "exerciseId": "1770183966156_6whslwg5f",
+      "date": "2026-03-16",
+      "reps": 14,
+      "weight": 14,
+      "id": "dev-1773664948019-5-z6nmn5",
+      "sequence": 6
+    },
+    {
+      "exerciseId": "1769598356921_facepulls",
+      "date": "2026-03-16",
+      "reps": 12,
+      "weight": 47.5,
+      "id": "dev-1773664948019-6-2n3mnb",
+      "sequence": 7
+    },
+    {
+      "exerciseId": "1769598356921_facepulls",
+      "date": "2026-03-16",
+      "reps": 10,
+      "weight": 52.5,
+      "id": "dev-1773664948019-7-jm8dsq",
+      "sequence": 8
+    },
+    {
+      "exerciseId": "1769598356921_facepulls",
+      "date": "2026-03-16",
+      "reps": 8,
+      "weight": 57.5,
+      "id": "dev-1773664948019-8-894w9d",
+      "sequence": 9
+    },
+    {
+      "exerciseId": "1769598356908_audtljs1j",
+      "date": "2026-03-16",
+      "reps": 12,
+      "weight": null,
+      "id": "dev-1773664948019-9-40sgza",
+      "sequence": 10
+    },
+    {
+      "exerciseId": "1769598356908_audtljs1j",
+      "date": "2026-03-16",
+      "reps": 10,
+      "weight": null,
+      "id": "dev-1773664948019-10-ja8fx3",
+      "sequence": 11
+    },
+    {
+      "exerciseId": "1769598356908_audtljs1j",
+      "date": "2026-03-16",
+      "reps": 8,
+      "weight": null,
+      "id": "dev-1773664948019-11-7hkrz2",
+      "sequence": 12
+    },
+    {
+      "exerciseId": "1769598356908_flvdqzdhf",
+      "date": "2026-03-16",
+      "reps": 12,
+      "weight": 77.5,
+      "id": "dev-1773665059341-0-y3t4py",
+      "sequence": 13
+    },
+    {
+      "exerciseId": "1769598356908_flvdqzdhf",
+      "date": "2026-03-16",
+      "reps": 12,
+      "weight": 77.5,
+      "id": "dev-1773665059341-1-ru5s4f",
+      "sequence": 14
+    },
+    {
+      "exerciseId": "1769598356908_flvdqzdhf",
+      "date": "2026-03-16",
+      "reps": 12,
+      "weight": 77.5,
+      "id": "dev-1773665059341-2-zvsilt",
+      "sequence": 15
     }
   ],
   "templates": [
@@ -5672,6 +5792,122 @@
         }
       ],
       "updatedAt": "2026-03-11T11:35:37.572Z"
+    },
+    {
+      "id": "dev-tpl-1773737753769-2zi429",
+      "name": "Monday, March 16, 2026",
+      "rows": [
+        {
+          "id": "tpl-row-1773737753769-u74ogf",
+          "type": "single",
+          "exerciseId": "1769598356908_6t3ss20am",
+          "sets": [
+            {
+              "id": "tpl-row-1773737753769-u74ogf-set-1",
+              "reps": "",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-1773737753769-u74ogf-set-2",
+              "reps": "",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-1773737753769-u74ogf-set-3",
+              "reps": "",
+              "weight": ""
+            }
+          ]
+        },
+        {
+          "id": "tpl-row-1773737753769-5m8lvy",
+          "type": "single",
+          "exerciseId": "1770183966156_6whslwg5f",
+          "sets": [
+            {
+              "id": "tpl-row-1773737753769-5m8lvy-set-1",
+              "reps": "",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-1773737753769-5m8lvy-set-2",
+              "reps": "",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-1773737753769-5m8lvy-set-3",
+              "reps": "",
+              "weight": ""
+            }
+          ]
+        },
+        {
+          "id": "tpl-row-1773737753769-cjmmou",
+          "type": "single",
+          "exerciseId": "1769598356921_facepulls",
+          "sets": [
+            {
+              "id": "tpl-row-1773737753769-cjmmou-set-1",
+              "reps": "",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-1773737753769-cjmmou-set-2",
+              "reps": "",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-1773737753769-cjmmou-set-3",
+              "reps": "",
+              "weight": ""
+            }
+          ]
+        },
+        {
+          "id": "tpl-row-1773737753769-v2vz1d",
+          "type": "single",
+          "exerciseId": "1769598356908_audtljs1j",
+          "sets": [
+            {
+              "id": "tpl-row-1773737753769-v2vz1d-set-1",
+              "reps": "",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-1773737753769-v2vz1d-set-2",
+              "reps": "",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-1773737753769-v2vz1d-set-3",
+              "reps": "",
+              "weight": ""
+            }
+          ]
+        },
+        {
+          "id": "tpl-row-1773737753769-byryn3",
+          "type": "single",
+          "exerciseId": "1769598356908_flvdqzdhf",
+          "sets": [
+            {
+              "id": "tpl-row-1773737753769-byryn3-set-1",
+              "reps": "",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-1773737753769-byryn3-set-2",
+              "reps": "",
+              "weight": ""
+            },
+            {
+              "id": "tpl-row-1773737753769-byryn3-set-3",
+              "reps": "",
+              "weight": ""
+            }
+          ]
+        }
+      ]
     }
   ]
 }

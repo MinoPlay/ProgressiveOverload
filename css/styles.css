@@ -456,6 +456,11 @@
     height: 20px;
 }
 
+/* ─── Fullscreen button icon swap ────────────────────────────────────────── */
+#fullscreenBtn .icon-minimize { display: none; }
+#fullscreenBtn.is-fullscreen .icon-maximize { display: none; }
+#fullscreenBtn.is-fullscreen .icon-minimize { display: block; }
+
 /* Smooth theme transition */
 *, *::before, *::after {
     transition: background-color 0.25s ease, border-color 0.25s ease, color 0.25s ease;

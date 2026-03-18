@@ -23,26 +23,31 @@
         <header class="app-header">
             <div class="header-content">
                 <nav class="header-nav" role="navigation" aria-label="Main navigation">
-                    <!-- Theme Toggle -->
-                    <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">
-                        <i data-lucide="moon" id="themeToggleIcon"></i>
-                    </button>
-                    <!-- Fullscreen Toggle -->
-                    <button id="fullscreenBtn" class="theme-toggle-btn" aria-label="Toggle fullscreen" title="Toggle fullscreen">
-                        <i data-lucide="maximize" id="fullscreenIcon"></i>
-                    </button>
-                    <button class="nav-btn" data-section="workout" title="Workout" aria-label="Workout">
-                        <i data-lucide="plus-circle" class="nav-icon"></i>
-                    </button>
-                    <button class="nav-btn" data-section="history" title="History" aria-label="History">
-                        <i data-lucide="calendar" class="nav-icon"></i>
-                    </button>
-                    <button class="nav-btn" data-section="statistics" title="Statistics" aria-label="Statistics">
-                        <i data-lucide="line-chart" class="nav-icon"></i>
-                    </button>
-                    <button class="nav-btn" data-section="exercises" title="Manage" aria-label="Manage">
-                        <i data-lucide="list" class="nav-icon"></i>
-                    </button>
+                    <div class="nav-left">
+                        <!-- Theme Toggle -->
+                        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">
+                            <i data-lucide="moon" id="themeToggleIcon"></i>
+                        </button>
+                    </div>
+                    <div class="nav-center">
+                        <button class="nav-btn" data-section="workout" title="Workout" aria-label="Workout">
+                            <i data-lucide="plus-circle" class="nav-icon"></i>
+                        </button>
+                        <button class="nav-btn" data-section="history" title="History" aria-label="History">
+                            <i data-lucide="calendar" class="nav-icon"></i>
+                        </button>
+                        <button class="nav-btn" data-section="statistics" title="Statistics" aria-label="Statistics">
+                            <i data-lucide="line-chart" class="nav-icon"></i>
+                        </button>
+                        <button class="nav-btn" data-section="exercises" title="Manage" aria-label="Manage">
+                            <i data-lucide="list" class="nav-icon"></i>
+                        </button>
+                    </div>
+                    <div class="nav-right">
+                        <!-- Fullscreen Toggle -->
+                        <button id="fullscreenBtn" class="theme-toggle-btn" aria-label="Toggle fullscreen" title="Toggle fullscreen">
+                            <i data-lucide="maximize" id="fullscreenIcon"></i>
+                        </button>
                     <div class="nav-dropdown">
                         <button class="nav-btn dropdown-trigger" id="configNavTrigger" title="Configuration" aria-label="Configuration" aria-haspopup="true" aria-expanded="false">
                             <i data-lucide="settings" class="nav-icon"></i>
@@ -84,10 +89,9 @@
                             </div>
                         </div>
                     </div>
+                    </div>
                 </nav>
-                <h1 id="main-header" style="display: flex; align-items: center; gap: 10px;">
-                    <i data-lucide="dumbbell"></i> Progressive Tracker
-                </h1>
+
             </div>
         </header>
 

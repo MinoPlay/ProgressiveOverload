@@ -186,8 +186,8 @@ body {
 /* Config dropdown panel */
 .config-dropdown-content {
     min-width: 300px;
-    left: 0;
-    right: auto;
+    left: auto;
+    right: 0;
 }
 
 .config-dropdown-body {

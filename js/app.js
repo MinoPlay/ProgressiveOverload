@@ -214,19 +214,10 @@ const App = {
      * Initialize navigation between sections
      */
     initNavigation() {
-        const navElements = document.querySelectorAll('.nav-btn[data-section], .dropdown-item[data-section]');
+        const navElements = document.querySelectorAll('.nav-btn[data-section]');
 
-        // Section label map for the trigger button
-        const sectionLabels = {
-            workout: 'Workout',
-            history: 'History',
-            statistics: 'Statistics',
-            exercises: 'Manage'
-        };
-
-        const activeNavLabel = document.getElementById('activeNavLabel');
-        const dropdownTrigger = document.getElementById('mainNavTrigger');
-        const dropdownContent = document.getElementById('mainNavContent');
+        const configTrigger = document.getElementById('configNavTrigger');
+        const configContent = document.getElementById('configNavContent');
         const appContent = document.querySelector('.app-content');
         const workoutPane = document.getElementById('workoutPane');
 
@@ -247,10 +238,10 @@ const App = {
             workoutPane.style.height = `${availableHeight}px`;
         };
 
-        const closeDropdown = () => {
-            if (dropdownTrigger && dropdownContent) {
-                dropdownTrigger.setAttribute('aria-expanded', 'false');
-                dropdownContent.style.display = 'none';
+        const closeConfig = () => {
+            if (configTrigger && configContent) {
+                configTrigger.setAttribute('aria-expanded', 'false');
+                configContent.style.display = 'none';
             }
         };
 
@@ -262,12 +253,7 @@ const App = {
                 targetSection = 'workout';
             }
 
-            // Update the trigger label
-            if (activeNavLabel && sectionLabels[targetSection]) {
-                activeNavLabel.textContent = sectionLabels[targetSection];
-            }
-
-            // Update active state for dropdown items
+            // Update active state for nav icons
             navElements.forEach(el => {
                 if (el.dataset.section === targetSection) {
                     el.classList.add('active');
@@ -292,46 +278,34 @@ const App = {
             localStorage.setItem('activeSection', targetSection);
         };
 
-        // Nav item clicks — switch section and close dropdown
+        // Nav icon clicks — switch section
         navElements.forEach(el => {
             el.addEventListener('click', (e) => {
                 e.stopPropagation();
                 const targetSection = el.dataset.section;
                 if (targetSection) {
                     switchSection(targetSection);
-                    closeDropdown();
                 }
             });
         });
 
-        // Toggle dropdown on trigger click
-        if (dropdownTrigger && dropdownContent) {
-            dropdownTrigger.addEventListener('click', (e) => {
+        // Config dropdown toggle
+        if (configTrigger && configContent) {
+            configTrigger.addEventListener('click', (e) => {
                 e.stopPropagation();
-                const isExpanded = dropdownTrigger.getAttribute('aria-expanded') === 'true';
-                dropdownTrigger.setAttribute('aria-expanded', String(!isExpanded));
-                dropdownContent.style.display = isExpanded ? 'none' : 'block';
+                const isExpanded = configTrigger.getAttribute('aria-expanded') === 'true';
+                configTrigger.setAttribute('aria-expanded', String(!isExpanded));
+                configContent.style.display = isExpanded ? 'none' : 'block';
             });
 
-            // Keep dropdown open when clicking inside the config area
-            dropdownContent.addEventListener('click', (e) => {
-                // Only stop propagation for config interactions (not nav items — those close it)
-                if (!e.target.closest('.nav-btn[data-section]') && !e.target.closest('.dropdown-item[data-section]')) {
-                    e.stopPropagation();
-                }
+            configContent.addEventListener('click', (e) => {
+                e.stopPropagation();
             });
 
-            // Close dropdown when clicking outside (capture phase so it's reliable
-            // even when inner controls stop bubbling click events)
             document.addEventListener('pointerdown', (e) => {
-                const navContainer = dropdownTrigger.closest('.main-nav-dropdown');
-                if (!navContainer) {
-                    closeDropdown();
-                    return;
-                }
-
-                if (!navContainer.contains(e.target)) {
-                    closeDropdown();
+                const navContainer = configTrigger.closest('.nav-dropdown');
+                if (!navContainer || !navContainer.contains(e.target)) {
+                    closeConfig();
                 }
             }, true);
         }
@@ -342,21 +316,6 @@ const App = {
                 updateWorkoutPaneHeight();
             }
         });
-
-        // Config collapsible toggle
-        const configToggleBtn = document.getElementById('configToggleBtn');
-        const configBody = document.getElementById('configBody');
-        const configChevron = document.getElementById('configChevron');
-        if (configToggleBtn && configBody) {
-            configToggleBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                const isHidden = configBody.style.display === 'none';
-                configBody.style.display = isHidden ? 'block' : 'none';
-                if (configChevron) {
-                    configChevron.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
-                }
-            });
-        }
 
         // Restore saved section on load
         const savedSection = localStorage.getItem('activeSection') || 'workout';

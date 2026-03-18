@@ -339,25 +339,20 @@ export const Charts = {
 
         const buildMuscleSessionSummary = (workouts) => {
             const muscleSessions = {}; // Count unique dates (sessions) per muscle
-            const muscleExercises = {}; // Count unique exercises per session
-            const muscleExercisesTracking = {}; // Track [exerciseId, date] combinations
+            const muscleExercises = {}; // Count unique (exercise, day) combinations per muscle
 
             workouts.forEach(w => {
                 if (w.muscle) {
                     if (!muscleSessions[w.muscle]) {
                         muscleSessions[w.muscle] = new Set();
-                        muscleExercises[w.muscle] = 0;
-                        muscleExercisesTracking[w.muscle] = new Set();
+                        muscleExercises[w.muscle] = new Set();
                     }
                     // Treat each unique training day as 1 "session" for that muscle group
                     muscleSessions[w.muscle].add(w.date);
 
-                    // Track unique exercise instances (not sets)
-                    const exerciseKey = `${w.exerciseId}_${w.date}`;
-                    if (!muscleExercisesTracking[w.muscle].has(exerciseKey)) {
-                        muscleExercisesTracking[w.muscle].add(exerciseKey);
-                        muscleExercises[w.muscle]++;
-                    }
+                    // Count each exercise done each day as 1 (not per set)
+                    const exerciseKey = `${w.exerciseId || w.exerciseName}_${w.date}`;
+                    if (exerciseKey) muscleExercises[w.muscle].add(exerciseKey);
                 }
             });
 
@@ -365,7 +360,7 @@ export const Charts = {
                 .map(([muscle, sessions]) => ({
                     name: muscle,
                     count: sessions.size,
-                    exCount: muscleExercises[muscle]
+                    exCount: muscleExercises[muscle].size
                 }))
                 .sort((a, b) => b.count - a.count);
 
@@ -644,7 +639,7 @@ export const Charts = {
             if (!metricSetsByMuscle[w.muscle]) metricSetsByMuscle[w.muscle] = new Set();
 
             if (mode === 'exercises') {
-                const exerciseKey = w.exerciseId || w.exerciseName;
+                const exerciseKey = `${w.exerciseId || w.exerciseName}_${w.date}`;
                 if (exerciseKey) metricSetsByMuscle[w.muscle].add(exerciseKey);
             } else {
                 metricSetsByMuscle[w.muscle].add(w.date);

@@ -40,8 +40,10 @@ const Theme = {
             fsBtn.addEventListener('click', () => {
                 if (!document.fullscreenElement) {
                     document.documentElement.requestFullscreen();
+                    localStorage.setItem('preferFullscreen', 'true');
                 } else {
                     document.exitFullscreen();
+                    localStorage.setItem('preferFullscreen', 'false');
                 }
             });
             document.addEventListener('fullscreenchange', () => {
@@ -71,8 +73,8 @@ const Theme = {
     _applyChartDefaults(theme) {
         if (typeof window.Chart === 'undefined') return;
         const isDark = theme === 'dark' || theme === 'green';
-        const textColor   = theme === 'green' ? '#00b82e' : isDark ? '#9090aa' : '#666666';
-        const gridColor   = theme === 'green' ? 'rgba(0, 255, 65, 0.1)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+        const textColor = theme === 'green' ? '#00b82e' : isDark ? '#9090aa' : '#666666';
+        const gridColor = theme === 'green' ? 'rgba(0, 255, 65, 0.1)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
         const borderColor = theme === 'green' ? 'rgba(0, 230, 118, 0.15)' : isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
 
         window.Chart.defaults.color = textColor;
@@ -150,6 +152,35 @@ const App = {
         if (window.lucide) {
             window.lucide.createIcons();
         }
+
+        // Auto-fullscreen after app is fully loaded (including iframe)
+        // Defaults to true; users can disable via the fullscreen toggle button
+        const preferFS = localStorage.getItem('preferFullscreen') !== 'false';
+        if (preferFS && !document.fullscreenElement) {
+            // Wait for the workout iframe to finish loading before requesting fullscreen,
+            // otherwise the iframe load will cause the browser to exit fullscreen.
+            const iframe = document.querySelector('#workoutPane iframe');
+            const requestFS = () => {
+                const doFS = () => {
+                    if (!document.fullscreenElement) {
+                        document.documentElement.requestFullscreen().catch(() => { });
+                    }
+                    document.removeEventListener('click', doFS, true);
+                    document.removeEventListener('touchstart', doFS, true);
+                    document.removeEventListener('keydown', doFS, true);
+                };
+                document.addEventListener('click', doFS, { capture: true, once: true });
+                document.addEventListener('touchstart', doFS, { capture: true, once: true });
+                document.addEventListener('keydown', doFS, { capture: true, once: true });
+            };
+
+            if (iframe && !iframe.contentDocument?.readyState?.match(/complete/)) {
+                iframe.addEventListener('load', requestFS, { once: true });
+            } else {
+                requestFS();
+            }
+        }
+
     },
 
     /**
@@ -174,13 +205,13 @@ const App = {
 
             // Initialize storage
             await Storage.initialize();
-            
+
             // Debug: Check if exercises loaded
             console.log(`Loaded ${Storage.getExercises().length} exercises`);
 
             // Initialize iframe bridge (send exercise data to embedded iframes)
             IframeBridge.init();
-            
+
             // Give iframes a moment to set up their message listeners, then broadcast data
             setTimeout(() => {
                 IframeBridge.broadcastExercises();

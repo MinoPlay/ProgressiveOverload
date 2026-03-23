@@ -53,6 +53,10 @@
                         <button id="fullscreenBtn" class="theme-toggle-btn" aria-label="Toggle fullscreen" title="Toggle fullscreen">
                             <i data-lucide="maximize" id="fullscreenIcon"></i>
                         </button>
+                        <!-- PWA Install Button (hidden until installable) -->
+                        <button id="pwaInstallBtn" class="theme-toggle-btn" aria-label="Install app" title="Install app" style="display:none">
+                            <i data-lucide="download"></i>
+                        </button>
                     <div class="nav-dropdown">
                         <button class="nav-btn dropdown-trigger" id="configNavTrigger" title="Configuration" aria-label="Configuration" aria-haspopup="true" aria-expanded="false">
                             <i data-lucide="settings" class="nav-icon"></i>
@@ -457,49 +461,48 @@
             });
         }
 
-        // PWA install hint
+        // PWA install
         (function () {
-            if (localStorage.getItem('pwa-install-dismissed')) return;
+            var deferredPrompt = null;
 
-            const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+            var isStandalone = window.matchMedia('(display-mode: standalone)').matches
                 || window.navigator.standalone === true;
             if (isStandalone) return;
 
-            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-            const isAndroid = /android/i.test(navigator.userAgent);
-            if (!isIOS && !isAndroid) return;
+            var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
 
-            function showBanner(msg) {
-                const banner = document.createElement('div');
-                banner.id = 'pwa-install-banner';
-                banner.innerHTML = `<span>${msg}</span><button id="pwa-install-btn" style="display:none">Install</button><button id="pwa-dismiss-btn">✕</button>`;
-                document.body.appendChild(banner);
-                document.getElementById('pwa-dismiss-btn').onclick = function () {
-                    banner.remove();
-                    localStorage.setItem('pwa-install-dismissed', '1');
-                };
-                return banner;
-            }
-
+            // iOS: show banner with manual instructions
             if (isIOS) {
                 window.addEventListener('load', function () {
-                    showBanner('📲 Install: tap Share then "Add to Home Screen"');
+                    var banner = document.createElement('div');
+                    banner.id = 'pwa-install-banner';
+                    banner.innerHTML = '<span>📲 Tap Share → "Add to Home Screen" to install</span><button id="pwa-dismiss-btn">✕</button>';
+                    document.body.appendChild(banner);
+                    document.getElementById('pwa-dismiss-btn').onclick = function () { banner.remove(); };
                 }, { once: true });
-            } else {
-                window.addEventListener('beforeinstallprompt', function (e) {
-                    e.preventDefault();
-                    const banner = showBanner('📲 Add to Home Screen for offline use');
-                    const installBtn = document.getElementById('pwa-install-btn');
-                    installBtn.style.display = 'inline-block';
-                    installBtn.onclick = function () {
-                        e.prompt();
-                        e.userChoice.then(function () {
-                            banner.remove();
-                            localStorage.setItem('pwa-install-dismissed', '1');
-                        });
-                    };
-                });
+                return;
             }
+
+            // Android/Chrome: capture prompt, show install button in header
+            window.addEventListener('beforeinstallprompt', function (e) {
+                // Do NOT call e.preventDefault() — let Chrome show its native mini-bar too
+                deferredPrompt = e;
+                var btn = document.getElementById('pwaInstallBtn');
+                if (btn) btn.style.display = '';
+            });
+
+            window.addEventListener('appinstalled', function () {
+                deferredPrompt = null;
+                var btn = document.getElementById('pwaInstallBtn');
+                if (btn) btn.style.display = 'none';
+            });
+
+            document.addEventListener('click', function (e) {
+                if (e.target.closest('#pwaInstallBtn') && deferredPrompt) {
+                    deferredPrompt.prompt();
+                    deferredPrompt.userChoice.then(function () { deferredPrompt = null; });
+                }
+            });
         })();
     </script>
 </body>

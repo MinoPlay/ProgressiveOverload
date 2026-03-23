@@ -862,6 +862,25 @@ body {
 }
 .tab-nav-btn i { width: 28px; height: 28px; }
 .tab-nav-btn.primary { color: var(--accent); }
+.execute-skip-row {
+  display: flex;
+  justify-content: center;
+  margin-top: 10px;
+}
+.execute-skip-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text3);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 7px 16px;
+  cursor: pointer;
+}
+.execute-skip-btn i { width: 14px; height: 14px; }
 .execute-done {
   text-align: center;
   padding: 48px 24px;
@@ -1155,6 +1174,12 @@ body {
         </div>
 
         <div id="executeCards"></div>
+
+        <div class="execute-skip-row">
+          <button class="execute-skip-btn" onclick="executeSkip()">
+            <i data-lucide="skip-forward"></i> Skip
+          </button>
+        </div>
 
       </div>
 
@@ -2344,6 +2369,32 @@ function executeNav(dir) {
   if (next < 0 || next >= executeState.groups.length) return;
   renderExecuteGroup(next);
   document.getElementById('scrollArea').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function executeSkip() {
+  const group = executeState.groups[executeState.current];
+  if (!group) return;
+  group.cardIds.forEach(cardId => {
+    const card = document.getElementById(cardId);
+    if (!card) return;
+    clearExerciseLink(cardId);
+    const ticked = card.querySelectorAll('.tick-btn.ticked').length;
+    tickedCount = Math.max(0, tickedCount - ticked);
+    card.remove();
+  });
+  executeState.cardOrder = executeState.cardOrder.filter(id => !group.cardIds.includes(id));
+  executeState.groups.splice(executeState.current, 1);
+  updateSubmit();
+  saveDesign1State();
+  if (executeState.groups.length === 0) {
+    showExecuteDone();
+  } else {
+    if (executeState.current >= executeState.groups.length) {
+      executeState.current = executeState.groups.length - 1;
+    }
+    renderExecuteGroup(executeState.current);
+    document.getElementById('scrollArea').scrollTo({ top: 0, behavior: 'smooth' });
+  }
 }
 
 function executeSubmit() {

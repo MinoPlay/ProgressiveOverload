@@ -1,33 +1,33 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const STATIC_CACHE  = `po-static-${CACHE_VERSION}`;
 const CDN_CACHE     = `po-cdn-${CACHE_VERSION}`;
 
 // Local assets to pre-cache on install
 const STATIC_SHELL = [
-  '/',
-  '/index.html',
-  '/workout.html',
-  '/manifest.json',
-  '/css/layout.css',
-  '/css/components.css',
-  '/css/styles.css',
-  '/js/app.js',
-  '/js/auth.js',
-  '/js/config.js',
-  '/js/storage.js',
-  '/js/github-api.js',
-  '/js/dev-storage.js',
-  '/js/exercises.js',
-  '/js/workouts.js',
-  '/js/templates.js',
-  '/js/charts.js',
-  '/js/chart-helpers.js',
-  '/js/history.js',
-  '/js/utils.js',
-  '/data/exercises.json',
-  '/assets/favicon.svg',
-  '/assets/icon-192.png',
-  '/assets/icon-512.png',
+  './',
+  './index.html',
+  './workout.html',
+  './manifest.json',
+  './css/layout.css',
+  './css/components.css',
+  './css/styles.css',
+  './js/app.js',
+  './js/auth.js',
+  './js/config.js',
+  './js/storage.js',
+  './js/github-api.js',
+  './js/dev-storage.js',
+  './js/exercises.js',
+  './js/workouts.js',
+  './js/templates.js',
+  './js/charts.js',
+  './js/chart-helpers.js',
+  './js/history.js',
+  './js/utils.js',
+  './data/exercises.json',
+  './assets/favicon.svg',
+  './assets/icon-192.png',
+  './assets/icon-512.png',
 ];
 
 // CDN URLs to cache on first use (cache-first thereafter)
@@ -73,7 +73,7 @@ self.addEventListener('fetch', event => {
   }
 
   // 2. Local dev API — network only
-  if (url.pathname.startsWith('/api/')) {
+  if (url.pathname.endsWith('/api/') || url.pathname.includes('/api/')) {
     return;
   }
 

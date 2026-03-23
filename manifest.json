@@ -2,7 +2,7 @@
   "name": "Progressive Overload Tracker",
   "short_name": "OverloadPro",
   "description": "Track strength training progress with progressive overload principles.",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
   "theme_color": "#667eea",

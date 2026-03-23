@@ -7,8 +7,13 @@
     <title>Progressive Overload Tracker</title>
     <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
     <link rel="alternate icon" type="image/png" href="assets/favicon.svg">
-    <link rel="apple-touch-icon" href="assets/favicon.svg">
+    <link rel="apple-touch-icon" href="assets/icon-192.png">
     <meta name="theme-color" content="#667eea">
+    <link rel="manifest" href="manifest.json">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="OverloadPro">
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/styles.css">
@@ -443,6 +448,14 @@
 
     <!-- Application Scripts -->
     <script type="module" src="js/app.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js')
+                    .catch(err => console.warn('SW registration failed:', err));
+            });
+        }
+    </script>
 </body>
 
 </html>

@@ -449,12 +449,58 @@
     <!-- Application Scripts -->
     <script type="module" src="js/app.js"></script>
     <script>
+        // Service Worker registration
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('/sw.js')
                     .catch(err => console.warn('SW registration failed:', err));
             });
         }
+
+        // PWA install hint
+        (function () {
+            if (localStorage.getItem('pwa-install-dismissed')) return;
+
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                || window.navigator.standalone === true;
+            if (isStandalone) return;
+
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            const isAndroid = /android/i.test(navigator.userAgent);
+            if (!isIOS && !isAndroid) return;
+
+            function showBanner(msg) {
+                const banner = document.createElement('div');
+                banner.id = 'pwa-install-banner';
+                banner.innerHTML = `<span>${msg}</span><button id="pwa-install-btn" style="display:none">Install</button><button id="pwa-dismiss-btn">✕</button>`;
+                document.body.appendChild(banner);
+                document.getElementById('pwa-dismiss-btn').onclick = function () {
+                    banner.remove();
+                    localStorage.setItem('pwa-install-dismissed', '1');
+                };
+                return banner;
+            }
+
+            if (isIOS) {
+                window.addEventListener('load', function () {
+                    showBanner('📲 Install: tap Share then "Add to Home Screen"');
+                }, { once: true });
+            } else {
+                window.addEventListener('beforeinstallprompt', function (e) {
+                    e.preventDefault();
+                    const banner = showBanner('📲 Add to Home Screen for offline use');
+                    const installBtn = document.getElementById('pwa-install-btn');
+                    installBtn.style.display = 'inline-block';
+                    installBtn.onclick = function () {
+                        e.prompt();
+                        e.userChoice.then(function () {
+                            banner.remove();
+                            localStorage.setItem('pwa-install-dismissed', '1');
+                        });
+                    };
+                });
+            }
+        })();
     </script>
 </body>
 

@@ -980,3 +980,40 @@ html {
 [data-theme="green"] #historySection .history-date-group {
     border: 1px solid rgba(0, 230, 118, 0.16) !important;
 }
+
+/* PWA install banner */
+#pwa-install-banner {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    background: var(--primary-gradient, linear-gradient(135deg, #667eea, #764ba2));
+    color: #fff;
+    font-size: 0.82rem;
+    box-shadow: 0 -2px 12px rgba(0,0,0,0.25);
+}
+#pwa-install-banner span { flex: 1; }
+#pwa-install-btn {
+    background: rgba(255,255,255,0.25);
+    color: #fff;
+    border: 1px solid rgba(255,255,255,0.5);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 0.8rem;
+    cursor: pointer;
+    white-space: nowrap;
+}
+#pwa-dismiss-btn {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.8);
+    font-size: 1rem;
+    cursor: pointer;
+    padding: 2px 4px;
+    line-height: 1;
+}

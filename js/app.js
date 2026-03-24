@@ -35,25 +35,6 @@ const Theme = {
             btn.addEventListener('click', () => this.toggle());
         }
 
-        const fsBtn = document.getElementById('fullscreenBtn');
-        if (fsBtn) {
-            fsBtn.addEventListener('click', () => {
-                if (!document.fullscreenElement) {
-                    document.documentElement.requestFullscreen();
-                } else {
-                    document.exitFullscreen();
-                }
-            });
-            document.addEventListener('fullscreenchange', () => {
-                fsBtn.classList.toggle('is-fullscreen', !!document.fullscreenElement);
-                fsBtn.setAttribute('aria-label', document.fullscreenElement ? 'Exit fullscreen' : 'Toggle fullscreen');
-                const icon = fsBtn.querySelector('[data-lucide]');
-                if (icon) {
-                    icon.setAttribute('data-lucide', document.fullscreenElement ? 'minimize' : 'maximize');
-                    if (window.lucide) window.lucide.createIcons();
-                }
-            });
-        }
     },
 
     toggle() {

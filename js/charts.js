@@ -90,16 +90,23 @@ export const Charts = {
             // Show loading indicator
             if (loadingIndicator) loadingIndicator.style.display = 'flex';
 
-            // Collect data for all exercises (in parallel for speed)
-            const exerciseData = await Promise.all(
-                exercises.map(async (exercise) => {
-                    const workouts = await Storage.getWorkoutsForExercise(exercise.id, startDate, endDate);
-                    return {
-                        exercise,
-                        workouts
-                    };
-                })
-            );
+            // Try stats-summary.json first (1 API call for all-time data)
+            // Fall back to range-based fetch if summary doesn't exist yet
+            let allWorkoutsInRange;
+            const summaryWorkouts = await Storage.loadStatsSummaryWorkouts();
+            if (summaryWorkouts) {
+                const startStr = startDate.toISOString().slice(0, 10);
+                const endStr = endDate.toISOString().slice(0, 10);
+                allWorkoutsInRange = summaryWorkouts.filter(w => w.date >= startStr && w.date <= endStr);
+            } else {
+                allWorkoutsInRange = await Storage.getWorkoutsInRange(startDate, endDate);
+            }
+
+            // Collect data for all exercises using the already-loaded workouts
+            const exerciseData = exercises.map((exercise) => ({
+                exercise,
+                workouts: allWorkoutsInRange.filter(w => w.exerciseId === exercise.id)
+            }));
 
             // Hide loading indicator
             if (loadingIndicator) loadingIndicator.style.display = 'none';

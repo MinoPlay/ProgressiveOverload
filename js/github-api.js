@@ -6,6 +6,17 @@ import { getConfig, CONFIG } from './config.js';
 
 
 export const GitHubAPI = {
+    // Session-lifetime in-memory caches — cleared on page refresh
+    _fileCache: {}, // path → {content, sha}
+    _dirCache: {},  // path → array of file objects
+
+    /** Invalidate all cache entries for a given file path and its parent directory */
+    _invalidateCache(filePath) {
+        delete this._fileCache[filePath];
+        const dir = filePath.includes('/') ? filePath.substring(0, filePath.lastIndexOf('/')) : '';
+        delete this._dirCache[dir || 'data'];
+    },
+
     /**
      * Get current repository configuration
      * @returns {object} {owner, repo}
@@ -38,6 +49,9 @@ export const GitHubAPI = {
      * @returns {Promise<array>} Array of file objects with name and path
      */
     async listFiles(path) {
+        if (this._dirCache[path]) {
+            return this._dirCache[path];
+        }
         try {
             const { owner, repo } = this.getRepoInfo();
             const url = `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`;
@@ -49,7 +63,9 @@ export const GitHubAPI = {
                 throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
             }
 
-            return await response.json();
+            const result = await response.json();
+            this._dirCache[path] = result;
+            return result;
         } catch (error) {
             console.error('Error listing files:', error);
             return [];
@@ -63,6 +79,9 @@ export const GitHubAPI = {
      * @returns {Promise<{content: object, sha: string}|null>} File content and SHA
      */
     async getFile(path, silent = false) {
+        if (this._fileCache[path]) {
+            return this._fileCache[path];
+        }
         try {
             const { owner, repo } = this.getRepoInfo();
             const url = `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`;
@@ -93,10 +112,12 @@ export const GitHubAPI = {
             const jsonStr = decodeURIComponent(bytes.split('').map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join(''));
             const content = JSON.parse(jsonStr);
 
-            return {
+            const result = {
                 content,
                 sha: data.sha
             };
+            this._fileCache[path] = result;
+            return result;
         } catch (error) {
             console.error('Error fetching file:', error);
             throw error;
@@ -113,6 +134,7 @@ export const GitHubAPI = {
      */
     async putFile(path, content, message, sha = null) {
         try {
+            this._invalidateCache(path);
             const { owner, repo } = this.getRepoInfo();
             const url = `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`;
             console.log('[GitHubAPI] PUT (putFile):', url, '| sha:', sha);
@@ -360,5 +382,23 @@ export const GitHubAPI = {
             console.error('Error checking rate limit:', error);
             return null;
         }
+    },
+
+    /**
+     * Get stats summary from repository
+     * @returns {Promise<{content: object, sha: string}|null>}
+     */
+    async getStatsSummary() {
+        return await this.getFile(CONFIG.paths.statsSummary, true);
+    },
+
+    /**
+     * Save stats summary to repository
+     * @param {object} summary - Summary content
+     * @param {string|null} sha - Current file SHA
+     * @returns {Promise<object>}
+     */
+    async saveStatsSummary(summary, sha = null) {
+        return await this.putFile(CONFIG.paths.statsSummary, summary, 'Update stats summary', sha);
     }
 };

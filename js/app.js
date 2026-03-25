@@ -170,12 +170,11 @@ const App = {
             }, 100);
 
             console.log('Initializing UI modules...');
-            // Initialize all modules
+            // Initialize always-needed modules
             Exercises.init();
             Workouts.init();
-            History.init();
-            Charts.init();
             Templates.init();
+            // History and Charts are lazy-initialized on first tab visit
 
             // Hide loading
             showLoading(false);
@@ -226,6 +225,8 @@ const App = {
             }
         };
 
+        const _initializedTabs = new Set();
+
         const switchSection = (targetSection) => {
             if (!targetSection) return;
 
@@ -253,6 +254,16 @@ const App = {
 
             if (targetSection === 'workout') {
                 updateWorkoutPaneHeight();
+            }
+
+            // Lazy-initialize tabs on first visit
+            if (!_initializedTabs.has(targetSection)) {
+                _initializedTabs.add(targetSection);
+                if (targetSection === 'history') {
+                    History.init();
+                } else if (targetSection === 'statistics') {
+                    Charts.init();
+                }
             }
 
             // Save to localStorage for persistence

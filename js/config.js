@@ -31,7 +31,8 @@ export const CONFIG = {
     paths: {
         exercises: 'data/exercises.json',
         workoutsPrefix: 'data/workouts-',
-        sessionTemplates: 'data/session-templates.json'
+        sessionTemplates: 'data/session-templates.json',
+        statsSummary: 'data/stats-summary.json'
     },
 
     // UI Limits

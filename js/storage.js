@@ -269,6 +269,7 @@ export const Storage = {
             // Save to GitHub
             const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha);
             this.currentMonthSha = result.content.sha;
+            this.generateAndSaveStatsSummary();
 
             return newWorkout;
         } else {
@@ -283,6 +284,7 @@ export const Storage = {
 
             monthData.workouts.push(newWorkout);
             await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
+            this.generateAndSaveStatsSummary();
 
             return newWorkout;
         }
@@ -326,6 +328,7 @@ export const Storage = {
 
             const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha);
             this.currentMonthSha = result.content.sha;
+            this.generateAndSaveStatsSummary();
             return newWorkouts;
         }
 
@@ -336,6 +339,7 @@ export const Storage = {
 
         monthData.workouts.push(...newWorkouts);
         await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
+        this.generateAndSaveStatsSummary();
 
         return newWorkouts;
     },
@@ -695,6 +699,7 @@ export const Storage = {
 
             const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha);
             this.currentMonthSha = result.content.sha;
+            this.generateAndSaveStatsSummary();
             return this.currentMonthWorkouts[index];
         } else {
             const monthData = await GitHubAPI.getWorkouts(workoutDate);
@@ -711,6 +716,7 @@ export const Storage = {
             };
 
             const result = await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
+            this.generateAndSaveStatsSummary();
             return monthData.workouts[index];
         }
     },
@@ -750,6 +756,7 @@ export const Storage = {
 
             const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha);
             this.currentMonthSha = result.content.sha;
+            this.generateAndSaveStatsSummary();
         } else {
             const monthData = await GitHubAPI.getWorkouts(workoutDate);
             const index = monthData.workouts.findIndex(w => w.id === id);
@@ -769,6 +776,7 @@ export const Storage = {
             });
 
             await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
+            this.generateAndSaveStatsSummary();
         }
     },
 
@@ -903,6 +911,77 @@ export const Storage = {
         this.sessionTemplates.splice(index, 1);
         const result = await GitHubAPI.saveSessionTemplates(this.sessionTemplates, this.sessionTemplatesSha);
         this.sessionTemplatesSha = result.content.sha;
+    },
+
+    // ─── Stats Summary ───────────────────────────────────────────────────────
+
+    /**
+     * Load all workouts from stats-summary.json (compact format).
+     * Returns null if the summary file doesn't exist yet.
+     * @returns {Promise<array|null>} Array of full workout objects or null
+     */
+    async loadStatsSummaryWorkouts() {
+        try {
+            const result = await GitHubAPI.getStatsSummary();
+            if (!result) return null;
+            return (result.content.workouts || []).map(w => ({
+                exerciseId: w.e,
+                date: w.d,
+                reps: w.r,
+                weight: w.w,
+                sequence: w.seq
+            }));
+        } catch {
+            return null;
+        }
+    },
+
+    /**
+     * Regenerate and save stats-summary.json after workout data changes.
+     * Loads all monthly workout files and writes a compact summary.
+     * Fires-and-forgets (does not block the caller on errors).
+     */
+    async generateAndSaveStatsSummary() {
+        if (getConfig().mode !== 'github' || !Auth.isAuthenticated()) return;
+
+        try {
+            const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/')) || 'data';
+            const files = await GitHubAPI.listFiles(dataPath);
+
+            const prefix = CONFIG.paths.workoutsPrefix.split('/').pop();
+            const workoutFiles = files
+                .filter(f => f.name.startsWith(prefix) && f.name.endsWith('.json'))
+                .map(f => f.name)
+                .sort();
+
+            const regex = new RegExp(`${prefix}(\\d{4})-(\\d{2})\\.json`);
+            const allWorkouts = [];
+
+            for (const filename of workoutFiles) {
+                const match = filename.match(regex);
+                if (!match) continue;
+                const date = new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1);
+                const monthData = await GitHubAPI.getWorkouts(date);
+                for (const w of monthData.workouts) {
+                    allWorkouts.push({
+                        e: w.exerciseId,
+                        d: w.date,
+                        r: w.reps,
+                        w: w.weight,
+                        seq: w.sequence
+                    });
+                }
+            }
+
+            const existingSummary = await GitHubAPI.getStatsSummary();
+            const summary = {
+                generated: new Date().toISOString(),
+                workouts: allWorkouts
+            };
+            await GitHubAPI.saveStatsSummary(summary, existingSummary?.sha || null);
+        } catch (err) {
+            console.warn('[Storage] Could not update stats summary:', err);
+        }
     }
 };
 // Note: generateId, parseDate, and formatDate are now imported from utils.js

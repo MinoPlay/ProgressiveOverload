@@ -100,6 +100,8 @@ export const Charts = {
                 allWorkoutsInRange = summaryWorkouts.filter(w => w.date >= startStr && w.date <= endStr);
             } else {
                 allWorkoutsInRange = await Storage.getWorkoutsInRange(startDate, endDate);
+                // Bootstrap stats-summary.json so future opens skip the 404
+                Storage.generateAndSaveStatsSummary();
             }
 
             // Collect data for all exercises using the already-loaded workouts

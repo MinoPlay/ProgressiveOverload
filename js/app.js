@@ -8,7 +8,7 @@ import { Workouts } from './workouts.js';
 import { Charts } from './charts.js';
 import { History } from './history.js';
 import { Templates } from './templates.js';
-import { CONFIG, loadConfig } from './config.js';
+import { CONFIG, loadConfig, isGitHubConfigured } from './config.js';
 
 /**
  * Theme management
@@ -107,15 +107,10 @@ const App = {
         if (CONFIG.devMode) {
             console.log('🧪 Running in DEVELOPMENT MODE');
             console.log('📝 Using local dummy data - changes will not be saved');
-        } else {
-            // Check for token in production mode
-            if (!Auth.isAuthenticated()) {
-                const token = Auth.promptForToken();
-                if (!token) {
-                    alert('GitHub token is required to use this app.');
-                    return;
-                }
-            }
+        } else if (!isGitHubConfigured()) {
+            // No GitHub config — activate guest/demo mode using dev-data
+            CONFIG.devMode = true;
+            console.log('👤 No GitHub config found — running in guest demo mode');
         }
 
         // Show app

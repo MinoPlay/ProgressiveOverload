@@ -154,10 +154,11 @@ window.saveConfig = function () {
 };
 
 /**
- * Check if GitHub configuration is complete
+ * Check if GitHub configuration is complete (token + owner + repo all set)
  */
-function isConfigured() {
-    return config.token && config.owner && config.repo;
+export function isGitHubConfigured() {
+    const c = getConfig();
+    return !!(c.token && c.owner && c.repo);
 }
 
 /**

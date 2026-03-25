@@ -2,6 +2,8 @@
 // Uses local dev-data.json file instead of GitHub API
 
 const DEV_API_URL = 'http://localhost:3000/api/dev-data';
+const DEV_DATA_STATIC_URL = 'data/dev-data.json';
+const IS_LOCALHOST = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
 
 export const DevStorage = {
     // In-memory cache
@@ -21,7 +23,8 @@ export const DevStorage = {
         console.log('🧪 DEV MODE: Loading data from dev-data.json');
 
         try {
-            const response = await fetch(DEV_API_URL);
+            const url = IS_LOCALHOST ? DEV_API_URL : DEV_DATA_STATIC_URL;
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
@@ -42,7 +45,7 @@ export const DevStorage = {
             console.log('💾 Changes will be saved to data/dev-data.json');
         } catch (error) {
             console.error('❌ Failed to load dev data:', error);
-            throw new Error('Could not load dev data. Make sure the server is running.');
+            throw new Error('Could not load demo data.');
         }
     },
 
@@ -51,6 +54,10 @@ export const DevStorage = {
      * @returns {Promise<void>}
      */
     async saveToFile() {
+        if (!IS_LOCALHOST) {
+            console.log('📖 Guest mode: changes are not persisted');
+            return;
+        }
         try {
             const data = {
                 exercises: this.exercises,

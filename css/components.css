@@ -2436,6 +2436,7 @@
 .stats-period-tab-nav {
     display: flex;
     flex-wrap: wrap;
+    justify-content: center;
     gap: 0.5rem;
     margin-bottom: var(--spacing-lg);
     padding-bottom: var(--spacing-sm);

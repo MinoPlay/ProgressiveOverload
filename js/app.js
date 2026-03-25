@@ -174,7 +174,8 @@ const App = {
             Exercises.init();
             Workouts.init();
             Templates.init();
-            // History and Charts are lazy-initialized on first tab visit
+            // Initialize whichever tab is currently active (History/Statistics are lazy)
+            this.initActiveTab?.();
 
             // Hide loading
             showLoading(false);
@@ -227,7 +228,7 @@ const App = {
 
         const _initializedTabs = new Set();
 
-        const switchSection = (targetSection) => {
+        const switchSection = (targetSection, skipLazyInit = false) => {
             if (!targetSection) return;
 
             const targetSectionElement = document.getElementById(`${targetSection}Section`);
@@ -256,8 +257,8 @@ const App = {
                 updateWorkoutPaneHeight();
             }
 
-            // Lazy-initialize tabs on first visit
-            if (!_initializedTabs.has(targetSection)) {
+            // Lazy-initialize tabs on first visit (skip during initial restore — storage not ready yet)
+            if (!skipLazyInit && !_initializedTabs.has(targetSection)) {
                 _initializedTabs.add(targetSection);
                 if (targetSection === 'history') {
                     History.init();
@@ -309,12 +310,22 @@ const App = {
             }
         });
 
-        // Restore saved section on load
+        // Restore saved section on load — skip lazy init (storage not ready yet)
         const savedSection = localStorage.getItem('activeSection') || 'workout';
-        switchSection(savedSection);
+        switchSection(savedSection, true);
 
         // Expose switchSection for potential use from other modules
         this.switchSection = switchSection;
+
+        // Called by initApp after storage is ready to init the active tab
+        this.initActiveTab = () => {
+            const active = localStorage.getItem('activeSection') || 'workout';
+            if (!_initializedTabs.has(active)) {
+                _initializedTabs.add(active);
+                if (active === 'history') History.init();
+                else if (active === 'statistics') Charts.init();
+            }
+        };
     }
 };
 

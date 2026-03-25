@@ -913,6 +913,8 @@ export const History = {
         input.placeholder = 'e.g., Push Day A';
         input.maxLength = 100;
         input.autocomplete = 'off';
+        input.id = 'template-name-input';
+        input.name = 'template-name';
         input.value = defaultName;
         formGroup.appendChild(label);
         formGroup.appendChild(input);

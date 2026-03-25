@@ -366,6 +366,7 @@ export const Templates = {
     buildExerciseSelect(rowId, itemId, selectedValue) {
         const select = document.createElement('select');
         select.dataset.field = 'exerciseId';
+        select.name = 'exercise-select';
         select.dataset.rowId = rowId;
         if (itemId) select.dataset.itemId = itemId;
 
@@ -441,6 +442,7 @@ export const Templates = {
             repsInput.min = '1';
             repsInput.max = '999';
             repsInput.dataset.field = 'reps';
+            repsInput.name = 'reps';
             repsInput.dataset.rowId = rowId;
             repsInput.dataset.setId = setEntry.id;
             if (itemId) repsInput.dataset.itemId = itemId;
@@ -475,6 +477,7 @@ export const Templates = {
             weightInput.min = '0';
             weightInput.step = 'any';
             weightInput.dataset.field = 'weight';
+            weightInput.name = 'weight';
             weightInput.dataset.rowId = rowId;
             weightInput.dataset.setId = setEntry.id;
             if (itemId) weightInput.dataset.itemId = itemId;

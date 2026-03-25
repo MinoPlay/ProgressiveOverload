@@ -1338,6 +1338,7 @@ export const Workouts = {
     createExerciseSelect(rowId, itemId, selectedValue) {
         const select = document.createElement('select');
         select.dataset.field = 'exerciseId';
+        select.name = 'exercise-select';
         select.dataset.rowId = rowId;
         if (itemId) {
             select.dataset.itemId = itemId;

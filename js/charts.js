@@ -1023,6 +1023,7 @@ export const Charts = {
             checkbox.value = muscle;
             checkbox.checked = this.selectedMuscleGroups.includes(muscle);
             checkbox.className = 'muscle-checkbox';
+            checkbox.name = 'muscle-group';
             checkbox.addEventListener('change', (e) => {
                 this.handleMuscleCheckboxChange(muscle, e.target.checked, groupedByMuscle);
             });

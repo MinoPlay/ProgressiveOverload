@@ -68,10 +68,10 @@
                                     </button>
                                 </div>
                                 <div class="config-form" id="github-config">
-                                    <input type="password" id="github-token" placeholder="GitHub Token"
+                                    <input type="password" id="github-token" name="github-token" placeholder="GitHub Token"
                                         autocomplete="off">
-                                    <input type="text" id="repo-owner" placeholder="GitHub Username" autocomplete="off">
-                                    <input type="text" id="repo-name" placeholder="Repository Name" autocomplete="off">
+                                    <input type="text" id="repo-owner" name="repo-owner" placeholder="GitHub Username" autocomplete="off">
+                                    <input type="text" id="repo-name" name="repo-name" placeholder="Repository Name" autocomplete="off">
                                     <button onclick="saveConfig()" class="btn-save">
                                         <i data-lucide="save"></i> Save
                                     </button>
@@ -134,15 +134,15 @@
                     <div id="exerciseForm" class="form-container" style="display: none;">
                         <h3 id="exerciseFormTitle">Add New Exercise</h3>
                         <form id="exerciseFormElement">
-                            <input type="hidden" id="exerciseId">
-                            <input type="hidden" id="equipmentType" required aria-required="true">
-                            <input type="hidden" id="muscle" required aria-required="true">
+                            <input type="hidden" id="exerciseId" name="exerciseId">
+                            <input type="hidden" id="equipmentType" name="equipmentType" required aria-required="true">
+                            <input type="hidden" id="muscle" name="muscle" required aria-required="true">
 
                             <div class="form-group">
                                 <label for="exerciseName">
                                     Exercise Name <span class="required" aria-label="required">*</span>
                                 </label>
-                                <input type="text" id="exerciseName" placeholder="e.g., Bench Press" required
+                                <input type="text" id="exerciseName" name="exerciseName" placeholder="e.g., Bench Press" required
                                     aria-required="true" maxlength="100">
                             </div>
 
@@ -199,7 +199,7 @@
 
                             <div class="form-group">
                                 <label for="templateName">Template Name <span class="required">*</span></label>
-                                <input type="text" id="templateName" placeholder="e.g., Push Day A" maxlength="100" autocomplete="off">
+                                <input type="text" id="templateName" name="templateName" placeholder="e.g., Push Day A" maxlength="100" autocomplete="off">
                             </div>
 
                             <div class="planner-controls" style="margin-bottom: var(--spacing-sm);">
@@ -397,7 +397,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="saveAsTemplateNameInput">Template Name <span class="required">*</span></label>
-                        <input type="text" id="saveAsTemplateNameInput" placeholder="e.g., Push Day A"
+                        <input type="text" id="saveAsTemplateNameInput" name="saveAsTemplateNameInput" placeholder="e.g., Push Day A"
                             maxlength="100" autocomplete="off">
                     </div>
                     <div class="form-actions">
@@ -421,7 +421,7 @@
                 <div class="modal-body">
                     <div class="form-group">
                         <label for="plannerExercisePickerSelect">Exercise <span class="required">*</span></label>
-                        <select id="plannerExercisePickerSelect"></select>
+                        <select id="plannerExercisePickerSelect" name="plannerExercisePickerSelect"></select>
                     </div>
                     <div class="form-actions">
                         <button type="button" id="plannerExercisePickerConfirmBtn" class="btn btn-primary" title="Apply" aria-label="Apply selection">

@@ -1002,20 +1002,20 @@ body {
           </div>
           <div class="set-row" id="set-bench-1">
             <span class="set-num">1</span>
-            <input class="set-input reps-input" type="number" placeholder="4" value="4" inputmode="numeric">
-            <input class="set-input prefilled" type="number" placeholder="80" value="82.5" inputmode="decimal">
+            <input class="set-input reps-input" type="number" name="reps" placeholder="4" value="4" inputmode="numeric">
+            <input class="set-input prefilled" type="number" name="weight" placeholder="80" value="82.5" inputmode="decimal">
             <button class="tick-btn" onclick="tickSet(this, 'card-bench')"><i data-lucide="check"></i></button>
           </div>
           <div class="set-row" id="set-bench-2">
             <span class="set-num">2</span>
-            <input class="set-input" type="number" placeholder="4" inputmode="numeric">
-            <input class="set-input ghost" type="number" placeholder="82.5" inputmode="decimal">
+            <input class="set-input" type="number" name="reps" placeholder="4" inputmode="numeric">
+            <input class="set-input ghost" type="number" name="weight" placeholder="82.5" inputmode="decimal">
             <button class="tick-btn" onclick="tickSet(this, 'card-bench')"><i data-lucide="check"></i></button>
           </div>
           <div class="set-row" id="set-bench-3">
             <span class="set-num">3</span>
-            <input class="set-input" type="number" placeholder="4" inputmode="numeric">
-            <input class="set-input ghost" type="number" placeholder="82.5" inputmode="decimal">
+            <input class="set-input" type="number" name="reps" placeholder="4" inputmode="numeric">
+            <input class="set-input ghost" type="number" name="weight" placeholder="82.5" inputmode="decimal">
             <button class="tick-btn" onclick="tickSet(this, 'card-bench')"><i data-lucide="check"></i></button>
           </div>
         </div>
@@ -1038,20 +1038,20 @@ body {
           </div>
           <div class="set-row">
             <span class="set-num">1</span>
-            <input class="set-input" type="number" placeholder="5" inputmode="numeric">
-            <input class="set-input ghost" type="number" placeholder="50" inputmode="decimal">
+            <input class="set-input" type="number" name="reps" placeholder="5" inputmode="numeric">
+            <input class="set-input ghost" type="number" name="weight" placeholder="50" inputmode="decimal">
             <button class="tick-btn" onclick="tickSet(this, 'card-ohp')"><i data-lucide="check"></i></button>
           </div>
           <div class="set-row">
             <span class="set-num">2</span>
-            <input class="set-input" type="number" placeholder="5" inputmode="numeric">
-            <input class="set-input ghost" type="number" placeholder="50" inputmode="decimal">
+            <input class="set-input" type="number" name="reps" placeholder="5" inputmode="numeric">
+            <input class="set-input ghost" type="number" name="weight" placeholder="50" inputmode="decimal">
             <button class="tick-btn" onclick="tickSet(this, 'card-ohp')"><i data-lucide="check"></i></button>
           </div>
           <div class="set-row">
             <span class="set-num">3</span>
-            <input class="set-input" type="number" placeholder="5" inputmode="numeric">
-            <input class="set-input ghost" type="number" placeholder="50" inputmode="decimal">
+            <input class="set-input" type="number" name="reps" placeholder="5" inputmode="numeric">
+            <input class="set-input ghost" type="number" name="weight" placeholder="50" inputmode="decimal">
             <button class="tick-btn" onclick="tickSet(this, 'card-ohp')"><i data-lucide="check"></i></button>
           </div>
         </div>
@@ -1074,17 +1074,17 @@ body {
           </div>
           <div class="set-row bodyweight">
             <span class="set-num">1</span>
-            <input class="set-input" type="number" placeholder="10" inputmode="numeric">
+            <input class="set-input" type="number" name="reps" placeholder="10" inputmode="numeric">
             <button class="tick-btn" onclick="tickSet(this, 'card-dips')"><i data-lucide="check"></i></button>
           </div>
           <div class="set-row bodyweight">
             <span class="set-num">2</span>
-            <input class="set-input" type="number" placeholder="10" inputmode="numeric">
+            <input class="set-input" type="number" name="reps" placeholder="10" inputmode="numeric">
             <button class="tick-btn" onclick="tickSet(this, 'card-dips')"><i data-lucide="check"></i></button>
           </div>
           <div class="set-row bodyweight">
             <span class="set-num">3</span>
-            <input class="set-input" type="number" placeholder="8" inputmode="numeric">
+            <input class="set-input" type="number" name="reps" placeholder="8" inputmode="numeric">
             <button class="tick-btn" onclick="tickSet(this, 'card-dips')"><i data-lucide="check"></i></button>
           </div>
         </div>
@@ -1101,7 +1101,7 @@ body {
         <h3>Log a Set</h3>
         <div class="form-group">
           <label class="form-label">Muscle Group</label>
-          <select class="form-select">
+          <select class="form-select" id="muscleGroupFilter" name="muscleGroupFilter">
             <option>All Muscles</option>
             <option selected>Chest</option>
             <option>Shoulders</option>
@@ -1113,7 +1113,7 @@ body {
         </div>
         <div class="form-group">
           <label class="form-label">Exercise</label>
-          <select class="form-select">
+          <select class="form-select" id="exerciseFilter" name="exerciseFilter">
             <option selected>Bench Press</option>
             <option>Incline Press</option>
             <option>Cable Fly</option>
@@ -1129,13 +1129,13 @@ body {
             <label class="form-label">Reps</label>
             <div class="quick-reps-control">
               <button class="quick-rep-btn" type="button" onclick="changeQuickLogReps(-1)">−</button>
-              <input id="quickLogReps" class="form-input" type="number" placeholder="4" value="4" inputmode="numeric" style="text-align:center;font-size:22px;font-weight:700;padding:14px 8px;">
+              <input id="quickLogReps" name="quickLogReps" class="form-input" type="number" placeholder="4" value="4" inputmode="numeric" style="text-align:center;font-size:22px;font-weight:700;padding:14px 8px;">
               <button class="quick-rep-btn" type="button" onclick="changeQuickLogReps(1)">+</button>
             </div>
           </div>
           <div class="form-group">
             <label class="form-label">Weight</label>
-            <input class="form-input" type="number" placeholder="80" inputmode="decimal" style="text-align:center;font-size:22px;font-weight:700;padding:14px 8px;">
+            <input id="quickLogWeight" name="quickLogWeight" class="form-input" type="number" placeholder="80" inputmode="decimal" style="text-align:center;font-size:22px;font-weight:700;padding:14px 8px;">
           </div>
         </div>
         <button class="log-btn">
@@ -1153,7 +1153,7 @@ body {
         <p>Great session. Submit when you're ready.</p>
         <div class="execute-done-submit">
           <label class="execute-done-clear-check">
-            <input type="checkbox" id="executeDoneClearCheck" checked>
+            <input type="checkbox" id="executeDoneClearCheck" name="executeDoneClearCheck" checked>
             <span>Clear exercises after submit</span>
           </label>
           <button class="execute-done-btn" id="executeDoneSubmitBtn" onclick="executeSubmit()">
@@ -1210,7 +1210,7 @@ body {
   </nav>
   <!-- Hidden submit button + clear checkbox kept for submit logic -->
   <div style="display:none">
-    <input type="checkbox" id="clearExercisesCheck" checked>
+    <input type="checkbox" id="clearExercisesCheck" name="clearExercisesCheck" checked>
     <button id="submitBtn"></button>
   </div>
 </div>
@@ -1219,7 +1219,7 @@ body {
 <div class="session-picker-overlay" id="sessionPicker" onclick="if(event.target===this) closeSessionPicker()">
   <div class="session-picker-dialog">
     <div class="session-picker-title">Choose Exercise</div>
-    <select class="session-picker-select" id="sessionPickerSelect"></select>
+    <select class="session-picker-select" id="sessionPickerSelect" name="sessionPickerSelect"></select>
     <div class="session-picker-actions">
       <button class="sp-cancel" onclick="closeSessionPicker()">Cancel</button>
       <button class="sp-confirm" onclick="confirmSessionPicker()">Confirm</button>
@@ -2569,8 +2569,8 @@ function addSet(cardId, suppressSave = false) {
   row.className = `set-row${isBodyweight ? ' bodyweight' : ''}`;
   row.dataset.added = '1';
   row.innerHTML = `<span class="set-num">${n}</span>
-    <input class="set-input reps-input" type="number" placeholder="${repsDefault}" value="${repsValue}" inputmode="numeric">
-    ${isBodyweight ? `` : `<input class="set-input ghost weight-input" type="number" placeholder="${weightDefault}" value="${weightFromHistory}" inputmode="decimal">`}
+    <input class="set-input reps-input" type="number" name="reps" placeholder="${repsDefault}" value="${repsValue}" inputmode="numeric">
+    ${isBodyweight ? `` : `<input class="set-input ghost weight-input" type="number" name="weight" placeholder="${weightDefault}" value="${weightFromHistory}" inputmode="decimal">`}
     <button class="tick-btn" onclick="tickSet(this,'${cardId}')"><i data-lucide="check"></i></button>`;
   body.insertBefore(row, addBtn);
   enhanceRepsControls(row);
@@ -2702,8 +2702,8 @@ function addExercise(defaultExerciseId = null, markAsCustom = true, options = {}
     <div class="sets-body" id="body-${bodyKey}">
       <div class="set-row">
         <span class="set-num">1</span>
-        <input class="set-input reps-input" type="number" placeholder="—" inputmode="numeric">
-        <input class="set-input ghost weight-input" type="number" placeholder="—" inputmode="decimal">
+        <input class="set-input reps-input" type="number" name="reps" placeholder="—" inputmode="numeric">
+        <input class="set-input ghost weight-input" type="number" name="weight" placeholder="—" inputmode="decimal">
         <button class="tick-btn" onclick="tickSet(this,'${id}')"><i data-lucide="check"></i></button>
       </div>
     </div>
@@ -2902,10 +2902,10 @@ function loadTemplate(name) {
     ex.sets.forEach((s,i) => {
       setRows += `<div class='set-row${isBodyweight ? ' bodyweight' : ''}' id='set-${bodyKey}-${i+1}'>
         <span class='set-num'>${i+1}</span>
-        <input class='set-input reps-input' type='number' placeholder='${s.reps}' inputmode='numeric'>
+        <input class='set-input reps-input' type='number' name='reps' placeholder='${s.reps}' inputmode='numeric'>
         ${isBodyweight
           ? ``
-          : `<input class='set-input prefilled weight-input' type='number' placeholder='${s.weight}' value='${s.weight}' inputmode='decimal'>`}
+          : `<input class='set-input prefilled weight-input' type='number' name='weight' placeholder='${s.weight}' value='${s.weight}' inputmode='decimal'>`}
         <button class='tick-btn' onclick="tickSet(this, '${cardId}')"><i data-lucide='check'></i></button>
       </div>`;
     });

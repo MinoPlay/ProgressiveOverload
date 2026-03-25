@@ -411,5 +411,23 @@ export const DevStorage = {
         console.log('🧪 DEV MODE: Deleting session template');
         this.sessionTemplates = this.sessionTemplates.filter(t => t.id !== id);
         await this.saveToFile();
+    },
+
+    // ─── Stats Summary (dev stubs) ───────────────────────────────────────────
+
+    /** Return all dev workouts as the "summary" — no GitHub call needed. */
+    async loadStatsSummaryWorkouts() {
+        return this.currentMonthWorkouts.map(w => ({
+            exerciseId: w.exerciseId,
+            date: w.date,
+            reps: w.reps,
+            weight: w.weight,
+            sequence: w.sequence
+        }));
+    },
+
+    /** No-op in dev mode — there is no GitHub repo to write to. */
+    async generateAndSaveStatsSummary() {
+        console.log('🧪 DEV MODE: generateAndSaveStatsSummary skipped');
     }
 };

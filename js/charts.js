@@ -709,7 +709,7 @@ export const Charts = {
                     r: {
                         beginAtZero: true,
                         ticks: { display: false, stepSize: 1, font: { size: 9 }, backdropColor: 'transparent' },
-                        pointLabels: { font: { size: 10, weight: '600' } },
+                        pointLabels: { font: { size: 10, weight: '600' }, callback: (label, index) => `${label} (${values[index]})` },
                         grid: { display: true, color: 'rgba(128,128,128,0.4)', lineWidth: 1 },
                         angleLines: { display: true, color: 'rgba(128,128,128,0.4)', lineWidth: 1 }
                     }

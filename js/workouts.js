@@ -2114,7 +2114,7 @@ export const Workouts = {
                     sets,
                     copyCursor: 1,
                     activeSetId: null,
-                    expanded: true
+                    expanded: false
                 });
                 continue;
             }
@@ -2138,7 +2138,7 @@ export const Workouts = {
                 id: blockId,
                 type: 'superset',
                 label: row.label || 'Superset',
-                expanded: true,
+                expanded: false,
                 exercises
             });
         }

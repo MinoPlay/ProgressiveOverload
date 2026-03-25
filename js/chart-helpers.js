@@ -131,8 +131,8 @@ export function aggregateByWeek(workouts) {
                     weekData.muscleGroupSessions[workout.muscle] = new Set();
                     weekData.muscleGroupVolume[workout.muscle] = 0;
                 }
-                // Track unique exercises (different movements)
-                weekData.muscleGroupCounts[workout.muscle].add(exerciseKey);
+                // Track unique exercise-day combinations (same exercise on different days counts separately)
+                weekData.muscleGroupCounts[workout.muscle].add(`${workout.date}_${exerciseKey}`);
                 // Track unique training days (sessions) for this muscle
                 if (workout.date) {
                     weekData.muscleGroupSessions[workout.muscle].add(workout.date);

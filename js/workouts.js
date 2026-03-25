@@ -2130,7 +2130,8 @@ export const Workouts = {
                     exerciseId,
                     sets,
                     copyCursor: 1,
-                    activeSetId: null
+                    activeSetId: null,
+                    expanded: false
                 });
             }
 

@@ -2891,7 +2891,7 @@ function loadTemplate(name) {
     const cardId = 'card-' + exerciseId;
     const bodyKey = cardId.replace('card-','');
     const card = document.createElement('div');
-    card.className = 'exercise-card card-open';
+    card.className = 'exercise-card';
     card.id = cardId;
     let prevHint = '';
     if (ex.sets && ex.sets.length) {
@@ -2914,9 +2914,9 @@ function loadTemplate(name) {
         <i class='exercise-icon' data-lucide='${getEquipmentIcon(meta?.equipment)}' aria-hidden='true'></i>
         <div class='exercise-name' id='name-${bodyKey}' onclick="openSessionPicker('${cardId}'); event.stopPropagation()">${exerciseName}</div>
         <button class='link-next-btn' onclick="toggleLinkWithNext('${cardId}', event)" title='Link with exercise below'><i data-lucide='link'></i></button>
-        <button class='collapse-btn open' id='btn-${bodyKey}'><i data-lucide='chevron-down'></i></button>
+        <button class='collapse-btn' id='btn-${bodyKey}'><i data-lucide='chevron-down'></i></button>
       </div>
-      <div class='sets-body' id='body-${bodyKey}'>
+      <div class='sets-body' id='body-${bodyKey}' style='display:none'>
         ${prevHint}
         ${setRows}
       </div>

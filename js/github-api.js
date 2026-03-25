@@ -88,8 +88,10 @@ export const GitHubAPI = {
 
             const data = await response.json();
 
-            // Decode base64 content
-            const content = JSON.parse(atob(data.content));
+            // Decode base64 content (UTF-8 safe, supports emojis and special characters)
+            const bytes = atob(data.content.replace(/\s/g, ''));
+            const jsonStr = decodeURIComponent(bytes.split('').map(c => '%' + c.charCodeAt(0).toString(16).padStart(2, '0')).join(''));
+            const content = JSON.parse(jsonStr);
 
             return {
                 content,
@@ -114,8 +116,9 @@ export const GitHubAPI = {
             const { owner, repo } = this.getRepoInfo();
             const url = `${CONFIG.github.apiUrl}/repos/${owner}/${repo}/contents/${path}`;
             console.log('[GitHubAPI] PUT (putFile):', url, '| sha:', sha);
-            // Encode content to base64
-            const encodedContent = btoa(JSON.stringify(content, null, 2));
+            // Encode content to base64 (UTF-8 safe, supports emojis and special characters)
+            const jsonStr = JSON.stringify(content, null, 2);
+            const encodedContent = btoa(encodeURIComponent(jsonStr).replace(/%([0-9A-F]{2})/g, (_, p1) => String.fromCharCode(parseInt(p1, 16))));
 
             const body = {
                 message,

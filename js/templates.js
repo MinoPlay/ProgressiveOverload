@@ -182,9 +182,7 @@ export const Templates = {
 
     createDefaultSets(baseId) {
         return Array.from({ length: DEFAULT_SET_COUNT }, (_, i) => ({
-            id: `${baseId}-set-${i + 1}`,
-            reps: '',
-            weight: ''
+            id: `${baseId}-set-${i + 1}`
         }));
     },
 
@@ -223,23 +221,12 @@ export const Templates = {
             return `Superset: ${names.join(' / ')}`;
         }
         const ex = row.exerciseId ? Storage.getExerciseById(row.exerciseId) : null;
-        const exName = ex ? ex.name : `Exercise ${index + 1}`;
-        const sets = row.sets || [];
-        if (sets.length === 0) return exName;
-        const setsSummary = sets
-            .filter(s => s.reps || s.weight)
-            .map(s => {
-                if (s.reps && s.weight) return `${s.reps}×${s.weight}`;
-                if (s.reps) return `${s.reps} reps`;
-                return `×${s.weight}`;
-            })
-            .join(', ');
-        return setsSummary ? `${exName} · ${setsSummary}` : exName;
+        return ex ? ex.name : `Exercise ${index + 1}`;
     },
 
     buildSingleRow(row, index) {
         const wrapper = document.createElement('div');
-        wrapper.className = 'planned-row collapsed';
+        wrapper.className = row.exerciseId ? 'planned-row collapsed' : 'planned-row';
 
         const header = document.createElement('div');
         header.className = 'planned-row-header';
@@ -292,7 +279,6 @@ export const Templates = {
         topRow.appendChild(this.buildExerciseSelect(row.id, null, row.exerciseId));
 
         body.appendChild(topRow);
-        body.appendChild(this.buildSetsGrid(row.id, null, row.sets));
 
         wrapper.appendChild(header);
         wrapper.appendChild(body);
@@ -301,7 +287,8 @@ export const Templates = {
 
     buildSupersetRow(row, index) {
         const wrapper = document.createElement('div');
-        wrapper.className = 'superset-block collapsed';
+        const bothSelected = (row.exercises || []).every(e => Boolean(e.exerciseId));
+        wrapper.className = bothSelected ? 'superset-block collapsed' : 'superset-block';
 
         const header = document.createElement('div');
         header.className = 'superset-header';
@@ -362,7 +349,6 @@ export const Templates = {
             topRow.appendChild(this.buildExerciseSelect(row.id, item.id, item.exerciseId));
 
             content.appendChild(topRow);
-            content.appendChild(this.buildSetsGrid(row.id, item.id, item.sets));
 
             rowContainer.appendChild(label);
             rowContainer.appendChild(content);
@@ -524,15 +510,7 @@ export const Templates = {
             if (fieldName === 'exerciseId') {
                 // Sync all DOM values to editorSession before re-rendering
                 this.syncEditorFromDom();
-                // Now update the exercise selection
                 row.exerciseId = field.value;
-                const exercise = field.value ? Storage.getExerciseById(field.value) : null;
-                const requiresWeight = Boolean(exercise?.requiresWeight);
-                if (!requiresWeight) {
-                    (row.sets || []).forEach(setEntry => {
-                        setEntry.weight = '';
-                    });
-                }
                 this.renderEditorRows();
                 return;
             } else {
@@ -545,15 +523,7 @@ export const Templates = {
             if (fieldName === 'exerciseId') {
                 // Sync all DOM values to editorSession before re-rendering
                 this.syncEditorFromDom();
-                // Now update the exercise selection
                 item.exerciseId = field.value;
-                const exercise = field.value ? Storage.getExerciseById(field.value) : null;
-                const requiresWeight = Boolean(exercise?.requiresWeight);
-                if (!requiresWeight) {
-                    (item.sets || []).forEach(setEntry => {
-                        setEntry.weight = '';
-                    });
-                }
                 this.renderEditorRows();
                 return;
             } else {
@@ -593,9 +563,7 @@ export const Templates = {
                     type: 'single',
                     exerciseId: first?.exerciseId || '',
                     sets: (first?.sets || this.createDefaultSets(firstId)).map((s, i) => ({
-                        id: `${firstId}-set-${i + 1}`,
-                        reps: s.reps,
-                        weight: s.weight
+                        id: `${firstId}-set-${i + 1}`
                     }))
                 };
                 const secondRow = {
@@ -603,9 +571,7 @@ export const Templates = {
                     type: 'single',
                     exerciseId: second?.exerciseId || '',
                     sets: (second?.sets || this.createDefaultSets(secondId)).map((s, i) => ({
-                        id: `${secondId}-set-${i + 1}`,
-                        reps: s.reps,
-                        weight: s.weight
+                        id: `${secondId}-set-${i + 1}`
                     }))
                 };
                 this.editorSession.rows.splice(index, 1, firstRow, secondRow);
@@ -628,18 +594,14 @@ export const Templates = {
                             id: exAId,
                             exerciseId: row.exerciseId || '',
                             sets: (row.sets || this.createDefaultSets(exAId)).map((s, i) => ({
-                                id: `${exAId}-set-${i + 1}`,
-                                reps: s.reps,
-                                weight: s.weight
+                                id: `${exAId}-set-${i + 1}`
                             }))
                         },
                         {
                             id: exBId,
                             exerciseId: next.exerciseId || '',
                             sets: (next.sets || this.createDefaultSets(exBId)).map((s, i) => ({
-                                id: `${exBId}-set-${i + 1}`,
-                                reps: s.reps,
-                                weight: s.weight
+                                id: `${exBId}-set-${i + 1}`
                             }))
                         }
                     ]
@@ -727,7 +689,15 @@ export const Templates = {
         // (inputs fire 'change' on blur, but user may click Save without leaving focus)
         this.syncEditorFromDom();
 
-        const payload = { name, rows: this.editorSession.rows };
+        const strippedRows = this.editorSession.rows.map(row => {
+            if (row.type === 'superset') {
+                return { ...row, exercises: (row.exercises || []).map(e => ({
+                    ...e, sets: (e.sets || []).map(s => ({ id: s.id }))
+                })) };
+            }
+            return { ...row, sets: (row.sets || []).map(s => ({ id: s.id })) };
+        });
+        const payload = { name, rows: strippedRows };
         console.log('[Templates.saveTemplate] editorSession.id:', this.editorSession.id);
         console.log('[Templates.saveTemplate] payload rows count:', payload.rows?.length);
         console.log('[Templates.saveTemplate] payload:', JSON.parse(JSON.stringify(payload)));

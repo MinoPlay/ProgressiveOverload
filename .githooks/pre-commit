@@ -1,0 +1,15 @@
+#!/bin/sh
+# Bump CACHE_VERSION in sw.js before every commit.
+
+SW=sw.js
+
+current=$(grep -oP "(?<=CACHE_VERSION = 'v)\d+" "$SW")
+if [ -z "$current" ]; then
+  echo "pre-commit: could not find CACHE_VERSION in $SW" >&2
+  exit 1
+fi
+
+next=$((current + 1))
+sed -i "s/CACHE_VERSION = 'v${current}'/CACHE_VERSION = 'v${next}'/" "$SW"
+git add "$SW"
+echo "pre-commit: CACHE_VERSION bumped v${current} → v${next}"

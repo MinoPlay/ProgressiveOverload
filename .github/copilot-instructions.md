@@ -14,6 +14,10 @@
 - **Mobile-first.** All UI changes must work well on small screens (320px+). Use responsive units, flexible layouts, and avoid fixed widths that break on mobile.
 - **Compact.** Keep UI dense and efficient. Avoid excessive padding, large empty spaces, or verbose labels. Prefer concise text and tight spacing.
 
+## PWA Version
+
+- **Bump `CACHE_VERSION` in `sw.js` on every commit.** The format is `'vN'` (e.g., `'v4'` → `'v5'`). Increment the number by 1 each time changes are committed. This ensures the service worker cache is invalidated for all users.
+
 ## Git Workflow
 
 After completing each prompt, offer a ready-to-run git command block:

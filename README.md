@@ -55,7 +55,11 @@ A premium, modern web application designed to help you track your strength train
    git clone https://github.com/MinoPlay/ProgressiveOverload.git
    cd ProgressiveOverload
    ```
-2. Start the development server:
+2. Enable the git hooks (auto-bumps PWA version on each commit):
+   ```bash
+   git config core.hooksPath .githooks
+   ```
+3. Start the development server:
    ```bash
    node server.js
    ```
@@ -63,7 +67,7 @@ A premium, modern web application designed to help you track your strength train
    ```powershell
    .\dev-start.ps1
    ```
-3. Open `http://localhost:3000` in your browser.
+4. Open `http://localhost:3000` in your browser.
 
 ### Configuring GitHub Mode (Sync)
 1. In the app, go to **Menu > Configuration**.

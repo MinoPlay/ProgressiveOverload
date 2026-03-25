@@ -159,8 +159,7 @@ export const Templates = {
         this.editorSession.rows.push({
             id: rowId,
             type: 'single',
-            exerciseId: '',
-            sets: this.createDefaultSets(rowId)
+            exerciseId: ''
         });
         this.renderEditorRows();
     },
@@ -173,8 +172,8 @@ export const Templates = {
             type: 'superset',
             label: 'Superset',
             exercises: [
-                { id: `${blockId}-a`, exerciseId: '', sets: this.createDefaultSets(`${blockId}-a`) },
-                { id: `${blockId}-b`, exerciseId: '', sets: this.createDefaultSets(`${blockId}-b`) }
+                { id: `${blockId}-a`, exerciseId: '' },
+                { id: `${blockId}-b`, exerciseId: '' }
             ]
         });
         this.renderEditorRows();
@@ -561,18 +560,12 @@ export const Templates = {
                 const firstRow = {
                     id: firstId,
                     type: 'single',
-                    exerciseId: first?.exerciseId || '',
-                    sets: (first?.sets || this.createDefaultSets(firstId)).map((s, i) => ({
-                        id: `${firstId}-set-${i + 1}`
-                    }))
+                    exerciseId: first?.exerciseId || ''
                 };
                 const secondRow = {
                     id: secondId,
                     type: 'single',
-                    exerciseId: second?.exerciseId || '',
-                    sets: (second?.sets || this.createDefaultSets(secondId)).map((s, i) => ({
-                        id: `${secondId}-set-${i + 1}`
-                    }))
+                    exerciseId: second?.exerciseId || ''
                 };
                 this.editorSession.rows.splice(index, 1, firstRow, secondRow);
             } else {
@@ -590,20 +583,8 @@ export const Templates = {
                     type: 'superset',
                     label: 'Superset',
                     exercises: [
-                        {
-                            id: exAId,
-                            exerciseId: row.exerciseId || '',
-                            sets: (row.sets || this.createDefaultSets(exAId)).map((s, i) => ({
-                                id: `${exAId}-set-${i + 1}`
-                            }))
-                        },
-                        {
-                            id: exBId,
-                            exerciseId: next.exerciseId || '',
-                            sets: (next.sets || this.createDefaultSets(exBId)).map((s, i) => ({
-                                id: `${exBId}-set-${i + 1}`
-                            }))
-                        }
+                        { id: exAId, exerciseId: row.exerciseId || '' },
+                        { id: exBId, exerciseId: next.exerciseId || '' }
                     ]
                 };
                 this.editorSession.rows.splice(index, 2, supersetBlock);
@@ -691,11 +672,14 @@ export const Templates = {
 
         const strippedRows = this.editorSession.rows.map(row => {
             if (row.type === 'superset') {
-                return { ...row, exercises: (row.exercises || []).map(e => ({
-                    ...e, sets: (e.sets || []).map(s => ({ id: s.id }))
-                })) };
+                return {
+                    id: row.id,
+                    type: row.type,
+                    label: row.label,
+                    exercises: (row.exercises || []).map(e => ({ id: e.id, exerciseId: e.exerciseId }))
+                };
             }
-            return { ...row, sets: (row.sets || []).map(s => ({ id: s.id })) };
+            return { id: row.id, type: row.type, exerciseId: row.exerciseId };
         });
         const payload = { name, rows: strippedRows };
         console.log('[Templates.saveTemplate] editorSession.id:', this.editorSession.id);

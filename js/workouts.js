@@ -2033,26 +2033,17 @@ export const Workouts = {
                 return {
                     id: rowId,
                     type: 'single',
-                    exerciseId: row.exerciseId || '',
-                    sets: (row.sets || []).map((s, i) => ({
-                        id: s.id || `${rowId}-set-${i + 1}`
-                    }))
+                    exerciseId: row.exerciseId || ''
                 };
             } else {
                 return {
                     id: rowId,
                     type: 'superset',
                     label: row.label || 'Superset',
-                    exercises: (row.exercises || []).map((item, exIdx) => {
-                        const exId = item.id || `${rowId}-ex-${exIdx}`;
-                        return {
-                            id: exId,
-                            exerciseId: item.exerciseId || '',
-                            sets: (item.sets || []).map((s, i) => ({
-                                id: s.id || `${exId}-set-${i + 1}`
-                            }))
-                        };
-                    })
+                    exercises: (row.exercises || []).map((item, exIdx) => ({
+                        id: item.id || `${rowId}-ex-${exIdx}`,
+                        exerciseId: item.exerciseId || ''
+                    }))
                 };
             }
         });

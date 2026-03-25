@@ -5296,7 +5296,7 @@
   "templates": [
     {
       "id": "tpl_push_a",
-      "name": "Push Day A",
+      "name": "🔥 Push Day A",
       "createdAt": "2026-01-06T08:00:00.000Z",
       "rows": [
         {
@@ -5392,7 +5392,7 @@
     },
     {
       "id": "tpl_pull_a",
-      "name": "Pull Day A",
+      "name": "🏋️ Pull Day A",
       "createdAt": "2026-01-06T08:00:00.000Z",
       "rows": [
         {

@@ -130,6 +130,8 @@ export const Charts = {
 
             // Group exercises by muscle group
             const groupedByMuscle = this.groupExercisesByMuscle(dataWithWorkouts);
+            // Cache before renderDashboard so activatePeriod's rAF can re-render it
+            this.groupedByMuscle = groupedByMuscle;
 
             // Apply default selections (select all muscle groups if none selected)
             if (this.selectedMuscleGroups.length === 0) {
@@ -203,6 +205,11 @@ export const Charts = {
                 // (they render at 0×0 if the panel was hidden on first render)
                 if (period === 'overall' && this._cachedAllWorkouts) {
                     requestAnimationFrame(() => this.renderWeeklyStats(this._cachedAllWorkouts));
+                }
+
+                // Re-render exercise charts when Overall panel becomes visible
+                if (period === 'overall' && this.groupedByMuscle) {
+                    requestAnimationFrame(() => this.renderMuscleGroupView(this.groupedByMuscle));
                 }
 
                 window.dispatchEvent(new Event('resize'));
@@ -947,10 +954,13 @@ export const Charts = {
         const sortedGrouped = {};
         Object.keys(grouped).sort().forEach(muscle => {
             sortedGrouped[muscle] = grouped[muscle];
-            // Sort exercises within each muscle group alphabetically
-            sortedGrouped[muscle].sort((a, b) =>
-                a.exercise.name.localeCompare(b.exercise.name)
-            );
+            // Sort exercises by session count (desc) then alphabetically
+            sortedGrouped[muscle].sort((a, b) => {
+                const aSessions = new Set(a.workouts.map(w => w.date)).size;
+                const bSessions = new Set(b.workouts.map(w => w.date)).size;
+                if (bSessions !== aSessions) return bSessions - aSessions;
+                return a.exercise.name.localeCompare(b.exercise.name);
+            });
         });
 
         return sortedGrouped;
@@ -962,43 +972,228 @@ export const Charts = {
      * @param {Object} groupedByMuscle - Exercises grouped by muscle
      */
     renderMuscleGroupView(groupedByMuscle) {
+        this.groupedByMuscle = groupedByMuscle;
+
         const categoryTabsContainer = document.getElementById('categoryTabsContainer');
         const categoryTabs = document.getElementById('categoryTabs');
         const categoryTabContent = document.getElementById('categoryTabContent');
 
         if (!categoryTabs || !categoryTabContent) return;
 
-        // Hide old tabs and repurpose them for a single "Overview" layout
         categoryTabs.style.display = 'none';
         categoryTabContent.innerHTML = '';
 
-        // Always select all muscle groups
         this.selectedMuscleGroups = Object.keys(groupedByMuscle);
 
-        // Create metric selector
         this.renderMetricSelector();
 
-        // Create main pane
+        let collapseState = {};
+        try {
+            collapseState = JSON.parse(localStorage.getItem('overallProgressCollapseState') || '{}');
+        } catch (e) { collapseState = {}; }
+
+        const muscleColors = {
+            'chest': '#ff5252', 'back': '#448aff', 'shoulders': '#ffab40',
+            'legs': '#7c4dff', 'biceps': '#00bcd4', 'triceps': '#667eea',
+            'arms': '#40c4ff', 'core': '#69f0ae', 'neck': '#bdbdbd', 'other': '#607d8b'
+        };
+
+        const accordion = document.createElement('div');
+        accordion.className = 'po-accordion';
+        const pendingRenders = [];
+
+        Object.keys(groupedByMuscle).forEach((muscle, muscleIdx) => {
+            const exercises = groupedByMuscle[muscle];
+            const muscleCollapsed = muscle in collapseState ? collapseState[muscle] : muscleIdx > 0;
+            const color = muscleColors[muscle] || '#667eea';
+
+            const muscleGroup = document.createElement('div');
+            muscleGroup.className = 'po-muscle-group' + (muscleCollapsed ? ' collapsed' : '');
+            muscleGroup.dataset.muscle = muscle;
+
+            const muscleHeader = document.createElement('div');
+            muscleHeader.className = 'po-muscle-header';
+            muscleHeader.style.setProperty('--muscle-color', color);
+            muscleHeader.innerHTML = `
+                <span class="po-muscle-title">
+                    <span class="po-muscle-dot" style="background:${color}"></span>
+                    ${this.capitalize(muscle)}
+                    <span class="po-muscle-count">${exercises.length} exercise${exercises.length !== 1 ? 's' : ''}</span>
+                </span>
+                <svg class="po-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            `;
+
+            const muscleContent = document.createElement('div');
+            muscleContent.className = 'po-muscle-content';
+
+            exercises.forEach(({ exercise, workouts }) => {
+                const sessionCount = new Set(workouts.map(w => w.date)).size;
+                const exKey = `ex-${exercise.id}`;
+                const exCollapsed = exKey in collapseState ? collapseState[exKey] : true;
+
+                const exRow = document.createElement('div');
+                exRow.className = 'po-exercise-row' + (exCollapsed ? ' collapsed' : '');
+                exRow.dataset.exerciseId = exercise.id;
+
+                const exHeader = document.createElement('div');
+                exHeader.className = 'po-exercise-header';
+                exHeader.innerHTML = `
+                    <span class="po-exercise-title">
+                        ${exercise.name}
+                        <span class="po-exercise-sessions">${sessionCount} session${sessionCount !== 1 ? 's' : ''}</span>
+                    </span>
+                    <svg class="po-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                `;
+
+                const chartWrap = document.createElement('div');
+                chartWrap.className = 'po-exercise-chart-wrap';
+                chartWrap.innerHTML = `<canvas id="exercise-chart-${exercise.id}"></canvas>`;
+
+                const doRender = () => {
+                    this.renderExerciseChart(`exercise-chart-${exercise.id}`, { exercise, workouts });
+                };
+
+                if (!exCollapsed) pendingRenders.push(doRender);
+
+                exHeader.addEventListener('click', () => {
+                    exRow.classList.toggle('collapsed');
+                    const nowCollapsed = exRow.classList.contains('collapsed');
+                    collapseState[exKey] = exRow.classList.contains('collapsed');
+                    localStorage.setItem('overallProgressCollapseState', JSON.stringify(collapseState));
+                    if (!nowCollapsed) {
+                        doRender();
+                    }
+                });
+
+                exRow.appendChild(exHeader);
+                exRow.appendChild(chartWrap);
+                muscleContent.appendChild(exRow);
+            });
+
+            muscleHeader.addEventListener('click', () => {
+                muscleGroup.classList.toggle('collapsed');
+                collapseState[muscle] = muscleGroup.classList.contains('collapsed');
+                localStorage.setItem('overallProgressCollapseState', JSON.stringify(collapseState));
+            });
+
+            muscleGroup.appendChild(muscleHeader);
+            muscleGroup.appendChild(muscleContent);
+            accordion.appendChild(muscleGroup);
+        });
+
         const pane = document.createElement('div');
         pane.className = 'category-tab-pane active';
-
-        // Create chart container (no muscle selector UI)
-        const chartContainer = document.createElement('div');
-        chartContainer.className = 'category-chart-container';
-        chartContainer.innerHTML = `
-            <div class="chart-container category-chart-tall">
-                <canvas id="muscleGroupChart"></canvas>
-            </div>
-        `;
-        pane.appendChild(chartContainer);
-
+        pane.appendChild(accordion);
         categoryTabContent.appendChild(pane);
-
-        // Show the container
         categoryTabsContainer.style.display = 'block';
 
-        // Render chart
-        this.renderMuscleGroupChart(groupedByMuscle);
+        pendingRenders.forEach(fn => fn());
+    },
+
+    renderExerciseChart(canvasId, { exercise, workouts }) {
+        const canvas = document.getElementById(canvasId);
+        if (!canvas) return;
+
+        const existingChart = Chart.getChart(canvas);
+        if (existingChart) existingChart.destroy();
+
+        if (!workouts || workouts.length === 0) {
+            canvas.parentElement.innerHTML = '<p class="empty-state" style="padding:var(--spacing-md)">No data</p>';
+            return;
+        }
+
+        const getISOWeekKey = (dateStr) => {
+            const d = new Date(dateStr + 'T00:00:00');
+            const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay();
+            const thursday = new Date(d);
+            thursday.setDate(d.getDate() + (4 - dayOfWeek));
+            const yearStart = new Date(thursday.getFullYear(), 0, 1);
+            const week = Math.ceil(((thursday - yearStart) / 86400000 + 1) / 7);
+            return { year: thursday.getFullYear(), week, key: `${thursday.getFullYear()}-W${String(week).padStart(2, '0')}` };
+        };
+
+        const allDates = [...new Set(workouts.map(w => w.date))].sort();
+        const weekKeySet = new Set();
+        const weekKeyInfo = {};
+        allDates.forEach(date => {
+            const info = getISOWeekKey(date);
+            weekKeySet.add(info.key);
+            weekKeyInfo[info.key] = info;
+        });
+        const sortedWeekKeys = Array.from(weekKeySet).sort();
+        const weekLabels = sortedWeekKeys.map(k => `W${weekKeyInfo[k].week}`);
+
+        const dailyRaw = this.groupByDate(workouts, exercise.requiresWeight);
+        const baselineCount = Math.min(3, dailyRaw.values.length);
+        const baseline = baselineCount > 0
+            ? dailyRaw.values.slice(0, baselineCount).reduce((s, v) => s + v, 0) / baselineCount
+            : 0;
+
+        const values = sortedWeekKeys.map(weekKey => {
+            const weekDates = allDates.filter(d => getISOWeekKey(d).key === weekKey);
+            const weekSets = workouts.filter(w => weekDates.includes(w.date));
+            if (weekSets.length === 0) return null;
+
+            if (this.selectedMetric === 'relative') {
+                if (baseline <= 0) return null;
+                const weekVol = weekSets.reduce((sum, w) =>
+                    sum + (exercise.requiresWeight && w.weight ? w.reps * w.weight : w.reps), 0);
+                return (weekVol / baseline) * 100;
+            } else if (this.selectedMetric === 'weight') {
+                return weekSets.reduce((sum, w) => sum + (w.weight ? w.reps * w.weight : w.reps), 0);
+            } else {
+                return weekSets.reduce((sum, w) => sum + w.reps, 0);
+            }
+        });
+
+        const ctx = canvas.getContext('2d');
+        const isLine = this.chartType === 'line';
+        new Chart(ctx, {
+            type: isLine ? 'line' : 'bar',
+            data: {
+                labels: weekLabels,
+                datasets: [{
+                    data: values,
+                    borderColor: '#667eea',
+                    backgroundColor: isLine ? '#667eea33' : '#667eea99',
+                    borderWidth: isLine ? 2 : 1,
+                    pointRadius: isLine ? 3 : 0,
+                    fill: isLine,
+                    tension: 0.3,
+                    spanGaps: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            title: (contexts) => {
+                                const idx = contexts[0].dataIndex;
+                                const wk = weekKeyInfo[sortedWeekKeys[idx]];
+                                return `Week ${wk.week}, ${wk.year}`;
+                            },
+                            label: (context) => {
+                                const val = context.parsed.y;
+                                if (val === null) return null;
+                                const suffix = this.selectedMetric === 'relative' ? '%'
+                                    : this.selectedMetric === 'weight' ? ' kg' : ' reps';
+                                return `${val.toFixed(1)}${suffix}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { font: { size: 10 } }
+                    },
+                    x: { ticks: { font: { size: 10 } } }
+                }
+            }
+        });
     },
 
     /**
@@ -1321,15 +1516,36 @@ export const Charts = {
                         <i data-lucide="repeat"></i>
                     </button>
                 </div>
+                <div class="metric-btns">
+                    <button class="metric-btn metric-btn--icon ${this.chartType === 'bar' ? 'active' : ''}" data-chart-type="bar" title="Bar chart" aria-label="Bar chart">
+                        <i data-lucide="chart-column"></i>
+                    </button>
+                    <button class="metric-btn metric-btn--icon ${this.chartType === 'line' ? 'active' : ''}" data-chart-type="line" title="Line chart" aria-label="Line chart">
+                        <i data-lucide="chart-line"></i>
+                    </button>
+                </div>
             </div>
         `;
 
         if (window.lucide) window.lucide.createIcons();
 
         // Metric handlers
-        controls.querySelectorAll('.metric-btn').forEach(btn => {
+        controls.querySelectorAll('.metric-btn[data-metric]').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 this.switchMetric(e.currentTarget.dataset.metric);
+            });
+        });
+
+        // Chart type handlers
+        controls.querySelectorAll('.metric-btn[data-chart-type]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const type = e.currentTarget.dataset.chartType;
+                this.chartType = type;
+                localStorage.setItem('chartType', type);
+                controls.querySelectorAll('.metric-btn[data-chart-type]').forEach(b => {
+                    b.classList.toggle('active', b.dataset.chartType === type);
+                });
+                if (this.groupedByMuscle) this.renderMuscleGroupView(this.groupedByMuscle);
             });
         });
     },
@@ -1347,9 +1563,10 @@ export const Charts = {
             btn.classList.toggle('active', btn.dataset.metric === metric);
         });
 
-        // Re-render chart
-        const groupedByMuscle = this.groupExercisesByMuscle(this.allExercisesData);
-        this.renderMuscleGroupChart(groupedByMuscle);
+        // Re-render accordion
+        if (this.groupedByMuscle) {
+            this.renderMuscleGroupView(this.groupedByMuscle);
+        }
     },
 
     /**

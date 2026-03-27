@@ -4157,6 +4157,131 @@
     height: 450px;
 }
 
+/* Progressive Overload accordion (Overall stats) */
+.po-accordion {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
+.po-muscle-group {
+    background: var(--bg-primary);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.po-muscle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-left: 4px solid var(--muscle-color, var(--primary-color));
+    background: var(--bg-secondary);
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-fast);
+}
+
+.po-muscle-header:hover {
+    background: var(--border-light);
+}
+
+.po-muscle-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-weight: 600;
+    font-size: 0.95rem;
+    color: var(--text-primary);
+}
+
+.po-muscle-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: var(--radius-full);
+    flex-shrink: 0;
+}
+
+.po-muscle-count {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-light);
+}
+
+.po-chevron {
+    width: 16px;
+    height: 16px;
+    color: var(--text-light);
+    flex-shrink: 0;
+    transition: transform var(--transition-base);
+}
+
+.po-muscle-group.collapsed .po-muscle-header .po-chevron {
+    transform: rotate(-90deg);
+}
+
+.po-muscle-content {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border-light);
+}
+
+.po-muscle-group.collapsed .po-muscle-content {
+    display: none;
+}
+
+.po-exercise-row {
+    background: var(--bg-primary);
+    min-width: 0;
+}
+
+.po-exercise-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md) var(--spacing-sm) calc(var(--spacing-md) + 14px);
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-fast);
+}
+
+.po-exercise-header:hover {
+    background: var(--bg-secondary);
+}
+
+.po-exercise-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
+    font-size: 0.88rem;
+    color: var(--text-primary);
+}
+
+.po-exercise-sessions {
+    font-size: 0.72rem;
+    color: var(--text-light);
+    font-weight: 400;
+}
+
+.po-exercise-row.collapsed .po-exercise-header .po-chevron {
+    transform: rotate(-90deg);
+}
+
+.po-exercise-chart-wrap {
+    position: relative;
+    height: 160px;
+    padding: 0 var(--spacing-sm) var(--spacing-sm) var(--spacing-sm);
+    min-width: 0;
+    overflow: hidden;
+}
+
+.po-exercise-row.collapsed .po-exercise-chart-wrap {
+    display: none;
+}
+
 .no-sessions-msg {
     text-align: center;
     color: var(--text-light);
@@ -4367,6 +4492,10 @@
 
     #statisticsSection .chart-wrapper-md {
         height: 220px;
+    }
+
+    .po-muscle-content {
+        grid-template-columns: 1fr;
     }
 }
 

@@ -1102,26 +1102,14 @@ export const Charts = {
             return;
         }
 
-        const getISOWeekKey = (dateStr) => {
+        const allDates = [...new Set(workouts.map(w => w.date))].sort();
+
+        const formatLabel = (dateStr) => {
             const d = new Date(dateStr + 'T00:00:00');
-            const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay();
-            const thursday = new Date(d);
-            thursday.setDate(d.getDate() + (4 - dayOfWeek));
-            const yearStart = new Date(thursday.getFullYear(), 0, 1);
-            const week = Math.ceil(((thursday - yearStart) / 86400000 + 1) / 7);
-            return { year: thursday.getFullYear(), week, key: `${thursday.getFullYear()}-W${String(week).padStart(2, '0')}` };
+            return `${d.getDate()}/${d.getMonth() + 1}`;
         };
 
-        const allDates = [...new Set(workouts.map(w => w.date))].sort();
-        const weekKeySet = new Set();
-        const weekKeyInfo = {};
-        allDates.forEach(date => {
-            const info = getISOWeekKey(date);
-            weekKeySet.add(info.key);
-            weekKeyInfo[info.key] = info;
-        });
-        const sortedWeekKeys = Array.from(weekKeySet).sort();
-        const weekLabels = sortedWeekKeys.map(k => `W${weekKeyInfo[k].week}`);
+        const dateLabels = allDates.map(formatLabel);
 
         const dailyRaw = this.groupByDate(workouts, exercise.requiresWeight);
         const baselineCount = Math.min(3, dailyRaw.values.length);
@@ -1129,20 +1117,19 @@ export const Charts = {
             ? dailyRaw.values.slice(0, baselineCount).reduce((s, v) => s + v, 0) / baselineCount
             : 0;
 
-        const values = sortedWeekKeys.map(weekKey => {
-            const weekDates = allDates.filter(d => getISOWeekKey(d).key === weekKey);
-            const weekSets = workouts.filter(w => weekDates.includes(w.date));
-            if (weekSets.length === 0) return null;
+        const values = allDates.map(date => {
+            const daySets = workouts.filter(w => w.date === date);
+            if (daySets.length === 0) return null;
 
             if (this.selectedMetric === 'relative') {
                 if (baseline <= 0) return null;
-                const weekVol = weekSets.reduce((sum, w) =>
+                const vol = daySets.reduce((sum, w) =>
                     sum + (exercise.requiresWeight && w.weight ? w.reps * w.weight : w.reps), 0);
-                return (weekVol / baseline) * 100;
+                return (vol / baseline) * 100;
             } else if (this.selectedMetric === 'weight') {
-                return weekSets.reduce((sum, w) => sum + (w.weight ? w.reps * w.weight : w.reps), 0);
+                return daySets.reduce((sum, w) => sum + (w.weight ? w.reps * w.weight : w.reps), 0);
             } else {
-                return weekSets.reduce((sum, w) => sum + w.reps, 0);
+                return daySets.reduce((sum, w) => sum + w.reps, 0);
             }
         });
 
@@ -1151,7 +1138,7 @@ export const Charts = {
         new Chart(ctx, {
             type: isLine ? 'line' : 'bar',
             data: {
-                labels: weekLabels,
+                labels: dateLabels,
                 datasets: [{
                     data: values,
                     borderColor: '#667eea',
@@ -1170,11 +1157,7 @@ export const Charts = {
                     legend: { display: false },
                     tooltip: {
                         callbacks: {
-                            title: (contexts) => {
-                                const idx = contexts[0].dataIndex;
-                                const wk = weekKeyInfo[sortedWeekKeys[idx]];
-                                return `Week ${wk.week}, ${wk.year}`;
-                            },
+                            title: (contexts) => allDates[contexts[0].dataIndex],
                             label: (context) => {
                                 const val = context.parsed.y;
                                 if (val === null) return null;

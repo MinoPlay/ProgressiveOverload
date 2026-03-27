@@ -4137,6 +4137,18 @@
     gap: 8px;
 }
 
+.stats-card-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.stats-card-title-row .stats-card-title {
+    margin-bottom: 0;
+}
+
 .stats-card-title--compact {
     margin-bottom: 8px;
 }
@@ -4279,6 +4291,54 @@
 }
 
 .po-exercise-row.collapsed .po-exercise-chart-wrap {
+    display: none;
+}
+
+.ma-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1px;
+    background: var(--border-light);
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+.ma-muscle-card {
+    background: var(--bg-primary);
+    min-width: 0;
+}
+
+.ma-muscle-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-sm) var(--spacing-md);
+    border-left: 4px solid var(--muscle-color, var(--primary-color));
+    background: var(--bg-secondary);
+    cursor: pointer;
+    user-select: none;
+    transition: background var(--transition-fast);
+}
+
+.ma-muscle-header:hover {
+    background: var(--border-light);
+}
+
+.ma-muscle-card.collapsed .ma-muscle-header .po-chevron {
+    transform: rotate(-90deg);
+}
+
+.ma-chart-wrap {
+    position: relative;
+    height: 160px;
+    padding: 0 var(--spacing-sm) var(--spacing-sm) var(--spacing-sm);
+    min-width: 0;
+    overflow: hidden;
+}
+
+.ma-muscle-card.collapsed .ma-chart-wrap {
     display: none;
 }
 
@@ -4452,13 +4512,10 @@
     overflow: hidden;
 }
 
-#statisticsSection #chartControls.chart-controls {
-    justify-content: center;
-    margin-bottom: var(--spacing-sm);
-}
-
-#statisticsSection #chartControls .metric-btns {
-    margin: 0 auto;
+#chartControls {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-sm);
 }
 
 #statisticsSection #categoryTabContent .category-tab-pane {
@@ -4495,6 +4552,10 @@
     }
 
     .po-muscle-content {
+        grid-template-columns: 1fr;
+    }
+
+    .ma-grid {
         grid-template-columns: 1fr;
     }
 }

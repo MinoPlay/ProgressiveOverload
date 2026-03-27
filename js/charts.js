@@ -740,8 +740,8 @@ export const Charts = {
      */
     renderWeeklyStats(allWorkouts) {
         const freqCanvas = document.getElementById('weeklyFrequencyChart');
-        const muscleCanvas = document.getElementById('weeklyMuscleChart');
-        if (!freqCanvas || !muscleCanvas) return;
+        const muscleContainer = document.getElementById('weeklyMuscleActivityContainer');
+        if (!freqCanvas || !muscleContainer) return;
 
         const weeklyData = aggregateByWeek(allWorkouts);
         // Only show last 12 weeks for the dashboard
@@ -755,8 +755,8 @@ export const Charts = {
         // 1. Render Training Frequency Chart
         this.renderFrequencyChart(freqCanvas, displayData, labels);
 
-        // 2. Render Muscle Group Activity Chart
-        this.renderMuscleActivityChart(muscleCanvas, displayData, labels);
+        // 2. Render Muscle Group Activity Charts (one per muscle)
+        this.renderMuscleActivityCharts(muscleContainer, displayData, labels);
     },
 
     /**
@@ -809,22 +809,18 @@ export const Charts = {
     },
 
     /**
-     * Render weekly muscle activity as unique exercises per muscle group (not sets)
+     * Render weekly muscle activity as one collapsible chart per muscle group
      */
-    renderMuscleActivityChart(canvas, displayData, labels) {
-        const hiddenSeriesKey = 'muscleGroupActivityHiddenSeries';
-        let hiddenSeries = new Set();
-        try {
-            const stored = JSON.parse(localStorage.getItem(hiddenSeriesKey) || '[]');
-            if (Array.isArray(stored)) hiddenSeries = new Set(stored);
-        } catch (error) {
-            hiddenSeries = new Set();
-        }
+    renderMuscleActivityCharts(container, displayData, labels) {
+        const collapseStateKey = 'muscleActivityCollapseState';
+        const chartTypeKey = 'muscleActivityChartType';
 
-        const muscleGroups = new Set();
-        displayData.forEach(week => {
-            Object.keys(week.muscleGroupCounts || {}).forEach(m => muscleGroups.add(m));
-        });
+        let collapseState = {};
+        try {
+            collapseState = JSON.parse(localStorage.getItem(collapseStateKey) || '{}');
+        } catch (e) { collapseState = {}; }
+
+        let chartType = localStorage.getItem(chartTypeKey) || 'bar';
 
         const muscleColors = {
             'chest': '#ff5252',
@@ -839,70 +835,155 @@ export const Charts = {
             'full-body': '#ffd740'
         };
 
-        const datasets = Array.from(muscleGroups).sort().map(muscle => ({
-            muscleKey: muscle,
-            label: muscle.charAt(0).toUpperCase() + muscle.slice(1).replace('-', ' '),
-            data: displayData.map(d => (d.muscleGroupCounts && d.muscleGroupCounts[muscle]) || 0),
-            borderColor: muscleColors[muscle] || '#667eea',
-            backgroundColor: (muscleColors[muscle] || '#667eea') + '22',
-            borderWidth: 2,
-            fill: false,
-            tension: 0.35,
-            pointRadius: 0,
-            pointHoverRadius: 0,
-            pointHitRadius: 0,
-            hidden: hiddenSeries.has(muscle)
-        }));
+        const muscleGroups = new Set();
+        displayData.forEach(week => {
+            Object.keys(week.muscleGroupCounts || {}).forEach(m => muscleGroups.add(m));
+        });
 
-        const ctx = canvas.getContext('2d');
-        const existingChart = Chart.getChart(canvas);
-        if (existingChart) existingChart.destroy();
+        container.innerHTML = '';
 
-        new Chart(ctx, {
-            type: 'line',
+        // Controls: bar / line toggle — injected into the header row
+        const controlsTarget = document.getElementById('weeklyMuscleActivityControls');
+        if (controlsTarget) {
+            controlsTarget.innerHTML = `
+                <div class="metric-btns">
+                    <button class="metric-btn metric-btn--icon ${chartType === 'bar' ? 'active' : ''}" data-ma-chart-type="bar" title="Bar chart" aria-label="Bar chart">
+                        <i data-lucide="chart-column"></i>
+                    </button>
+                    <button class="metric-btn metric-btn--icon ${chartType === 'line' ? 'active' : ''}" data-ma-chart-type="line" title="Line chart" aria-label="Line chart">
+                        <i data-lucide="chart-line"></i>
+                    </button>
+                </div>
+            `;
+            if (window.lucide) window.lucide.createIcons({ nodes: [controlsTarget] });
+        }
+
+        const grid = document.createElement('div');
+        grid.className = 'ma-grid';
+
+        const pendingRenders = [];
+
+        Array.from(muscleGroups).sort().forEach(muscle => {
+            const isCollapsed = muscle in collapseState ? collapseState[muscle] : false;
+            const color = muscleColors[muscle] || '#667eea';
+            const canvasId = `ma-chart-${muscle}`;
+
+            const card = document.createElement('div');
+            card.className = 'ma-muscle-card' + (isCollapsed ? ' collapsed' : '');
+            card.dataset.muscle = muscle;
+
+            const header = document.createElement('div');
+            header.className = 'ma-muscle-header';
+            header.style.setProperty('--muscle-color', color);
+            header.innerHTML = `
+                <span class="po-muscle-title">
+                    <span class="po-muscle-dot" style="background:${color}"></span>
+                    ${this.capitalize(muscle)}
+                </span>
+                <svg class="po-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            `;
+
+            const chartWrap = document.createElement('div');
+            chartWrap.className = 'ma-chart-wrap';
+            chartWrap.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+
+            const doRender = () => {
+                const canvas = document.getElementById(canvasId);
+                if (canvas) this.renderMuscleActivitySingleChart(canvas, muscle, displayData, labels, chartType);
+            };
+
+            if (!isCollapsed) pendingRenders.push(doRender);
+
+            header.addEventListener('click', () => {
+                card.classList.toggle('collapsed');
+                const nowCollapsed = card.classList.contains('collapsed');
+                collapseState[muscle] = nowCollapsed;
+                localStorage.setItem(collapseStateKey, JSON.stringify(collapseState));
+                if (!nowCollapsed) doRender();
+            });
+
+            card.appendChild(header);
+            card.appendChild(chartWrap);
+            grid.appendChild(card);
+        });
+
+        container.appendChild(grid);
+
+        // Chart type toggle handler
+        if (controlsTarget) controlsTarget.querySelectorAll('.metric-btn[data-ma-chart-type]').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                chartType = e.currentTarget.dataset.maChartType;
+                localStorage.setItem(chartTypeKey, chartType);
+                controlsTarget.querySelectorAll('.metric-btn[data-ma-chart-type]').forEach(b => {
+                    b.classList.toggle('active', b.dataset.maChartType === chartType);
+                });
+                // Re-render all expanded charts
+                grid.querySelectorAll('.ma-muscle-card:not(.collapsed)').forEach(card => {
+                    const m = card.dataset.muscle;
+                    const canvas = document.getElementById(`ma-chart-${m}`);
+                    if (canvas) this.renderMuscleActivitySingleChart(canvas, m, displayData, labels, chartType);
+                });
+            });
+        });
+
+        pendingRenders.forEach(fn => fn());
+    },
+
+    /**
+     * Render a single muscle group's weekly activity chart
+     */
+    renderMuscleActivitySingleChart(canvas, muscle, displayData, labels, chartType) {
+        const muscleColors = {
+            'chest': '#ff5252',
+            'back': '#448aff',
+            'shoulders': '#ffab40',
+            'legs': '#7c4dff',
+            'biceps': '#40c4ff',
+            'triceps': '#667eea',
+            'arms': '#40c4ff',
+            'core': '#69f0ae',
+            'neck': '#bdbdbd',
+            'full-body': '#ffd740'
+        };
+
+        const existing = Chart.getChart(canvas);
+        if (existing) existing.destroy();
+
+        const color = muscleColors[muscle] || '#667eea';
+        const data = displayData.map(d => (d.muscleGroupCounts && d.muscleGroupCounts[muscle]) || 0);
+        const isLine = chartType === 'line';
+
+        new Chart(canvas.getContext('2d'), {
+            type: isLine ? 'line' : 'bar',
             data: {
                 labels: labels,
-                datasets: datasets
+                datasets: [{
+                    data: data,
+                    backgroundColor: isLine ? color + '33' : color + '99',
+                    borderColor: color,
+                    borderWidth: isLine ? 2 : 1,
+                    fill: isLine,
+                    tension: 0.3,
+                    pointRadius: isLine ? 3 : 0,
+                    spanGaps: true
+                }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: {
-                        position: 'top',
-                        labels: { boxWidth: 10, font: { size: 10 } },
-                        onClick: (event, legendItem, legend) => {
-                            const chart = legend.chart;
-                            const datasetIndex = legendItem.datasetIndex;
-                            if (datasetIndex == null) return;
-
-                            if (chart.isDatasetVisible(datasetIndex)) {
-                                chart.hide(datasetIndex);
-                            } else {
-                                chart.show(datasetIndex);
-                            }
-
-                            const nextHiddenSeries = chart.data.datasets
-                                .filter((dataset, index) => !chart.isDatasetVisible(index))
-                                .map(dataset => dataset.muscleKey)
-                                .filter(Boolean);
-                            localStorage.setItem(hiddenSeriesKey, JSON.stringify(nextHiddenSeries));
-                        }
-                    },
+                    legend: { display: false },
                     tooltip: {
-                        enabled: true,
-                        mode: 'index',
-                        intersect: false,
                         callbacks: {
-                            label: (context) => `${context.dataset.label}: ${context.parsed.y} exercises`
+                            label: (context) => `${context.parsed.y} exercises`
                         }
                     }
                 },
                 scales: {
-                    x: {},
+                    x: { ticks: { font: { size: 10 } } },
                     y: {
                         beginAtZero: true,
-                        ticks: { stepSize: 1 },
+                        ticks: { stepSize: 1, font: { size: 10 } },
                         title: { display: false }
                     }
                 }
@@ -1487,26 +1568,24 @@ export const Charts = {
         if (!controls) return;
 
         controls.innerHTML = `
-            <div style="display: flex; align-items: center; gap: var(--spacing-md); flex-wrap: wrap; width: 100%;">
-                <div class="metric-btns">
-                    <button class="metric-btn metric-btn--icon ${this.selectedMetric === 'relative' ? 'active' : ''}" data-metric="relative" title="Progress relative to your first workouts" aria-label="Relative progress metric">
-                        <i data-lucide="percent"></i>
-                    </button>
-                    <button class="metric-btn metric-btn--icon ${this.selectedMetric === 'weight' ? 'active' : ''}" data-metric="weight" title="Heaviest weight lifted (PR)" aria-label="Weight PR metric">
-                        <i data-lucide="dumbbell"></i>
-                    </button>
-                    <button class="metric-btn metric-btn--icon ${this.selectedMetric === 'reps' ? 'active' : ''}" data-metric="reps" title="Total repetitions performed" aria-label="Repetitions metric">
-                        <i data-lucide="repeat"></i>
-                    </button>
-                </div>
-                <div class="metric-btns">
-                    <button class="metric-btn metric-btn--icon ${this.chartType === 'bar' ? 'active' : ''}" data-chart-type="bar" title="Bar chart" aria-label="Bar chart">
-                        <i data-lucide="chart-column"></i>
-                    </button>
-                    <button class="metric-btn metric-btn--icon ${this.chartType === 'line' ? 'active' : ''}" data-chart-type="line" title="Line chart" aria-label="Line chart">
-                        <i data-lucide="chart-line"></i>
-                    </button>
-                </div>
+            <div class="metric-btns">
+                <button class="metric-btn metric-btn--icon ${this.selectedMetric === 'relative' ? 'active' : ''}" data-metric="relative" title="Progress relative to your first workouts" aria-label="Relative progress metric">
+                    <i data-lucide="percent"></i>
+                </button>
+                <button class="metric-btn metric-btn--icon ${this.selectedMetric === 'weight' ? 'active' : ''}" data-metric="weight" title="Heaviest weight lifted (PR)" aria-label="Weight PR metric">
+                    <i data-lucide="dumbbell"></i>
+                </button>
+                <button class="metric-btn metric-btn--icon ${this.selectedMetric === 'reps' ? 'active' : ''}" data-metric="reps" title="Total repetitions performed" aria-label="Repetitions metric">
+                    <i data-lucide="repeat"></i>
+                </button>
+            </div>
+            <div class="metric-btns">
+                <button class="metric-btn metric-btn--icon ${this.chartType === 'bar' ? 'active' : ''}" data-chart-type="bar" title="Bar chart" aria-label="Bar chart">
+                    <i data-lucide="chart-column"></i>
+                </button>
+                <button class="metric-btn metric-btn--icon ${this.chartType === 'line' ? 'active' : ''}" data-chart-type="line" title="Line chart" aria-label="Line chart">
+                    <i data-lucide="chart-line"></i>
+                </button>
             </div>
         `;
 

@@ -1391,58 +1391,6 @@
     gap: 0;
 }
 
-.history-date-group {
-    background: var(--bg-primary);
-    border-radius: var(--radius-lg);
-    padding: var(--spacing-md);
-    box-shadow: var(--shadow-sm);
-}
-
-.history-date-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: var(--spacing-sm);
-    padding-bottom: var(--spacing-sm);
-    border-bottom: 2px solid var(--border-light);
-}
-
-.history-date-header h3 {
-    font-size: 1.1rem;
-    color: var(--text-primary);
-    margin: 0;
-}
-
-.workout-count {
-    font-size: 0.9rem;
-    color: var(--text-secondary);
-    padding: var(--spacing-xs) var(--spacing-md);
-    background: var(--secondary-color);
-    border-radius: var(--radius-xl);
-}
-
-.history-date-header-right {
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-/* Collapsible History Groups */
-.history-date-group {
-    transition: all var(--transition-base);
-    overflow: hidden;
-}
-
-.history-date-group.collapsed .history-workouts-list {
-    display: none;
-}
-
-.history-date-header {
-    cursor: pointer;
-    user-select: none;
-    transition: background var(--transition-base);
-}
-
 .history-title-row {
     display: flex;
     align-items: center;
@@ -1451,27 +1399,6 @@
 
 .history-title-row--compact {
     gap: var(--spacing-xs);
-}
-
-.history-date-header:hover {
-    background: var(--bg-secondary);
-}
-
-.history-date-header .chevron {
-    margin-left: var(--spacing-sm);
-    transition: transform var(--transition-base);
-    font-size: 0.8rem;
-    color: var(--text-light);
-}
-
-.history-date-group.collapsed .chevron {
-    transform: rotate(-90deg);
-}
-
-.history-workouts-list {
-    display: flex;
-    flex-direction: column;
-    gap: var(--spacing-sm);
 }
 
 .history-workout-item {
@@ -3324,71 +3251,25 @@
 
 /* History Weekly Grouping */
 .history-week-group {
-    background: var(--bg-primary);
-    border-radius: 0;
-    box-shadow: none;
-    margin-bottom: 0;
-    border: 1px solid var(--border-light);
-    border-top: none;
-    overflow: hidden;
-    transition: all var(--transition-base);
+    border-top: 1px solid var(--border-light);
+    padding-top: 4px;
+    margin-top: 4px;
 }
 
 .history-week-group:first-child {
-    border-top: 1px solid var(--border-light);
-    border-top-left-radius: var(--radius-md);
-    border-top-right-radius: var(--radius-md);
-}
-
-.history-week-group:last-child {
-    border-bottom-left-radius: var(--radius-md);
-    border-bottom-right-radius: var(--radius-md);
-}
-
-.history-week-group.collapsed .history-week-content {
-    display: none;
-}
-
-.history-week-header {
-    background: var(--primary-gradient);
-    padding: 0.35rem var(--spacing-md);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    cursor: pointer;
-    color: white;
-}
-
-.history-week-header h3 {
-    margin: 0;
-    font-size: 0.95rem;
-    font-weight: 700;
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-sm);
-}
-
-.current-week-badge {
-    background: white;
-    color: var(--primary-color);
-    font-size: 0.6rem;
-    padding: 1px 6px;
-    border-radius: var(--radius-full);
-    text-transform: uppercase;
-    font-weight: 800;
+    border-top: none;
+    padding-top: 0;
+    margin-top: 0;
 }
 
 .history-week-content {
-    padding: 6px;
     display: flex;
     flex-direction: column;
-    gap: 6px;
-    background: var(--bg-secondary);
+    gap: 4px;
 }
 
-/* History Sections (Summary / Daily) */
-.history-summary-section,
-.history-daily-section {
+/* History Sections (Summary) */
+.history-summary-section {
     background: var(--bg-primary);
     border-radius: var(--radius-md);
     border: 1px solid var(--border-light);
@@ -3415,28 +3296,16 @@
 }
 
 /* Section Collapsible */
-.history-summary-section.collapsed .history-summary-table-container,
-.history-daily-section.collapsed .history-daily-list {
+.history-summary-section.collapsed .history-summary-table-container {
     display: none;
 }
 
-.history-summary-section.collapsed .history-section-sub-header,
-.history-daily-section.collapsed .history-section-sub-header {
+.history-summary-section.collapsed .history-section-sub-header {
     border-bottom: none;
 }
 
-.history-summary-section.collapsed .chevron,
-.history-daily-section.collapsed .chevron,
-.history-week-group.collapsed .chevron {
+.history-summary-section.collapsed .chevron {
     transform: rotateX(180deg);
-}
-
-/* Inner Lists */
-.history-daily-list {
-    padding: 6px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
 }
 
 .history-summary-table-container {
@@ -3448,39 +3317,6 @@
     color: var(--text-light);
     font-size: 0.8rem;
     margin: 4px 0;
-}
-
-/* Adjusting existing history-date-group for nesting */
-.history-date-group {
-    border: 1px solid var(--border-light) !important;
-    background: var(--bg-primary) !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-    margin-bottom: 0 !important;
-}
-
-.history-date-header {
-    padding: var(--spacing-xs) var(--spacing-sm) !important;
-    background: var(--bg-secondary) !important;
-    border-bottom: 1px solid var(--border-light) !important;
-    margin-bottom: 0 !important;
-}
-
-.history-date-title h3 {
-    font-size: 0.9rem !important;
-}
-
-.history-date-group.collapsed .history-date-header {
-    border-bottom: none !important;
-}
-
-.history-date-group.collapsed .history-workouts-list {
-    display: none !important;
-}
-
-.history-workouts-list {
-    padding: var(--spacing-xs) !important;
-    gap: 4px !important;
 }
 
 .history-exercise-group {
@@ -3509,6 +3345,155 @@
 .set-number,
 .set-details {
     font-size: 0.8rem !important;
+}
+
+/* History Day Grid */
+.history-day-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    padding: 6px;
+}
+
+.history-day-cell {
+    background: var(--bg-primary);
+    border: 1px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 6px 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    cursor: pointer;
+    transition: border-color var(--transition-fast), background var(--transition-fast);
+    min-height: 72px;
+    text-align: center;
+}
+
+.history-day-cell:hover {
+    border-color: var(--primary-color);
+    background: var(--bg-secondary);
+}
+
+.history-day-cell--empty {
+    opacity: 0.35;
+    cursor: default;
+    pointer-events: none;
+}
+
+.history-day-cell__name {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.history-day-cell__date {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    line-height: 1.1;
+}
+
+.history-day-cell__month {
+    font-size: 0.6rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.history-day-cell__year {
+    font-size: 0.55rem;
+    color: var(--text-light);
+}
+
+.history-day-cell__count {
+    font-size: 0.6rem;
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+/* History Day Modal */
+.history-day-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 110;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s;
+}
+
+.history-day-overlay.open {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.history-day-dialog {
+    background: var(--bg-primary);
+    width: min(92vw, 480px);
+    max-height: 85vh;
+    border-radius: var(--radius-lg);
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
+    transform: scale(0.95);
+    transition: transform 0.2s ease;
+}
+
+.history-day-overlay.open .history-day-dialog {
+    transform: scale(1);
+}
+
+.history-day-dialog-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px 10px;
+    border-bottom: 1px solid var(--border-light);
+    flex-shrink: 0;
+}
+
+.history-day-dialog-header span {
+    font-weight: 700;
+    font-size: 1rem;
+    color: var(--text-primary);
+}
+
+.history-day-close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 4px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+}
+
+.history-day-close-btn:hover {
+    color: var(--text-primary);
+    background: var(--bg-secondary);
+}
+
+.history-day-dialog-body {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.history-day-dialog-footer {
+    padding: 8px 12px;
+    border-top: 1px solid var(--border-light);
+    flex-shrink: 0;
 }
 
 /* Weekly Stats Table (Used in Summary) */
@@ -4411,22 +4396,10 @@
 }
 
 #historySection .history-week-group {
-    border: 1px solid rgba(102, 126, 234, 0.18);
-    border-radius: 14px;
-    box-shadow: 0 10px 22px rgba(20, 27, 45, 0.08);
     margin-bottom: var(--spacing-sm);
 }
 
-#historySection .history-week-header {
-    padding: 0.6rem var(--spacing-md);
-}
-
-#historySection .history-week-header h3 {
-    font-size: 1rem;
-}
-
-#historySection .history-summary-section,
-#historySection .history-daily-section {
+#historySection .history-summary-section {
     border-radius: 12px;
     border-color: rgba(102, 126, 234, 0.14);
 }
@@ -4435,16 +4408,6 @@
     padding: 0.4rem var(--spacing-md);
     font-size: 0.82rem;
     background: linear-gradient(180deg, rgba(248, 250, 255, 0.96), rgba(243, 246, 255, 0.92));
-}
-
-#historySection .history-date-group {
-    background: rgba(255, 255, 255, 0.96) !important;
-    border: 1px solid rgba(102, 126, 234, 0.16) !important;
-    border-radius: 10px !important;
-}
-
-#historySection .history-date-header {
-    background: linear-gradient(180deg, rgba(250, 252, 255, 0.98), rgba(244, 247, 255, 0.94)) !important;
 }
 
 #historySection .history-exercise-group {
@@ -4563,7 +4526,6 @@
 /* Surface Depth Hierarchy (Workout / History / Statistics only) */
 #workoutSection .form-container,
 #workoutSection .last-workout-summary,
-#historySection .history-week-group,
 #statisticsSection .kpi-card,
 #statisticsSection .section-card {
     background: var(--surface-tier-1-bg);
@@ -4575,8 +4537,7 @@
 #workoutSection .planned-row,
 #workoutSection .superset-block,
 #historySection .history-summary-section,
-#historySection .history-daily-section,
-#historySection .history-date-group,
+#historySection .history-day-grid,
 #statisticsSection .chart-controls,
 #statisticsSection .week-nav-bar {
     background: var(--surface-tier-2-bg);
@@ -4595,14 +4556,12 @@
 }
 
 #workoutSection .form-container:hover,
-#historySection .history-week-group:hover,
 #statisticsSection .kpi-card:hover,
 #statisticsSection .section-card:hover {
     box-shadow: var(--shadow-lg);
     transform: translateY(-2px);
 }
 
-#historySection .history-week-group,
 #statisticsSection .kpi-card,
 #statisticsSection .section-card {
     transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-base);

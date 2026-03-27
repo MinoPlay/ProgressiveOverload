@@ -245,6 +245,24 @@
                 <div id="historyContent" class="history-container"></div>
             </section>
 
+            <!-- History Day Detail Modal -->
+            <div class="history-day-overlay" id="historyDayOverlay" role="dialog" aria-modal="true" aria-labelledby="historyDayModalTitle">
+                <div class="history-day-dialog">
+                    <div class="history-day-dialog-header">
+                        <span id="historyDayModalTitle"></span>
+                        <button class="history-day-close-btn" id="historyDayCloseBtn" aria-label="Close">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <div class="history-day-dialog-body" id="historyDayModalBody"></div>
+                    <div class="history-day-dialog-footer">
+                        <button class="btn btn-secondary btn-small" id="historyDayModalTemplateBtn">
+                            <i data-lucide="bookmark-plus"></i> Save as Template
+                        </button>
+                    </div>
+                </div>
+            </div>
+
             <!-- Statistics Section -->
             <section id="statisticsSection" class="content-section" role="region" aria-label="Statistics & Progress">
 

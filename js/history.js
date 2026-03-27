@@ -8,12 +8,28 @@ import { formatDate, parseDate, getWeekStart, getWeekNumber } from './utils.js';
 export const History = {
     draggedWorkout: null,
     draggedDate: null,
+    openModalDate: null,
+    _modalListenersAttached: false,
 
     /**
      * Initialize history module
      */
     init() {
         this.renderHistory();
+
+        if (!this._modalListenersAttached) {
+            this._modalListenersAttached = true;
+            const overlay = document.getElementById('historyDayOverlay');
+            if (overlay) {
+                overlay.addEventListener('click', (e) => {
+                    if (e.target === overlay) this.closeDayModal();
+                });
+            }
+            const closeBtn = document.getElementById('historyDayCloseBtn');
+            if (closeBtn) {
+                closeBtn.addEventListener('click', () => this.closeDayModal());
+            }
+        }
 
         // Listen for workout updates
         window.addEventListener('workoutsUpdated', () => {
@@ -50,7 +66,6 @@ export const History = {
 
             // Group workouts by week
             const workoutsByWeek = new Map(); // Key: Week start date string (Monday)
-            const currentWeekStart = formatDate(getWeekStart(new Date()));
 
             for (const workout of allWorkouts) {
                 const date = parseDate(workout.date);
@@ -108,15 +123,27 @@ export const History = {
                 const currentStats = weekMuscleStats.get(weekStartStr);
                 const previousWeekStartStr = sortedWeekStarts[i + 1];
                 const previousStats = previousWeekStartStr ? weekMuscleStats.get(previousWeekStartStr) : null;
-                const isCurrentWeek = weekStartStr === currentWeekStart;
 
-                const weekGroup = this.createWeekGroup(weekStartStr, weekData, currentStats, previousStats, isCurrentWeek);
+                const weekGroup = this.createWeekGroup(weekStartStr, weekData, currentStats, previousStats);
                 container.appendChild(weekGroup);
             }
 
             // Initialize icons
             if (window.lucide) {
                 window.lucide.createIcons();
+            }
+
+            // Refresh modal if open
+            if (this.openModalDate) {
+                const dateObj = new Date(this.openModalDate + 'T00:00:00');
+                const freshWorkouts = await Storage.getWorkoutsInRange(dateObj, dateObj);
+                const forDate = freshWorkouts.filter(w => w.date === this.openModalDate);
+                forDate.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+                if (forDate.length === 0) {
+                    this.closeDayModal();
+                } else {
+                    this.populateDayModal(this.openModalDate, forDate);
+                }
             }
 
             showLoading(false);
@@ -130,90 +157,164 @@ export const History = {
     /**
      * Create a weekly group element
      */
-    createWeekGroup(weekStartStr, weekData, currentStats, previousStats, isCurrentWeek) {
-        const weekStart = parseDate(weekStartStr);
-        const weekEnd = new Date(weekStart);
-        weekEnd.setDate(weekEnd.getDate() + 6);
-
-        const fromStr = weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const toStr = weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        const weekNum = getWeekNumber(weekStart);
-        const weekLabel = `Week ${String(weekNum).padStart(2, '0')} (${fromStr} – ${toStr}, ${weekEnd.getFullYear()})`;
-
+    createWeekGroup(weekStartStr, weekData, currentStats, previousStats) {
         const group = document.createElement('div');
         group.className = 'history-week-group';
-        if (!isCurrentWeek) {
-            group.classList.add('collapsed');
-        }
-
-        const header = document.createElement('div');
-        header.className = 'history-week-header';
-        header.onclick = () => group.classList.toggle('collapsed');
-
-        const title = document.createElement('h3');
-        title.innerHTML = `<i data-lucide="calendar" class="icon-xs"></i> ${weekLabel}`;
-
-        if (isCurrentWeek) {
-            const badge = document.createElement('span');
-            badge.className = 'current-week-badge';
-            badge.textContent = 'Current';
-            title.appendChild(badge);
-        }
-
-        const chevron = document.createElement('span');
-        chevron.className = 'chevron';
-        chevron.textContent = '▼';
-
-        header.appendChild(title);
-        header.appendChild(chevron);
-        group.appendChild(header);
 
         const content = document.createElement('div');
         content.className = 'history-week-content';
 
-        // 1. Summary Section
-        const summarySection = this.createSummarySection(currentStats, previousStats, isCurrentWeek);
+        // 1. Summary Section (always visible)
+        const summarySection = this.createSummarySection(currentStats, previousStats);
         content.appendChild(summarySection);
 
-        // 2. Daily History Section
-        const dailySection = document.createElement('div');
-        dailySection.className = 'history-daily-section collapsed';
-
-        const dailyHeader = document.createElement('div');
-        dailyHeader.className = 'history-section-sub-header';
-        dailyHeader.onclick = (e) => {
-            e.stopPropagation();
-            dailySection.classList.toggle('collapsed');
-        };
-        dailyHeader.innerHTML = `<span><i data-lucide="history" class="icon-xs"></i> Daily History</span><span class="chevron">▼</span>`;
-        dailySection.appendChild(dailyHeader);
-
-        const dailyList = document.createElement('div');
-        dailyList.className = 'history-daily-list';
-
-        const sortedDates = Array.from(weekData.dates.keys()).sort((a, b) => b.localeCompare(a));
-        for (const date of sortedDates) {
-            const workouts = weekData.dates.get(date);
-            workouts.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
-            const dateGroup = this.createDateGroup(date, workouts);
-            dailyList.appendChild(dateGroup);
-        }
-        dailySection.appendChild(dailyList);
-        content.appendChild(dailySection);
+        // 2. Day Grid
+        const dayGrid = this.createDayGrid(weekStartStr, weekData);
+        content.appendChild(dayGrid);
 
         group.appendChild(content);
         return group;
     },
 
     /**
+     * Create a 7-day Mon–Sun grid for a week
+     */
+    createDayGrid(weekStartStr, weekData) {
+        const DAY_NAMES = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+        const grid = document.createElement('div');
+        grid.className = 'history-day-grid';
+
+        for (let i = 0; i < 7; i++) {
+            const dayDate = parseDate(weekStartStr);
+            dayDate.setDate(dayDate.getDate() + i);
+            const dateStr = formatDate(dayDate);
+            const workouts = weekData.dates.get(dateStr) || [];
+            grid.appendChild(this.createDayCell(dateStr, workouts, DAY_NAMES[i]));
+        }
+
+        return grid;
+    },
+
+    /**
+     * Create a single day tile for the week grid
+     */
+    createDayCell(dateStr, workouts, dayName) {
+        const hasWorkouts = workouts.length > 0;
+        const cell = document.createElement('div');
+        cell.className = 'history-day-cell' + (hasWorkouts ? '' : ' history-day-cell--empty');
+
+        const d = new Date(dateStr + 'T00:00:00');
+        const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+        const nameEl = document.createElement('span');
+        nameEl.className = 'history-day-cell__name';
+        nameEl.textContent = dayName;
+
+        const dayEl = document.createElement('span');
+        dayEl.className = 'history-day-cell__date';
+        dayEl.textContent = d.getDate();
+
+        const monthEl = document.createElement('span');
+        monthEl.className = 'history-day-cell__month';
+        monthEl.textContent = MONTHS[d.getMonth()];
+
+        const yearEl = document.createElement('span');
+        yearEl.className = 'history-day-cell__year';
+        yearEl.textContent = d.getFullYear();
+
+        cell.appendChild(nameEl);
+        cell.appendChild(dayEl);
+        cell.appendChild(monthEl);
+        cell.appendChild(yearEl);
+
+        if (hasWorkouts) {
+            const exerciseCount = new Set(workouts.map(w => w.exerciseId)).size;
+            const countEl = document.createElement('span');
+            countEl.className = 'history-day-cell__count';
+            countEl.textContent = `${exerciseCount} ex`;
+            cell.appendChild(countEl);
+
+            cell.addEventListener('click', () => {
+                const sorted = [...workouts].sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
+                this.openDayModal(dateStr, sorted);
+            });
+        }
+
+        return cell;
+    },
+
+    /**
+     * Open the day detail modal for a given date
+     */
+    openDayModal(date, workouts) {
+        this.openModalDate = date;
+
+        const title = document.getElementById('historyDayModalTitle');
+        if (title) {
+            const d = new Date(date + 'T00:00:00');
+            title.textContent = d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+        }
+
+        this.populateDayModal(date, workouts);
+
+        const overlay = document.getElementById('historyDayOverlay');
+        if (overlay) overlay.classList.add('open');
+
+        if (window.lucide) window.lucide.createIcons();
+    },
+
+    /**
+     * Populate the day modal body with exercise groups
+     */
+    populateDayModal(date, workouts) {
+        const body = document.getElementById('historyDayModalBody');
+        if (!body) return;
+        body.innerHTML = '';
+
+        const exerciseGroups = new Map();
+        for (const workout of workouts) {
+            if (!exerciseGroups.has(workout.exerciseId)) {
+                exerciseGroups.set(workout.exerciseId, []);
+            }
+            exerciseGroups.get(workout.exerciseId).push(workout);
+        }
+
+        const sortedGroups = Array.from(exerciseGroups.entries())
+            .map(([exerciseId, exerciseWorkouts]) => ({
+                exerciseId,
+                workouts: exerciseWorkouts,
+                minSequence: Math.min(...exerciseWorkouts.map(w => w.sequence || 0))
+            }))
+            .sort((a, b) => a.minSequence - b.minSequence);
+
+        sortedGroups.forEach((group, index) => {
+            const item = this.createGroupedExerciseItem(date, group.exerciseId, group.workouts, index + 1);
+            body.appendChild(item);
+        });
+
+        const templateBtn = document.getElementById('historyDayModalTemplateBtn');
+        if (templateBtn) {
+            templateBtn.onclick = () => this.openTemplateModal(date, sortedGroups.map(g => g.exerciseId));
+        }
+
+        if (window.lucide) window.lucide.createIcons();
+    },
+
+    /**
+     * Close the day detail modal
+     */
+    closeDayModal() {
+        this.openModalDate = null;
+        const overlay = document.getElementById('historyDayOverlay');
+        if (overlay) overlay.classList.remove('open');
+    },
+
+    /**
      * Create summary section for a week
      */
-    createSummarySection(currentStats, previousStats, isCurrentWeek) {
+    createSummarySection(currentStats, previousStats) {
         const section = document.createElement('div');
-        section.className = 'history-summary-section';
-        if (!isCurrentWeek) {
-            section.classList.add('collapsed');
-        }
+        section.className = 'history-summary-section collapsed';
 
         const header = document.createElement('div');
         header.className = 'history-section-sub-header';

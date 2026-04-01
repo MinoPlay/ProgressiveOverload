@@ -1381,6 +1381,7 @@ function _mergeParentWorkouts(workouts) {
     if (!byExercise[w.exerciseId]) byExercise[w.exerciseId] = [];
     byExercise[w.exerciseId].push(w);
   });
+  const lastWorkoutMap = getLastWorkoutMap();
   let updated = 0;
   Object.entries(byExercise).forEach(([parentId, entries]) => {
     const parentEx = _parentExerciseMap[parentId];
@@ -1413,6 +1414,12 @@ function _mergeParentWorkouts(workouts) {
       });
     });
 
+    // Populate last workout map so non-template adds get per-set history
+    lastWorkoutMap[exerciseId] = {
+      sets: latestSets.map(s => ({ reps: s.reps, weight: preset.bodyweight ? 'BW' : s.weight })),
+      timestamp: new Date(latestDate).getTime()
+    };
+
     // Store full history grouped by date for per-exercise history view
     const byDate = {};
     entries.forEach(w => {
@@ -1430,6 +1437,7 @@ function _mergeParentWorkouts(workouts) {
 
     updated++;
   });
+  saveLastWorkoutMap(lastWorkoutMap);
   console.log(`[Session Board] Processed workout history, updated ${updated} exercises with prev data`);
 }
 

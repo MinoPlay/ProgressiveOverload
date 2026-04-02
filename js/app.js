@@ -309,6 +309,14 @@ const App = {
         const savedSection = localStorage.getItem('activeSection') || 'workout';
         switchSection(savedSection, true);
 
+        // Re-measure height after initial paint — icons/fonts may not be sized yet during the
+        // synchronous call above, causing an incorrect workoutTop and thus a wrong availableHeight.
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            if ((localStorage.getItem('activeSection') || 'workout') === 'workout') {
+                updateWorkoutPaneHeight();
+            }
+        }));
+
         // Expose switchSection for potential use from other modules
         this.switchSection = switchSection;
 

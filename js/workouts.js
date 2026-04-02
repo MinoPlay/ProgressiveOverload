@@ -102,7 +102,7 @@ export const Workouts = {
 
         // Show/hide weight field and clear reps/weight based on exercise selection
         if (exerciseSelect) {
-            exerciseSelect.addEventListener('change', () => {
+            exerciseSelect.addEventListener('change', async () => {
                 const repsInput = document.getElementById('workoutReps');
                 const weightInput = document.getElementById('workoutWeight');
 
@@ -110,6 +110,17 @@ export const Workouts = {
                 if (weightInput) weightInput.value = '';
 
                 this.updateWeightField();
+
+                const exerciseId = exerciseSelect.value;
+                if (!exerciseId) return;
+                try {
+                    const sessions = await Storage.getLastWorkoutSessionsForExercise(exerciseId, 1);
+                    const lastSet = sessions?.[0]?.sets?.[0];
+                    if (lastSet) {
+                        if (repsInput && lastSet.reps != null) repsInput.value = lastSet.reps;
+                        if (weightInput && lastSet.weight != null) weightInput.value = lastSet.weight;
+                    }
+                } catch (_) { /* silently ignore, fields remain empty */ }
             });
         }
 

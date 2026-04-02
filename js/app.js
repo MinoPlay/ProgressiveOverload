@@ -407,11 +407,11 @@ const IframeBridge = {
     },
 
     /** Send exercises + templates + workouts to a single iframe */
-    sendAllData(frame) {
+    async sendAllData(frame) {
         try {
             this.sendExercises(frame);
             this.sendTemplates(frame);
-            this.sendWorkouts(frame);
+            await this.sendWorkouts(frame);
         } catch (err) {
             console.warn('IframeBridge: could not send data to iframe', err);
         }
@@ -428,8 +428,17 @@ const IframeBridge = {
         frame.contentWindow?.postMessage({ type: 'po-templates', templates }, '*');
     },
 
-    sendWorkouts(frame) {
-        const workouts = Storage.currentMonthWorkouts || [];
+    async sendWorkouts(frame) {
+        let workouts = Storage.currentMonthWorkouts || [];
+        if (!CONFIG.devMode) {
+            try {
+                const now = new Date();
+                const start = new Date(now.getFullYear(), now.getMonth() - 2, 1);
+                workouts = await Storage.getWorkoutsInRange(start, now);
+            } catch (err) {
+                console.warn('IframeBridge: could not fetch recent workouts, using current month only', err);
+            }
+        }
         frame.contentWindow?.postMessage({ type: 'po-workouts', workouts }, '*');
     },
 

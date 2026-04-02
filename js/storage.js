@@ -465,7 +465,7 @@ export const Storage = {
         }
 
         // 2. If not enough sessions, look at other files in data directory
-        if (getConfig().mode !== 'github' || !Auth.isAuthenticated()) {
+        if (CONFIG.devMode || !Auth.isAuthenticated()) {
             return sessions;
         }
         try {
@@ -559,7 +559,7 @@ export const Storage = {
         }
 
         // 2. If no workouts in current month, check previous months
-        if (workouts.length === 0 && getConfig().mode === 'github' && Auth.isAuthenticated()) {
+        if (workouts.length === 0 && !CONFIG.devMode && Auth.isAuthenticated()) {
             try {
                 const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/')) || 'data';
                 const files = await GitHubAPI.listFiles(dataPath);

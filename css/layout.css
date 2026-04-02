@@ -12,6 +12,7 @@ body {
     color: var(--text-primary);
     background-color: var(--bg-secondary);
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 /* App Container */
@@ -19,6 +20,7 @@ body {
     display: flex;
     flex-direction: column;
     min-height: 100vh;
+    min-height: 100dvh;
 }
 
 /* Header */
@@ -376,6 +378,8 @@ body {
 /* Main Content */
 .app-content {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     max-width: 1200px;
     width: 100%;
     margin: 0 auto;
@@ -393,15 +397,15 @@ body {
 #workoutSection.content-section.active {
     display: flex;
     flex-direction: column;
+    flex: 1;
     min-height: 0;
 }
 
 
 .workout-design-section {
     width: 100%;
-    flex: 1 1 auto;
-    height: calc(100vh - 170px);
-    min-height: 560px;
+    flex: 1 1 0;
+    min-height: 0;
 }
 
 .workout-design-section.active {
@@ -633,8 +637,7 @@ body {
     }
 
     .workout-design-section {
-        height: calc(100vh - 140px);
-        min-height: 480px;
+        min-height: 0;
     }
 
     .section-header {

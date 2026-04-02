@@ -102,7 +102,7 @@ export const Workouts = {
 
         // Show/hide weight field and clear reps/weight based on exercise selection
         if (exerciseSelect) {
-            exerciseSelect.addEventListener('change', async () => {
+            exerciseSelect.addEventListener('change', () => {
                 const repsInput = document.getElementById('workoutReps');
                 const weightInput = document.getElementById('workoutWeight');
 
@@ -113,14 +113,12 @@ export const Workouts = {
 
                 const exerciseId = exerciseSelect.value;
                 if (!exerciseId) return;
-                try {
-                    const sessions = await Storage.getLastWorkoutSessionsForExercise(exerciseId, 1);
-                    const lastSet = sessions?.[0]?.sets?.[0];
-                    if (lastSet) {
-                        if (repsInput && lastSet.reps != null) repsInput.value = lastSet.reps;
-                        if (weightInput && lastSet.weight != null) weightInput.value = lastSet.weight;
-                    }
-                } catch (_) { /* silently ignore, fields remain empty */ }
+                const exercise = Storage.getExerciseById(exerciseId);
+                const lastSet = Array.isArray(exercise?.lastSets) ? exercise.lastSets[0] : null;
+                if (lastSet) {
+                    if (repsInput && lastSet.reps != null) repsInput.value = lastSet.reps;
+                    if (weightInput && lastSet.weight != null) weightInput.value = lastSet.weight;
+                }
             });
         }
 
@@ -511,7 +509,7 @@ export const Workouts = {
 
         if (context.mode === 'add') {
             const rowId = `row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-            const sets = await this.resolveTemplateLoadSets(selectedExerciseId, [], rowId);
+            const sets = this.resolveTemplateLoadSets(selectedExerciseId, [], rowId);
             this.collapseAllPlannedRowsExcept(rowId);
             this.plannedSession.rows.push({
                 id: rowId,
@@ -2118,7 +2116,7 @@ export const Workouts = {
             if (row.type === 'single') {
                 const rowId = `row-${stamp()}`;
                 const exerciseId = row.exerciseId || '';
-                const sets = await this.resolveTemplateLoadSets(exerciseId, row.sets, rowId);
+                const sets = this.resolveTemplateLoadSets(exerciseId, row.sets, rowId);
                 newRows.push({
                     id: rowId,
                     type: 'single',
@@ -2136,7 +2134,7 @@ export const Workouts = {
             for (const [idx, item] of (row.exercises || []).entries()) {
                 const itemId = `${blockId}-${String.fromCharCode(97 + idx)}`;
                 const exerciseId = item.exerciseId || '';
-                const sets = await this.resolveTemplateLoadSets(exerciseId, item.sets, itemId);
+                const sets = this.resolveTemplateLoadSets(exerciseId, item.sets, itemId);
                 exercises.push({
                     id: itemId,
                     exerciseId,
@@ -2184,46 +2182,40 @@ export const Workouts = {
         }));
     },
 
-    async resolveTemplateLoadSets(exerciseId, templateSets, baseId) {
+    resolveTemplateLoadSets(exerciseId, templateSets, baseId) {
         const fallbackSets = this.remapSets(templateSets, baseId);
 
         if (!exerciseId) {
             return fallbackSets;
         }
 
-        try {
-            const sessions = await Storage.getLastWorkoutSessionsForExercise(exerciseId, 1);
-            const latest = sessions?.[0];
-            const latestSets = Array.isArray(latest?.sets) ? latest.sets : [];
-            if (!latestSets.length) {
-                return fallbackSets;
-            }
-
-            const exercise = Storage.getExerciseById(exerciseId);
-            const requiresWeight = Boolean(exercise?.requiresWeight);
-
-            const fromHistory = latestSets
-                .slice(0, DEFAULT_PLANNER_SET_COUNT)
-                .map((setEntry, index) => ({
-                    id: `${baseId}-set-${index + 1}`,
-                    reps: setEntry?.reps ?? '',
-                    weight: requiresWeight ? (setEntry?.weight ?? '') : '',
-                    completed: false
-                }));
-
-            while (fromHistory.length < DEFAULT_PLANNER_SET_COUNT) {
-                fromHistory.push({
-                    id: `${baseId}-set-${fromHistory.length + 1}`,
-                    reps: '',
-                    weight: '',
-                    completed: false
-                });
-            }
-
-            return fromHistory;
-        } catch (error) {
+        const exercise = Storage.getExerciseById(exerciseId);
+        const lastSets = Array.isArray(exercise?.lastSets) ? exercise.lastSets : [];
+        if (!lastSets.length) {
             return fallbackSets;
         }
+
+        const requiresWeight = Boolean(exercise?.requiresWeight);
+
+        const fromHistory = lastSets
+            .slice(0, DEFAULT_PLANNER_SET_COUNT)
+            .map((setEntry, index) => ({
+                id: `${baseId}-set-${index + 1}`,
+                reps: setEntry?.reps ?? '',
+                weight: requiresWeight ? (setEntry?.weight ?? '') : '',
+                completed: false
+            }));
+
+        while (fromHistory.length < DEFAULT_PLANNER_SET_COUNT) {
+            fromHistory.push({
+                id: `${baseId}-set-${fromHistory.length + 1}`,
+                reps: '',
+                weight: '',
+                completed: false
+            });
+        }
+
+        return fromHistory;
     },
 
     updateWeightField() {

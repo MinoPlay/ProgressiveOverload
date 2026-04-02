@@ -1289,21 +1289,27 @@ function _mergeParentExercises(exercises) {
   // Always overwrite/add exercises from parent — parent data is authoritative
   let count = 0;
   exercises.forEach(ex => {
+    const lastSet = Array.isArray(ex.lastSets) && ex.lastSets.length ? ex.lastSets[0] : null;
+    const defaultReps = lastSet?.reps != null ? String(lastSet.reps) : '8';
+    const defaultWeight = ex.requiresWeight === false ? 'BW'
+        : (lastSet?.weight != null ? String(lastSet.weight) : '20');
     EXERCISE_META_BY_ID[ex.id] = {
       id: ex.id,
       name: ex.name,
       muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1),
       equipment: ex.equipmentType || 'barbell',
-      reps: '8',
-      weight: ex.requiresWeight === false ? 'BW' : '20',
-      bodyweight: ex.requiresWeight === false
+      reps: defaultReps,
+      weight: defaultWeight,
+      bodyweight: ex.requiresWeight === false,
+      lastSets: ex.lastSets || null
     };
     EXERCISE_PRESETS[ex.name] = {
       muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1),
       equipment: ex.equipmentType || 'barbell',
-      reps: '8',
-      weight: ex.requiresWeight === false ? 'BW' : '20',
-      bodyweight: ex.requiresWeight === false
+      reps: defaultReps,
+      weight: defaultWeight,
+      bodyweight: ex.requiresWeight === false,
+      lastSets: ex.lastSets || null
     };
     count++;
   });
@@ -1323,11 +1329,7 @@ function _mergeParentTemplates(parentTemplates) {
         const ex = _parentExerciseMap[row.exerciseId];
         if (!ex) return;
         const isBodyweight = ex.requiresWeight === false;
-        const sets = (row.sets || []).map(s => ({
-          reps: parseInt(s.reps, 10) || 8,
-          weight: isBodyweight ? 'BW' : (parseFloat(s.weight) || 20)
-        }));
-        if (!sets.length) sets.push({ reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 });
+        const sets = _resolveTemplateSets(row.sets, ex, isBodyweight);
         rows.push({
           exerciseId: ex.id,
           name: ex.name,
@@ -1340,11 +1342,7 @@ function _mergeParentTemplates(parentTemplates) {
           const ex = _parentExerciseMap[item.exerciseId];
           if (!ex) return;
           const isBodyweight = ex.requiresWeight === false;
-          const sets = (item.sets || []).map(s => ({
-            reps: parseInt(s.reps, 10) || 8,
-            weight: isBodyweight ? 'BW' : (parseFloat(s.weight) || 20)
-          }));
-          if (!sets.length) sets.push({ reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 }, { reps: 8, weight: isBodyweight ? 'BW' : 20 });
+          const sets = _resolveTemplateSets(item.sets, ex, isBodyweight);
           supersetItems.push({ exerciseId: ex.id, name: ex.name, muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1), sets });
         });
         supersetItems.forEach((item, i) => {
@@ -1360,6 +1358,24 @@ function _mergeParentTemplates(parentTemplates) {
   });
   _rebuildTemplateMenu();
   console.log(`[Session Board] Received ${parentTemplates.length} templates from parent, added ${added} new`);
+}
+
+function _resolveTemplateSets(rawSets, exercise, isBodyweight) {
+  const lastSets = Array.isArray(exercise.lastSets) ? exercise.lastSets : [];
+  if (lastSets.length) {
+    return lastSets.map(s => ({
+      reps: s.reps ?? 8,
+      weight: isBodyweight ? 'BW' : (s.weight ?? 20)
+    }));
+  }
+  const sets = (rawSets || []).map(s => ({
+    reps: parseInt(s.reps, 10) || 8,
+    weight: isBodyweight ? 'BW' : (parseFloat(s.weight) || 20)
+  }));
+  if (!sets.length) {
+    for (let i = 0; i < 3; i++) sets.push({ reps: 8, weight: isBodyweight ? 'BW' : 20 });
+  }
+  return sets;
 }
 
 function _rebuildTemplateMenu() {
@@ -1615,14 +1631,17 @@ function getExerciseMetaById(exerciseId) {
   if (EXERCISE_META_BY_ID[exerciseId]) return EXERCISE_META_BY_ID[exerciseId];
   const parent = _parentExerciseMap[exerciseId];
   if (parent) {
+    const lastSet = Array.isArray(parent.lastSets) && parent.lastSets.length ? parent.lastSets[0] : null;
     return {
       id: parent.id,
       name: parent.name,
       muscle: (parent.muscle || 'other').charAt(0).toUpperCase() + (parent.muscle || 'other').slice(1),
       equipment: parent.equipmentType || 'barbell',
-      reps: '8',
-      weight: parent.requiresWeight === false ? 'BW' : '20',
-      bodyweight: parent.requiresWeight === false
+      reps: lastSet?.reps != null ? String(lastSet.reps) : '8',
+      weight: parent.requiresWeight === false ? 'BW'
+          : (lastSet?.weight != null ? String(lastSet.weight) : '20'),
+      bodyweight: parent.requiresWeight === false,
+      lastSets: parent.lastSets || null
     };
   }
   return null;

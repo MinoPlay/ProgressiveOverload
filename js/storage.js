@@ -256,13 +256,15 @@ export const Storage = {
         const isSameMonth = workoutDate.getMonth() === now.getMonth() &&
             workoutDate.getFullYear() === now.getFullYear();
 
+        let newWorkout;
+
         // If workout is for current month, use cached data
         if (isSameMonth) {
             // Calculate sequence number for this date
             const sameDateWorkouts = this.currentMonthWorkouts.filter(w => w.date === workout.date);
             const sequence = sameDateWorkouts.length + 1;
 
-            const newWorkout = this.buildWorkoutRecord(workout, sequence);
+            newWorkout = this.buildWorkoutRecord(workout, sequence);
 
             this.currentMonthWorkouts.push(newWorkout);
 
@@ -270,8 +272,6 @@ export const Storage = {
             const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha);
             this.currentMonthSha = result.content.sha;
             this.generateAndSaveStatsSummary();
-
-            return newWorkout;
         } else {
             // Load different month, add workout, save
             const monthData = await GitHubAPI.getWorkouts(workoutDate);
@@ -280,14 +280,19 @@ export const Storage = {
             const sameDateWorkouts = monthData.workouts.filter(w => w.date === workout.date);
             const sequence = sameDateWorkouts.length + 1;
 
-            const newWorkout = this.buildWorkoutRecord(workout, sequence);
+            newWorkout = this.buildWorkoutRecord(workout, sequence);
 
             monthData.workouts.push(newWorkout);
             await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
             this.generateAndSaveStatsSummary();
-
-            return newWorkout;
         }
+
+        // Gather all sets for this exercise on this date to build complete lastSets
+        const allSetsForExercise = this.currentMonthWorkouts
+            .filter(w => w.exerciseId === newWorkout.exerciseId && w.date === newWorkout.date);
+        await this._syncExerciseLastSets(allSetsForExercise);
+
+        return newWorkout;
     },
 
     /**
@@ -319,28 +324,30 @@ export const Storage = {
         const isSameMonth = workoutDate.getMonth() === now.getMonth() &&
             workoutDate.getFullYear() === now.getFullYear();
 
+        let newWorkouts;
+
         if (isSameMonth) {
             const sameDateWorkouts = this.currentMonthWorkouts.filter(w => w.date === targetDate);
             const startSequence = sameDateWorkouts.length + 1;
-            const newWorkouts = workouts.map((entry, index) => this.buildWorkoutRecord(entry, startSequence + index));
+            newWorkouts = workouts.map((entry, index) => this.buildWorkoutRecord(entry, startSequence + index));
 
             this.currentMonthWorkouts.push(...newWorkouts);
 
             const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha);
             this.currentMonthSha = result.content.sha;
             this.generateAndSaveStatsSummary();
-            return newWorkouts;
+        } else {
+            const monthData = await GitHubAPI.getWorkouts(workoutDate);
+            const sameDateWorkouts = monthData.workouts.filter(w => w.date === targetDate);
+            const startSequence = sameDateWorkouts.length + 1;
+            newWorkouts = workouts.map((entry, index) => this.buildWorkoutRecord(entry, startSequence + index));
+
+            monthData.workouts.push(...newWorkouts);
+            await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
+            this.generateAndSaveStatsSummary();
         }
 
-        const monthData = await GitHubAPI.getWorkouts(workoutDate);
-        const sameDateWorkouts = monthData.workouts.filter(w => w.date === targetDate);
-        const startSequence = sameDateWorkouts.length + 1;
-        const newWorkouts = workouts.map((entry, index) => this.buildWorkoutRecord(entry, startSequence + index));
-
-        monthData.workouts.push(...newWorkouts);
-        await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
-        this.generateAndSaveStatsSummary();
-
+        await this._syncExerciseLastSets(newWorkouts);
         return newWorkouts;
     },
 
@@ -372,6 +379,46 @@ export const Storage = {
         });
 
         return record;
+    },
+
+    /**
+     * Update exercise lastSets/lastDate after workouts are saved.
+     * Groups saved workouts by exercise, compares dates, persists if changed.
+     * @param {array} savedWorkouts - Workout records just saved
+     * @returns {Promise<void>}
+     */
+    async _syncExerciseLastSets(savedWorkouts) {
+        if (!savedWorkouts.length) return;
+
+        const byExercise = {};
+        savedWorkouts.forEach(w => {
+            if (!byExercise[w.exerciseId]) byExercise[w.exerciseId] = [];
+            byExercise[w.exerciseId].push(w);
+        });
+
+        let changed = false;
+        for (const [exerciseId, sets] of Object.entries(byExercise)) {
+            const exercise = this.exercises.find(ex => ex.id === exerciseId);
+            if (!exercise) continue;
+
+            const date = sets[0].date;
+            if (exercise.lastDate && date < exercise.lastDate) continue;
+
+            const newLastSets = sets
+                .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
+                .map(s => ({ reps: s.reps, weight: s.weight ?? null }));
+
+            if (exercise.lastDate === date && JSON.stringify(exercise.lastSets) === JSON.stringify(newLastSets)) continue;
+
+            exercise.lastSets = newLastSets;
+            exercise.lastDate = date;
+            changed = true;
+        }
+
+        if (changed) {
+            const result = await GitHubAPI.saveExercises(this.exercises, this.exercisesSha);
+            this.exercisesSha = result.content.sha;
+        }
     },
 
     /**

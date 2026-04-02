@@ -85,6 +85,32 @@ export const DevStorage = {
     },
 
     /**
+     * Update exercise lastSets/lastDate from saved workouts (dev mode)
+     */
+    _syncExerciseLastSets(savedWorkouts) {
+        if (!savedWorkouts.length) return;
+
+        const byExercise = {};
+        savedWorkouts.forEach(w => {
+            if (!byExercise[w.exerciseId]) byExercise[w.exerciseId] = [];
+            byExercise[w.exerciseId].push(w);
+        });
+
+        for (const [exerciseId, sets] of Object.entries(byExercise)) {
+            const exercise = this.exercises.find(ex => ex.id === exerciseId);
+            if (!exercise) continue;
+
+            const date = sets[0].date;
+            if (exercise.lastDate && date < exercise.lastDate) continue;
+
+            exercise.lastSets = sets
+                .sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
+                .map(s => ({ reps: s.reps, weight: s.weight ?? null }));
+            exercise.lastDate = date;
+        }
+    },
+
+    /**
      * Get all exercises
      * @returns {Array}
      */
@@ -179,6 +205,12 @@ export const DevStorage = {
 
         this.currentMonthWorkouts.push(workout);
         await this.saveToFile();
+
+        const allSetsForExercise = this.currentMonthWorkouts
+            .filter(w => w.exerciseId === workout.exerciseId && w.date === workout.date);
+        this._syncExerciseLastSets(allSetsForExercise);
+        await this.saveToFile();
+
         return workout;
     },
 
@@ -211,6 +243,7 @@ export const DevStorage = {
         }));
 
         this.currentMonthWorkouts.push(...newWorkouts);
+        this._syncExerciseLastSets(newWorkouts);
         await this.saveToFile();
         return newWorkouts;
     },

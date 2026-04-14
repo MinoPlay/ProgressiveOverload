@@ -126,19 +126,6 @@
     --surface-tier-3-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-/* Scrollbar in dark mode */
-[data-theme="dark"] ::-webkit-scrollbar-track {
-    background: #18182a;
-}
-
-[data-theme="dark"] ::-webkit-scrollbar-thumb {
-    background: #44445a;
-}
-
-[data-theme="dark"] ::-webkit-scrollbar-thumb:hover {
-    background: #66667a;
-}
-
 /* Dropdown panel (hardcoded #fff in layout.css) */
 [data-theme="dark"] .dropdown-content {
     background: #252538;
@@ -473,26 +460,18 @@ canvas {
 /* Smooth Scrolling */
 html {
     height: 100%;
+    height: 100dvh;
     scroll-behavior: smooth;
 }
 
-/* Custom Scrollbar */
+/* Hidden scrollbar (keep scrollable) */
 ::-webkit-scrollbar {
-    width: 10px;
-    height: 10px;
+    display: none;
 }
 
-::-webkit-scrollbar-track {
-    background: var(--bg-secondary);
-}
-
-::-webkit-scrollbar-thumb {
-    background: #888;
-    border-radius: var(--radius-sm);
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #555;
+* {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
 
 /* Selection Color */
@@ -694,11 +673,6 @@ html {
     --surface-tier-3-border: rgba(0, 230, 118, 0.1);
     --surface-tier-3-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
 }
-
-/* Scrollbar in green mode */
-[data-theme="green"] ::-webkit-scrollbar-track { background: #060d06; }
-[data-theme="green"] ::-webkit-scrollbar-thumb { background: #0e3312; }
-[data-theme="green"] ::-webkit-scrollbar-thumb:hover { background: #155220; }
 
 /* Dropdown panel */
 [data-theme="green"] .dropdown-content {

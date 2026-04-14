@@ -114,7 +114,7 @@ const App = {
         }
 
         // Show app
-        document.getElementById('app').style.display = 'block';
+        document.getElementById('app').style.display = '';
 
         // Initialize theme toggle
         Theme.init();
@@ -182,7 +182,7 @@ const App = {
             showLoading(false);
 
             // Show app anyway so user isn't stuck
-            document.getElementById('app').style.display = 'block';
+            document.getElementById('app').style.display = '';
         }
     },
 

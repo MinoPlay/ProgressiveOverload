@@ -5,8 +5,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const PORT = 3000;
-const DEV_DATA_FILE = path.join(__dirname, 'data', 'dev-data.json');
+const PORT = 3001;
+const DEV_DATA_FILE = path.join(__dirname, 'progressive-overload', 'dev-data.json');
 
 const mimeTypes = {
     '.html': 'text/html',
@@ -117,7 +117,7 @@ server.listen(PORT, () => {
     console.log(`📝 Dev data: ${DEV_DATA_FILE}`);
     console.log('');
     console.log('📝 Make sure devMode is set to true in js/config.js');
-    console.log('💾 Changes will be saved to data/dev-data.json');
+    console.log('💾 Changes will be saved to progressive-overload/dev-data.json');
     console.log('');
     console.log('Press Ctrl+C to stop the server');
 });

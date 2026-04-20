@@ -74,7 +74,7 @@ export const GitHubAPI = {
 
     /**
      * Get file from repository
-     * @param {string} path - File path in repository (e.g., 'data/exercises.json')
+     * @param {string} path - File path in repository (e.g., 'progressive-overload/exercises.json')
      * @param {boolean} silent - If true, don't log 404 warnings
      * @returns {Promise<{content: object, sha: string}|null>} File content and SHA
      */
@@ -221,7 +221,7 @@ export const GitHubAPI = {
     /**
      * Get workout file path for a given date
      * @param {Date} date - Date object
-     * @returns {string} File path (e.g., 'data/workouts-2026-01.json')
+     * @returns {string} File path (e.g., 'progressive-overload/workouts-2026-01.json')
      */
     getWorkoutFilePath(date) {
         const year = date.getFullYear();

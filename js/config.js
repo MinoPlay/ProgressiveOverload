@@ -29,10 +29,10 @@ export const CONFIG = {
 
     // File Paths
     paths: {
-        exercises: 'data/exercises.json',
-        workoutsPrefix: 'data/workouts-',
-        sessionTemplates: 'data/session-templates.json',
-        statsSummary: 'data/stats-summary.json'
+        exercises: 'progressive-overload/exercises.json',
+        workoutsPrefix: 'progressive-overload/workouts-',
+        sessionTemplates: 'progressive-overload/session-templates.json',
+        statsSummary: 'progressive-overload/stats-summary.json'
     },
 
     // UI Limits

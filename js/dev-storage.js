@@ -2,7 +2,7 @@
 // Uses local dev-data.json file instead of GitHub API
 
 const DEV_API_URL = 'http://localhost:3000/api/dev-data';
-const DEV_DATA_STATIC_URL = 'data/dev-data.json';
+const DEV_DATA_STATIC_URL = 'progressive-overload/dev-data.json';
 const IS_LOCALHOST = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:';
 
 export const DevStorage = {
@@ -38,11 +38,11 @@ export const DevStorage = {
             const now = new Date();
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
-            this.currentMonthPath = `data/workouts-${year}-${month}.json`;
+            this.currentMonthPath = `progressive-overload/workouts-${year}-${month}.json`;
 
             console.log(`📦 Loaded ${this.exercises.length} exercises`);
             console.log(`📦 Loaded ${this.currentMonthWorkouts.length} workouts`);
-            console.log('💾 Changes will be saved to data/dev-data.json');
+            console.log('💾 Changes will be saved to progressive-overload/dev-data.json');
         } catch (error) {
             console.error('❌ Failed to load dev data:', error);
             throw new Error('Could not load demo data.');

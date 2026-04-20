@@ -85,7 +85,7 @@ A premium, modern web application designed to help you track your strength train
 - `index.html`: Main application entry point.
 - `css/`: Styling organized by layout and components.
 - `js/`: Modular JavaScript logic (storage, charts, UI, API).
-- `data/`: Local development data and schemas.
+- `progressive-overload/`: Local development data and schemas.
 - `assets/`: Icons and static assets.
 
 ## 📄 License

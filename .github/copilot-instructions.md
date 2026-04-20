@@ -46,7 +46,7 @@ git push
 ```
 js/          → Browser ES modules (app.js is the entry point)
 css/         → Stylesheets (styles.css imports layout.css and components.css)
-data/        → Static JSON data (exercises list, dev seed data)
+progressive-overload/ → Static JSON data (exercises list, dev seed data)
 assets/      → Static assets
 server.js    → Node.js dev server (CommonJS, port 3000)
 ```

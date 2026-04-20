@@ -6,7 +6,7 @@ Usage:
     python backfill-last-sets.py [data_dir]
 
     data_dir  Path to folder containing exercises.json and workouts-YYYY-MM.json files.
-              Defaults to ./data
+              Defaults to ./progressive-overload
 """
 
 import json
@@ -26,7 +26,7 @@ def save_json(path: Path, data: dict) -> None:
 
 
 def main():
-    data_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).parent / "data"
+    data_dir = Path(sys.argv[1]) if len(sys.argv) > 1 else Path(__file__).parent / "progressive-overload"
 
     exercises_path = data_dir / "exercises.json"
     if not exercises_path.exists():

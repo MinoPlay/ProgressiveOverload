@@ -480,6 +480,7 @@ const IframeBridge = {
                     .then(() => {
                         event.source.postMessage({ type: 'po-workouts-saved' }, '*');
                         this.broadcastWorkouts();
+                        window.dispatchEvent(new CustomEvent('workoutsUpdated'));
                     })
                     .catch(err => {
                         event.source.postMessage({ type: 'po-save-error', error: err.message }, '*');

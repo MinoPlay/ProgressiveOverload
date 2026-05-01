@@ -103,16 +103,6 @@ const App = {
         // Load configuration first
         loadConfig();
 
-        // In dev mode, skip authentication
-        if (CONFIG.devMode) {
-            console.log('🧪 Running in DEVELOPMENT MODE');
-            console.log('📝 Using local dummy data - changes will not be saved');
-        } else if (!isGitHubConfigured()) {
-            // No GitHub config — activate guest/demo mode using dev-data
-            CONFIG.devMode = true;
-            console.log('👤 No GitHub config found — running in guest demo mode');
-        }
-
         // Show app
         document.getElementById('app').style.display = '';
 
@@ -140,13 +130,16 @@ const App = {
             // even if GitHub initialization fails (e.g., expired token)
             this.initNavigation();
 
-            console.log('Initializing storage...');
-
-            // In dev mode, replace Storage methods with DevStorage
-            if (CONFIG.devMode) {
-                const { DevStorage } = await import('./dev-storage.js');
-                Object.assign(Storage, DevStorage);
+            if (!isGitHubConfigured()) {
+                // No GitHub config — open config panel so user can enter credentials
+                console.warn('⚠️ GitHub not configured — please set up your token and repository.');
+                showLoading(false);
+                this._openConfigPanel();
+                showToast('Please configure your GitHub token and repository to get started.', 'info');
+                return;
             }
+
+            console.log('Initializing storage...');
 
             // Initialize storage
             await Storage.initialize();
@@ -183,6 +176,16 @@ const App = {
 
             // Show app anyway so user isn't stuck
             document.getElementById('app').style.display = '';
+        }
+    },
+
+    /** Open the config/nav dropdown so the user can enter GitHub credentials. */
+    _openConfigPanel() {
+        const trigger = document.getElementById('configNavTrigger');
+        const content = document.getElementById('configNavContent');
+        if (trigger && content) {
+            trigger.setAttribute('aria-expanded', 'true');
+            content.style.display = 'block';
         }
     },
 

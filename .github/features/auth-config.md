@@ -1,7 +1,7 @@
 # Feature: Authentication & Configuration
 
 ## Purpose
-Manages the GitHub Personal Access Token (PAT) and repository settings (owner/repo). Supports two modes: **GitHub** (remote storage) and **Local** (demo/dev). Configuration is stored in `localStorage` and surfaced via the nav config dropdown.
+Manages the GitHub Personal Access Token (PAT) and repository settings (owner/repo). Configuration is stored in `localStorage` and surfaced via the nav config dropdown. GitHub is always required — if not configured, the app opens the config panel automatically.
 
 ## Key Files
 - `js/auth.js` — `Auth` singleton (token CRUD)
@@ -19,7 +19,6 @@ Manages the GitHub Personal Access Token (PAT) and repository settings (owner/re
 
 ## `CONFIG` Constants (read-only at runtime)
 ```js
-CONFIG.devMode          // true on localhost / file: protocol or no GitHub config
 CONFIG.github           // { apiUrl, owner, repo, branch }
 CONFIG.storage.authKey  // localStorage key for legacy token storage ('github_pat')
 CONFIG.paths            // file paths for exercises, workouts, templates, stats
@@ -46,11 +45,11 @@ CONFIG.defaultExercises // seed exercises for empty repos
 ## Integration Points
 - `GitHubAPI.getHeaders()` calls `Auth.getToken()` for every request
 - `GitHubAPI.getRepoInfo()` calls `getConfig()` to read owner/repo
-- `App.init()` calls `loadConfig()` then checks `isGitHubConfigured()` to decide dev/guest mode
+- `App.init()` calls `loadConfig()` then checks `isGitHubConfigured()` — opens config panel if not configured
 - Config form lives in `index.html` inside the `#configNavContent` dropdown
 
 ## Rules & Constraints
-- `CONFIG` is a module-level constant — do **not** mutate it at runtime (exception: `CONFIG.devMode` is set to `true` in `app.js` when guest mode is activated).
+- `CONFIG` is a module-level constant — do **not** mutate it at runtime.
 - `getConfig()` always returns a merged copy — mutating the returned object has no effect.
 - `window.saveConfig` and `window.setMode` are global functions called from inline HTML `onclick` attributes — do not rename them.
 - Token is never logged or included in error messages.

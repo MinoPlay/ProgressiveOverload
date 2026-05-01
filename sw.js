@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v51';
+const CACHE_VERSION = 'v53';
 const STATIC_CACHE  = `po-static-${CACHE_VERSION}`;
 const CDN_CACHE     = `po-cdn-${CACHE_VERSION}`;
 
@@ -16,7 +16,6 @@ const STATIC_SHELL = [
   './js/config.js',
   './js/storage.js',
   './js/github-api.js',
-  './js/dev-storage.js',
   './js/exercises.js',
   './js/workouts.js',
   './js/templates.js',

@@ -6,7 +6,6 @@ const fs = require('fs');
 const path = require('path');
 
 const PORT = 3001;
-const DEV_DATA_FILE = path.join(__dirname, 'progressive-overload', 'dev-data.json');
 
 const mimeTypes = {
     '.html': 'text/html',
@@ -22,55 +21,6 @@ const mimeTypes = {
 
 const server = http.createServer((req, res) => {
     console.log(`${req.method} ${req.url}`);
-
-    // API endpoint to get dev data
-    if (req.url === '/api/dev-data' && req.method === 'GET') {
-        fs.readFile(DEV_DATA_FILE, 'utf8', (err, data) => {
-            if (err) {
-                res.writeHead(500, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Failed to read dev data' }));
-                return;
-            }
-            res.writeHead(200, { 
-                'Content-Type': 'application/json',
-                'Access-Control-Allow-Origin': '*'
-            });
-            res.end(data);
-        });
-        return;
-    }
-
-    // API endpoint to save dev data
-    if (req.url === '/api/dev-data' && req.method === 'POST') {
-        let body = '';
-        req.on('data', chunk => {
-            body += chunk.toString();
-        });
-        req.on('end', () => {
-            try {
-                // Validate JSON
-                const data = JSON.parse(body);
-                
-                // Write to file with pretty formatting
-                fs.writeFile(DEV_DATA_FILE, JSON.stringify(data, null, 2), 'utf8', (err) => {
-                    if (err) {
-                        res.writeHead(500, { 'Content-Type': 'application/json' });
-                        res.end(JSON.stringify({ error: 'Failed to save dev data' }));
-                        return;
-                    }
-                    res.writeHead(200, { 
-                        'Content-Type': 'application/json',
-                        'Access-Control-Allow-Origin': '*'
-                    });
-                    res.end(JSON.stringify({ success: true }));
-                });
-            } catch (error) {
-                res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Invalid JSON' }));
-            }
-        });
-        return;
-    }
 
     // Handle OPTIONS for CORS
     if (req.method === 'OPTIONS') {
@@ -114,10 +64,8 @@ server.listen(PORT, () => {
     console.log('╚════════════════════════════════════════╝');
     console.log('');
     console.log(`🚀 Server running at http://localhost:${PORT}/`);
-    console.log(`📝 Dev data: ${DEV_DATA_FILE}`);
     console.log('');
-    console.log('📝 Make sure devMode is set to true in js/config.js');
-    console.log('💾 Changes will be saved to progressive-overload/dev-data.json');
+    console.log('Configure your GitHub token via the settings panel in the app.');
     console.log('');
     console.log('Press Ctrl+C to stop the server');
 });

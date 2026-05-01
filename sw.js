@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v54';
+const CACHE_VERSION = 'v55';
 const STATIC_CACHE  = `po-static-${CACHE_VERSION}`;
 const CDN_CACHE     = `po-cdn-${CACHE_VERSION}`;
 
@@ -71,18 +71,13 @@ self.addEventListener('fetch', event => {
     return; // fall through to browser default
   }
 
-  // 2. Local dev API — network only
-  if (url.pathname.endsWith('/api/') || url.pathname.includes('/api/')) {
-    return;
-  }
-
-  // 3. CDN resources — cache-first, populate on miss
+  // 2. CDN resources — cache-first, populate on miss
   if (CDN_ORIGINS.some(origin => url.origin === origin)) {
     event.respondWith(cacheFirst(request, CDN_CACHE));
     return;
   }
 
-  // 4. Local static assets — cache-first, populate on miss
+  // 3. Local static assets — cache-first, populate on miss
   if (url.origin === self.location.origin) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
   }

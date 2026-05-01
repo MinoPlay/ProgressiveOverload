@@ -6,7 +6,7 @@ Reference for all non-UI, non-JS-module files: data files, dev server, service w
 
 ## Data Files (`progressive-overload/`)
 
-All data files live in the `progressive-overload/` directory of the user's GitHub repository. They are managed exclusively through `js/storage.js` (business logic) and `js/github-api.js` (HTTP layer). In dev mode, `dev-data.json` is used instead and is served/saved by the local `server.js`.
+All data files live in the `progressive-overload/` directory of the user's GitHub repository. They are managed exclusively through `js/storage.js` (business logic) and `js/github-api.js` (HTTP layer).
 
 ### File Overview
 
@@ -16,7 +16,6 @@ All data files live in the `progressive-overload/` directory of the user's GitHu
 | `workouts-YYYY-MM.json` | `{ workouts: WorkoutRecord[] }` | All workout records for one calendar month |
 | `session-templates.json` | `{ templates: SessionTemplate[] }` | Saved session templates |
 | `stats-summary.json` | Aggregated stats object | Pre-computed stats cache |
-| `dev-data.json` | Same shape as `exercises.json` | Local dev-mode seed / working data |
 
 ---
 
@@ -100,35 +99,22 @@ All data files live in the `progressive-overload/` directory of the user's GitHu
 
 ---
 
-### `dev-data.json`
-
-**Purpose:** Local development seed/working data. Used only when the app runs in dev mode (served by `server.js`). Mirrors the shape of `exercises.json`.
-
-| Event | Action |
-|---|---|
-| Repo cloned / initial setup | Ships with pre-seeded exercises (committed to the repo) |
-| App running in dev mode saves exercises | `POST /api/dev-data` writes the updated JSON back to disk |
-| App running in dev mode reads exercises | `GET /api/dev-data` reads the current file from disk |
-
----
-
 ## Dev Server
 
 ### `server.js`
 
-**Purpose:** Minimal Node.js HTTP server for local development. Serves static files and provides a two-route API so the app can persist data locally without a GitHub token.
+**Purpose:** Minimal Node.js HTTP server for local development. Serves static files from the project root.
 
 **Port:** `3001`
 
-**API routes:**
+**Routes:**
 
 | Method | Path | Description |
 |---|---|---|
-| `GET` | `/api/dev-data` | Reads `progressive-overload/dev-data.json` and returns it as JSON |
-| `POST` | `/api/dev-data` | Validates the request body as JSON, then writes it to `progressive-overload/dev-data.json` (pretty-printed, 2-space indent) |
 | `OPTIONS` | `*` | Returns CORS headers to allow cross-origin requests from the browser |
+| Any | `*` | Serves the matching static file; falls back to 404 for unknown paths |
 
-All other paths are served as static files from the project root. Unknown paths return 404; server errors return 500.
+All paths are served as static files from the project root. Unknown paths return 404; server errors return 500.
 
 **When to run:** Only during local development. Not needed in production (the app talks directly to the GitHub API).
 
@@ -160,7 +146,6 @@ All other paths are served as static files from the project root. Unknown paths 
 | Request origin | Strategy |
 |---|---|
 | `api.github.com` | Network-only — never cached; always fresh |
-| `/api/*` (local dev API) | Network-only — bypassed so `server.js` always handles it |
 | CDN origins (`unpkg.com`, `cdn.jsdelivr.net`) | Cache-first; populate cache on miss |
 | Same origin (local static assets) | Cache-first; populate cache on miss; offline fallback to `index.html` for navigation requests |
 

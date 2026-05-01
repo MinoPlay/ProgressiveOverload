@@ -1,12 +1,11 @@
 # Feature: Storage & GitHub Sync
 
 ## Purpose
-Central data layer. In production it persists exercises, workouts, and templates as JSON files in a user-configured GitHub repository via the REST API. In dev/demo mode `DevStorage` replaces `Storage` methods and reads from `progressive-overload/dev-data.json`.
+Central data layer. Persists exercises, workouts, and templates as JSON files in a user-configured GitHub repository via the REST API.
 
 ## Key Files
 - `js/storage.js` — `Storage` singleton (public API)
 - `js/github-api.js` — `GitHubAPI` singleton (HTTP layer)
-- `js/dev-storage.js` — `DevStorage` singleton (dev/demo override)
 - `progressive-overload/exercises.json`
 - `progressive-overload/workouts-YYYY-MM.json` (one file per month)
 - `progressive-overload/session-templates.json`
@@ -59,12 +58,6 @@ Central data layer. In production it persists exercises, workouts, and templates
 | `saveWorkouts(date, workouts, sha)` | PUT monthly workouts file |
 | `listFiles(path)` | List directory contents; cached per session |
 | `_invalidateCache(filePath)` | Clear file + parent-dir cache entries after write |
-
-## Dev Mode Behaviour
-- `CONFIG.devMode` is `true` on localhost/file protocol or when GitHub is not configured.
-- `DevStorage` methods replace `Storage` methods via `Object.assign(Storage, DevStorage)` in `app.js`.
-- On localhost, writes go to `progressive-overload/dev-data.json` via `POST /api/dev-data` (served by `server.js`).
-- On a deployed static host (guest mode), writes are no-ops with a console log.
 
 ## Rules & Constraints
 - **Always pass the current SHA** when saving a file that already exists — GitHub will reject the PUT with 409 if the SHA is wrong or missing.

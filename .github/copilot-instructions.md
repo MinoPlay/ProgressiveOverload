@@ -50,3 +50,19 @@ progressive-overload/ → Static JSON data (exercises list, dev seed data)
 assets/      → Static assets
 server.js    → Node.js dev server (CommonJS, port 3000)
 ```
+
+## Feature Context Files
+
+Detailed context for each feature lives in `.github/features/`. Reference the relevant file(s) when working on that area of the codebase.
+
+| File | When to reference |
+|---|---|
+| [`features/workout-logger.md`](features/workout-logger.md) | Anything in `workout.html` or `js/workouts.js` — exercise cards, set rows, planner session, iframe submit flow |
+| [`features/exercise-management.md`](features/exercise-management.md) | Anything in `js/exercises.js` — CRUD, equipment types, muscle groups, toggle-chip filters |
+| [`features/session-templates.md`](features/session-templates.md) | Anything in `js/templates.js` — template editor, loading templates into the planner |
+| [`features/workout-history.md`](features/workout-history.md) | Anything in `js/history.js` — history rendering, week grouping, day modal |
+| [`features/statistics-charts.md`](features/statistics-charts.md) | Anything in `js/charts.js` or `js/chart-helpers.js` — Chart.js rendering, 1RM, PRs, aggregation |
+| [`features/storage-github-sync.md`](features/storage-github-sync.md) | Anything in `js/storage.js` or `js/github-api.js` — data persistence, SHA management, dev mode |
+| [`features/auth-config.md`](features/auth-config.md) | Anything in `js/auth.js` or `js/config.js` — PAT handling, CONFIG constants, mode switching |
+| [`features/theme-system.md`](features/theme-system.md) | Theme toggle, Chart.js color integration, `data-theme` attribute, `themeChanged` event |
+| [`features/iframe-bridge.md`](features/iframe-bridge.md) | `postMessage` communication between `index.html` and the `workout.html` iframe |

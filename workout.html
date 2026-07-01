@@ -291,7 +291,26 @@ body {
   background: var(--accent);
   border-radius: 2px 2px 0 0;
   opacity: .85;
+  cursor: pointer;
 }
+.volume-tooltip {
+  position: fixed;
+  z-index: 1000;
+  background: var(--surface2, #1f2937);
+  color: var(--text1, #fff);
+  border: 1px solid var(--border, rgba(255,255,255,.15));
+  border-radius: 6px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  text-align: center;
+  pointer-events: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,.3);
+  white-space: nowrap;
+  transform: translate(-50%, -100%);
+}
+.volume-tooltip-date { color: var(--text3, #9ca3af); }
+.volume-tooltip-vol { font-weight: 700; }
 .completed-pill {
   font-size: 10px;
   font-weight: 700;
@@ -1489,15 +1508,20 @@ function renderVolumeBars(card) {
   }
   const max = Math.max(...series.map(s => s.volume)) || 1;
   container.innerHTML = '';
-  series.forEach(s => {
+  series.forEach((s, i) => {
     const bar = document.createElement('div');
     bar.className = 'volume-bar';
     bar.style.height = Math.max(8, Math.round((s.volume / max) * 100)) + '%';
-    const w = String(s.weight).toUpperCase();
-    const label = w === 'BW' || s.weight == null || s.weight === ''
-      ? `${s.reps} reps`
-      : `${s.reps}×${s.weight} kg = ${s.volume}`;
-    bar.title = label;
+    const prev = i > 0 ? series[i - 1].volume : 0;
+    bar.style.background = s.volume > prev
+      ? 'var(--success, #22c55e)'
+      : s.volume < prev
+        ? 'var(--danger, #ef4444)'
+        : 'var(--warning, #eab308)';
+    bar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      showVolumeTooltip(bar, s.date, s.volume);
+    });
     container.appendChild(bar);
   });
 }
@@ -1505,6 +1529,33 @@ function renderVolumeBars(card) {
 function refreshAllVolumeBars() {
   document.querySelectorAll('.exercise-card').forEach(card => renderVolumeBars(card));
 }
+
+let _volumeTooltipEl = null;
+function hideVolumeTooltip() {
+  if (_volumeTooltipEl) {
+    _volumeTooltipEl.remove();
+    _volumeTooltipEl = null;
+  }
+}
+function showVolumeTooltip(bar, date, volume) {
+  hideVolumeTooltip();
+  const tip = document.createElement('div');
+  tip.className = 'volume-tooltip';
+  const dateLine = document.createElement('div');
+  dateLine.className = 'volume-tooltip-date';
+  dateLine.textContent = date;
+  const volLine = document.createElement('div');
+  volLine.className = 'volume-tooltip-vol';
+  volLine.textContent = `Total volume: ${volume}`;
+  tip.appendChild(dateLine);
+  tip.appendChild(volLine);
+  document.body.appendChild(tip);
+  const rect = bar.getBoundingClientRect();
+  tip.style.left = (rect.left + rect.width / 2) + 'px';
+  tip.style.top = (rect.top - 6) + 'px';
+  _volumeTooltipEl = tip;
+}
+document.addEventListener('click', hideVolumeTooltip);
 
 function _mergeParentWorkouts(workouts) {
   if (Array.isArray(workouts) && workouts.length) {
@@ -1576,21 +1627,23 @@ function _mergeParentWorkouts(workouts) {
           .map(s => ({ reps: s.reps, weight: s.weight }))
       }));
 
-    // Build the volume series (last up to 15 records, oldest → newest) for the in-card bars
-    const chronological = entries.slice().sort((a, b) => {
-      const d = new Date(a.date) - new Date(b.date);
-      return d !== 0 ? d : (a.sequence || 0) - (b.sequence || 0);
-    });
-    _exerciseVolumeBars[exerciseId] = chronological.slice(-15).map(s => {
+    // Build the volume series (last up to 15 days, oldest → newest) for the
+    // in-card bars, grouping every set logged on the same date into one bar.
+    const volByDate = {};
+    entries.forEach(s => {
       const reps = Number(s.reps) || 0;
       const weight = preset.bodyweight ? null : Number(s.weight) || 0;
-      return {
-        volume: preset.bodyweight ? reps : reps * weight,
+      const vol = preset.bodyweight ? reps : reps * weight;
+      if (!volByDate[s.date]) volByDate[s.date] = { date: s.date, volume: 0, sets: [] };
+      volByDate[s.date].volume += vol;
+      volByDate[s.date].sets.push({
         reps: s.reps,
-        weight: preset.bodyweight ? 'BW' : s.weight,
-        date: s.date
-      };
+        weight: preset.bodyweight ? 'BW' : s.weight
+      });
     });
+    _exerciseVolumeBars[exerciseId] = Object.values(volByDate)
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .slice(-15);
 
     updated++;
   });

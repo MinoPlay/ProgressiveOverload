@@ -156,6 +156,7 @@ const App = {
                 IframeBridge.broadcastTemplates();
                 IframeBridge.broadcastWorkouts();
                 IframeBridge.broadcastWeekWorkouts();
+                IframeBridge.broadcastHistoryWorkouts();
             }, 100);
 
             console.log('Initializing UI modules...');
@@ -447,6 +448,24 @@ const IframeBridge = {
     },
 
     /**
+     * Send a broad window of workout history (last 12 months) to a single iframe.
+     * Used by the workout tab to render the per-exercise volume bars and to
+     * preload reps/weight from the most recent session even when the exercise
+     * was last performed in an earlier month (only the current month is cached
+     * in memory, so a wider range must be fetched on demand).
+     */
+    async sendHistoryWorkouts(frame) {
+        try {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+            const workouts = await Storage.getWorkoutsInRange(start, now);
+            frame.contentWindow?.postMessage({ type: 'po-history-workouts', workouts }, '*');
+        } catch (err) {
+            console.warn('IframeBridge: could not send history workouts to iframe', err);
+        }
+    },
+
+    /**
      * Send the current calendar week's workouts (Mon–Sun) to a single iframe.
      * Loads across month boundaries so the workout tab's weekly muscle balance
      * matches the statistics tab even at the start of a month.
@@ -485,6 +504,11 @@ const IframeBridge = {
         this.frames.forEach(f => this.sendWeekWorkouts(f));
     },
 
+    /** Broadcast the last-12-months workout history to every iframe */
+    broadcastHistoryWorkouts() {
+        this.frames.forEach(f => this.sendHistoryWorkouts(f));
+    },
+
     /** Handle incoming postMessage from iframes */
     handleMessage(event) {
         const msg = event.data;
@@ -507,12 +531,16 @@ const IframeBridge = {
             case 'po-request-week-workouts':
                 this.sendWeekWorkouts(sourceFrame);
                 break;
+            case 'po-request-history-workouts':
+                this.sendHistoryWorkouts(sourceFrame);
+                break;
             case 'po-save-workouts':
                 Storage.addWorkoutsBatch(msg.workouts)
                     .then(() => {
                         event.source.postMessage({ type: 'po-workouts-saved' }, '*');
                         this.broadcastWorkouts();
                         this.broadcastWeekWorkouts();
+                        this.broadcastHistoryWorkouts();
                         window.dispatchEvent(new CustomEvent('workoutsUpdated'));
                     })
                     .catch(err => {

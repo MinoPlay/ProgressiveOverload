@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v60';
+const CACHE_VERSION = 'v62';
 const STATIC_CACHE  = `po-static-${CACHE_VERSION}`;
 const CDN_CACHE     = `po-cdn-${CACHE_VERSION}`;
 

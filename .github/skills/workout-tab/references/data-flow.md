@@ -48,7 +48,8 @@ The iframe's `message` listener routes them:
 |---|---|---|
 | `po-exercises` | `_mergeParentExercises` | Fills `EXERCISE_META_BY_ID` + `EXERCISE_PRESETS` (name, muscle, equipment, default reps/weight from last set, bodyweight flag); then re-applies saved state. Parent data is authoritative. |
 | `po-templates` | `_mergeParentTemplates` | Builds selectable session templates (resolves exercise ids → names/sets). |
-| `po-workouts` | `_mergeParentWorkouts` | Supplies prior workouts for last-set hints. |
+| `po-workouts` | `_mergeParentWorkouts` | Supplies prior workouts (current month) for last-set hints and the per-exercise volume bars. |
+| `po-history-workouts` | `_mergeParentWorkouts` | Supplies a broader window of prior workouts (last 12 months) so volume bars and reps/weight preload reflect sessions from earlier months. Merged (deduped by id) with `po-workouts`. |
 | `po-workouts-saved` | (inline) | Save acknowledged: show "Saved ✓", capture last-workout snapshot, optionally clear the board, leave execute mode. |
 | `po-save-error` | (inline) | Re-enable submit, alert the error. |
 
@@ -83,7 +84,8 @@ write path**.
 |---|---|---|
 | `po-exercises` | `{ exercises: Exercise[] }` | Full exercise list (authoritative) |
 | `po-templates` | `{ templates: SessionTemplate[] }` | Full template list |
-| `po-workouts` | `{ workouts: WorkoutRecord[] }` | Current workouts (for hints) |
+| `po-workouts` | `{ workouts: WorkoutRecord[] }` | Current month's workouts (for hints + volume bars) |
+| `po-history-workouts` | `{ workouts: WorkoutRecord[] }` | Last 12 months of workouts — used for the per-exercise volume bars and to preload reps/weight from earlier-month sessions |
 | `po-week-workouts` | `{ workouts: WorkoutRecord[] }` | Current calendar week's workouts (Mon–Sun, may span months) — used for the top-of-tab weekly muscle balance radar |
 | `po-workouts-saved` | — | Save succeeded |
 | `po-save-error` | `{ error }` | Save failed |
@@ -94,6 +96,7 @@ write path**.
 | `po-request-exercises` | — | Please send exercises |
 | `po-request-templates` | — | Please send templates |
 | `po-request-workouts` | — | Please send workouts |
+| `po-request-history-workouts` | — | Please send the last 12 months of workouts |
 | `po-request-week-workouts` | — | Please send the current week's workouts |
 | `po-save-workouts` | `{ workouts: {exerciseId,date,reps,weight}[] }` | Save these ticked sets |
 

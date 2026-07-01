@@ -1458,6 +1458,9 @@ const _exerciseHistory = {};
 // Per-exercise volume series for the in-card bars: { exerciseId: [{volume, reps, weight, date}] }
 const _exerciseVolumeBars = {};
 let _rawParentWorkouts = [];
+// Accumulated raw workouts keyed by id so the current-month feed and the
+// broader history feed combine instead of overwriting each other.
+const _rawParentWorkoutsById = {};
 
 function renderVolumeBars(card) {
   if (!card) return;
@@ -1495,11 +1498,18 @@ function refreshAllVolumeBars() {
 }
 
 function _mergeParentWorkouts(workouts) {
-  if (Array.isArray(workouts) && workouts.length) _rawParentWorkouts = workouts;
-  if (!Array.isArray(workouts) || !workouts.length) return;
+  if (Array.isArray(workouts) && workouts.length) {
+    workouts.forEach(w => {
+      if (!w || !w.exerciseId) return;
+      const key = w.id || `${w.exerciseId}|${w.date}|${w.sequence ?? ''}`;
+      _rawParentWorkoutsById[key] = w;
+    });
+    _rawParentWorkouts = Object.values(_rawParentWorkoutsById);
+  }
+  if (!_rawParentWorkouts.length) return;
   // Group by exerciseId, find latest session per exercise
   const byExercise = {};
-  workouts.forEach(w => {
+  _rawParentWorkouts.forEach(w => {
     if (!byExercise[w.exerciseId]) byExercise[w.exerciseId] = [];
     byExercise[w.exerciseId].push(w);
   });
@@ -1771,6 +1781,8 @@ if (EMBED_MODE) {
       _mergeParentTemplates(msg.templates);
     } else if (msg.type === 'po-workouts') {
       _mergeParentWorkouts(msg.workouts);
+    } else if (msg.type === 'po-history-workouts') {
+      _mergeParentWorkouts(msg.workouts);
     } else if (msg.type === 'po-week-workouts') {
       _weekWorkouts = Array.isArray(msg.workouts) ? msg.workouts : [];
       renderWorkoutRadars();
@@ -1803,6 +1815,7 @@ if (EMBED_MODE) {
     window.parent.postMessage({ type: 'po-request-exercises' }, '*');
     window.parent.postMessage({ type: 'po-request-templates' }, '*');
     window.parent.postMessage({ type: 'po-request-workouts' }, '*');
+    window.parent.postMessage({ type: 'po-request-history-workouts' }, '*');
     window.parent.postMessage({ type: 'po-request-week-workouts' }, '*');
   } catch (_) {}
 }
@@ -3224,6 +3237,7 @@ function loadTemplate(name) {
   refreshExerciseSelectOptions();
   refreshExerciseIcons();
   enhanceRepsControls(planView);
+  refreshAllVolumeBars();
   lucide.createIcons();
 }
 _rebuildTemplateMenu();

@@ -84,6 +84,7 @@ write path**.
 | `po-exercises` | `{ exercises: Exercise[] }` | Full exercise list (authoritative) |
 | `po-templates` | `{ templates: SessionTemplate[] }` | Full template list |
 | `po-workouts` | `{ workouts: WorkoutRecord[] }` | Current workouts (for hints) |
+| `po-week-workouts` | `{ workouts: WorkoutRecord[] }` | Current calendar week's workouts (Mon–Sun, may span months) — used for the top-of-tab weekly muscle balance radar |
 | `po-workouts-saved` | — | Save succeeded |
 | `po-save-error` | `{ error }` | Save failed |
 
@@ -93,6 +94,7 @@ write path**.
 | `po-request-exercises` | — | Please send exercises |
 | `po-request-templates` | — | Please send templates |
 | `po-request-workouts` | — | Please send workouts |
+| `po-request-week-workouts` | — | Please send the current week's workouts |
 | `po-save-workouts` | `{ workouts: {exerciseId,date,reps,weight}[] }` | Save these ticked sets |
 
 ### Rules

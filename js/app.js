@@ -155,6 +155,7 @@ const App = {
                 IframeBridge.broadcastExercises();
                 IframeBridge.broadcastTemplates();
                 IframeBridge.broadcastWorkouts();
+                IframeBridge.broadcastWeekWorkouts();
             }, 100);
 
             console.log('Initializing UI modules...');
@@ -423,6 +424,7 @@ const IframeBridge = {
             this.sendExercises(frame);
             this.sendTemplates(frame);
             this.sendWorkouts(frame);
+            this.sendWeekWorkouts(frame);
         } catch (err) {
             console.warn('IframeBridge: could not send data to iframe', err);
         }
@@ -444,6 +446,25 @@ const IframeBridge = {
         frame.contentWindow?.postMessage({ type: 'po-workouts', workouts }, '*');
     },
 
+    /**
+     * Send the current calendar week's workouts (Mon–Sun) to a single iframe.
+     * Loads across month boundaries so the workout tab's weekly muscle balance
+     * matches the statistics tab even at the start of a month.
+     */
+    async sendWeekWorkouts(frame) {
+        try {
+            const now = new Date();
+            const diffToMon = (now.getDay() + 6) % 7;
+            const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMon);
+            const sunday = new Date(monday);
+            sunday.setDate(monday.getDate() + 6);
+            const workouts = await Storage.getWorkoutsInRange(monday, sunday);
+            frame.contentWindow?.postMessage({ type: 'po-week-workouts', workouts }, '*');
+        } catch (err) {
+            console.warn('IframeBridge: could not send week workouts to iframe', err);
+        }
+    },
+
     /** Broadcast exercises to every iframe */
     broadcastExercises() {
         this.frames.forEach(f => this.sendExercises(f));
@@ -457,6 +478,11 @@ const IframeBridge = {
     /** Broadcast workouts to every iframe */
     broadcastWorkouts() {
         this.frames.forEach(f => this.sendWorkouts(f));
+    },
+
+    /** Broadcast the current week's workouts to every iframe */
+    broadcastWeekWorkouts() {
+        this.frames.forEach(f => this.sendWeekWorkouts(f));
     },
 
     /** Handle incoming postMessage from iframes */
@@ -478,11 +504,15 @@ const IframeBridge = {
             case 'po-request-workouts':
                 this.sendWorkouts(sourceFrame);
                 break;
+            case 'po-request-week-workouts':
+                this.sendWeekWorkouts(sourceFrame);
+                break;
             case 'po-save-workouts':
                 Storage.addWorkoutsBatch(msg.workouts)
                     .then(() => {
                         event.source.postMessage({ type: 'po-workouts-saved' }, '*');
                         this.broadcastWorkouts();
+                        this.broadcastWeekWorkouts();
                         window.dispatchEvent(new CustomEvent('workoutsUpdated'));
                     })
                     .catch(err => {

@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Session Board — Active Workout</title>
 <script src="https://unpkg.com/lucide@latest"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
 <style>
 /* ── Reset & Base ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -956,6 +957,50 @@ body {
   cursor: pointer;
 }
 .execute-done-clear-check input[type=checkbox] { width: 14px; height: 14px; cursor: pointer; margin: 0; }
+
+/* ── Muscle balance radars (workout top) ─────────────────────────── */
+.workout-radar-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.workout-radar-card {
+  flex: 1 1 0;
+  min-width: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 8px 6px 6px;
+}
+.workout-radar-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text2);
+  text-align: center;
+  line-height: 1.2;
+  margin-bottom: 4px;
+}
+.workout-radar-title i { width: 13px; height: 13px; }
+.workout-radar-wrap {
+  position: relative;
+  height: 170px;
+}
+.workout-radar-wrap .no-radar-msg {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-size: 11px;
+  color: var(--text3);
+  padding: 4px;
+}
 </style>
 </head>
 <body>
@@ -990,6 +1035,13 @@ body {
 
     <!-- PLAN VIEW -->
     <div class="view active" id="planView">
+
+      <div class="workout-radar-row">
+        <div class="workout-radar-card">
+          <div class="workout-radar-title"><i data-lucide="radar"></i> Muscle Balance · This Week</div>
+          <div class="workout-radar-wrap"><canvas id="workoutMuscleRadar"></canvas></div>
+        </div>
+      </div>
 
       <div class="template-picker">
         <button class="template-btn" onclick="toggleTemplateMenu(event)">
@@ -1290,6 +1342,7 @@ applyEmbeddedMode();
 window.addEventListener('storage', (event) => {
   if (event.key === THEME_KEY) {
     applyStoredTheme();
+    if (typeof renderWorkoutRadars === 'function') renderWorkoutRadars();
   }
 });
 
@@ -1583,6 +1636,126 @@ document.getElementById('planView')?.addEventListener('click', (e) => {
   if (exerciseId) showExerciseHistory(exerciseId);
 });
 
+/* ── Muscle balance radars (top of workout, current week) ── */
+const MUSCLE_RADAR_COLORS = {
+  'chest':     '#ff5252',
+  'back':      '#448aff',
+  'shoulders': '#ffab40',
+  'legs':      '#7c4dff',
+  'biceps':    '#00bcd4',
+  'triceps':   '#667eea',
+  'arms':      '#40c4ff',
+  'core':      '#69f0ae',
+  'neck':      '#bdbdbd',
+  'full-body': '#ffd740',
+  'other':     '#607d8b'
+};
+const _workoutRadarCharts = {};
+let _weekWorkouts = []; // Current calendar week's workouts, pushed from parent (may span months)
+
+function _getCurrentWeekBounds() {
+  const now = new Date();
+  const diffToMon = (now.getDay() + 6) % 7;
+  const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMon);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const toStr = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  return { start: toStr(monday), end: toStr(sunday) };
+}
+
+function _computeMuscleRadar(workouts) {
+  const daysByMuscle = {};
+  workouts.forEach((w) => {
+    const ex = _parentExerciseMap[w.exerciseId];
+    const muscle = ex && ex.muscle ? ex.muscle : null;
+    if (!muscle) return;
+    if (!daysByMuscle[muscle]) daysByMuscle[muscle] = new Set();
+    daysByMuscle[muscle].add(w.date);
+  });
+  const muscles = Object.keys(daysByMuscle).sort();
+  return {
+    muscles,
+    labels: muscles.map((m) => m.charAt(0).toUpperCase() + m.slice(1).replace('-', ' ')),
+    values: muscles.map((m) => daysByMuscle[m].size)
+  };
+}
+
+function _renderOneMuscleRadar(canvasId, data) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas || !window.Chart) return;
+  const wrap = canvas.parentElement;
+  let msgEl = wrap.querySelector('.no-radar-msg');
+  if (_workoutRadarCharts[canvasId]) {
+    _workoutRadarCharts[canvasId].destroy();
+    _workoutRadarCharts[canvasId] = null;
+  }
+  if (!data.muscles.length) {
+    canvas.style.display = 'none';
+    if (!msgEl) {
+      msgEl = document.createElement('p');
+      msgEl.className = 'no-radar-msg';
+      wrap.appendChild(msgEl);
+    }
+    msgEl.style.display = '';
+    msgEl.textContent = 'No sessions this week';
+    return;
+  }
+  canvas.style.display = '';
+  if (msgEl) msgEl.style.display = 'none';
+
+  const styles = getComputedStyle(document.documentElement);
+  const accent = (styles.getPropertyValue('--accent') || '#667eea').trim();
+  const textColor = (styles.getPropertyValue('--text2') || '#666').trim();
+  const pointColors = data.muscles.map((m) => MUSCLE_RADAR_COLORS[m] || accent);
+  const values = data.values;
+
+  _workoutRadarCharts[canvasId] = new Chart(canvas.getContext('2d'), {
+    type: 'radar',
+    data: {
+      labels: data.labels,
+      datasets: [{
+        label: 'Sessions',
+        data: values,
+        borderColor: accent,
+        backgroundColor: accent + '33',
+        borderWidth: 2,
+        pointBackgroundColor: pointColors,
+        pointBorderColor: '#fff',
+        pointRadius: 3,
+        pointHoverRadius: 5
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (c) => ` ${c.parsed.r} session${c.parsed.r !== 1 ? 's' : ''}`
+          }
+        }
+      },
+      scales: {
+        r: {
+          beginAtZero: true,
+          ticks: { display: false, stepSize: 1, backdropColor: 'transparent' },
+          pointLabels: { color: textColor, font: { size: 9, weight: '600' }, callback: (label, index) => `${label} (${values[index]})` },
+          grid: { display: true, color: 'rgba(128,128,128,0.4)', lineWidth: 1 },
+          angleLines: { display: true, color: 'rgba(128,128,128,0.4)', lineWidth: 1 }
+        }
+      }
+    }
+  });
+}
+
+function renderWorkoutRadars() {
+  if (!window.Chart) return;
+  const { start, end } = _getCurrentWeekBounds();
+  const weekWorkouts = (_weekWorkouts || []).filter((w) => w.date >= start && w.date <= end);
+  _renderOneMuscleRadar('workoutMuscleRadar', _computeMuscleRadar(weekWorkouts));
+}
+
 if (EMBED_MODE) {
   window.addEventListener('message', (e) => {
     const msg = e.data;
@@ -1593,10 +1766,14 @@ if (EMBED_MODE) {
       applySavedDesign1State();
       // Rebuild volume bars now that the exercise map is ready (workouts may have arrived first)
       if (_rawParentWorkouts.length) _mergeParentWorkouts(_rawParentWorkouts);
+      renderWorkoutRadars();
     } else if (msg.type === 'po-templates') {
       _mergeParentTemplates(msg.templates);
     } else if (msg.type === 'po-workouts') {
       _mergeParentWorkouts(msg.workouts);
+    } else if (msg.type === 'po-week-workouts') {
+      _weekWorkouts = Array.isArray(msg.workouts) ? msg.workouts : [];
+      renderWorkoutRadars();
     } else if (msg.type === 'po-workouts-saved') {
       captureLastWorkoutFromCurrentBoard();
       const btn = document.getElementById('submitBtn');
@@ -1626,6 +1803,7 @@ if (EMBED_MODE) {
     window.parent.postMessage({ type: 'po-request-exercises' }, '*');
     window.parent.postMessage({ type: 'po-request-templates' }, '*');
     window.parent.postMessage({ type: 'po-request-workouts' }, '*');
+    window.parent.postMessage({ type: 'po-request-week-workouts' }, '*');
   } catch (_) {}
 }
 
@@ -1640,6 +1818,7 @@ function toggleTheme() {
   const icons = { light: 'moon', dark: 'terminal', green: 'sun' };
   icon.setAttribute('data-lucide', icons[next] || 'moon');
   lucide.createIcons();
+  if (typeof renderWorkoutRadars === 'function') renderWorkoutRadars();
 }
 
 function toggleNavMenu(event) {

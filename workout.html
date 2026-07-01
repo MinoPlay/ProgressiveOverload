@@ -268,6 +268,20 @@ body {
   flex-shrink: 0;
 }
 .exercise-name.done-text { text-decoration: none; color: var(--text); }
+.volume-bars {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 30px;
+  padding: 0 10px 6px;
+}
+.volume-bar {
+  flex: 1;
+  min-width: 3px;
+  background: var(--accent);
+  border-radius: 2px 2px 0 0;
+  opacity: .85;
+}
 .completed-pill {
   font-size: 10px;
   font-weight: 700;
@@ -1388,8 +1402,47 @@ function _rebuildTemplateMenu() {
 
 // Per-exercise workout history storage: { exerciseId: [{date, sets: [{reps, weight}]}] }
 const _exerciseHistory = {};
+// Per-exercise volume series for the in-card bars: { exerciseId: [{volume, reps, weight, date}] }
+const _exerciseVolumeBars = {};
+let _rawParentWorkouts = [];
+
+function renderVolumeBars(card) {
+  if (!card) return;
+  const exerciseId = card.dataset.exerciseId;
+  const series = exerciseId ? (_exerciseVolumeBars[exerciseId] || []) : [];
+  let container = card.querySelector('.volume-bars');
+  if (!series.length) {
+    if (container) container.remove();
+    return;
+  }
+  if (!container) {
+    container = document.createElement('div');
+    container.className = 'volume-bars';
+    const header = card.querySelector('.card-header');
+    if (!header) return;
+    header.insertAdjacentElement('afterend', container);
+  }
+  const max = Math.max(...series.map(s => s.volume)) || 1;
+  container.innerHTML = '';
+  series.forEach(s => {
+    const bar = document.createElement('div');
+    bar.className = 'volume-bar';
+    bar.style.height = Math.max(8, Math.round((s.volume / max) * 100)) + '%';
+    const w = String(s.weight).toUpperCase();
+    const label = w === 'BW' || s.weight == null || s.weight === ''
+      ? `${s.reps} reps`
+      : `${s.reps}×${s.weight} kg = ${s.volume}`;
+    bar.title = label;
+    container.appendChild(bar);
+  });
+}
+
+function refreshAllVolumeBars() {
+  document.querySelectorAll('.exercise-card').forEach(card => renderVolumeBars(card));
+}
 
 function _mergeParentWorkouts(workouts) {
+  if (Array.isArray(workouts) && workouts.length) _rawParentWorkouts = workouts;
   if (!Array.isArray(workouts) || !workouts.length) return;
   // Group by exerciseId, find latest session per exercise
   const byExercise = {};
@@ -1451,9 +1504,26 @@ function _mergeParentWorkouts(workouts) {
           .map(s => ({ reps: s.reps, weight: s.weight }))
       }));
 
+    // Build the volume series (last up to 15 records, oldest → newest) for the in-card bars
+    const chronological = entries.slice().sort((a, b) => {
+      const d = new Date(a.date) - new Date(b.date);
+      return d !== 0 ? d : (a.sequence || 0) - (b.sequence || 0);
+    });
+    _exerciseVolumeBars[exerciseId] = chronological.slice(-15).map(s => {
+      const reps = Number(s.reps) || 0;
+      const weight = preset.bodyweight ? null : Number(s.weight) || 0;
+      return {
+        volume: preset.bodyweight ? reps : reps * weight,
+        reps: s.reps,
+        weight: preset.bodyweight ? 'BW' : s.weight,
+        date: s.date
+      };
+    });
+
     updated++;
   });
   saveLastWorkoutMap(lastWorkoutMap);
+  refreshAllVolumeBars();
   console.log(`[Session Board] Processed workout history, updated ${updated} exercises with prev data`);
 }
 
@@ -1521,6 +1591,8 @@ if (EMBED_MODE) {
       _mergeParentExercises(msg.exercises);
       // Re-apply saved state now that exercises are available from parent
       applySavedDesign1State();
+      // Rebuild volume bars now that the exercise map is ready (workouts may have arrived first)
+      if (_rawParentWorkouts.length) _mergeParentWorkouts(_rawParentWorkouts);
     } else if (msg.type === 'po-templates') {
       _mergeParentTemplates(msg.templates);
     } else if (msg.type === 'po-workouts') {
@@ -1736,6 +1808,7 @@ function applyExercisePresetById(exerciseId, cardId) {
   refreshExerciseSelectOptions();
   refreshLinkButtons();
   updateLinkVisuals();
+  renderVolumeBars(card);
   saveDesign1State();
 }
 
@@ -1974,6 +2047,7 @@ function applyCardState(cardId, cardState) {
 
   checkCardDone(cardId);
   ensureCardEquipmentIcon(cardId);
+  renderVolumeBars(card);
 }
 
 function setTemplateSelection(name) {

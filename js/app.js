@@ -397,6 +397,8 @@ function escapeHtml(str) {
  */
 const IframeBridge = {
     frames: [],
+    _allWorkoutsPromise: null,
+    _summaryStale: false,
 
     init() {
         const workoutFrame = document.querySelector('#workoutPane iframe');
@@ -447,18 +449,51 @@ const IframeBridge = {
         frame.contentWindow?.postMessage({ type: 'po-workouts', workouts }, '*');
     },
 
+    /** Format a Date as a local 'YYYY-MM-DD' string (matches stored workout dates). */
+    _dateStr(d) {
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    },
+
+    /**
+     * Load every workout once, preferring the compact stats-summary.json — a
+     * single request for all-time data — over fetching each monthly file. The
+     * promise is cached for the page session so the history and week sends share
+     * one fetch instead of listing + fetching monthly files several times.
+     * Resolves to null when no summary exists yet (or after a save, until the
+     * summary is regenerated) so callers fall back to a fresh range fetch.
+     * @returns {Promise<array|null>}
+     */
+    loadAllWorkouts() {
+        if (this._summaryStale) return Promise.resolve(null);
+        if (!this._allWorkoutsPromise) {
+            this._allWorkoutsPromise = Storage.loadStatsSummaryWorkouts().catch(() => null);
+        }
+        return this._allWorkoutsPromise;
+    },
+
     /**
      * Send a broad window of workout history (last 12 months) to a single iframe.
      * Used by the workout tab to render the per-exercise volume bars and to
      * preload reps/weight from the most recent session even when the exercise
-     * was last performed in an earlier month (only the current month is cached
-     * in memory, so a wider range must be fetched on demand).
+     * was last performed in an earlier month. Sourced from stats-summary.json
+     * (one request) when available, falling back to a monthly range fetch.
      */
     async sendHistoryWorkouts(frame) {
         try {
             const now = new Date();
             const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
-            const workouts = await Storage.getWorkoutsInRange(start, now);
+            const all = await this.loadAllWorkouts();
+            let workouts;
+            if (all) {
+                // The current month is delivered separately via po-workouts (with
+                // ids); summary records have no id, so excluding the current month
+                // here avoids the same sets being counted twice in the volume bars.
+                const currentMonthStart = this._dateStr(new Date(now.getFullYear(), now.getMonth(), 1));
+                const startStr = this._dateStr(start);
+                workouts = all.filter(w => w.date >= startStr && w.date < currentMonthStart);
+            } else {
+                workouts = await Storage.getWorkoutsInRange(start, now);
+            }
             frame.contentWindow?.postMessage({ type: 'po-history-workouts', workouts }, '*');
         } catch (err) {
             console.warn('IframeBridge: could not send history workouts to iframe', err);
@@ -477,7 +512,10 @@ const IframeBridge = {
             const monday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - diffToMon);
             const sunday = new Date(monday);
             sunday.setDate(monday.getDate() + 6);
-            const workouts = await Storage.getWorkoutsInRange(monday, sunday);
+            const all = await this.loadAllWorkouts();
+            const workouts = all
+                ? all.filter(w => w.date >= this._dateStr(monday) && w.date <= this._dateStr(sunday))
+                : await Storage.getWorkoutsInRange(monday, sunday);
             frame.contentWindow?.postMessage({ type: 'po-week-workouts', workouts }, '*');
         } catch (err) {
             console.warn('IframeBridge: could not send week workouts to iframe', err);
@@ -537,6 +575,10 @@ const IframeBridge = {
             case 'po-save-workouts':
                 Storage.addWorkoutsBatch(msg.workouts)
                     .then(() => {
+                        // The stats summary is regenerated asynchronously after a
+                        // save; fall back to fresh range fetches until it catches up.
+                        this._summaryStale = true;
+                        this._allWorkoutsPromise = null;
                         event.source.postMessage({ type: 'po-workouts-saved' }, '*');
                         this.broadcastWorkouts();
                         this.broadcastWeekWorkouts();

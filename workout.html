@@ -6,10 +6,19 @@
 <title>Session Board — Active Workout</title>
 <script src="https://unpkg.com/lucide@latest"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  // When embedded in the main app, hide the board's placeholder cards until the
+  // parent pushes real exercise/workout data, so populated values are shown from
+  // the first paint instead of flashing the static demo values on refresh.
+  if (window.self !== window.top) document.documentElement.classList.add('board-loading');
+</script>
 <style>
 /* ── Reset & Base ─────────────────────────────────────────────────── */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { font-size: 16px; height: 100%; overflow: hidden; }
+/* Keep the placeholder exercise cards out of view until the parent app has
+   populated the board, so the real (populated) cards are shown from first paint. */
+html.board-loading #planView .exercise-card { display: none; }
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   background: #e8e8f0;
@@ -1777,6 +1786,8 @@ if (EMBED_MODE) {
       // Rebuild volume bars now that the exercise map is ready (workouts may have arrived first)
       if (_rawParentWorkouts.length) _mergeParentWorkouts(_rawParentWorkouts);
       renderWorkoutRadars();
+      // Board is now populated with real cards/values — reveal it.
+      document.documentElement.classList.remove('board-loading');
     } else if (msg.type === 'po-templates') {
       _mergeParentTemplates(msg.templates);
     } else if (msg.type === 'po-workouts') {
@@ -1818,6 +1829,8 @@ if (EMBED_MODE) {
     window.parent.postMessage({ type: 'po-request-history-workouts' }, '*');
     window.parent.postMessage({ type: 'po-request-week-workouts' }, '*');
   } catch (_) {}
+  // Safety net: never leave the board hidden if the parent never responds.
+  setTimeout(() => document.documentElement.classList.remove('board-loading'), 2500);
 }
 
 /* ── Theme ── */
@@ -1995,6 +2008,28 @@ function applyExercisePresetById(exerciseId, cardId) {
       }
     }
   });
+
+  const setsBody = document.getElementById('body-' + bodyKey);
+  if (setsBody) {
+    const existingHint = setsBody.querySelector('.prev-hint');
+    if (existingHint) existingHint.remove();
+    if (Array.isArray(lastWorkout?.sets) && lastWorkout.sets.length) {
+      const summary = lastWorkout.sets.map((s) => {
+        const w = ex.bodyweight || s.weight === 'BW' ? 'BW' : (s.weight + ' kg');
+        return `${s.reps}×${w}`;
+      }).join(' · ');
+      const hint = document.createElement('div');
+      hint.className = 'prev-hint';
+      const icon = document.createElement('i');
+      icon.setAttribute('data-lucide', 'history');
+      const span = document.createElement('span');
+      span.textContent = 'Last session: ' + summary;
+      hint.appendChild(icon);
+      hint.appendChild(span);
+      setsBody.insertBefore(hint, setsBody.firstChild);
+      lucide.createIcons();
+    }
+  }
 
   enhanceRepsControls(card);
   refreshExerciseSelectOptions();
@@ -3184,7 +3219,7 @@ function loadTemplate(name) {
     const cardId = 'card-' + exerciseId;
     const bodyKey = cardId.replace('card-','');
     const card = document.createElement('div');
-    card.className = 'exercise-card';
+    card.className = 'exercise-card card-open';
     card.id = cardId;
     let prevHint = '';
     if (ex.sets && ex.sets.length) {
@@ -3207,9 +3242,9 @@ function loadTemplate(name) {
         <i class='exercise-icon' data-lucide='${getEquipmentIcon(meta?.equipment)}' aria-hidden='true'></i>
         <div class='exercise-name' id='name-${bodyKey}' onclick="openSessionPicker('${cardId}'); event.stopPropagation()">${exerciseName}</div>
         <button class='link-next-btn' onclick="toggleLinkWithNext('${cardId}', event)" title='Link with exercise below'><i data-lucide='link'></i></button>
-        <button class='collapse-btn' id='btn-${bodyKey}'><i data-lucide='chevron-down'></i></button>
+        <button class='collapse-btn open' id='btn-${bodyKey}'><i data-lucide='chevron-down'></i></button>
       </div>
-      <div class='sets-body' id='body-${bodyKey}' style='display:none'>
+      <div class='sets-body' id='body-${bodyKey}'>
         ${prevHint}
         ${setRows}
       </div>

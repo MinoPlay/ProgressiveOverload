@@ -1013,7 +1013,15 @@ body {
   line-height: 1.2;
   margin-bottom: 4px;
 }
+.workout-radar-title { cursor: pointer; }
 .workout-radar-title i { width: 13px; height: 13px; }
+.workout-radar-title .radar-chev {
+  margin-left: 2px;
+  transition: transform 0.2s;
+}
+.workout-radar-card.radar-collapsed .radar-chev { transform: rotate(-90deg); }
+.workout-radar-card.radar-collapsed .workout-radar-wrap { display: none; }
+.workout-radar-card.radar-collapsed .workout-radar-title { margin-bottom: 0; }
 .workout-radar-wrap {
   position: relative;
   height: 170px;
@@ -1065,8 +1073,8 @@ body {
     <div class="view active" id="planView">
 
       <div class="workout-radar-row">
-        <div class="workout-radar-card">
-          <div class="workout-radar-title"><i data-lucide="radar"></i> Muscle Balance · This Week</div>
+        <div class="workout-radar-card" id="workoutRadarCard">
+          <div class="workout-radar-title" onclick="toggleMuscleRadar()"><i data-lucide="radar"></i> Muscle Balance · This Week<i data-lucide="chevron-down" class="radar-chev"></i></div>
           <div class="workout-radar-wrap"><canvas id="workoutMuscleRadar"></canvas></div>
         </div>
       </div>
@@ -1335,6 +1343,7 @@ lucide.createIcons();
 
 const THEME_KEY = 'theme';
 const SESSION_KEY = 'workout.activeSession';
+const RADAR_COLLAPSED_KEY = 'workout.muscleRadarCollapsed';
 const DESIGN1_LAST_WORKOUT_KEY = 'workout1.lastWorkoutByExercise';
 const EMBED_MODE = window.self !== window.top;
 
@@ -1366,6 +1375,22 @@ function applyEmbeddedMode() {
 
 applyStoredTheme();
 applyEmbeddedMode();
+
+function applyMuscleRadarState() {
+  const card = document.getElementById('workoutRadarCard');
+  if (!card) return;
+  const collapsed = localStorage.getItem(RADAR_COLLAPSED_KEY) === '1';
+  card.classList.toggle('radar-collapsed', collapsed);
+}
+
+function toggleMuscleRadar() {
+  const card = document.getElementById('workoutRadarCard');
+  if (!card) return;
+  const collapsed = card.classList.toggle('radar-collapsed');
+  localStorage.setItem(RADAR_COLLAPSED_KEY, collapsed ? '1' : '0');
+}
+
+applyMuscleRadarState();
 
 window.addEventListener('storage', (event) => {
   if (event.key === THEME_KEY) {

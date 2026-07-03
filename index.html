@@ -49,6 +49,7 @@
                         </button>
                     </div>
                     <div class="nav-right">
+                        <span id="cacheVersionLabel" class="cache-version-label" title="Cache version"></span>
                         <!-- PWA Install Button (hidden until installable) -->
                         <button id="pwaInstallBtn" class="theme-toggle-btn" aria-label="Install app" title="Install app" style="display:none">
                             <i data-lucide="download"></i>
@@ -479,6 +480,16 @@
                     .catch(err => console.warn('SW registration failed:', err));
             });
         }
+
+        // Display cache version from sw.js
+        fetch('./sw.js')
+            .then(res => res.text())
+            .then(text => {
+                const match = text.match(/CACHE_VERSION\s*=\s*['"]([^'"]+)['"]/);
+                const label = document.getElementById('cacheVersionLabel');
+                if (match && label) label.textContent = match[1];
+            })
+            .catch(err => console.warn('Failed to read cache version:', err));
 
         // PWA install
         (function () {

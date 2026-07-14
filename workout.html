@@ -692,7 +692,8 @@ body {
 .session-picker-overlay {
   position: fixed; inset: 0;
   background: rgba(0,0,0,.45);
-  display: flex; align-items: center; justify-content: center;
+  display: flex; align-items: flex-start; justify-content: center;
+  padding: 24px 12px;
   z-index: 100;
   opacity: 0; pointer-events: none;
   transition: opacity .2s;
@@ -706,19 +707,55 @@ body {
   box-shadow: 0 8px 30px rgba(0,0,0,.25);
 }
 .session-picker-title { font-size: 16px; font-weight: 700; margin-bottom: 12px; color: var(--text); }
-.session-picker-select {
-  width: 100%; padding: 10px 12px;
-  border: 1.5px solid var(--border); border-radius: var(--radius-sm);
-  background: var(--surface2); color: var(--text); font-size: 14px;
-  margin-bottom: 12px; box-sizing: border-box;
+
+.session-picker-grid-dialog {
+  width: min(96vw, 640px);
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  padding: 16px;
 }
-.session-picker-actions { display: flex; gap: 8px; margin-top: 12px; }
-.session-picker-actions button {
-  flex: 1; padding: 10px; border-radius: var(--radius-sm);
-  font-weight: 600; font-size: 14px; cursor: pointer; border: none;
+.session-picker-header {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 12px;
 }
-.sp-cancel { background: var(--surface2); color: var(--text); }
-.sp-confirm { background: var(--accent); color: #fff; }
+.session-picker-header .session-picker-title { margin-bottom: 0; }
+.sp-close {
+  width: 30px; height: 30px; flex: 0 0 auto;
+  border: none; border-radius: 50%;
+  background: var(--surface2); color: var(--text3);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.sp-close i { width: 16px; height: 16px; }
+.session-picker-filters { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
+.picker-filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; }
+.picker-chip {
+  display: block; width: 100%;
+  padding: 6px 8px; border-radius: 999px;
+  border: 1.5px solid var(--border); background: var(--surface2);
+  color: var(--text2); font-size: 12px; font-weight: 600; cursor: pointer;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;
+}
+.picker-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.session-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 8px;
+  overflow-y: auto;
+  padding: 2px;
+  min-height: 60px;
+}
+.picker-cell {
+  padding: 12px 10px; border-radius: var(--radius-sm);
+  border: 1.5px solid var(--border); background: var(--surface2);
+  color: var(--text); font-size: 13px; font-weight: 600; text-align: center;
+  cursor: pointer; line-height: 1.25;
+}
+.picker-cell:hover { border-color: var(--accent); }
+.session-picker-empty {
+  grid-column: 1 / -1; text-align: center; color: var(--text3);
+  font-size: 13px; padding: 24px 8px;
+}
 .remove-ex-btn {
   width: 28px;
   height: 28px;
@@ -1319,13 +1356,16 @@ body {
 
 <!-- Session Exercise Picker Modal -->
 <div class="session-picker-overlay" id="sessionPicker" onclick="if(event.target===this) closeSessionPicker()">
-  <div class="session-picker-dialog">
-    <div class="session-picker-title">Choose Exercise</div>
-    <select class="session-picker-select" id="sessionPickerSelect" name="sessionPickerSelect"></select>
-    <div class="session-picker-actions">
-      <button class="sp-cancel" onclick="closeSessionPicker()">Cancel</button>
-      <button class="sp-confirm" onclick="confirmSessionPicker()">Confirm</button>
+  <div class="session-picker-dialog session-picker-grid-dialog">
+    <div class="session-picker-header">
+      <div class="session-picker-title">Choose Exercise</div>
+      <button class="sp-close" onclick="closeSessionPicker()" aria-label="Close"><i data-lucide="x"></i></button>
     </div>
+    <div class="session-picker-filters">
+      <div class="picker-filter-row" id="pickerEquipmentFilters"></div>
+      <div class="picker-filter-row" id="pickerMuscleFilters"></div>
+    </div>
+    <div class="session-picker-grid" id="sessionPickerGrid"></div>
   </div>
 </div>
 
@@ -2011,31 +2051,100 @@ function getExerciseIdByName(name) {
 ensureExerciseMetaById();
 
 /* ── Session Exercise Picker ── */
+const pickerFilters = { equipment: 'all', muscle: 'all' };
+
+function getPickerAvailableMetas() {
+  return getAvailableExerciseIds()
+    .map((exerciseId) => getExerciseMetaById(exerciseId))
+    .filter((meta) => meta && meta.id);
+}
+
+function buildPickerFilterChips(metas) {
+  const equipRow = document.getElementById('pickerEquipmentFilters');
+  const muscleRow = document.getElementById('pickerMuscleFilters');
+  const equipments = Array.from(new Set(metas.map((m) => m.equipment || 'barbell'))).sort();
+  const muscles = Array.from(new Set(metas.map((m) => (m.muscle || 'Other')))).sort();
+
+  const chip = (kind, value, label, active) =>
+    `<button class="picker-chip${active ? ' active' : ''}" onclick="setPicker${kind}Filter('${value}')">` +
+    `<span>${label}</span></button>`;
+
+  equipRow.innerHTML =
+    chip('Equipment', 'all', 'All', pickerFilters.equipment === 'all') +
+    equipments.map((eq) =>
+      chip('Equipment', eq, eq.charAt(0).toUpperCase() + eq.slice(1), pickerFilters.equipment === eq)
+    ).join('');
+
+  muscleRow.innerHTML =
+    chip('Muscle', 'all', 'All', pickerFilters.muscle === 'all') +
+    muscles.map((mu) =>
+      chip('Muscle', mu, mu, pickerFilters.muscle === mu)
+    ).join('');
+}
+
+function renderExercisePickerGrid() {
+  const grid = document.getElementById('sessionPickerGrid');
+  const metas = getPickerAvailableMetas();
+  const matches = metas.filter((meta) =>
+    (pickerFilters.equipment === 'all' || (meta.equipment || 'barbell') === pickerFilters.equipment) &&
+    (pickerFilters.muscle === 'all' || (meta.muscle || 'Other') === pickerFilters.muscle)
+  );
+
+  grid.innerHTML = '';
+  if (!matches.length) {
+    const empty = document.createElement('div');
+    empty.className = 'session-picker-empty';
+    empty.textContent = 'No exercises match';
+    grid.appendChild(empty);
+    return;
+  }
+
+  matches.forEach((meta) => {
+    const cell = document.createElement('button');
+    cell.className = 'picker-cell';
+    cell.type = 'button';
+    cell.textContent = meta.name || meta.id;
+    cell.addEventListener('click', () => pickExercise(meta.id));
+    grid.appendChild(cell);
+  });
+}
+
+function refreshPicker() {
+  buildPickerFilterChips(getPickerAvailableMetas());
+  renderExercisePickerGrid();
+  if (window.lucide) window.lucide.createIcons();
+}
+
+function setPickerEquipmentFilter(value) {
+  pickerFilters.equipment = value;
+  refreshPicker();
+}
+
+function setPickerMuscleFilter(value) {
+  pickerFilters.muscle = value;
+  refreshPicker();
+}
+
+function pickExercise(exerciseId) {
+  if (!exerciseId) return;
+  addExercise(exerciseId, true, { allowDuplicate: false });
+  closeSessionPicker();
+}
+
 function openAddExercisePicker() {
-  const select = document.getElementById('sessionPickerSelect');
   const available = getAvailableExerciseIds();
   if (!available.length) {
     alert('All exercises are already in this workout.');
     return;
   }
-  select.innerHTML = available.map((exerciseId) => {
-    const preset = getExerciseMetaById(exerciseId);
-    return `<option value="${exerciseId}">${preset?.name || exerciseId}</option>`;
-  }).join('');
-  select.value = available[0];
+  pickerFilters.equipment = 'all';
+  pickerFilters.muscle = 'all';
+  refreshPicker();
   document.getElementById('sessionPicker').classList.add('open');
-  requestAnimationFrame(() => select.focus());
 }
 
 function closeSessionPicker() {
   document.getElementById('sessionPicker').classList.remove('open');
-}
-
-function confirmSessionPicker() {
-  const exerciseId = document.getElementById('sessionPickerSelect').value;
-  if (!exerciseId) return;
-  addExercise(exerciseId, true, { allowDuplicate: false });
-  closeSessionPicker();
 }
 
 function applyExercisePresetById(exerciseId, cardId) {

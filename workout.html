@@ -2088,7 +2088,7 @@ function renderExercisePickerGrid() {
   const matches = metas.filter((meta) =>
     (pickerFilters.equipment === 'all' || (meta.equipment || 'barbell') === pickerFilters.equipment) &&
     (pickerFilters.muscle === 'all' || (meta.muscle || 'Other') === pickerFilters.muscle)
-  );
+  ).sort((a, b) => (a.name || a.id).localeCompare(b.name || b.id));
 
   grid.innerHTML = '';
   if (!matches.length) {

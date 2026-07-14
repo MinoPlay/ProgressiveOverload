@@ -728,18 +728,20 @@ body {
 }
 .sp-close i { width: 16px; height: 16px; }
 .session-picker-filters { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
-.picker-filter-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(96px, 1fr)); gap: 6px; }
+.picker-filter-divider { height: 1px; background: var(--border); margin: 4px 0; }
+.picker-filter-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
 .picker-chip {
-  display: block; width: 100%;
-  padding: 6px 8px; border-radius: 999px;
-  border: 1.5px solid var(--border); background: var(--surface2);
-  color: var(--text2); font-size: 12px; font-weight: 600; cursor: pointer;
-  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-align: center;
+  display: flex; align-items: center; justify-content: center;
+  width: 100%; height: 44px; padding: 4px;
+  border-radius: 12px; cursor: pointer;
+  border: 1.5px solid var(--border); background: #eef1f5;
 }
-.picker-chip.active { background: var(--accent); border-color: var(--accent); color: #fff; }
+.picker-chip.active { background: var(--accent); border-color: var(--accent); border-width: 2px; box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 30%, transparent); }
+.picker-chip.active .picker-chip-icon { filter: brightness(0) invert(1); }
+.picker-chip-icon { height: 30px; width: auto; max-width: 100%; object-fit: contain; pointer-events: none; }
 .session-picker-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: 8px;
   overflow-y: auto;
   padding: 2px;
@@ -1363,6 +1365,7 @@ body {
     </div>
     <div class="session-picker-filters">
       <div class="picker-filter-row" id="pickerEquipmentFilters"></div>
+      <div class="picker-filter-divider"></div>
       <div class="picker-filter-row" id="pickerMuscleFilters"></div>
     </div>
     <div class="session-picker-grid" id="sessionPickerGrid"></div>
@@ -2059,6 +2062,15 @@ function getPickerAvailableMetas() {
     .filter((meta) => meta && meta.id);
 }
 
+function pickerIconFor(kind, value) {
+  const base = 'assets/icons/filters/';
+  if (kind === 'Equipment') {
+    if (value === 'bodyweight+') return base + 'bodyweight-plus.png';
+    return base + value + '.png';
+  }
+  return base + String(value).toLowerCase() + '.png';
+}
+
 function buildPickerFilterChips(metas) {
   const equipRow = document.getElementById('pickerEquipmentFilters');
   const muscleRow = document.getElementById('pickerMuscleFilters');
@@ -2066,17 +2078,21 @@ function buildPickerFilterChips(metas) {
   const muscles = Array.from(new Set(metas.map((m) => (m.muscle || 'Other')))).sort();
 
   const chip = (kind, value, label, active) =>
-    `<button class="picker-chip${active ? ' active' : ''}" onclick="setPicker${kind}Filter('${value}')">` +
-    `<span>${label}</span></button>`;
+    `<button class="picker-chip${active ? ' active' : ''}" title="${label}" aria-label="${label}" onclick="setPicker${kind}Filter('${value}')">` +
+    `<img class="picker-chip-icon" src="${pickerIconFor(kind, value)}" alt="${label}"></button>`;
 
+  const twoRows = (row, count) => {
+    row.style.gridTemplateColumns = `repeat(${Math.max(1, Math.ceil(count / 2))}, 1fr)`;
+  };
+
+  twoRows(equipRow, equipments.length);
   equipRow.innerHTML =
-    chip('Equipment', 'all', 'All', pickerFilters.equipment === 'all') +
     equipments.map((eq) =>
       chip('Equipment', eq, eq.charAt(0).toUpperCase() + eq.slice(1), pickerFilters.equipment === eq)
     ).join('');
 
+  twoRows(muscleRow, muscles.length);
   muscleRow.innerHTML =
-    chip('Muscle', 'all', 'All', pickerFilters.muscle === 'all') +
     muscles.map((mu) =>
       chip('Muscle', mu, mu, pickerFilters.muscle === mu)
     ).join('');
@@ -2116,12 +2132,12 @@ function refreshPicker() {
 }
 
 function setPickerEquipmentFilter(value) {
-  pickerFilters.equipment = value;
+  pickerFilters.equipment = pickerFilters.equipment === value ? 'all' : value;
   refreshPicker();
 }
 
 function setPickerMuscleFilter(value) {
-  pickerFilters.muscle = value;
+  pickerFilters.muscle = pickerFilters.muscle === value ? 'all' : value;
   refreshPicker();
 }
 

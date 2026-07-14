@@ -28,6 +28,10 @@ git push
 - Use imperative mood for commit messages (e.g., "Add", "Fix", "Remove", not "Added", "Fixed", "Removed").
 - If the change spans multiple concerns, suggest separate commits instead.
 
+## Cache Busting
+
+- **Bump `CACHE_VERSION` in `sw.js` after every change.** Any change to app files must increment the `CACHE_VERSION` constant at the top of `sw.js` (e.g., `v72d` → `v72e`) so the service worker invalidates stale caches and clients pick up the update.
+
 ## Code Conventions
 
 - **Indentation:** 4 spaces (no tabs).

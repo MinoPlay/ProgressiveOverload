@@ -748,10 +748,13 @@ body {
   min-height: 60px;
 }
 .picker-cell {
-  padding: 12px 10px; border-radius: var(--radius-sm);
+  min-width: 0; height: 64px;
+  display: flex; align-items: center; justify-content: center;
+  padding: 8px; border-radius: var(--radius-sm);
   border: 1.5px solid var(--border); background: var(--surface2);
   color: var(--text); font-size: 13px; font-weight: 600; text-align: center;
-  cursor: pointer; line-height: 1.25;
+  cursor: pointer; line-height: 1.2;
+  overflow: hidden; word-break: break-word; overflow-wrap: anywhere;
 }
 .picker-cell:hover { border-color: var(--accent); }
 .session-picker-empty {

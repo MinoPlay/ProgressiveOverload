@@ -110,10 +110,11 @@
 .exercise-card {
     background: var(--bg-primary);
     border-radius: var(--radius-lg);
-    padding: var(--spacing-lg);
+    padding: var(--spacing-sm) var(--spacing-md);
     box-shadow: var(--shadow-md);
     transition: all var(--transition-base);
     border-left: 4px solid var(--primary-color);
+    min-width: 0;
 }
 
 .exercise-card:hover {
@@ -125,25 +126,34 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
-    margin-bottom: var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 
 .exercise-card h3 {
-    font-size: 1.25rem;
+    font-size: 0.95rem;
     color: var(--text-primary);
-    margin-bottom: var(--spacing-sm);
+    margin-bottom: var(--spacing-xs);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.exercise-card-info {
+    min-width: 0;
+    flex: 1;
 }
 
 .exercise-card-actions {
     display: flex;
-    gap: var(--spacing-sm);
+    gap: var(--spacing-xs);
+    flex-shrink: 0;
 }
 
 .equipment-badge {
     display: inline-block;
-    padding: 0.25rem 0.75rem;
+    padding: 0.15rem 0.5rem;
     border-radius: var(--radius-xl);
-    font-size: 0.85rem;
+    font-size: 0.7rem;
     font-weight: 500;
     background: #e3f2fd;
     color: #1976d2;
@@ -242,9 +252,9 @@
 
 .muscle-badge {
     display: inline-block;
-    margin-left: var(--spacing-sm);
-    font-size: 0.8rem;
-    padding: 0.2rem 0.6rem;
+    margin-left: var(--spacing-xs);
+    font-size: 0.7rem;
+    padding: 0.15rem 0.5rem;
     border-radius: var(--radius-xl);
     background: var(--secondary-color);
     color: var(--text-secondary);
@@ -662,14 +672,6 @@
 
     .toast {
         min-width: unset;
-    }
-
-    .exercise-card-actions {
-        flex-direction: column;
-    }
-
-    .exercise-card-actions .btn {
-        width: 100%;
     }
 
     /* Increase workout item padding and font sizes */
@@ -3784,10 +3786,59 @@
     color: #fff;
 }
 
+.filter-icon-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-sm);
+}
+
+#exerciseFilterEquipment.filter-icon-row {
+    grid-template-columns: repeat(3, 1fr);
+}
+
+.filter-icon-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: var(--spacing-sm) 0;
+}
+
+.filter-icon-chip {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 44px;
+    padding: 4px;
+    border-radius: var(--radius-lg);
+    cursor: pointer;
+    border: 1.5px solid var(--border-color);
+    background: #eef1f5;
+    transition: all var(--transition-fast);
+}
+
+.filter-icon-chip.active {
+    background: var(--primary-color);
+    border-color: var(--primary-color);
+    border-width: 2px;
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 30%, transparent);
+}
+
+.filter-icon-chip.active .filter-icon-img {
+    filter: brightness(0) invert(1);
+}
+
+.filter-icon-img {
+    height: 26px;
+    width: auto;
+    max-width: 100%;
+    object-fit: contain;
+    pointer-events: none;
+}
+
 .manage-pane .exercise-list {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-    gap: var(--spacing-md);
+    grid-template-columns: 1fr;
+    gap: var(--spacing-sm);
     margin-top: 0;
 }
 

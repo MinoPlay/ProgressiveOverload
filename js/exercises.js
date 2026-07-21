@@ -74,27 +74,65 @@ export const Exercises = {
     },
 
     renderFilterToggleGroups() {
-        this.renderToggleButtons(
+        this.renderFilterIconButtons(
             'exerciseFilterEquipment',
-            [{ value: '', label: 'All' }, ...this.getEquipmentOptions()],
+            this.getEquipmentOptions(),
+            this.getEquipmentFilterIcon,
             this.activeEquipmentFilter,
             (value) => {
-                this.activeEquipmentFilter = value;
+                this.activeEquipmentFilter = this.activeEquipmentFilter === value ? '' : value;
                 this.renderFilterToggleGroups();
                 this.render();
             }
         );
 
-        this.renderToggleButtons(
+        this.renderFilterIconButtons(
             'exerciseFilterMuscle',
-            [{ value: '', label: 'All' }, ...this.getMuscleOptions()],
+            this.getMuscleOptions(),
+            this.getMuscleFilterIcon,
             this.activeMuscleFilter,
             (value) => {
-                this.activeMuscleFilter = value;
+                this.activeMuscleFilter = this.activeMuscleFilter === value ? '' : value;
                 this.renderFilterToggleGroups();
                 this.render();
             }
         );
+    },
+
+    getEquipmentFilterIcon(value) {
+        const fileName = value === 'bodyweight+' ? 'bodyweight-plus' : value;
+        return `assets/icons/filters/${fileName}.png`;
+    },
+
+    getMuscleFilterIcon(value) {
+        return `assets/icons/filters/${value.toLowerCase()}.png`;
+    },
+
+    /**
+     * Render icon-only filter chips (no labels); selecting the active chip again clears the filter.
+     */
+    renderFilterIconButtons(containerId, options, getIcon, selectedValue, onSelect) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+
+        container.innerHTML = '';
+        options.forEach((option) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = `filter-icon-chip${selectedValue === option.value ? ' active' : ''}`;
+            button.title = option.label;
+            button.setAttribute('aria-label', option.label);
+            button.setAttribute('aria-pressed', selectedValue === option.value ? 'true' : 'false');
+
+            const icon = document.createElement('img');
+            icon.className = 'filter-icon-img';
+            icon.src = getIcon(option.value);
+            icon.alt = option.label;
+            button.appendChild(icon);
+
+            button.addEventListener('click', () => onSelect(option.value));
+            container.appendChild(button);
+        });
     },
 
     renderToggleButtons(containerId, options, selectedValue, onSelect) {
@@ -106,8 +144,8 @@ export const Exercises = {
             const button = document.createElement('button');
             button.type = 'button';
             button.className = `toggle-chip-btn${selectedValue === option.value ? ' active' : ''}`;
-            button.textContent = option.label;
             button.setAttribute('aria-pressed', selectedValue === option.value ? 'true' : 'false');
+            button.textContent = option.label;
             button.addEventListener('click', () => onSelect(option.value));
             container.appendChild(button);
         });
@@ -336,6 +374,7 @@ export const Exercises = {
         header.className = 'exercise-card-header';
 
         const info = document.createElement('div');
+        info.className = 'exercise-card-info';
 
         const title = document.createElement('h3');
         title.textContent = exercise.name; // Safe from XSS
@@ -356,13 +395,17 @@ export const Exercises = {
         actions.className = 'exercise-card-actions';
 
         const editBtn = document.createElement('button');
-        editBtn.className = 'btn btn-small btn-secondary';
-        editBtn.innerHTML = '<i data-lucide="edit-2"></i> Edit';
+        editBtn.className = 'btn-icon btn-small btn-secondary';
+        editBtn.innerHTML = '<i data-lucide="edit-2" style="width: 14px; height: 14px;"></i>';
+        editBtn.title = 'Edit';
+        editBtn.setAttribute('aria-label', 'Edit exercise');
         editBtn.onclick = () => this.showForm(exercise);
 
         const deleteBtn = document.createElement('button');
-        deleteBtn.className = 'btn btn-small btn-danger';
-        deleteBtn.innerHTML = '<i data-lucide="trash-2"></i> Delete';
+        deleteBtn.className = 'btn-icon btn-small btn-secondary btn-danger-text';
+        deleteBtn.innerHTML = '<i data-lucide="trash-2" style="width: 14px; height: 14px;"></i>';
+        deleteBtn.title = 'Delete';
+        deleteBtn.setAttribute('aria-label', 'Delete exercise');
         deleteBtn.onclick = () => this.handleDelete(exercise.id);
 
         actions.appendChild(editBtn);

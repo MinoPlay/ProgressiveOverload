@@ -116,56 +116,61 @@
 
             <!-- Exercises Section -->
             <section id="exercisesSection" class="content-section" role="region" aria-label="Manage Exercises">
-                <div class="manage-view-toggle" role="tablist" aria-label="Manage view">
-                    <button id="manageTabExercises" class="manage-tab-btn active" type="button" role="tab"
-                        aria-selected="true">Exercises</button>
-                    <button id="manageTabTemplates" class="manage-tab-btn" type="button" role="tab"
-                        aria-selected="false">Templates</button>
+                <div class="manage-header-row">
+                    <div class="manage-view-toggle" role="tablist" aria-label="Manage view">
+                        <button id="manageTabExercises" class="manage-tab-btn active" type="button" role="tab"
+                            aria-selected="true">Exercises</button>
+                        <button id="manageTabTemplates" class="manage-tab-btn" type="button" role="tab"
+                            aria-selected="false">Templates</button>
+                    </div>
+                    <button id="manageAddBtn" class="btn-icon btn-primary manage-add-btn" aria-label="Add new exercise"
+                        title="Add new exercise">
+                        <i data-lucide="plus"></i>
+                    </button>
                 </div>
 
                 <div id="manageExercisesPane" class="manage-pane active" role="tabpanel" aria-label="Exercises">
-                    <div class="section-header manage-actions-header">
-                        <button id="addExerciseBtn" class="btn-icon btn-primary manage-add-btn" aria-label="Add new exercise"
-                            title="Add new exercise">
-                            <i data-lucide="plus"></i>
-                        </button>
-                    </div>
-
                     <!-- Add/Edit Exercise Form -->
-                    <div id="exerciseForm" class="form-container" style="display: none;">
-                        <h3 id="exerciseFormTitle">Add New Exercise</h3>
-                        <form id="exerciseFormElement">
-                            <input type="hidden" id="exerciseId" name="exerciseId">
-                            <input type="hidden" id="equipmentType" name="equipmentType" required aria-required="true">
-                            <input type="hidden" id="muscle" name="muscle" required aria-required="true">
-
-                            <div class="form-group">
-                                <label for="exerciseName">
-                                    Exercise Name <span class="required" aria-label="required">*</span>
-                                </label>
-                                <input type="text" id="exerciseName" name="exerciseName" placeholder="e.g., Bench Press" required
-                                    aria-required="true" maxlength="100">
+                    <div id="exerciseForm" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="exerciseFormTitle">
+                        <div class="modal-content" style="max-width: 480px;">
+                            <div class="modal-header">
+                                <h2 id="exerciseFormTitle">Add New Exercise</h2>
                             </div>
+                            <div class="modal-body">
+                                <form id="exerciseFormElement">
+                                    <input type="hidden" id="exerciseId" name="exerciseId">
+                                    <input type="hidden" id="equipmentType" name="equipmentType" required aria-required="true">
+                                    <input type="hidden" id="muscle" name="muscle" required aria-required="true">
 
-                            <div class="form-group">
-                                <label>
-                                    Equipment Type <span class="required" aria-label="required">*</span>
-                                </label>
-                                <div id="equipmentTypeToggle" class="toggle-chip-grid" aria-label="Select equipment type"></div>
-                            </div>
+                                    <div class="form-group">
+                                        <label for="exerciseName">
+                                            Exercise Name <span class="required" aria-label="required">*</span>
+                                        </label>
+                                        <input type="text" id="exerciseName" name="exerciseName" placeholder="e.g., Bench Press" required
+                                            aria-required="true" maxlength="100">
+                                    </div>
 
-                            <div class="form-group">
-                                <label>
-                                    Target Muscle <span class="required" aria-label="required">*</span>
-                                </label>
-                                <div id="muscleToggle" class="toggle-chip-grid" aria-label="Select target muscle"></div>
-                            </div>
+                                    <div class="form-group">
+                                        <label>
+                                            Equipment Type <span class="required" aria-label="required">*</span>
+                                        </label>
+                                        <div id="equipmentTypeToggle" class="filter-icon-row" aria-label="Select equipment type"></div>
+                                    </div>
 
-                            <div class="form-actions">
-                                <button type="submit" class="btn btn-primary">Save Exercise</button>
-                                <button type="button" id="cancelExerciseBtn" class="btn btn-secondary">Cancel</button>
+                                    <div class="form-group">
+                                        <label>
+                                            Target Muscle <span class="required" aria-label="required">*</span>
+                                        </label>
+                                        <div id="muscleToggle" class="filter-icon-row" aria-label="Select target muscle"></div>
+                                    </div>
+
+                                    <div class="form-actions">
+                                        <button type="submit" class="btn btn-primary">Save Exercise</button>
+                                        <button type="button" id="cancelExerciseBtn" class="btn btn-secondary">Cancel</button>
+                                    </div>
+                                </form>
                             </div>
-                        </form>
+                        </div>
                     </div>
 
                     <div class="form-container exercise-filter-panel">
@@ -179,12 +184,6 @@
                 </div>
 
                 <div id="manageTemplatesPane" class="manage-pane" role="tabpanel" aria-label="Templates">
-                    <div class="section-header">
-                        <button id="addTemplateBtn" class="btn btn-primary" aria-label="Add new template">
-                            <i data-lucide="plus"></i> Add New Template
-                        </button>
-                    </div>
-
                     <!-- Template List -->
                     <div id="templateList" class="template-list"></div>
 

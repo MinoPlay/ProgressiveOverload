@@ -3712,6 +3712,14 @@
 }
 
 /* ─── Manage View Toggles ───────────────────────────────────────────────────── */
+.manage-header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-sm);
+    margin-bottom: var(--spacing-md);
+}
+
 .manage-view-toggle {
     display: inline-flex;
     gap: var(--spacing-xs);
@@ -3719,7 +3727,6 @@
     background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: var(--radius-xl);
-    margin-bottom: var(--spacing-md);
 }
 
 .manage-tab-btn {
@@ -3748,14 +3755,10 @@
     display: block;
 }
 
-.manage-actions-header {
-    justify-content: flex-start;
-    margin-bottom: var(--spacing-md);
-}
-
 .manage-add-btn {
     min-width: 46px;
     min-height: 46px;
+    flex-shrink: 0;
 }
 
 .exercise-filter-panel {
@@ -3792,7 +3795,8 @@
     gap: var(--spacing-sm);
 }
 
-#exerciseFilterEquipment.filter-icon-row {
+#exerciseFilterEquipment.filter-icon-row,
+#equipmentTypeToggle.filter-icon-row {
     grid-template-columns: repeat(3, 1fr);
 }
 

@@ -37,12 +37,12 @@ CRUD operations for the exercise library. Lives in the **Manage** tab. Exercises
 |---|---|
 | `init()` | Bind events, render toggle groups, restore active manage tab, render list |
 | `render()` | Re-render `#exerciseList` with current filter state |
-| `showForm(exercise?)` | Open add/edit form; pass exercise object to edit, omit to add |
-| `hideForm()` | Close and reset form |
+| `showForm(exercise?)` | Open add/edit modal dialog (`#exerciseForm`); pass exercise object to edit, omit to add |
+| `hideForm()` | Close and reset modal |
 | `handleSubmit(e)` | Validate fields, call `Storage.addExercise` or `Storage.updateExercise` |
 | `handleDelete(id)` | Confirm then call `Storage.deleteExercise` |
-| `renderToggleButtons(containerId, options, selected, onSelect)` | Render chip-style toggle buttons |
-| `setManageView(view)` | Switch between `'exercises'` and `'templates'` panes |
+| `renderIconChipButtons(containerId, options, getIcon, selected, onSelect)` | Render icon-only chip buttons (used by both the add/edit form and the list filters) |
+| `setManageView(view)` | Switch between `'exercises'` and `'templates'` panes; also relabels the shared `#manageAddBtn` |
 
 ## Integration Points
 - **Storage** — reads `getExercises()`, writes via `addExercise / updateExercise / deleteExercise`
@@ -52,6 +52,7 @@ CRUD operations for the exercise library. Lives in the **Manage** tab. Exercises
 ## Rules & Constraints
 - Exercise names are case-insensitively unique — enforce before saving.
 - `requiresWeight` is always derived from `CONFIG.equipmentTypes[equipmentType].requiresWeight`; never set it manually.
-- Equipment type and muscle are selected via toggle-chip buttons (not a `<select>`); the hidden `<input>` holds the value.
+- Equipment type and muscle are selected via icon-only chip buttons (not a `<select>`); the hidden `<input>` holds the value.
+- The add/edit form (`#exerciseForm`) is a modal dialog (`.modal`/`.modal-content`), opened via the shared `#manageAddBtn` next to the Exercises/Templates tabs; clicking the backdrop or Cancel closes it.
 - Do not render exercise names via `innerHTML` — use `textContent` to prevent XSS.
 - Deleting an exercise does not remove historical workout records referencing its ID.

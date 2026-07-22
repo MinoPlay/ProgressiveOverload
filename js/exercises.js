@@ -5,6 +5,7 @@ import { Storage } from './storage.js';
 import { showToast } from './app.js';
 import { CONFIG } from './config.js';
 import { validateExerciseName, validateEquipmentType, formatEquipmentType } from './utils.js';
+import { Templates } from './templates.js';
 
 const MUSCLE_OPTIONS = ['chest', 'back', 'shoulders', 'legs', 'biceps', 'triceps', 'core', 'neck'];
 
@@ -29,15 +30,29 @@ export const Exercises = {
      * Bind event listeners
      */
     bindEvents() {
-        const addBtn = document.getElementById('addExerciseBtn');
+        const addBtn = document.getElementById('manageAddBtn');
         const cancelBtn = document.getElementById('cancelExerciseBtn');
         const form = document.getElementById('exerciseFormElement');
+        const formModal = document.getElementById('exerciseForm');
         const exercisesTab = document.getElementById('manageTabExercises');
         const templatesTab = document.getElementById('manageTabTemplates');
 
-        if (addBtn) addBtn.addEventListener('click', () => this.showForm());
+        if (addBtn) {
+            addBtn.addEventListener('click', () => {
+                if (this.manageView === 'templates') {
+                    Templates.openTemplateEditor();
+                } else {
+                    this.showForm();
+                }
+            });
+        }
         if (cancelBtn) cancelBtn.addEventListener('click', () => this.hideForm());
         if (form) form.addEventListener('submit', (e) => this.handleSubmit(e));
+        if (formModal) {
+            formModal.addEventListener('click', (e) => {
+                if (e.target === formModal) this.hideForm();
+            });
+        }
         if (exercisesTab) exercisesTab.addEventListener('click', () => this.setManageView('exercises'));
         if (templatesTab) templatesTab.addEventListener('click', () => this.setManageView('templates'));
     },
@@ -48,9 +63,10 @@ export const Exercises = {
     },
 
     renderFormToggleGroups() {
-        this.renderToggleButtons(
+        this.renderIconChipButtons(
             'equipmentTypeToggle',
             this.getEquipmentOptions(),
+            this.getEquipmentFilterIcon,
             this.selectedEquipmentType,
             (value) => {
                 this.selectedEquipmentType = value;
@@ -60,9 +76,10 @@ export const Exercises = {
             }
         );
 
-        this.renderToggleButtons(
+        this.renderIconChipButtons(
             'muscleToggle',
             this.getMuscleOptions(),
+            this.getMuscleFilterIcon,
             this.selectedMuscle,
             (value) => {
                 this.selectedMuscle = value;
@@ -74,7 +91,7 @@ export const Exercises = {
     },
 
     renderFilterToggleGroups() {
-        this.renderFilterIconButtons(
+        this.renderIconChipButtons(
             'exerciseFilterEquipment',
             this.getEquipmentOptions(),
             this.getEquipmentFilterIcon,
@@ -86,7 +103,7 @@ export const Exercises = {
             }
         );
 
-        this.renderFilterIconButtons(
+        this.renderIconChipButtons(
             'exerciseFilterMuscle',
             this.getMuscleOptions(),
             this.getMuscleFilterIcon,
@@ -109,9 +126,9 @@ export const Exercises = {
     },
 
     /**
-     * Render icon-only filter chips (no labels); selecting the active chip again clears the filter.
+     * Render icon-only chip buttons (no labels).
      */
-    renderFilterIconButtons(containerId, options, getIcon, selectedValue, onSelect) {
+    renderIconChipButtons(containerId, options, getIcon, selectedValue, onSelect) {
         const container = document.getElementById(containerId);
         if (!container) return;
 
@@ -130,22 +147,6 @@ export const Exercises = {
             icon.alt = option.label;
             button.appendChild(icon);
 
-            button.addEventListener('click', () => onSelect(option.value));
-            container.appendChild(button);
-        });
-    },
-
-    renderToggleButtons(containerId, options, selectedValue, onSelect) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
-
-        container.innerHTML = '';
-        options.forEach((option) => {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = `toggle-chip-btn${selectedValue === option.value ? ' active' : ''}`;
-            button.setAttribute('aria-pressed', selectedValue === option.value ? 'true' : 'false');
-            button.textContent = option.label;
             button.addEventListener('click', () => onSelect(option.value));
             container.appendChild(button);
         });
@@ -186,6 +187,13 @@ export const Exercises = {
         }
         if (exercisesPane) exercisesPane.classList.toggle('active', isExercises);
         if (templatesPane) templatesPane.classList.toggle('active', !isExercises);
+
+        const addBtn = document.getElementById('manageAddBtn');
+        if (addBtn) {
+            const label = isExercises ? 'Add new exercise' : 'Add new template';
+            addBtn.setAttribute('aria-label', label);
+            addBtn.title = label;
+        }
     },
 
     /**
@@ -221,7 +229,7 @@ export const Exercises = {
 
         this.renderFormToggleGroups();
 
-        form.style.display = 'block';
+        form.style.display = 'flex';
         nameInput.focus();
     },
 

@@ -19,14 +19,12 @@ export const Templates = {
     },
 
     bindEvents() {
-        const addBtn = document.getElementById('addTemplateBtn');
         const cancelBtn = document.getElementById('cancelTemplateBtn');
         const saveBtn = document.getElementById('saveTemplateBtn');
         const addExerciseBtn = document.getElementById('templateAddExerciseBtn');
         const addSupersetBtn = document.getElementById('templateAddSupersetBtn');
         const rowList = document.getElementById('templateRowList');
 
-        if (addBtn) addBtn.addEventListener('click', () => this.openTemplateEditor());
         if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeTemplateEditor());
         if (saveBtn) saveBtn.addEventListener('click', () => this.saveTemplate());
         if (addExerciseBtn) addExerciseBtn.addEventListener('click', () => this.addEditorExercise());

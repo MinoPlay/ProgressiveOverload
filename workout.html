@@ -171,6 +171,35 @@ body {
 }
 .scroll-area::-webkit-scrollbar { width: 0; }
 
+/* ── Plan Toolbar (template picker + collapse-all) ────────────────── */
+.plan-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.plan-toolbar .template-picker {
+  flex: 1;
+  min-width: 0;
+  margin-bottom: 0;
+}
+.collapse-all-btn {
+  flex-shrink: 0;
+  border: 1.5px solid var(--border);
+  background: var(--surface);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text3);
+  cursor: pointer;
+  white-space: nowrap;
+}
+.collapse-all-btn i { width: 16px; height: 16px; }
+
 /* ── Template Picker ─────────────────────────────────────────────── */
 .template-picker {
   position: relative;
@@ -1130,15 +1159,21 @@ body {
         </div>
       </div>
 
-      <div class="template-picker">
-        <button class="template-btn" onclick="toggleTemplateMenu(event)">
-          <i data-lucide="bookmark"></i>
-          <span id="activeTemplateLabel">No template</span>
-          <i data-lucide="chevron-down" class="chev"></i>
-        </button>
-        <div class="template-menu" id="templateMenu">
-          <!-- Template options injected dynamically -->
+      <div class="plan-toolbar">
+        <div class="template-picker">
+          <button class="template-btn" onclick="toggleTemplateMenu(event)">
+            <i data-lucide="bookmark"></i>
+            <span id="activeTemplateLabel">No template</span>
+            <i data-lucide="chevron-down" class="chev"></i>
+          </button>
+          <div class="template-menu" id="templateMenu">
+            <!-- Template options injected dynamically -->
+          </div>
         </div>
+        <button class="collapse-all-btn" id="collapseAllBtn" onclick="toggleAllCards()" title="Collapse/expand all exercises">
+          <i data-lucide="chevrons-down-up" id="collapseAllIcon"></i>
+          <span id="collapseAllLabel">Collapse</span>
+        </button>
       </div>
 
       <!-- Exercise Card 1: Bench Press -->
@@ -3018,6 +3053,31 @@ function toggleCard(id) {
     const showCompletedSummary = isOpen && card.classList.contains('done');
     sum.style.display = showCompletedSummary ? 'block' : 'none';
   }
+  lucide.createIcons();
+}
+
+function toggleAllCards() {
+  const cards = Array.from(document.querySelectorAll('#planView .exercise-card'));
+  const anyOpen = cards.some(card => card.classList.contains('card-open'));
+  const collapse = anyOpen; // if any card is open, collapse all; otherwise expand all
+  cards.forEach(card => {
+    const key = card.id.replace('card-', '');
+    const body = document.getElementById('body-' + key);
+    const btn  = document.getElementById('btn-'  + key);
+    const sum  = document.getElementById('summary-' + key);
+    if (!body || !btn) return;
+    btn.classList.toggle('open', !collapse);
+    card.classList.toggle('card-open', !collapse);
+    body.style.display = collapse ? 'none' : '';
+    if (sum) {
+      const showCompletedSummary = collapse && card.classList.contains('done');
+      sum.style.display = showCompletedSummary ? 'block' : 'none';
+    }
+  });
+  const icon = document.getElementById('collapseAllIcon');
+  const label = document.getElementById('collapseAllLabel');
+  if (icon) icon.setAttribute('data-lucide', collapse ? 'chevrons-up-down' : 'chevrons-down-up');
+  if (label) label.textContent = collapse ? 'Expand' : 'Collapse';
   lucide.createIcons();
 }
 

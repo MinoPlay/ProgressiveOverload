@@ -3846,6 +3846,94 @@
     margin-top: 0;
 }
 
+/* ─── Template Exercise Picker ──────────────────────────────────────────────── */
+.template-picker-content {
+    max-width: 640px;
+    width: min(96vw, 640px);
+    max-height: calc(100vh - 48px);
+    display: flex;
+    flex-direction: column;
+    padding: 16px;
+    border-radius: var(--radius-lg);
+}
+
+.template-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0;
+    margin-bottom: var(--spacing-md);
+    border-bottom: none;
+}
+
+.template-picker-close-btn {
+    width: 30px;
+    height: 30px;
+    flex: 0 0 auto;
+    border: none;
+    border-radius: 50%;
+    background: var(--secondary-color);
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+}
+
+.template-picker-close-btn i {
+    width: 16px;
+    height: 16px;
+}
+
+.template-picker-content .modal-body {
+    padding: 0;
+    overflow-y: auto;
+}
+
+.template-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-sm);
+    margin-top: var(--spacing-md);
+    overflow-y: auto;
+    min-height: 60px;
+}
+
+.template-picker-cell {
+    min-width: 0;
+    height: 64px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-sm);
+    border-radius: var(--radius-sm);
+    border: 1.5px solid var(--border-color);
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    text-align: center;
+    line-height: 1.2;
+    cursor: pointer;
+    overflow: hidden;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    transition: all var(--transition-fast);
+}
+
+.template-picker-cell:hover,
+.template-picker-cell:focus-visible {
+    border-color: var(--primary-color);
+}
+
+.template-picker-empty {
+    grid-column: 1 / -1;
+    color: var(--text-secondary);
+    font-size: 0.875rem;
+    text-align: center;
+    padding: var(--spacing-md) 0;
+}
+
 /* ─── Template List ─────────────────────────────────────────────────────────── */
 .template-list {
     display: flex;

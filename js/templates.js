@@ -10,6 +10,10 @@ export const Templates = {
     /** Currently open editor state: { id?, name, rows } */
     editorSession: null,
 
+    /** Active exercise picker context: { mode: 'add'|'replace', rowId, itemId } */
+    pickerContext: null,
+    pickerFilters: { equipment: '', muscle: '' },
+
     init() {
         this.bindEvents();
         this.renderTemplateList();
@@ -22,24 +26,29 @@ export const Templates = {
         const cancelBtn = document.getElementById('cancelTemplateBtn');
         const saveBtn = document.getElementById('saveTemplateBtn');
         const addExerciseBtn = document.getElementById('templateAddExerciseBtn');
-        const addSupersetBtn = document.getElementById('templateAddSupersetBtn');
         const rowList = document.getElementById('templateRowList');
+        const pickerModal = document.getElementById('templateExercisePickerModal');
+        const pickerCloseBtn = document.getElementById('templateExercisePickerCloseBtn');
 
         if (cancelBtn) cancelBtn.addEventListener('click', () => this.closeTemplateEditor());
         if (saveBtn) saveBtn.addEventListener('click', () => this.saveTemplate());
-        if (addExerciseBtn) addExerciseBtn.addEventListener('click', () => this.addEditorExercise());
-        if (addSupersetBtn) addSupersetBtn.addEventListener('click', () => this.addEditorSuperset());
+        if (addExerciseBtn) addExerciseBtn.addEventListener('click', () => this.openAddExercisePicker());
 
         if (rowList) {
-            // Use 'change' for both selects and inputs to avoid double-firing on selects
             rowList.addEventListener('change', (e) => this.handleEditorFieldChange(e));
-            rowList.addEventListener('input', (e) => {
-                // Only handle input events for text/number inputs, not selects
-                if (e.target.tagName !== 'SELECT') {
-                    this.handleEditorFieldChange(e);
-                }
-            });
+            rowList.addEventListener('input', (e) => this.handleEditorFieldChange(e));
             rowList.addEventListener('click', (e) => this.handleEditorAction(e));
+        }
+
+        if (pickerCloseBtn) pickerCloseBtn.addEventListener('click', () => this.closeExercisePicker());
+        if (pickerModal) {
+            pickerModal.addEventListener('click', (e) => {
+                if (e.target === pickerModal) {
+                    this.closeExercisePicker();
+                    return;
+                }
+                this.handleExercisePickerClick(e);
+            });
         }
     },
 
@@ -151,28 +160,13 @@ export const Templates = {
 
     // ─── Editor rows ───────────────────────────────────────────────────────────
 
-    addEditorExercise() {
+    addEditorExercise(exerciseId = '') {
         if (!this.editorSession) return;
         const rowId = `tpl-row-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
         this.editorSession.rows.push({
             id: rowId,
             type: 'single',
-            exerciseId: ''
-        });
-        this.renderEditorRows();
-    },
-
-    addEditorSuperset() {
-        if (!this.editorSession) return;
-        const blockId = `tpl-ss-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-        this.editorSession.rows.push({
-            id: blockId,
-            type: 'superset',
-            label: 'Superset',
-            exercises: [
-                { id: `${blockId}-a`, exerciseId: '' },
-                { id: `${blockId}-b`, exerciseId: '' }
-            ]
+            exerciseId
         });
         this.renderEditorRows();
     },
@@ -273,7 +267,7 @@ export const Templates = {
 
         const topRow = document.createElement('div');
         topRow.className = 'planned-entry-top';
-        topRow.appendChild(this.buildExerciseSelect(row.id, null, row.exerciseId));
+        topRow.appendChild(this.buildExercisePickerButton(row.id, null, row.exerciseId));
 
         body.appendChild(topRow);
 
@@ -343,7 +337,7 @@ export const Templates = {
 
             const topRow = document.createElement('div');
             topRow.className = 'planned-entry-top';
-            topRow.appendChild(this.buildExerciseSelect(row.id, item.id, item.exerciseId));
+            topRow.appendChild(this.buildExercisePickerButton(row.id, item.id, item.exerciseId));
 
             content.appendChild(topRow);
 
@@ -361,28 +355,160 @@ export const Templates = {
         return wrapper;
     },
 
-    buildExerciseSelect(rowId, itemId, selectedValue) {
-        const select = document.createElement('select');
-        select.dataset.field = 'exerciseId';
-        select.name = 'exercise-select';
-        select.dataset.rowId = rowId;
-        if (itemId) select.dataset.itemId = itemId;
+    getExercisePickerIcon(exercise) {
+        if (!exercise) return 'plus-circle';
+        const equipmentIcons = {
+            barbell: 'dumbbell',
+            dumbbell: 'dumbbell',
+            kettlebell: 'dumbbell',
+            machines: 'settings',
+            bodyweight: 'user',
+            'bodyweight+': 'user'
+        };
+        return equipmentIcons[exercise.equipmentType] || 'dumbbell';
+    },
 
-        const defaultOption = document.createElement('option');
-        defaultOption.value = '';
-        defaultOption.textContent = 'Select Exercise...';
-        select.appendChild(defaultOption);
+    buildExercisePickerButton(rowId, itemId, selectedValue) {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'planner-exercise-picker-btn';
+        button.dataset.action = 'pick-exercise';
+        button.dataset.rowId = rowId;
+        if (itemId) button.dataset.itemId = itemId;
 
-        const exercises = Storage.getExercises().slice().sort((a, b) => a.name.localeCompare(b.name));
-        exercises.forEach(ex => {
-            const opt = document.createElement('option');
-            opt.value = ex.id;
-            opt.textContent = ex.name;
-            select.appendChild(opt);
-        });
+        const exercise = selectedValue ? Storage.getExerciseById(selectedValue) : null;
+        const label = exercise?.name || 'Select Exercise...';
+        const labelClass = exercise ? '' : 'placeholder';
+        const icon = this.getExercisePickerIcon(exercise);
+        button.innerHTML = `<span class="planner-exercise-picker-main"><i class="planner-exercise-picker-icon" data-lucide="${icon}" aria-hidden="true"></i><span class="${labelClass}">${label}</span></span><i data-lucide="chevron-down"></i>`;
+        button.title = 'Select exercise';
 
-        select.value = selectedValue || '';
-        return select;
+        return button;
+    },
+
+    // ─── Exercise picker modal ──────────────────────────────────────────────────
+
+    openExercisePicker(rowId, itemId) {
+        this.pickerContext = { mode: 'replace', rowId, itemId: itemId || null };
+        this.pickerFilters = { equipment: '', muscle: '' };
+        this.renderExercisePicker();
+        const modal = document.getElementById('templateExercisePickerModal');
+        if (modal) modal.style.display = 'flex';
+    },
+
+    openAddExercisePicker() {
+        if (!this.editorSession) return;
+        this.pickerContext = { mode: 'add' };
+        this.pickerFilters = { equipment: '', muscle: '' };
+        this.renderExercisePicker();
+        const modal = document.getElementById('templateExercisePickerModal');
+        if (modal) modal.style.display = 'flex';
+    },
+
+    closeExercisePicker() {
+        const modal = document.getElementById('templateExercisePickerModal');
+        if (modal) modal.style.display = 'none';
+        this.pickerContext = null;
+    },
+
+    getExercisePickerIconPath(kind, value) {
+        if (kind === 'equipment') {
+            const fileName = value === 'bodyweight+' ? 'bodyweight-plus' : value;
+            return `assets/icons/filters/${fileName}.png`;
+        }
+        return `assets/icons/filters/${String(value).toLowerCase()}.png`;
+    },
+
+    renderExercisePicker() {
+        const exercises = Storage.getExercises();
+
+        const equipmentRow = document.getElementById('templateExercisePickerEquipmentFilters');
+        const muscleRow = document.getElementById('templateExercisePickerMuscleFilters');
+        if (equipmentRow) {
+            const equipments = Array.from(new Set(exercises.map(ex => ex.equipmentType))).sort();
+            equipmentRow.innerHTML = equipments.map(eq => {
+                const active = this.pickerFilters.equipment === eq;
+                const label = eq.charAt(0).toUpperCase() + eq.slice(1);
+                return `<button type="button" class="filter-icon-chip${active ? ' active' : ''}" data-action="pick-filter" data-kind="equipment" data-value="${eq}" title="${label}" aria-label="${label}"><img class="filter-icon-img" src="${this.getExercisePickerIconPath('equipment', eq)}" alt="${label}"></button>`;
+            }).join('');
+        }
+        if (muscleRow) {
+            const muscles = Array.from(new Set(exercises.map(ex => ex.muscle))).sort();
+            muscleRow.innerHTML = muscles.map(mu => {
+                const active = this.pickerFilters.muscle === mu;
+                return `<button type="button" class="filter-icon-chip${active ? ' active' : ''}" data-action="pick-filter" data-kind="muscle" data-value="${mu}" title="${mu}" aria-label="${mu}"><img class="filter-icon-img" src="${this.getExercisePickerIconPath('muscle', mu)}" alt="${mu}"></button>`;
+            }).join('');
+        }
+
+        const grid = document.getElementById('templateExercisePickerGrid');
+        if (grid) {
+            const matches = exercises
+                .filter(ex =>
+                    (!this.pickerFilters.equipment || ex.equipmentType === this.pickerFilters.equipment) &&
+                    (!this.pickerFilters.muscle || ex.muscle === this.pickerFilters.muscle)
+                )
+                .sort((a, b) => a.name.localeCompare(b.name));
+
+            grid.innerHTML = '';
+            if (!matches.length) {
+                const empty = document.createElement('div');
+                empty.className = 'template-picker-empty';
+                empty.textContent = 'No exercises match';
+                grid.appendChild(empty);
+            } else {
+                matches.forEach(ex => {
+                    const cell = document.createElement('button');
+                    cell.type = 'button';
+                    cell.className = 'template-picker-cell';
+                    cell.dataset.action = 'select-exercise';
+                    cell.dataset.exerciseId = ex.id;
+                    cell.textContent = ex.name;
+                    grid.appendChild(cell);
+                });
+            }
+        }
+
+        if (window.lucide) window.lucide.createIcons();
+    },
+
+    handleExercisePickerClick(event) {
+        const filterBtn = event.target.closest('button[data-action="pick-filter"]');
+        if (filterBtn) {
+            const { kind, value } = filterBtn.dataset;
+            this.pickerFilters[kind] = this.pickerFilters[kind] === value ? '' : value;
+            this.renderExercisePicker();
+            return;
+        }
+
+        const cell = event.target.closest('button[data-action="select-exercise"]');
+        if (cell) {
+            this.selectPickerExercise(cell.dataset.exerciseId);
+        }
+    },
+
+    selectPickerExercise(exerciseId) {
+        if (!exerciseId || !this.pickerContext || !this.editorSession) return;
+
+        if (this.pickerContext.mode === 'add') {
+            this.addEditorExercise(exerciseId);
+            // Adding exercises stays open until the user explicitly closes the picker.
+            this.renderExercisePicker();
+            return;
+        }
+
+        const { rowId, itemId } = this.pickerContext;
+        const row = this.editorSession.rows.find(r => r.id === rowId);
+        if (!row) return;
+
+        if (row.type === 'single') {
+            row.exerciseId = exerciseId;
+        } else {
+            const item = (row.exercises || []).find(e => e.id === itemId);
+            if (!item) return;
+            item.exerciseId = exerciseId;
+        }
+        this.renderEditorRows();
+        this.closeExercisePicker();
     },
 
     buildSetsGrid(rowId, itemId, sets = []) {
@@ -507,29 +633,13 @@ export const Templates = {
         if (!row) return;
 
         if (row.type === 'single') {
-            if (fieldName === 'exerciseId') {
-                // Sync all DOM values to editorSession before re-rendering
-                this.syncEditorFromDom();
-                row.exerciseId = field.value;
-                this.renderEditorRows();
-                return;
-            } else {
-                const set = (row.sets || []).find(s => s.id === setId);
-                if (set) set[fieldName] = field.value;
-            }
+            const set = (row.sets || []).find(s => s.id === setId);
+            if (set) set[fieldName] = field.value;
         } else {
             const item = (row.exercises || []).find(e => e.id === itemId);
             if (!item) return;
-            if (fieldName === 'exerciseId') {
-                // Sync all DOM values to editorSession before re-rendering
-                this.syncEditorFromDom();
-                item.exerciseId = field.value;
-                this.renderEditorRows();
-                return;
-            } else {
-                const set = (item.sets || []).find(s => s.id === setId);
-                if (set) set[fieldName] = field.value;
-            }
+            const set = (item.sets || []).find(s => s.id === setId);
+            if (set) set[fieldName] = field.value;
         }
     },
 
@@ -538,6 +648,11 @@ export const Templates = {
         if (!button || !this.editorSession) return;
 
         const { action, rowId, itemId, setId, delta, setIndex } = button.dataset;
+
+        if (action === 'pick-exercise') {
+            this.openExercisePicker(rowId, itemId || null);
+            return;
+        }
 
         if (action === 'toggle-collapse') {
             const wrapper = button.closest('.planned-row, .superset-block');
@@ -722,30 +837,19 @@ export const Templates = {
         const rowList = document.getElementById('templateRowList');
         if (!rowList || !this.editorSession) return;
 
-        rowList.querySelectorAll('select[data-field], input[data-field]').forEach(field => {
+        rowList.querySelectorAll('input[data-field]').forEach(field => {
             const { field: fieldName, rowId, itemId, setId } = field.dataset;
             const row = this.editorSession.rows.find(r => r.id === rowId);
             if (!row) return;
 
             if (row.type === 'single') {
-                if (fieldName === 'exerciseId') {
-                    // Only update if a real exercise is selected.
-                    // A blank value means the <option> wasn't found (e.g. exercise ID
-                    // mismatch) — don't clobber the valid exerciseId already in editorSession.
-                    if (field.value) row.exerciseId = field.value;
-                } else {
-                    const set = (row.sets || []).find(s => s.id === setId);
-                    if (set) set[fieldName] = field.value;
-                }
+                const set = (row.sets || []).find(s => s.id === setId);
+                if (set) set[fieldName] = field.value;
             } else {
                 const item = (row.exercises || []).find(e => e.id === itemId);
                 if (!item) return;
-                if (fieldName === 'exerciseId') {
-                    if (field.value) item.exerciseId = field.value;
-                } else {
-                    const set = (item.sets || []).find(s => s.id === setId);
-                    if (set) set[fieldName] = field.value;
-                }
+                const set = (item.sets || []).find(s => s.id === setId);
+                if (set) set[fieldName] = field.value;
             }
         });
     },

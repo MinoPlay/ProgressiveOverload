@@ -16,7 +16,8 @@
 
 ## Git Workflow
 
-After completing each prompt, offer a ready-to-run git command block:
+- **Never commit or push.** Committing and pushing is ALWAYS a manual, user-performed step. Do not run `git commit` or `git push` yourself, even if asked to "commit" as part of a broader task — leave the changes staged/unstaged for the user to review.
+- After completing each prompt, offer a ready-to-run git command block for the user to run themselves:
 
 ```
 git add .<only the files that were changed>

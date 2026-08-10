@@ -79,7 +79,6 @@ body {
 }
 
 /* ── Dark mode: unify indicator/icon colours to white ─────────────── */
-[data-theme="dark"] .exercise-icon { color: var(--text); }
 [data-theme="dark"] .collapse-btn { color: var(--text); }
 [data-theme="dark"] .set-num { color: var(--text); }
 [data-theme="dark"] .tick-btn:not(.ticked) { color: var(--text); border-color: var(--text); }
@@ -87,7 +86,6 @@ body {
 [data-theme="dark"] .set-input.ghost { color: var(--text); }
 
 /* ── Green mode: terminal green icons ─────────────────────────────── */
-[data-theme="green"] .exercise-icon { color: var(--text); }
 [data-theme="green"] .collapse-btn { color: var(--text); }
 [data-theme="green"] .set-num { color: var(--text); }
 [data-theme="green"] .tick-btn:not(.ticked) { color: var(--text); border-color: var(--text); }
@@ -95,7 +93,6 @@ body {
 [data-theme="green"] .set-input.ghost { color: var(--text); }
 
 /* ── Light mode: unify indicator/icon colours to black ────────────── */
-[data-theme="light"] .exercise-icon { color: var(--text); }
 [data-theme="light"] .collapse-btn { color: var(--text); }
 [data-theme="light"] .set-num { color: var(--text); }
 [data-theme="light"] .tick-btn:not(.ticked) { color: var(--text); border-color: var(--text); }
@@ -270,12 +267,15 @@ body {
   width: 28px;
   height: 28px;
   border-radius: 8px;
-  background: var(--accent-light);
+  background: #fff;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: var(--accent);
   flex-shrink: 0;
+  padding: 3px;
+  box-sizing: border-box;
+  object-fit: contain;
+  overflow: hidden;
 }
 .exercise-name.done-text { text-decoration: none; color: var(--text); }
 .volume-bars {
@@ -2245,18 +2245,6 @@ function applyExercisePresetById(exerciseId, cardId) {
   saveDesign1State();
 }
 
-function getEquipmentIcon(equipment) {
-  const icons = {
-    barbell: 'dumbbell',
-    dumbbell: 'dumbbell',
-    kettlebell: 'dumbbell',
-    machines: 'settings',
-    bodyweight: 'user',
-    'bodyweight+': 'user'
-  };
-  return icons[equipment] || 'dumbbell';
-}
-
 function ensureCardEquipmentIcon(cardId) {
   const card = document.getElementById(cardId);
   if (!card) return;
@@ -2267,20 +2255,19 @@ function ensureCardEquipmentIcon(cardId) {
 
   const exerciseId = card.dataset.exerciseId || getExerciseIdByName((nameEl.textContent || '').trim());
   const preset = getExerciseMetaById(exerciseId);
-  const equipment = preset?.equipment || (card.dataset.bodyweight === '1' ? 'bodyweight' : null);
+  const muscle = preset?.muscle || 'Other';
 
   let iconEl = header.querySelector('.exercise-icon');
-  if (!iconEl) {
-    iconEl = document.createElement('i');
+  if (!iconEl || iconEl.tagName !== 'IMG') {
+    if (iconEl) iconEl.remove();
+    iconEl = document.createElement('img');
     iconEl.className = 'exercise-icon';
     iconEl.setAttribute('aria-hidden', 'true');
     header.insertBefore(iconEl, nameEl);
   }
 
-  iconEl.setAttribute('data-lucide', getEquipmentIcon(equipment));
-  if (window.lucide) {
-    window.lucide.createIcons();
-  }
+  iconEl.alt = muscle;
+  iconEl.src = pickerIconFor('Muscle', muscle);
 }
 
 function refreshExerciseIcons() {
@@ -3445,7 +3432,7 @@ function loadTemplate(name) {
     });
     card.innerHTML = `
       <div class='card-header' onclick="toggleCard('${cardId}')">
-        <i class='exercise-icon' data-lucide='${getEquipmentIcon(meta?.equipment)}' aria-hidden='true'></i>
+        <i class='exercise-icon' aria-hidden='true'></i>
         <div class='exercise-name' id='name-${bodyKey}' onclick="openSessionPicker('${cardId}'); event.stopPropagation()">${exerciseName}</div>
         <button class='link-next-btn' onclick="toggleLinkWithNext('${cardId}', event)" title='Link with exercise below'><i data-lucide='link'></i></button>
         <button class='collapse-btn open' id='btn-${bodyKey}'><i data-lucide='chevron-down'></i></button>

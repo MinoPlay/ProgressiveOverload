@@ -727,6 +727,15 @@ body {
   display: flex; align-items: center; justify-content: center; cursor: pointer;
 }
 .sp-close i { width: 16px; height: 16px; }
+.sp-header-actions { display: flex; align-items: center; gap: 8px; }
+.sp-keep-open {
+  width: 30px; height: 30px; flex: 0 0 auto;
+  border: 1.5px solid var(--border); border-radius: 50%;
+  background: var(--surface2); color: var(--text3);
+  display: flex; align-items: center; justify-content: center; cursor: pointer;
+}
+.sp-keep-open i { width: 16px; height: 16px; }
+.sp-keep-open.active { background: var(--accent); border-color: var(--accent); color: #fff; }
 .session-picker-filters { display: flex; flex-direction: column; gap: 6px; margin-bottom: 12px; }
 .picker-filter-divider { height: 1px; background: var(--border); margin: 4px 0; }
 .picker-filter-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
@@ -1364,7 +1373,10 @@ body {
   <div class="session-picker-dialog session-picker-grid-dialog">
     <div class="session-picker-header">
       <div class="session-picker-title">Choose Exercise</div>
-      <button class="sp-close" onclick="closeSessionPicker()" aria-label="Close"><i data-lucide="x"></i></button>
+      <div class="sp-header-actions">
+        <button class="sp-keep-open" id="spKeepOpenBtn" onclick="togglePickerKeepOpen()" aria-pressed="false" title="Keep open to add multiple exercises"><i data-lucide="check"></i></button>
+        <button class="sp-close" onclick="closeSessionPicker()" aria-label="Close"><i data-lucide="x"></i></button>
+      </div>
     </div>
     <div class="session-picker-filters">
       <div class="picker-filter-row" id="pickerEquipmentFilters"></div>
@@ -2144,10 +2156,25 @@ function setPickerMuscleFilter(value) {
   refreshPicker();
 }
 
+let pickerKeepOpen = false;
+
+function togglePickerKeepOpen() {
+  pickerKeepOpen = !pickerKeepOpen;
+  const btn = document.getElementById('spKeepOpenBtn');
+  if (btn) {
+    btn.classList.toggle('active', pickerKeepOpen);
+    btn.setAttribute('aria-pressed', String(pickerKeepOpen));
+  }
+}
+
 function pickExercise(exerciseId) {
   if (!exerciseId) return;
   addExercise(exerciseId, true, { allowDuplicate: false });
-  closeSessionPicker();
+  if (pickerKeepOpen && getAvailableExerciseIds().length) {
+    refreshPicker();
+  } else {
+    closeSessionPicker();
+  }
 }
 
 function openAddExercisePicker() {

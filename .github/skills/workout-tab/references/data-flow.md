@@ -59,7 +59,8 @@ The Submit button handler (≈ line 2992) and execute-mode submit collect **only
 ticked sets** into a minimal payload:
 
 ```js
-workouts.push({ exerciseId, date, reps, weight }); // weight null for bodyweight
+// weight null for bodyweight; supersetGroupId null unless the card is linked to its neighbour
+workouts.push({ exerciseId, date, reps, weight, supersetGroupId });
 window.parent.postMessage({ type: 'po-save-workouts', workouts }, '*');
 ```
 
@@ -98,7 +99,7 @@ write path**.
 | `po-request-workouts` | — | Please send workouts |
 | `po-request-history-workouts` | — | Please send the last 12 months of workouts |
 | `po-request-week-workouts` | — | Please send the current week's workouts |
-| `po-save-workouts` | `{ workouts: {exerciseId,date,reps,weight}[] }` | Save these ticked sets |
+| `po-save-workouts` | `{ workouts: {exerciseId,date,reps,weight,supersetGroupId}[] }` | Save these ticked sets |
 
 ### Rules
 - Only `type`s starting with `po-` are processed; the parent also verifies the

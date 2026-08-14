@@ -3559,6 +3559,20 @@ document.getElementById('submitBtn').addEventListener('click', () => {
 
   const workouts = [];
   const cards = document.querySelectorAll('#planView .exercise-card');
+
+  // Tag mutually-linked consecutive cards with a shared superset group id
+  const supersetGroupIds = {};
+  const cardList = Array.from(cards);
+  let supersetCount = 0;
+  cardList.forEach((card, index) => {
+    const next = cardList[index + 1];
+    if (!next) return;
+    if (card.dataset.linkedWith !== next.id || next.dataset.linkedWith !== card.id) return;
+    const groupId = supersetGroupIds[card.id] || `ss-${++supersetCount}`;
+    supersetGroupIds[card.id] = groupId;
+    supersetGroupIds[next.id] = groupId;
+  });
+
   for (const card of cards) {
     const exerciseId = card.dataset.exerciseId;
     if (!exerciseId) continue;
@@ -3580,7 +3594,7 @@ document.getElementById('submitBtn').addEventListener('click', () => {
           weight = parseFloat(rawWeight);
         }
       }
-      workouts.push({ exerciseId, date, reps, weight });
+      workouts.push({ exerciseId, date, reps, weight, supersetGroupId: supersetGroupIds[card.id] || null });
     }
   }
 

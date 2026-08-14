@@ -976,7 +976,8 @@ export const Storage = {
                 date: w.d,
                 reps: w.r,
                 weight: w.w,
-                sequence: w.seq
+                sequence: w.seq,
+                supersetGroupId: w.g || null
             }));
         } catch {
             return null;
@@ -1010,13 +1011,15 @@ export const Storage = {
                 const date = new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1);
                 const monthData = await GitHubAPI.getWorkouts(date);
                 for (const w of monthData.workouts) {
-                    allWorkouts.push({
+                    const entry = {
                         e: w.exerciseId,
                         d: w.date,
                         r: w.reps,
                         w: w.weight,
                         seq: w.sequence
-                    });
+                    };
+                    if (w.supersetGroupId) entry.g = w.supersetGroupId;
+                    allWorkouts.push(entry);
                 }
             }
 

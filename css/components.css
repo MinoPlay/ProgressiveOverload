@@ -4859,3 +4859,18 @@
     color: var(--text-secondary);
     white-space: nowrap;
 }
+
+.rankings-mode-toggle {
+    display: flex;
+    width: 100%;
+    margin-bottom: var(--spacing-sm);
+}
+
+.rankings-mode-toggle .manage-tab-btn {
+    flex: 1;
+}
+
+.filter-icon-row.disabled {
+    opacity: 0.4;
+    pointer-events: none;
+}

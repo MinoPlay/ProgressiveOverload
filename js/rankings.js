@@ -1,5 +1,5 @@
 // Rankings Module
-// Ranks exercises by how many distinct days they were performed, with muscle and time filters
+// Ranks exercises or supersets by how many distinct days they were performed
 
 import { Storage } from './storage.js';
 import { Exercises } from './exercises.js';
@@ -13,6 +13,7 @@ const PERIOD_OPTIONS = [
 ];
 
 export const Rankings = {
+    mode: localStorage.getItem('rankingsMode') || 'exercises', // 'exercises' | 'supersets'
     activeMuscleFilter: localStorage.getItem('rankingsMuscleFilter') || '',
     activePeriod: localStorage.getItem('rankingsPeriod') || 'all',
     _workouts: null,
@@ -21,6 +22,8 @@ export const Rankings = {
      * Initialize the rankings UI
      */
     init() {
+        this.bindEvents();
+        this.setMode(this.mode, true);
         this.renderFilters();
         this.load();
 
@@ -33,7 +36,47 @@ export const Rankings = {
     },
 
     /**
-     * Render the muscle and time period filter rows
+     * Bind the Exercises/Supersets mode toggle
+     */
+    bindEvents() {
+        const exercisesBtn = document.getElementById('rankingsModeExercises');
+        const supersetsBtn = document.getElementById('rankingsModeSupersets');
+
+        if (exercisesBtn) exercisesBtn.addEventListener('click', () => this.setMode('exercises'));
+        if (supersetsBtn) supersetsBtn.addEventListener('click', () => this.setMode('supersets'));
+    },
+
+    /**
+     * Switch between exercise and superset rankings
+     * @param {string} mode - 'exercises' or 'supersets'
+     * @param {boolean} silent - Skip re-rendering the filters and list
+     */
+    setMode(mode, silent = false) {
+        this.mode = mode === 'supersets' ? 'supersets' : 'exercises';
+        localStorage.setItem('rankingsMode', this.mode);
+
+        const isExercises = this.mode === 'exercises';
+        const exercisesBtn = document.getElementById('rankingsModeExercises');
+        const supersetsBtn = document.getElementById('rankingsModeSupersets');
+
+        if (exercisesBtn) {
+            exercisesBtn.classList.toggle('active', isExercises);
+            exercisesBtn.setAttribute('aria-selected', isExercises ? 'true' : 'false');
+        }
+        if (supersetsBtn) {
+            supersetsBtn.classList.toggle('active', !isExercises);
+            supersetsBtn.setAttribute('aria-selected', !isExercises ? 'true' : 'false');
+        }
+
+        if (!silent) {
+            this.renderFilters();
+            this.render();
+        }
+    },
+
+    /**
+     * Render the muscle and time period filter rows.
+     * The muscle row is disabled in superset mode — a superset spans muscle groups.
      */
     renderFilters() {
         Exercises.renderIconChipButtons(
@@ -48,6 +91,14 @@ export const Rankings = {
                 this.render();
             }
         );
+
+        const muscleRow = document.getElementById('rankingsFilterMuscle');
+        if (muscleRow) {
+            const disabled = this.mode === 'supersets';
+            muscleRow.classList.toggle('disabled', disabled);
+            muscleRow.setAttribute('aria-disabled', disabled ? 'true' : 'false');
+            muscleRow.querySelectorAll('button').forEach((button) => { button.disabled = disabled; });
+        }
 
         const container = document.getElementById('rankingsFilterPeriod');
         if (!container) return;
@@ -126,7 +177,7 @@ export const Rankings = {
 
     /**
      * Count distinct workout days per exercise, honouring the active filters
-     * @returns {Array<{exercise: object, count: number}>} Rows sorted by count descending
+     * @returns {Array<{name: string, muscle: string, count: number}>} Rows sorted by count descending
      */
     getRankedExercises() {
         const startStr = this.getStartDateStr();
@@ -147,26 +198,70 @@ export const Rankings = {
         });
 
         return Array.from(daysByExercise, ([id, days]) => ({
-            exercise: exerciseById.get(id),
+            name: exerciseById.get(id).name,
+            muscle: exerciseById.get(id).muscle,
             count: days.size
-        })).sort((a, b) => b.count - a.count || a.exercise.name.localeCompare(b.exercise.name));
+        })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
     },
 
     /**
-     * Render the ranked exercise list
+     * Count distinct workout days per superset combination. A superset is identified by
+     * its set of exercises, so the same pairing ranks as one entry regardless of the
+     * order it was performed in. The muscle filter does not apply here.
+     * @returns {Array<{name: string, muscle: null, count: number}>} Rows sorted by count descending
+     */
+    getRankedSupersets() {
+        const startStr = this.getStartDateStr();
+        const exerciseById = new Map(Storage.getExercises().map(e => [e.id, e]));
+        const sessionGroups = new Map();
+
+        (this._workouts || []).forEach((workout) => {
+            if (!workout.supersetGroupId) return;
+            if (startStr && workout.date < startStr) return;
+            if (!exerciseById.has(workout.exerciseId)) return;
+
+            const key = `${workout.date}|${workout.supersetGroupId}`;
+            if (!sessionGroups.has(key)) sessionGroups.set(key, new Set());
+            sessionGroups.get(key).add(workout.exerciseId);
+        });
+
+        const daysByCombo = new Map();
+        sessionGroups.forEach((exerciseIds, key) => {
+            if (exerciseIds.size < 2) return;
+
+            const name = Array.from(exerciseIds)
+                .map(id => exerciseById.get(id).name)
+                .sort((a, b) => a.localeCompare(b))
+                .join(' + ');
+
+            if (!daysByCombo.has(name)) daysByCombo.set(name, new Set());
+            daysByCombo.get(name).add(key.slice(0, key.indexOf('|')));
+        });
+
+        return Array.from(daysByCombo, ([name, days]) => ({
+            name,
+            muscle: null,
+            count: days.size
+        })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+    },
+
+    /**
+     * Render the ranked list for the active mode
      */
     render() {
         const container = document.getElementById('rankingsList');
         if (!container || !this._workouts) return;
 
-        const rows = this.getRankedExercises();
+        const rows = this.mode === 'supersets' ? this.getRankedSupersets() : this.getRankedExercises();
 
         container.innerHTML = '';
 
         if (rows.length === 0) {
             const empty = document.createElement('p');
             empty.className = 'empty-state';
-            empty.textContent = 'No workout data for the selected filters.';
+            empty.textContent = this.mode === 'supersets'
+                ? 'No supersets logged for the selected period.'
+                : 'No workout data for the selected filters.';
             container.appendChild(empty);
             return;
         }
@@ -186,7 +281,7 @@ export const Rankings = {
 
     /**
      * Create a single ranking row element (XSS-safe)
-     * @param {{exercise: object, count: number}} row - Ranked exercise entry
+     * @param {{name: string, muscle: string|null, count: number}} row - Ranked entry
      * @param {number} tier - Zero-based tier index (0-2 get trophies)
      * @returns {HTMLElement} Row element
      */
@@ -211,16 +306,17 @@ export const Rankings = {
 
         const name = document.createElement('span');
         name.className = 'ranking-name';
-        name.textContent = row.exercise.name;
-
-        const muscleBadge = document.createElement('span');
-        muscleBadge.className = 'muscle-badge';
-        muscleBadge.textContent = row.exercise.muscle
-            ? row.exercise.muscle.charAt(0).toUpperCase() + row.exercise.muscle.slice(1)
-            : 'Unknown';
-
+        name.textContent = row.name;
         info.appendChild(name);
-        info.appendChild(muscleBadge);
+
+        if (row.muscle !== null) {
+            const muscleBadge = document.createElement('span');
+            muscleBadge.className = 'muscle-badge';
+            muscleBadge.textContent = row.muscle
+                ? row.muscle.charAt(0).toUpperCase() + row.muscle.slice(1)
+                : 'Unknown';
+            info.appendChild(muscleBadge);
+        }
 
         const count = document.createElement('span');
         count.className = 'ranking-count';

@@ -10,6 +10,9 @@ export const History = {
     draggedDate: null,
     openModalDate: null,
     _modalListenersAttached: false,
+    _supersetGroups: [],
+    _supersetLinks: new Set(),
+    _supersetConnectors: [],
 
     /**
      * Initialize history module
@@ -287,17 +290,152 @@ export const History = {
             }))
             .sort((a, b) => a.minSequence - b.minSequence);
 
+        this.buildSupersetLinks(sortedGroups);
+
         sortedGroups.forEach((group, index) => {
+            if (index > 0) body.appendChild(this.createSupersetConnector(index - 1));
             const item = this.createGroupedExerciseItem(date, group.exerciseId, group.workouts, index + 1);
             body.appendChild(item);
         });
+
+        this.refreshSupersetConnectors();
 
         const templateBtn = document.getElementById('historyDayModalTemplateBtn');
         if (templateBtn) {
             templateBtn.onclick = () => this.openTemplateModal(date, sortedGroups.map(g => g.exerciseId));
         }
 
+        const overrideBtn = document.getElementById('historyDayModalOverrideBtn');
+        if (overrideBtn) {
+            overrideBtn.onclick = () => this.saveSupersetLinks(date, workouts);
+        }
+
         if (window.lucide) window.lucide.createIcons();
+    },
+
+    /**
+     * Build the pending superset links from the workouts already saved for a day.
+     * Only consecutive exercises can form a superset, so a link is detected when two
+     * neighbouring groups share the same supersetGroupId.
+     * @param {array} sortedGroups - Exercise groups in display order
+     */
+    buildSupersetLinks(sortedGroups) {
+        this._supersetGroups = sortedGroups;
+        this._supersetLinks = new Set();
+        this._supersetConnectors = [];
+
+        const groupIdOf = (group) => group.workouts.find(w => w.supersetGroupId)?.supersetGroupId || null;
+
+        for (let i = 0; i < sortedGroups.length - 1; i++) {
+            const currentId = groupIdOf(sortedGroups[i]);
+            if (currentId && currentId === groupIdOf(sortedGroups[i + 1]) && !this._supersetLinks.has(i - 1)) {
+                this._supersetLinks.add(i);
+            }
+        }
+    },
+
+    /**
+     * Create the toggle that links the exercise at `index` with the next one
+     * @param {number} index - Index of the upper exercise in the pair
+     * @returns {HTMLElement}
+     */
+    createSupersetConnector(index) {
+        const connector = document.createElement('button');
+        connector.type = 'button';
+        connector.className = 'history-superset-connector';
+        connector.dataset.index = String(index);
+        connector.innerHTML = '<i data-lucide="link"></i><span>Superset</span>';
+        connector.onclick = () => this.toggleSupersetLink(index);
+
+        this._supersetConnectors[index] = connector;
+        return connector;
+    },
+
+    /**
+     * Toggle the link between two consecutive exercises. An exercise can belong to
+     * one pair only, so linking is blocked while a neighbouring pair exists.
+     * @param {number} index - Index of the upper exercise in the pair
+     */
+    toggleSupersetLink(index) {
+        if (this._supersetLinks.has(index)) {
+            this._supersetLinks.delete(index);
+        } else {
+            if (this._supersetLinks.has(index - 1) || this._supersetLinks.has(index + 1)) return;
+            this._supersetLinks.add(index);
+        }
+
+        this.refreshSupersetConnectors();
+    },
+
+    /**
+     * Sync connector state: active when linked, disabled when a neighbouring pair
+     * already claims one of the two exercises.
+     */
+    refreshSupersetConnectors() {
+        this._supersetConnectors.forEach((connector, index) => {
+            if (!connector) return;
+            const linked = this._supersetLinks.has(index);
+            const blocked = !linked && (this._supersetLinks.has(index - 1) || this._supersetLinks.has(index + 1));
+
+            connector.classList.toggle('linked', linked);
+            connector.disabled = blocked;
+            connector.title = linked ? 'Remove superset link' : 'Link as superset';
+        });
+
+        this._supersetGroups.forEach((group, index) => {
+            const item = document.querySelector(`.history-exercise-group[data-exercise-id="${group.exerciseId}"]`);
+            if (!item) return;
+            item.classList.toggle('superset-linked', this._supersetLinks.has(index) || this._supersetLinks.has(index - 1));
+        });
+    },
+
+    /**
+     * Persist the pending superset links for a day, overriding the stored entries.
+     * @param {string} date - Date string (YYYY-MM-DD)
+     * @param {array} workouts - Workouts shown in the day modal
+     */
+    async saveSupersetLinks(date, workouts) {
+        const groupIdOf = (group) => group.workouts.find(w => w.supersetGroupId)?.supersetGroupId || null;
+
+        const assignments = {};
+        this._supersetGroups.forEach(group => { assignments[group.exerciseId] = null; });
+
+        this._supersetLinks.forEach(index => {
+            const first = this._supersetGroups[index];
+            const second = this._supersetGroups[index + 1];
+            if (!first || !second) return;
+
+            const existingId = groupIdOf(first);
+            const groupId = existingId && existingId === groupIdOf(second)
+                ? existingId
+                : `ss-${date}-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+            assignments[first.exerciseId] = groupId;
+            assignments[second.exerciseId] = groupId;
+        });
+
+        try {
+            showLoading(true);
+            await Storage.updateWorkoutSupersets(date, assignments);
+
+            workouts.forEach(workout => {
+                if (!Object.prototype.hasOwnProperty.call(assignments, workout.exerciseId)) return;
+                const groupId = assignments[workout.exerciseId];
+                if (groupId) {
+                    workout.supersetGroupId = groupId;
+                } else {
+                    delete workout.supersetGroupId;
+                }
+            });
+
+            this.populateDayModal(date, workouts);
+            showToast('Superset links saved', 'success');
+            window.dispatchEvent(new CustomEvent('workoutsUpdated'));
+        } catch (error) {
+            showToast(`Failed to save superset links: ${error.message}`, 'error');
+        } finally {
+            showLoading(false);
+        }
     },
 
     /**

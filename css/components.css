@@ -3496,6 +3496,52 @@
     padding: 8px 12px;
     border-top: 1px solid var(--border-light);
     flex-shrink: 0;
+    display: flex;
+    gap: 6px;
+}
+
+.history-day-dialog-footer .btn {
+    flex: 1;
+    justify-content: center;
+}
+
+.history-superset-connector {
+    align-self: center;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    margin: -2px 0;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-light);
+    background: var(--bg-secondary);
+    border: 1px dashed var(--border-light);
+    border-radius: var(--radius-xl);
+    cursor: pointer;
+}
+
+.history-superset-connector i {
+    width: 11px;
+    height: 11px;
+}
+
+.history-superset-connector.linked {
+    color: var(--primary-color);
+    border-style: solid;
+    border-color: var(--primary-color);
+}
+
+.history-superset-connector:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+
+.history-exercise-group.superset-linked {
+    border-left-width: 5px;
+    background: var(--bg-primary);
 }
 
 /* Weekly Stats Table (Used in Summary) */

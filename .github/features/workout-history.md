@@ -25,6 +25,11 @@ Week (Mon–Sun)
 | `openDayModal(dateStr)` | Open `#historyDayOverlay` showing all workouts for a specific date |
 | `closeDayModal()` | Close the overlay |
 | `renderDayWorkouts(workouts, date)` | Render workout cards inside the modal |
+| `buildSupersetLinks(sortedGroups)` | Detect existing supersets — a link exists when two *consecutive* groups share a `supersetGroupId` |
+| `createSupersetConnector(index)` | Build the "Superset" toggle rendered between exercise *index* and *index + 1* |
+| `toggleSupersetLink(index)` | Link/unlink a consecutive pair; blocked when a neighbouring pair already exists |
+| `refreshSupersetConnectors()` | Sync connector active/disabled state and the linked-group highlight |
+| `saveSupersetLinks(date, workouts)` | Persist the pending pairs via `Storage.updateWorkoutSupersets` ("Override data" button) |
 | `handleReorder(workoutId, direction, date)` | Swap `sequence` values and persist via `Storage.reorderWorkout` |
 
 ## Integration Points
@@ -34,6 +39,8 @@ Week (Mon–Sun)
 
 ## Rules & Constraints
 - History is **read-only** from the user's perspective; deletion is not supported in this view.
+- Superset links can be edited in the day modal: a **Superset** toggle sits between every two consecutive exercises; the **Override data** footer button writes the pairs back to the stored workouts.
+- Only **consecutive** exercises can be linked, and each exercise belongs to at most one pair (1+2, 3+4, 6+7 … ). Toggles whose neighbour is already paired are disabled.
 - `getWorkoutsInRange` may load up to 3 monthly JSON files — keep it lazy to avoid startup cost.
 - Workout entries must be resolved to exercise names via `Storage.getExerciseById`; if the exercise was deleted, display a fallback (e.g. `'Unknown exercise'`).
 - Week start is **Monday** (use `getWeekStart` from `js/utils.js`).

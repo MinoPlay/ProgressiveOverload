@@ -715,6 +715,50 @@ export const Storage = {
     },
 
     /**
+     * Overwrite superset links for a day. Every workout of an exercise listed in
+     * the assignments gets the given group ID, or has the link removed when null.
+     * @param {string} date - Date of workouts to update (YYYY-MM-DD)
+     * @param {object} assignments - Map of exerciseId to supersetGroupId (or null to unlink)
+     * @returns {Promise<void>}
+     */
+    async updateWorkoutSupersets(date, assignments) {
+        const workoutDate = parseDate(date);
+        if (!workoutDate) {
+            throw new Error('Invalid workout date');
+        }
+
+        const apply = (workouts) => {
+            workouts.forEach(workout => {
+                if (workout.date !== date) return;
+                if (!Object.prototype.hasOwnProperty.call(assignments, workout.exerciseId)) return;
+
+                const groupId = assignments[workout.exerciseId];
+                if (groupId) {
+                    workout.supersetGroupId = groupId;
+                } else {
+                    delete workout.supersetGroupId;
+                }
+            });
+        };
+
+        const now = new Date();
+        const isSameMonth = workoutDate.getMonth() === now.getMonth() &&
+            workoutDate.getFullYear() === now.getFullYear();
+
+        if (isSameMonth) {
+            apply(this.currentMonthWorkouts);
+            const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha);
+            this.currentMonthSha = result.content.sha;
+        } else {
+            const monthData = await GitHubAPI.getWorkouts(workoutDate);
+            apply(monthData.workouts);
+            await GitHubAPI.saveWorkouts(workoutDate, monthData.workouts, monthData.sha);
+        }
+
+        this.generateAndSaveStatsSummary();
+    },
+
+    /**
      * Update an existing workout entry
      * @param {string} id - Workout entry ID
      * @param {string} date - Workout entry date

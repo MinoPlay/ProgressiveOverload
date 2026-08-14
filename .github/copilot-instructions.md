@@ -67,6 +67,7 @@ Detailed context for each feature lives in `.github/features/`. Reference the re
 | [`features/session-templates.md`](features/session-templates.md) | Anything in `js/templates.js` — template editor, loading templates into the planner |
 | [`features/workout-history.md`](features/workout-history.md) | Anything in `js/history.js` — history rendering, week grouping, day modal |
 | [`features/statistics-charts.md`](features/statistics-charts.md) | Anything in `js/charts.js` or `js/chart-helpers.js` — Chart.js rendering, 1RM, PRs, aggregation |
+| [`skills/rankings-tab/SKILL.md`](skills/rankings-tab/SKILL.md) | Anything in `js/rankings.js` — the star Rankings tab, exercise day-count leaderboard, trophies, muscle/time filters |
 | [`features/storage-github-sync.md`](features/storage-github-sync.md) | Anything in `js/storage.js` or `js/github-api.js` — data persistence, SHA management, dev mode |
 | [`features/auth-config.md`](features/auth-config.md) | Anything in `js/auth.js` or `js/config.js` — PAT handling, CONFIG constants, mode switching |
 | [`features/theme-system.md`](features/theme-system.md) | Theme toggle, Chart.js color integration, `data-theme` attribute, `themeChanged` event |

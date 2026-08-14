@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v72y';
+const CACHE_VERSION = 'v72z';
 const STATIC_CACHE  = `po-static-${CACHE_VERSION}`;
 const CDN_CACHE     = `po-cdn-${CACHE_VERSION}`;
 
@@ -22,6 +22,7 @@ const STATIC_SHELL = [
   './js/charts.js',
   './js/chart-helpers.js',
   './js/history.js',
+  './js/rankings.js',
   './js/utils.js',
   './progressive-overload/exercises.json',
   './assets/favicon.svg',

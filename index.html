@@ -44,6 +44,9 @@
                         <button class="nav-btn" data-section="statistics" title="Statistics" aria-label="Statistics">
                             <i data-lucide="line-chart" class="nav-icon"></i>
                         </button>
+                        <button class="nav-btn" data-section="rankings" title="Rankings" aria-label="Rankings">
+                            <i data-lucide="star" class="nav-icon"></i>
+                        </button>
                         <button class="nav-btn" data-section="exercises" title="Manage" aria-label="Manage">
                             <i data-lucide="list" class="nav-icon"></i>
                         </button>
@@ -397,6 +400,17 @@
                 <div id="noStatsMessage" class="empty-state">
                     <p>No workout data available</p>
                 </div>
+            </section>
+
+            <!-- Rankings Section -->
+            <section id="rankingsSection" class="content-section" role="region" aria-label="Exercise Rankings">
+                <div class="form-container rankings-filter-panel">
+                    <div id="rankingsFilterMuscle" class="filter-icon-row" aria-label="Filter by target muscle"></div>
+                    <div class="filter-icon-divider"></div>
+                    <div id="rankingsFilterPeriod" class="rankings-period-row" aria-label="Filter by time period"></div>
+                </div>
+
+                <div id="rankingsList" class="rankings-list"></div>
             </section>
 
         </main>

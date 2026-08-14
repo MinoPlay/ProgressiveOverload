@@ -7,6 +7,7 @@ import { Exercises } from './exercises.js';
 import { Workouts } from './workouts.js';
 import { Charts } from './charts.js';
 import { History } from './history.js';
+import { Rankings } from './rankings.js';
 import { Templates } from './templates.js';
 import { CONFIG, loadConfig, isGitHubConfigured } from './config.js';
 
@@ -264,6 +265,8 @@ const App = {
                     History.init();
                 } else if (targetSection === 'statistics') {
                     Charts.init();
+                } else if (targetSection === 'rankings') {
+                    Rankings.init();
                 }
             }
 
@@ -332,6 +335,7 @@ const App = {
                 _initializedTabs.add(active);
                 if (active === 'history') History.init();
                 else if (active === 'statistics') Charts.init();
+                else if (active === 'rankings') Rankings.init();
             }
         };
     }

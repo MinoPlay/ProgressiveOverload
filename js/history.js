@@ -293,8 +293,10 @@ export const History = {
         this.buildSupersetLinks(sortedGroups);
 
         sortedGroups.forEach((group, index) => {
-            if (index > 0) body.appendChild(this.createSupersetConnector(index - 1));
             const item = this.createGroupedExerciseItem(date, group.exerciseId, group.workouts, index + 1);
+            if (index > 0) {
+                item.querySelector('.exercise-group-header').appendChild(this.createSupersetConnector(index - 1));
+            }
             body.appendChild(item);
         });
 
@@ -335,7 +337,8 @@ export const History = {
     },
 
     /**
-     * Create the toggle that links the exercise at `index` with the next one
+     * Create the toggle that links the exercise at `index` with the next one.
+     * It is rendered in the header of the lower exercise of the pair.
      * @param {number} index - Index of the upper exercise in the pair
      * @returns {HTMLElement}
      */
@@ -344,8 +347,11 @@ export const History = {
         connector.type = 'button';
         connector.className = 'history-superset-connector';
         connector.dataset.index = String(index);
-        connector.innerHTML = '<i data-lucide="link"></i><span>Superset</span>';
-        connector.onclick = () => this.toggleSupersetLink(index);
+        connector.innerHTML = '<i data-lucide="link"></i>';
+        connector.onclick = (e) => {
+            e.stopPropagation();
+            this.toggleSupersetLink(index);
+        };
 
         this._supersetConnectors[index] = connector;
         return connector;

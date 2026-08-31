@@ -4914,6 +4914,26 @@
     white-space: nowrap;
 }
 
+.ranking-row-clickable {
+    cursor: pointer;
+}
+
+.ranking-row-clickable:hover,
+.ranking-row-clickable:focus-visible {
+    border-color: var(--primary-color);
+}
+
+.rankings-volume-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.rankings-volume-chart-container {
+    position: relative;
+    height: 260px;
+}
+
 .rankings-mode-toggle {
     display: flex;
     width: 100%;

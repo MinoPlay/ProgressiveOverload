@@ -423,6 +423,23 @@
                 <div id="rankingsList" class="rankings-list"></div>
             </section>
 
+            <!-- Volume Progression Modal -->
+            <div id="rankingsVolumeModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="rankingsVolumeModalTitle">
+                <div class="modal-content" style="max-width: 480px;">
+                    <div class="modal-header rankings-volume-modal-header">
+                        <h2 id="rankingsVolumeModalTitle"></h2>
+                        <button class="history-day-close-btn" id="rankingsVolumeModalCloseBtn" aria-label="Close">
+                            <i data-lucide="x"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="rankings-volume-chart-container">
+                            <canvas id="rankingsVolumeChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
         </main>
 
         <!-- Save As Template Modal -->

@@ -1657,7 +1657,12 @@ function showVolumeTooltip(bar, date, volume) {
   tip.appendChild(volLine);
   document.body.appendChild(tip);
   const rect = bar.getBoundingClientRect();
-  tip.style.left = (rect.left + rect.width / 2) + 'px';
+  const tipRect = tip.getBoundingClientRect();
+  const half = tipRect.width / 2;
+  const margin = 8;
+  let centerX = rect.left + rect.width / 2;
+  centerX = Math.min(Math.max(centerX, half + margin), window.innerWidth - half - margin);
+  tip.style.left = centerX + 'px';
   tip.style.top = (rect.top - 6) + 'px';
   _volumeTooltipEl = tip;
 }

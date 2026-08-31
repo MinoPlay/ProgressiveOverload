@@ -50,10 +50,9 @@ export const History = {
         try {
             showLoading(true);
 
-            // Load all workouts from the last 90 days
+            // Load all workouts (no date cap, so older entries are not hidden)
             const endDate = new Date();
-            const startDate = new Date();
-            startDate.setDate(startDate.getDate() - 90);
+            const startDate = new Date(2000, 0, 1);
 
             const allWorkouts = await Storage.getWorkoutsInRange(startDate, endDate);
 

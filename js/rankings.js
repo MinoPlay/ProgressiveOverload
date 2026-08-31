@@ -17,6 +17,7 @@ export const Rankings = {
     activeMuscleFilter: localStorage.getItem('rankingsMuscleFilter') || '',
     activePeriod: localStorage.getItem('rankingsPeriod') || 'all',
     _workouts: null,
+    _volumeChart: null,
 
     /**
      * Initialize the rankings UI
@@ -36,7 +37,7 @@ export const Rankings = {
     },
 
     /**
-     * Bind the Exercises/Supersets mode toggle
+     * Bind the Exercises/Supersets mode toggle and the volume progression modal
      */
     bindEvents() {
         const exercisesBtn = document.getElementById('rankingsModeExercises');
@@ -44,6 +45,15 @@ export const Rankings = {
 
         if (exercisesBtn) exercisesBtn.addEventListener('click', () => this.setMode('exercises'));
         if (supersetsBtn) supersetsBtn.addEventListener('click', () => this.setMode('supersets'));
+
+        const overlay = document.getElementById('rankingsVolumeModal');
+        const closeBtn = document.getElementById('rankingsVolumeModalCloseBtn');
+        if (closeBtn) closeBtn.addEventListener('click', () => this.closeVolumeModal());
+        if (overlay) {
+            overlay.addEventListener('click', (e) => {
+                if (e.target === overlay) this.closeVolumeModal();
+            });
+        }
     },
 
     /**
@@ -198,6 +208,7 @@ export const Rankings = {
         });
 
         return Array.from(daysByExercise, ([id, days]) => ({
+            id,
             name: exerciseById.get(id).name,
             muscle: exerciseById.get(id).muscle,
             count: days.size
@@ -226,6 +237,7 @@ export const Rankings = {
         });
 
         const daysByCombo = new Map();
+        const occurrencesByCombo = new Map();
         sessionGroups.forEach((exerciseIds, key) => {
             if (exerciseIds.size < 2) return;
 
@@ -234,14 +246,22 @@ export const Rankings = {
                 .sort((a, b) => a.localeCompare(b))
                 .join(' + ');
 
+            const separatorIndex = key.indexOf('|');
+            const date = key.slice(0, separatorIndex);
+            const groupId = key.slice(separatorIndex + 1);
+
             if (!daysByCombo.has(name)) daysByCombo.set(name, new Set());
-            daysByCombo.get(name).add(key.slice(0, key.indexOf('|')));
+            daysByCombo.get(name).add(date);
+
+            if (!occurrencesByCombo.has(name)) occurrencesByCombo.set(name, []);
+            occurrencesByCombo.get(name).push({ date, groupId });
         });
 
         return Array.from(daysByCombo, ([name, days]) => ({
             name,
             muscle: null,
-            count: days.size
+            count: days.size,
+            occurrences: occurrencesByCombo.get(name)
         })).sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
     },
 
@@ -326,6 +346,150 @@ export const Rankings = {
         element.appendChild(info);
         element.appendChild(count);
 
+        if (row.id || (row.occurrences && row.occurrences.length)) {
+            element.classList.add('ranking-row-clickable');
+            element.setAttribute('role', 'button');
+            element.setAttribute('tabindex', '0');
+            element.addEventListener('click', () => this.openVolumeModal(row));
+            element.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    this.openVolumeModal(row);
+                }
+            });
+        }
+
         return element;
+    },
+
+    /**
+     * Compute chronologically sorted volume (or total reps for bodyweight exercises)
+     * per workout day for a single exercise, across all-time cached data.
+     * @param {string} exerciseId - Exercise to aggregate
+     * @returns {{labels: string[], values: number[], isWeighted: boolean}} Dates and per-day totals
+     */
+    getExerciseVolumeSeries(exerciseId) {
+        const exercise = Storage.getExercises().find(e => e.id === exerciseId);
+        const isWeighted = !!(exercise && exercise.requiresWeight);
+        const totalsByDate = new Map();
+
+        (this._workouts || []).forEach((workout) => {
+            if (workout.exerciseId !== exerciseId) return;
+            const value = isWeighted && workout.weight ? workout.reps * workout.weight : workout.reps;
+            totalsByDate.set(workout.date, (totalsByDate.get(workout.date) || 0) + value);
+        });
+
+        const labels = Array.from(totalsByDate.keys()).sort((a, b) => a.localeCompare(b));
+        return {
+            labels,
+            values: labels.map(date => totalsByDate.get(date)),
+            isWeighted
+        };
+    },
+
+    /**
+     * Compute chronologically sorted combined volume per occurrence day for a superset
+     * combo, summing every exercise's volume within that specific superset group.
+     * @param {Array<{date: string, groupId: string}>} occurrences - Session occurrences of the combo
+     * @returns {{labels: string[], values: number[], isWeighted: boolean}} Dates and per-day totals
+     */
+    getSupersetVolumeSeries(occurrences) {
+        const exerciseById = new Map(Storage.getExercises().map(e => [e.id, e]));
+        const occurrenceKeys = new Set((occurrences || []).map(o => `${o.date}|${o.groupId}`));
+        const totalsByDate = new Map();
+
+        (this._workouts || []).forEach((workout) => {
+            if (!workout.supersetGroupId) return;
+            const key = `${workout.date}|${workout.supersetGroupId}`;
+            if (!occurrenceKeys.has(key)) return;
+
+            const exercise = exerciseById.get(workout.exerciseId);
+            const value = exercise && exercise.requiresWeight && workout.weight
+                ? workout.reps * workout.weight
+                : workout.reps;
+            totalsByDate.set(workout.date, (totalsByDate.get(workout.date) || 0) + value);
+        });
+
+        const labels = Array.from(totalsByDate.keys()).sort((a, b) => a.localeCompare(b));
+        return {
+            labels,
+            values: labels.map(date => totalsByDate.get(date)),
+            isWeighted: false
+        };
+    },
+
+    /**
+     * Open the volume progression modal for a ranking row (exercise or superset combo)
+     * and render its Chart.js bar chart. Bars are colored the same way as the workout
+     * page's in-card volume bars: green when up on the previous bar, red when down,
+     * yellow when unchanged (the first bar compares against zero, so it is green).
+     * @param {{id?: string, name: string, occurrences?: Array}} row - Ranked entry that was clicked
+     */
+    openVolumeModal(row) {
+        const overlay = document.getElementById('rankingsVolumeModal');
+        const title = document.getElementById('rankingsVolumeModalTitle');
+        const canvas = document.getElementById('rankingsVolumeChart');
+        if (!overlay || !title || !canvas) return;
+
+        title.textContent = row.name;
+        overlay.style.display = 'flex';
+
+        const { labels, values, isWeighted } = row.id
+            ? this.getExerciseVolumeSeries(row.id)
+            : this.getSupersetVolumeSeries(row.occurrences);
+
+        if (this._volumeChart) {
+            this._volumeChart.destroy();
+            this._volumeChart = null;
+        }
+
+        if (labels.length === 0 || typeof Chart === 'undefined') return;
+
+        const barColors = values.map((value, i) => {
+            const prev = i > 0 ? values[i - 1] : 0;
+            if (value > prev) return '#4caf50';
+            if (value < prev) return '#f44336';
+            return '#f39c12';
+        });
+
+        this._volumeChart = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels,
+                datasets: [{
+                    data: values,
+                    backgroundColor: barColors,
+                    borderRadius: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: (context) => `${context.parsed.y.toFixed(1)}${isWeighted ? ' kg' : ' reps'}`
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, display: false },
+                    x: { display: false }
+                }
+            }
+        });
+    },
+
+    /**
+     * Close the volume progression modal and tear down its chart
+     */
+    closeVolumeModal() {
+        const overlay = document.getElementById('rankingsVolumeModal');
+        if (overlay) overlay.style.display = 'none';
+        if (this._volumeChart) {
+            this._volumeChart.destroy();
+            this._volumeChart = null;
+        }
     }
 };

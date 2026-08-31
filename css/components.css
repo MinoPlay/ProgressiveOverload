@@ -2045,6 +2045,29 @@
     transform: translateY(-2px);
 }
 
+.btn-refresh-cache {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-sm);
+    width: 100%;
+    padding: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
+    border: 2px solid white;
+    border-radius: var(--radius-md);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+}
+
+.btn-refresh-cache:hover {
+    background: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
 .config-help {
     margin: 0;
     font-size: 0.9rem;

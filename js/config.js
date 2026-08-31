@@ -202,6 +202,27 @@ window.clearLocalData = function () {
 };
 
 /**
+ * Invalidate the service worker cache and reload with the latest version from the remote
+ */
+window.refreshCache = async function () {
+    try {
+        if ('caches' in window) {
+            const keys = await caches.keys();
+            await Promise.all(keys.map(key => caches.delete(key)));
+        }
+        if ('serviceWorker' in navigator) {
+            const registrations = await navigator.serviceWorker.getRegistrations();
+            await Promise.all(registrations.map(reg => reg.unregister()));
+        }
+        showStatus('Cache cleared, reloading...', 'success');
+        setTimeout(() => location.reload(true), 500);
+    } catch (err) {
+        console.warn('Failed to refresh cache:', err);
+        showStatus('Failed to refresh cache', 'error');
+    }
+};
+
+/**
  * Get current configuration
  */
 export function getConfig() {

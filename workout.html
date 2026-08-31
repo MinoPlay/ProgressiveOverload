@@ -2129,7 +2129,7 @@ function buildPickerFilterChips(metas) {
       chip('Equipment', eq, eq.charAt(0).toUpperCase() + eq.slice(1), pickerFilters.equipment === eq)
     ).join('');
 
-  twoRows(muscleRow, muscles.length);
+  muscleRow.style.gridTemplateColumns = 'repeat(3, 1fr)';
   muscleRow.innerHTML =
     muscles.map((mu) =>
       chip('Muscle', mu, mu, pickerFilters.muscle === mu)

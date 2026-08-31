@@ -3848,6 +3848,12 @@
     grid-template-columns: repeat(3, 1fr);
 }
 
+#muscleToggle.filter-icon-row,
+#exerciseFilterMuscle.filter-icon-row,
+#templateExercisePickerMuscleFilters.filter-icon-row {
+    grid-template-columns: repeat(3, 1fr);
+}
+
 .filter-icon-divider {
     height: 1px;
     background: var(--border-color);

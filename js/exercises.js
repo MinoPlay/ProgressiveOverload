@@ -7,7 +7,7 @@ import { CONFIG } from './config.js';
 import { validateExerciseName, validateEquipmentType, formatEquipmentType } from './utils.js';
 import { Templates } from './templates.js';
 
-const MUSCLE_OPTIONS = ['chest', 'back', 'shoulders', 'legs', 'biceps', 'triceps', 'core', 'neck'];
+const MUSCLE_OPTIONS = ['chest', 'back', 'shoulders', 'legs', 'biceps', 'triceps', 'forearms', 'core', 'neck'];
 
 export const Exercises = {
     manageView: 'exercises',

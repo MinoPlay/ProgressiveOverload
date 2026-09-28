@@ -10,6 +10,13 @@ export const CONFIG = {
         branch: 'main'
     },
 
+    // Supabase public browser configuration
+    supabase: {
+        url: 'https://clkhiheomufzytfxrezn.supabase.co',
+        publishableKey: 'sb_publishable_51bQnrp9ags37FqQxeXYew_gbTj5e1e',
+        schema: 'progressive_overload'
+    },
+
     // Storage Keys
     storage: {
         authKey: 'github_pat'
@@ -71,7 +78,8 @@ export const CONFIG = {
         kettlebell: { label: 'Kettlebell', requiresWeight: true },
         machines: { label: 'Machines', requiresWeight: true },
         bodyweight: { label: 'Bodyweight', requiresWeight: false },
-        'bodyweight+': { label: 'Bodyweight+', requiresWeight: true }
+        'bodyweight+': { label: 'Bodyweight+', requiresWeight: true },
+        bands: { label: 'Bands', requiresWeight: false }
     }
 };
 
@@ -83,7 +91,8 @@ const CONFIG_KEY = 'app_config';
 
 // Global config state
 let config = {
-    mode: 'local',
+    mode: 'github',
+    storageBackend: 'github',
     token: '',
     owner: '',
     repo: ''
@@ -102,9 +111,11 @@ export function loadConfig() {
         if (tokenEl) tokenEl.value = config.token || '';
         if (ownerEl) ownerEl.value = config.owner || '';
         if (repoEl)  repoEl.value  = config.repo  || '';
-        config.mode = config.mode || 'local';
+        config.mode = config.mode || 'github';
+        config.storageBackend = config.storageBackend || config.mode;
     } else {
-        config.mode = 'local';
+        config.mode = 'github';
+        config.storageBackend = 'github';
     }
 
     // Update UI to reflect current mode
@@ -142,6 +153,15 @@ window.saveConfig = function () {
 };
 
 /**
+ * Get the selected persistence backend.
+ * @returns {'local'|'github'|'supabase'}
+ */
+export function getStorageBackend() {
+    const c = getConfig();
+    return c.storageBackend || c.mode || 'github';
+}
+
+/**
  * Check if GitHub configuration is complete (token + owner + repo all set)
  */
 export function isGitHubConfigured() {
@@ -150,33 +170,56 @@ export function isGitHubConfigured() {
 }
 
 /**
- * Set mode (local or github)
+ * Check if public Supabase browser configuration is available.
+ * @returns {boolean}
+ */
+export function isSupabaseConfigured() {
+    return !!(CONFIG.supabase.url && CONFIG.supabase.publishableKey);
+}
+
+/**
+ * Set persistence mode.
  */
 window.setMode = function (mode) {
     config.mode = mode;
+    config.storageBackend = mode;
     localStorage.setItem(CONFIG_KEY, JSON.stringify(config));
     updateModeUI();
-    showStatus(`Switched to ${mode === 'local' ? 'Local' : 'GitHub'} mode`, 'success');
+    const labels = {
+        local: 'Local',
+        github: 'GitHub',
+        supabase: 'Supabase'
+    };
+    showStatus(`Switched to ${labels[mode] || mode} mode. Reload to apply.`, 'success');
 };
 
 /**
  * Update UI based on current mode
  */
 function updateModeUI() {
-    const isLocal = config.mode === 'local';
+    const backend = config.storageBackend || config.mode || 'github';
+    const isLocal = backend === 'local';
+    const isGitHub = backend === 'github';
+    const isSupabase = backend === 'supabase';
 
     const modeLocal    = document.getElementById('mode-local');
     const modeGithub   = document.getElementById('mode-github');
+    const modeSupabase = document.getElementById('mode-supabase');
     const githubConfig = document.getElementById('github-config');
+    const supabaseConfig = document.getElementById('supabase-config');
     const localControls = document.getElementById('local-controls');
     const githubHelp   = document.getElementById('github-help');
+    const supabaseHelp = document.getElementById('supabase-help');
     const localHelp    = document.getElementById('local-help');
 
     if (modeLocal)     modeLocal.classList.toggle('active', isLocal);
-    if (modeGithub)    modeGithub.classList.toggle('active', !isLocal);
-    if (githubConfig)  githubConfig.style.display  = isLocal ? 'none' : 'block';
+    if (modeGithub)    modeGithub.classList.toggle('active', isGitHub);
+    if (modeSupabase)  modeSupabase.classList.toggle('active', isSupabase);
+    if (githubConfig)  githubConfig.style.display = isGitHub ? 'flex' : 'none';
+    if (supabaseConfig) supabaseConfig.style.display = isSupabase ? 'flex' : 'none';
     if (localControls) localControls.style.display = isLocal ? 'flex'  : 'none';
-    if (githubHelp)    githubHelp.style.display    = isLocal ? 'none' : 'block';
+    if (githubHelp)    githubHelp.style.display = isGitHub ? 'block' : 'none';
+    if (supabaseHelp)  supabaseHelp.style.display = isSupabase ? 'block' : 'none';
     if (localHelp)     localHelp.style.display     = isLocal ? 'block' : 'none';
 }
 

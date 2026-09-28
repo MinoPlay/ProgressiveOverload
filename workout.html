@@ -2108,6 +2108,7 @@ function getPickerAvailableMetas() {
 function pickerIconFor(kind, value) {
   const base = 'assets/icons/filters/';
   if (kind === 'Equipment') {
+    if (value === 'bands') return base + 'bands.jpg';
     if (value === 'bodyweight+') return base + 'bodyweight-plus.png';
     return base + value + '.png';
   }

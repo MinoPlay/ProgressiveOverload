@@ -70,6 +70,9 @@
                                     <button onclick="setMode('github')" class="mode-btn" id="mode-github">
                                         <i data-lucide="github"></i> GitHub
                                     </button>
+                                    <button onclick="setMode('supabase')" class="mode-btn" id="mode-supabase">
+                                        <i data-lucide="database"></i> Supabase
+                                    </button>
                                 </div>
                                 <div class="config-form" id="github-config">
                                     <input type="password" id="github-token" name="github-token" placeholder="GitHub Token"
@@ -79,6 +82,21 @@
                                     <button onclick="saveConfig()" class="btn-save">
                                         <i data-lucide="save"></i> Save
                                     </button>
+                                </div>
+                                <div class="config-form" id="supabase-config" style="display: none;">
+                                    <div id="supabase-signed-out" class="config-form">
+                                        <input type="email" id="supabase-email" name="supabase-email"
+                                            placeholder="Email address" autocomplete="email">
+                                        <button onclick="requestSupabaseMagicLink()" class="btn-save">
+                                            <i data-lucide="mail"></i> Send sign-in link
+                                        </button>
+                                    </div>
+                                    <div id="supabase-signed-in" class="config-form" style="display: none;">
+                                        <span id="supabase-user-email" class="config-help"></span>
+                                        <button onclick="signOutSupabase()" class="btn-save">
+                                            <i data-lucide="log-out"></i> Sign out
+                                        </button>
+                                    </div>
                                 </div>
                                 <div class="local-controls" id="local-controls" style="display: none;">
                                     <button onclick="generateDummyData()" class="btn-generate">
@@ -91,6 +109,9 @@
                                 <p class="config-help" id="github-help">
                                     Create a token with 'repo' scope at
                                     <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings</a>
+                                </p>
+                                <p class="config-help" id="supabase-help" style="display: none;">
+                                    Email magic-link authentication. Data is isolated per signed-in user.
                                 </p>
                                 <p class="config-help" id="local-help" style="display: none;">
                                     Local mode stores data in your browser's localStorage.

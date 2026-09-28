@@ -1,67 +1,81 @@
-# Feature: Storage & GitHub Sync
+# Feature: Storage, Supabase & GitHub Sync
 
 ## Purpose
-Central data layer. Persists exercises, workouts, and templates as JSON files in a user-configured GitHub repository via the REST API.
+`Storage` is the stable data interface used by the application. Persistence is selected at startup:
+
+- **Supabase** — multi-user source of truth with Supabase Auth and row-level security.
+- **GitHub** — legacy JSON backend retained during migration and as a guarded rollback path.
+- **Local** — existing browser-only mode.
+
+Before cutover, a scheduled workflow reconciles the GitHub JSON snapshot into one configured Supabase user. After cutover, forward reconciliation must be disabled and a separate workflow exports Supabase data to a dedicated GitHub backup branch.
 
 ## Key Files
-- `js/storage.js` — `Storage` singleton (public API)
-- `js/github-api.js` — `GitHubAPI` singleton (HTTP layer)
-- `progressive-overload/exercises.json`
-- `progressive-overload/workouts-YYYY-MM.json` (one file per month)
-- `progressive-overload/session-templates.json`
-- `progressive-overload/stats-summary.json`
+- `js/storage.js` — feature-facing `Storage` singleton and domain behavior.
+- `js/storage-api.js` — backend selector.
+- `js/github-api.js` — GitHub Contents adapter with SHA concurrency.
+- `js/supabase-api.js` — tenant-scoped Supabase adapter.
+- `js/supabase-auth.js` — email magic-link session handling.
+- `js/supabase-client.js` — configured browser client for the `progressive_overload` schema.
+- `js/supabase-records.js` — legacy JSON ↔ relational row mapping.
+- `supabase/migrations/` — schema, RLS, grants, indexes, and user initialization.
+- `scripts/` — forward reconciliation and reverse export commands.
+- `.github/workflows/` — scheduled/manual migration and backup workflows.
 
-## In-Memory Cache (Storage)
-```js
-{
-  exercises: Exercise[],
-  exercisesSha: string|null,
-  currentMonthWorkouts: WorkoutRecord[],
-  currentMonthSha: string|null,
-  currentMonthPath: string|null,
-  sessionTemplates: SessionTemplate[],
-  sessionTemplatesSha: string|null
-}
-```
+## Stable Storage Interface
+Feature modules continue to call `Storage`; they must not call a backend adapter directly.
 
-## GitHub API File Layout
+| Method | Description |
+|---|---|
+| `initialize()` | Initialize the signed-in user, load exercises/current month/templates, and run sequence migration |
+| `getExercises()` | Return cached exercises |
+| `addExercise`, `updateExercise`, `deleteExercise` | Validate and persist exercise changes |
+| `addWorkout`, `addWorkoutsBatch` | Construct and persist workout records |
+| `getWorkoutsInRange` | Return complete paginated history for a date range |
+| `updateWorkout`, `deleteWorkout` | Mutate an existing workout |
+| `getSessionTemplates` | Return cached templates |
+| `addSessionTemplate`, `updateSessionTemplate`, `deleteSessionTemplate` | Persist template changes |
+
+`buildWorkoutRecord` remains the only place that constructs persisted workout records.
+
+## Supabase Data Model
+All tables live in the dedicated `progressive_overload` schema.
+
+| Table | Purpose |
+|---|---|
+| `user_settings` | Idempotent per-user initialization marker |
+| `exercises` | User-owned exercise definitions and last-set hints |
+| `workouts` | User-owned relational workout sets |
+| `session_templates` | User-owned templates with nested rows stored as JSONB |
+| `sync_runs` | Service-role-only migration/backup audit records |
+
+Every tenant table includes `user_id`; browser access is restricted by RLS to `auth.uid()`. The browser uses only the public Supabase publishable key. The service-role key is allowed only in local environment secrets and GitHub Actions secrets.
+
+## Legacy GitHub Layout
 | File | Content |
 |---|---|
 | `progressive-overload/exercises.json` | `{ exercises: Exercise[] }` |
 | `progressive-overload/workouts-YYYY-MM.json` | `{ workouts: WorkoutRecord[] }` |
 | `progressive-overload/session-templates.json` | `{ templates: SessionTemplate[] }` |
-| `progressive-overload/stats-summary.json` | Aggregated stats cache (written async) |
+| `progressive-overload/stats-summary.json` | Derived aggregate; not authoritative in Supabase |
 
-## Key Storage Methods
-| Method | Description |
-|---|---|
-| `initialize()` | Load exercises, current-month workouts, migrate sequences, load templates |
-| `getExercises()` | Return in-memory exercise array |
-| `getExerciseById(id)` | Find exercise by ID; returns `null` if not found |
-| `addExercise(ex)` | Validate uniqueness, push, save to GitHub |
-| `updateExercise(id, updates)` | Patch in-memory, save to GitHub |
-| `deleteExercise(id)` | Splice in-memory, save to GitHub |
-| `addWorkout(workout)` | Build record, push to current month cache, save |
-| `addWorkoutsBatch(workouts)` | Batch-save multiple records for a single date |
-| `getWorkoutsInRange(start, end)` | Load monthly files covering the range; returns flat array |
-| `getSessionTemplates()` | Return in-memory templates array |
-| `addSessionTemplate(tmpl)` | Push, save to GitHub |
-| `updateSessionTemplate(id, updates)` | Patch, save to GitHub |
-| `deleteSessionTemplate(id)` | Splice, save to GitHub |
+GitHub writes must always use the current file SHA. GitHub-only SHA and file-cache details must not be added to new feature callers.
 
-## Key GitHubAPI Methods
-| Method | Description |
-|---|---|
-| `getExercises()` | GET exercises file; returns `{exercises, sha}` |
-| `saveExercises(exercises, sha)` | PUT exercises file; `sha` required for update (null for create) |
-| `getWorkouts(date)` | GET monthly workouts file for the month containing `date` |
-| `saveWorkouts(date, workouts, sha)` | PUT monthly workouts file |
-| `listFiles(path)` | List directory contents; cached per session |
-| `_invalidateCache(filePath)` | Clear file + parent-dir cache entries after write |
+## Migration Rules
+- Forward sync is one-way: GitHub → Supabase.
+- The source repository and directory come from `GITHUB_DATA_REPOSITORY` and `GITHUB_DATA_DIRECTORY`; defaults match this repository.
+- Validate the complete snapshot and all exercise references before applying writes or deletions.
+- Refuse an empty source snapshot that would erase existing target workouts.
+- Preserve legacy IDs and optional session/superset metadata.
+- Reconciliation is idempotent and deletes target rows absent from a fully validated source snapshot.
+- All imported rows are assigned to `SUPABASE_LEGACY_USER_ID`.
+- Set `SUPABASE_CUTOVER=true` when Supabase becomes authoritative; the scheduled forward job is guarded by that variable.
+- Reverse export is one-way: Supabase → dedicated GitHub backup branch. It is not a bidirectional sync loop.
+- Refuse an empty or mass-deletion backup unless `ALLOW_DESTRUCTIVE_BACKUP=true` is explicitly set for a reviewed run.
 
-## Rules & Constraints
-- **Always pass the current SHA** when saving a file that already exists — GitHub will reject the PUT with 409 if the SHA is wrong or missing.
-- `currentMonthWorkouts` and `currentMonthSha` only cover the **current calendar month**. Cross-month reads must use `getWorkoutsInRange`.
-- `buildWorkoutRecord` is the only place a `WorkoutRecord` is constructed — use it; do not create records manually.
-- `generateAndSaveStatsSummary()` is called after every workout write; it is fire-and-forget (does not block the UI).
-- Exercise names are case-insensitively unique — enforce in `addExercise` and `updateExercise`.
+## Constraints
+- Exercise names are case-insensitively unique per user.
+- `weight: null` represents bodyweight.
+- `sequence` is positive and orders sets within a day.
+- Workout history queries must paginate beyond PostgREST's default row limit.
+- Supabase Auth tokens must never cross the workout iframe bridge.
+- The hosted Supabase project must expose the `progressive_overload` schema through its Data API settings.

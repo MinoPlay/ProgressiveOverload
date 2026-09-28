@@ -9,16 +9,16 @@
 ## 1. Overview
 
 Progressive Overload is a **client-only Progressive Web App (PWA)** for tracking
-strength-training progress. There is no application backend: the browser is the
-entire runtime, and a **private GitHub repository is used as the database** via
-the GitHub REST API. A tiny Node.js static file server exists only for local
-development.
+strength-training progress. The browser is the application runtime and can use
+either a tenant-isolated **Supabase Postgres/Auth backend** or the legacy private
+GitHub JSON backend through the same `Storage` interface. A tiny Node.js static
+file server exists only for local development.
 
 ### Goals
 
 - Log sets (reps × weight) quickly, plan whole sessions, and support supersets.
 - Visualize progress: weekly volume by muscle, strength trends, 1RM, PRs.
-- Sync across devices with zero server infrastructure to operate or pay for.
+- Sync securely across devices with per-user data isolation.
 - Work offline and installable as a native-like app (PWA).
 
 ### Non-goals
@@ -55,9 +55,11 @@ graph TB
     subgraph Browser["Browser (single origin)"]
         subgraph Parent["Parent document — index.html"]
             App["app.js<br/>(bootstrap, nav, theme)"]
-            Cfg["config.js / auth.js<br/>(mode, PAT)"]
+            Cfg["config.js / auth modules<br/>(backend, PAT, Supabase session)"]
             Store["storage.js<br/>(in-memory cache + orchestration)"]
+            Adapter["storage-api.js<br/>(backend selector)"]
             GH["github-api.js<br/>(REST wrapper, SHA cache)"]
+            SB["supabase-api.js<br/>(tenant-scoped relational adapter)"]
             Ex["exercises.js"]
             Tmpl["templates.js"]
             Hist["history.js"]
@@ -73,9 +75,12 @@ graph TB
     end
 
     GHREPO[("GitHub repo<br/>progressive-overload/*.json")]
+    SUPABASE[("Supabase<br/>progressive_overload schema")]
     CDN[("CDN<br/>Chart.js / Lucide")]
 
-    App --> Store --> GH --> GHREPO
+    App --> Store --> Adapter
+    Adapter --> GH --> GHREPO
+    Adapter --> SB --> SUPABASE
     App --> Bridge
     Bridge <-->|"postMessage (po-*)"| Board
     Board --> LS2
@@ -84,6 +89,7 @@ graph TB
     SW -. cache-first .- CDN
     SW -. cache-first .- Parent
     SW -. network-only .- GHREPO
+    SW -. network-only .- SUPABASE
 ```
 
 ### Module responsibilities
@@ -91,10 +97,12 @@ graph TB
 | Module | Responsibility |
 |---|---|
 | `js/app.js` | App bootstrap, tab navigation (lazy-init History/Stats), theme system, and `IframeBridge` (the parent half of the workout bridge). |
-| `js/config.js` | `CONFIG` constants + user config (mode, token, owner, repo) in `localStorage`. |
-| `js/auth.js` | GitHub Personal Access Token (PAT) storage/retrieval. |
+| `js/config.js` | `CONFIG` constants + selected storage backend and legacy GitHub configuration in `localStorage`. |
+| `js/auth.js`, `js/supabase-auth.js` | GitHub PAT compatibility plus Supabase email magic-link sessions. |
 | `js/storage.js` | Central data layer: in-memory cache of exercises / current-month workouts / templates, sequence-number migration, stats-summary generation, last-set sync. |
+| `js/storage-api.js` | Selects the GitHub or Supabase persistence adapter without changing feature callers. |
 | `js/github-api.js` | Thin GitHub REST wrapper: base64 encode/decode, SHA tracking, per-session file/dir cache. |
+| `js/supabase-api.js` | RLS-protected relational persistence with paginated history queries. |
 | `js/exercises.js` | Exercise CRUD UI (equipment types, muscle groups, filtering). |
 | `js/templates.js` | Session template editor + loading templates into the planner. |
 | `js/history.js` | Workout history rendering (week grouping, day modal). |
@@ -160,8 +168,8 @@ editing **both** ends.
 
 ## 4. Data model
 
-All persisted data lives as JSON files in the GitHub repo under
-`progressive-overload/`.
+The domain shapes are preserved across two persistence representations:
+tenant-owned Supabase rows and legacy/backup JSON under `progressive-overload/`.
 
 ```mermaid
 erDiagram
@@ -197,14 +205,17 @@ erDiagram
     }
 ```
 
-### Files on disk (in the repo)
+### Persistence representations
 
-| Path | Shape | Notes |
+| Location | Shape | Notes |
 |---|---|---|
 | `progressive-overload/exercises.json` | `{ exercises: Exercise[] }` | Single file, unbounded growth (≈ fine for ~50–100 exercises; GitHub contents API caps ~1 MB). |
 | `progressive-overload/workouts-YYYY-MM.json` | `{ workouts: Workout[] }` | **Sharded by month** — the central scalability decision. Only the current month is loaded at startup; history/stats fetch ranges on demand. |
 | `progressive-overload/session-templates.json` | `{ templates: Template[] }` | Reusable planned sessions. |
 | `progressive-overload/stats-summary.json` | summary object | Pre-computed aggregate written on save to speed up stats. |
+| Supabase `progressive_overload.exercises` | relational rows keyed by `(user_id, id)` | Exercise definitions and last-set hints, protected by RLS. |
+| Supabase `progressive_overload.workouts` | one relational row per logged set | Indexed by tenant, date, and exercise; range reads are explicitly paginated. |
+| Supabase `progressive_overload.session_templates` | template metadata + `rows jsonb` | Keeps the nested planner structure intact while isolating ownership relationally. |
 
 ### Key field semantics
 
@@ -220,7 +231,7 @@ erDiagram
 
 | Key | Owner | Purpose |
 |---|---|---|
-| `app_config` | parent | mode, token, owner, repo |
+| `app_config` | parent | selected backend plus legacy GitHub token, owner, and repo |
 | `github_pat` | parent | PAT fallback |
 | `theme` | both | `light` / `dark` / `green`; synced into iframe via `storage` event |
 | `activeSection` | parent | last open tab |
@@ -231,15 +242,18 @@ erDiagram
 
 ## 5. Persistence & sync design
 
-`Storage` (parent) is the orchestration layer over `GitHubAPI`:
+`Storage` (parent) is the orchestration layer over `StorageAPI`, which selects
+the configured persistence adapter:
 
 - **In-memory cache** of exercises, current-month workouts, and templates is
   loaded once at `Storage.initialize()`.
+- **`SupabaseAPI`** stores tenant-owned relational rows under RLS. Range reads
+  paginate explicitly beyond PostgREST's default limit.
 - **`GitHubAPI`** wraps the REST contents endpoint: UTF-8-safe base64
   encode/decode, **per-session file/dir caches**, and **SHA tracking**. Every
   write is `PUT contents/<path>` including the file's current `sha`; GitHub
   rejects a stale SHA with **409**, surfaced to the user as "refresh and retry".
-- **Concurrency model:** optimistic, last-writer-wins per file, guarded by the
+- **GitHub concurrency model:** optimistic, last-writer-wins per file, guarded by the
   SHA. There is no merge — month-sharding keeps the blast radius of a conflict
   to a single month.
 
@@ -256,11 +270,16 @@ flowchart LR
     F -- "401/403" --> I["error: re-enter PAT"]
 ```
 
-### Dual-mode storage
+### Storage backends and migration
 
-`config.mode` is `local` or `github`. GitHub mode syncs across devices using the
-repo as the database; local mode keeps everything in the browser. The app boots
-straight into the config panel if GitHub isn't configured.
+`app_config.storageBackend` selects `local`, `github`, or `supabase`. Supabase
+mode restores an email magic-link session before loading data; GitHub mode
+requires the legacy PAT/repository configuration.
+
+Before cutover, a daily/manual workflow validates and reconciles the complete
+GitHub snapshot into one configured Supabase user. After cutover, forward sync
+must be disabled; a separate daily/manual workflow exports deterministic JSON
+to a dedicated GitHub backup branch.
 
 ---
 
@@ -322,15 +341,18 @@ board reflects the new "previous set" hints.
 
 ## 8. Security model
 
-- **Auth = a GitHub PAT** with `repo` scope, stored in `localStorage` on the
-  user's device. There is no server, so there is no server-side secret store.
-- The token **never crosses the iframe bridge** (origin `'*'`); all GitHub calls
-  happen in the parent.
+- **Supabase mode** uses email magic-link Auth and RLS policies requiring
+  `user_id = auth.uid()` on tenant tables.
+- The browser contains only the public Supabase project URL/publishable key.
+  The service-role key exists only in local automation or GitHub Actions secrets.
+- **GitHub mode** retains the legacy PAT in `localStorage` for migration and
+  rollback.
+- Auth tokens **never cross the iframe bridge** (origin `'*'`); persistence
+  calls happen in the parent.
 - User-entered text is rendered with `textContent` (never `innerHTML`) to
   prevent XSS.
-- **Implication:** anyone with access to the browser profile can read the PAT
-  from `localStorage`. This is acceptable for a single-user, self-hosted-data
-  tool but is the main security trade-off (see §9).
+- The dedicated `progressive_overload` schema is exposed through PostgREST, but
+  unauthenticated users have no tenant-table privileges.
 
 ---
 
@@ -338,12 +360,14 @@ board reflects the new "previous set" hints.
 
 | Decision | Benefit | Cost / risk |
 |---|---|---|
-| **GitHub repo as database (no backend)** | Zero infra to run/pay for; data is portable, versioned, and user-owned | Coupled to GitHub API rate limits; PAT lives client-side; optimistic concurrency only |
+| **Supabase as source of truth** | Multi-user Auth, RLS isolation, relational queries, row-level writes | Requires hosted schema configuration, migrations, and operational secrets |
+| **GitHub migration/backup representation** | Portable, reviewable JSON and a guarded rollback/export path | Forward sync must be disabled at cutover to avoid overwriting Supabase |
 | **Workout tab as an isolated iframe** | Strong encapsulation; the planner is a self-contained app; DOM-as-truth keeps it simple | Must keep `po-*` protocol and serialize/restore pairs in sync on both ends; easy to "fix the wrong file" (`js/workouts.js`) |
 | **Month-sharded workout files** | Small startup payload; bounded conflict scope; cheap range queries | Cross-month reports need multiple fetches; more files to manage |
 | **No framework (vanilla JS modules)** | No build step, tiny dependency surface, fast load | Manual DOM wiring; object-literal singletons instead of components |
 | **Pre-computed `stats-summary.json`** | Fast stats render without re-aggregating everything | Extra write on every save; can drift if hand-edited |
-| **PAT in `localStorage`** | Simplest possible auth for a serverless app | Readable on the device; no token rotation/encryption |
+| **Public Supabase browser key + RLS** | Static deployment without browser secrets | Correct grants and RLS policies are mandatory |
+| **Legacy PAT in `localStorage`** | Preserves the existing GitHub adapter for migration/rollback | Readable on the device; should not be the post-cutover default |
 | **Optimistic, SHA-guarded writes (last-writer-wins)** | Simple, no locking | Concurrent edits to the same month can 409; user must refresh & retry |
 
 ---
@@ -352,13 +376,11 @@ board reflects the new "previous set" hints.
 
 - **Legacy `js/workouts.js`** is dead for the live tab and should eventually be
   removed to avoid confusion.
-- **`exercises.json` is unbounded** — a single-file model that will eventually
-  hit the ~1 MB contents-API limit at extreme scale.
-- **No real multi-writer conflict resolution** — fine for one user across
-  devices used non-simultaneously.
-- Possible evolutions: encrypt/scope the token (fine-grained PAT), shard or
-  paginate exercises, add an export/backup flow, and formalize the stats-summary
-  as a derived artifact regenerated from raw months.
+- GitHub mode retains its single-file size and optimistic concurrency limits.
+- The hosted Supabase project must keep the custom schema exposed and Auth
+  redirect URLs synchronized with deployed origins.
+- The current browser adapter preserves the existing `Storage` behavior, which
+  still rewrites logical collections even though Supabase persists row changes.
 
 ---
 
@@ -372,10 +394,15 @@ manifest.json       PWA manifest
 server.js           Local-dev static server (CommonJS)
 js/
   app.js            Bootstrap, nav, theme, IframeBridge
-  config.js         CONFIG + user config (mode/token/owner/repo)
-  auth.js           PAT storage
+  config.js         CONFIG + selected backend and legacy GitHub config
+  auth.js           Backend-aware auth compatibility
+  supabase-auth.js  Email magic-link session handling
   storage.js        Data layer + orchestration
+  storage-api.js    Persistence adapter selector
   github-api.js     GitHub REST wrapper (base64, SHA, caches)
+  supabase-api.js   Tenant-scoped relational adapter
+  supabase-client.js Configured browser client
+  supabase-records.js JSON/row mapping
   exercises.js      Exercise CRUD UI
   templates.js      Session templates
   history.js        Workout history UI
@@ -387,6 +414,8 @@ progressive-overload/
   workouts-YYYY-MM.json     { workouts: [...] }  (month-sharded)
   session-templates.json    { templates: [...] }
   stats-summary.json        pre-computed aggregates
+supabase/           CLI config + versioned schema/RLS migrations
+scripts/            Forward reconciliation + reverse export automation
 css/                layout.css, components.css, styles.css
 Doc/                UI + design documentation (this file)
 ```

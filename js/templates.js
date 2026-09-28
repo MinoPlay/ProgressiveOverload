@@ -363,7 +363,8 @@ export const Templates = {
             kettlebell: 'dumbbell',
             machines: 'settings',
             bodyweight: 'user',
-            'bodyweight+': 'user'
+            'bodyweight+': 'user',
+            bands: 'move'
         };
         return equipmentIcons[exercise.equipmentType] || 'dumbbell';
     },
@@ -413,6 +414,7 @@ export const Templates = {
 
     getExercisePickerIconPath(kind, value) {
         if (kind === 'equipment') {
+            if (value === 'bands') return 'assets/icons/filters/bands.jpg';
             const fileName = value === 'bodyweight+' ? 'bodyweight-plus' : value;
             return `assets/icons/filters/${fileName}.png`;
         }

@@ -117,6 +117,7 @@ export const Exercises = {
     },
 
     getEquipmentFilterIcon(value) {
+        if (value === 'bands') return 'assets/icons/filters/bands.jpg';
         const fileName = value === 'bodyweight+' ? 'bodyweight-plus' : value;
         return `assets/icons/filters/${fileName}.png`;
     },

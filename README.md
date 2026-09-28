@@ -20,10 +20,11 @@ A premium, modern web application designed to help you track your strength train
 - **Personal Records (PRs)**: Automatically tracks and highlights your best lifts.
 - **Progress Milestones**: celebrate your achievements with a built-in milestone system (Streaks, Best Lifts, Consistent Progress).
 
-### 💾 Dual-Mode Storage Persistence
+### 💾 Multi-Backend Storage Persistence
 - **Local Mode**: Fast and private storage directly in your browser's `localStorage`.
-- **GitHub Mode**: Sync your data across devices by using a private GitHub repository as your database via the GitHub API.
-- **Seamless Migration**: Switch between modes easily via the configuration menu.
+- **Supabase Mode**: Multi-user persistence with email magic-link authentication and row-level security.
+- **GitHub Mode**: Legacy JSON persistence retained for migration and rollback.
+- **Automated Migration**: Daily GitHub-to-Supabase reconciliation before cutover and deterministic Supabase-to-GitHub backups afterward.
 
 ### 🍱 Premium UI/UX
 - **Modern Design**: A clean, "glassmorphism" inspired interface with a curated color palette.
@@ -38,7 +39,7 @@ A premium, modern web application designed to help you track your strength train
 - **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3.
 - **Charts**: [Chart.js](https://www.chartjs.org/) for high-performance data visualization.
 - **Icons**: [Lucide Icons](https://lucide.dev/) for beautiful, consistent iconography.
-- **Persistence**: GitHub REST API & Browser LocalStorage.
+- **Persistence**: Supabase Postgres/Auth, GitHub REST API, and Browser LocalStorage.
 - **Dev Environment**: Simple Node.js server for local development.
 
 ---
@@ -46,7 +47,7 @@ A premium, modern web application designed to help you track your strength train
 ## 🏁 Getting Started
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) (optional, for local dev server)
+- [Node.js](https://nodejs.org/) 22+
 - A modern web browser.
 
 ### Local Installation
@@ -59,7 +60,11 @@ A premium, modern web application designed to help you track your strength train
    ```bash
    git config core.hooksPath .githooks
    ```
-3. Start the development server:
+3. Install migration tooling:
+   ```bash
+   npm ci
+   ```
+4. Start the development server:
    ```bash
    node server.js
    ```
@@ -67,7 +72,71 @@ A premium, modern web application designed to help you track your strength train
    ```powershell
    .\dev-start.ps1
    ```
-4. Open `http://localhost:3000` in your browser.
+5. Open the URL printed by the development server.
+
+### Configuring Supabase
+
+Before running the automation:
+
+1. Install and authenticate the [Supabase CLI](https://supabase.com/docs/guides/local-development/cli/getting-started) and [GitHub CLI](https://cli.github.com/).
+2. Create or sign in the legacy owner through Supabase Auth and copy its user UUID.
+3. Copy the project's service-role key and database password into the current PowerShell session. Never put either value in browser code or pass them as command-line arguments.
+
+```powershell
+$securePassword = Read-Host 'Supabase database password' -AsSecureString
+$env:SUPABASE_DB_PASSWORD = [System.Net.NetworkCredential]::new('', $securePassword).Password
+$env:SUPABASE_SERVICE_ROLE_KEY = '<service-role-key>'
+npm run migration:help
+npm run migration:setup -- `
+  --project-ref clkhiheomufzytfxrezn `
+  --supabase-url https://clkhiheomufzytfxrezn.supabase.co `
+  --legacy-user-id '<auth-user-uuid>'
+```
+
+This links the project, applies migrations, and configures all required GitHub Actions secrets and variables. Use `--dry-run` to print a redacted plan without making changes. Repository, data path, source ref, and backup branch can be overridden; run `npm run migration:help` for all parameters.
+
+If the current network blocks PostgreSQL ports `5432` and `6543`, apply the migration file through the Supabase SQL Editor, record version `20260928102600` in `supabase_migrations.schema_migrations`, then rerun setup with `--skip-db-push`.
+
+After setup, two dashboard actions remain manual:
+
+1. Add `progressive_overload` under **Supabase → Data API → Exposed schemas**.
+2. Add the production and local URLs under **Supabase Auth → URL Configuration**.
+
+Push the migration files and workflows, then trigger the validation-only reconciliation:
+
+```powershell
+npm run migration:dispatch -- --dry-run
+```
+
+Review the workflow report, then run the real reconciliation:
+
+```powershell
+npm run migration:dispatch
+```
+
+GitHub remains authoritative and the workflow continues daily until cutover.
+
+### Cutover and Backup
+
+Before cutover, verify the legacy account in Supabase mode and pause all GitHub writes. Set the four variables needed by the local final reconciliation, then run:
+
+```powershell
+$env:SUPABASE_URL = 'https://clkhiheomufzytfxrezn.supabase.co'
+$securePassword = Read-Host 'Supabase database password' -AsSecureString
+$env:SUPABASE_DB_PASSWORD = [System.Net.NetworkCredential]::new('', $securePassword).Password
+$env:SUPABASE_SERVICE_ROLE_KEY = '<service-role-key>'
+$env:SUPABASE_LEGACY_USER_ID = '<auth-user-uuid>'
+$env:GITHUB_TOKEN = '<token-with-source-repository-read-access>'
+npm run migration:cutover -- --confirm-writes-paused --confirm-supabase-verified
+```
+
+The command performs the final GitHub-to-Supabase reconciliation and sets `SUPABASE_CUTOVER=true` only if it succeeds. Switch the app/browser backend to **Supabase**, then create the first reverse backup:
+
+```powershell
+npm run migration:backup
+```
+
+Do not run scheduled forward synchronization after Supabase receives new writes. For rollback, export Supabase first and review the backup branch before deliberately restoring GitHub mode.
 
 ### Configuring GitHub Mode (Sync)
 1. In the app, go to **Menu > Configuration**.
@@ -85,6 +154,9 @@ A premium, modern web application designed to help you track your strength train
 - `index.html`: Main application entry point.
 - `css/`: Styling organized by layout and components.
 - `js/`: Modular JavaScript logic (storage, charts, UI, API).
+- `supabase/`: Versioned database schema, RLS policies, and local CLI configuration.
+- `scripts/`: Forward reconciliation and reverse backup commands.
+- `.github/workflows/`: Scheduled migration and backup automation.
 - `progressive-overload/`: Local development data and schemas.
 - `assets/`: Icons and static assets.
 

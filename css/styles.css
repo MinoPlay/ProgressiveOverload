@@ -269,6 +269,7 @@
     color: #81d4fa;
 }
 [data-theme="dark"] .equipment-badge.bodyweight-plus { background: #0a1824; color: #4dd0e1; }
+[data-theme="dark"] .equipment-badge.bands { background: #241f0a; color: #e6d94d; }
 
 /* History sub-section headers (hardcoded #f8f9fa / #f1f3f5) */
 [data-theme="dark"] .history-section-sub-header {
@@ -728,6 +729,7 @@ html {
 [data-theme="green"] .equipment-badge.bodyweight { background: #001a0e; color: #00ff41; }
 [data-theme="green"] .equipment-badge            { background: #001a08; color: #00e676; }
 [data-theme="green"] .equipment-badge.bodyweight-plus { background: #001a10; color: #00ff41; }
+[data-theme="green"] .equipment-badge.bands { background: #1a1600; color: #e6ff00; }
 
 /* History entries */
 [data-theme="green"] .history-date-group {

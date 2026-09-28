@@ -1,9 +1,9 @@
 // Storage Module
 // Central data management layer for exercises and workouts
 
-import { GitHubAPI } from './github-api.js';
+import { StorageAPI as GitHubAPI } from './storage-api.js';
 import { Auth } from './auth.js';
-import { CONFIG, getConfig } from './config.js';
+import { CONFIG, getStorageBackend } from './config.js';
 import { generateId, parseDate, formatDate } from './utils.js';
 
 export const Storage = {
@@ -21,6 +21,7 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async initialize() {
+        await GitHubAPI.initializeUser?.();
         await this.loadExercises();
         await this.loadCurrentMonthWorkouts();
         await this.migrateSequenceNumbers();
@@ -234,11 +235,15 @@ export const Storage = {
             throw new Error('Exercise not found');
         }
 
-        this.exercises.splice(index, 1);
+        const [removedExercise] = this.exercises.splice(index, 1);
 
-        // Save to GitHub
-        const result = await GitHubAPI.saveExercises(this.exercises, this.exercisesSha);
-        this.exercisesSha = result.content.sha;
+        try {
+            const result = await GitHubAPI.saveExercises(this.exercises, this.exercisesSha);
+            this.exercisesSha = result.content.sha;
+        } catch (error) {
+            this.exercises.splice(index, 0, removedExercise);
+            throw error;
+        }
     },
 
     /**
@@ -1034,7 +1039,7 @@ export const Storage = {
      * Fires-and-forgets (does not block the caller on errors).
      */
     async generateAndSaveStatsSummary() {
-        if (getConfig().mode !== 'github' || !Auth.isAuthenticated()) return;
+        if (getStorageBackend() !== 'github' || !Auth.isAuthenticated()) return;
 
         try {
             const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/')) || 'data';

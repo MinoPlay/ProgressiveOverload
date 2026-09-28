@@ -217,7 +217,8 @@ export function formatEquipmentType(type) {
         'kettlebell': 'Kettlebell',
         'machines': 'Machines',
         'bodyweight': 'Bodyweight',
-        'bodyweight+': 'Bodyweight+'
+        'bodyweight+': 'Bodyweight+',
+        'bands': 'Bands'
     };
     return labels[type] || type;
 }

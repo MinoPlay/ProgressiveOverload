@@ -1,7 +1,8 @@
 // Authentication Module
 // Handles GitHub Personal Access Token storage
 
-import { CONFIG, getConfig } from './config.js';
+import { CONFIG, getConfig, getStorageBackend } from './config.js';
+import { SupabaseAuth } from './supabase-auth.js';
 
 export const Auth = {
     /**
@@ -44,6 +45,9 @@ export const Auth = {
      * @returns {boolean} True if token exists
      */
     isAuthenticated() {
+        if (getStorageBackend() === 'supabase') {
+            return SupabaseAuth.isAuthenticated();
+        }
         return !!this.getToken();
     },
 

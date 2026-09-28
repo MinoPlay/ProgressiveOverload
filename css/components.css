@@ -250,6 +250,11 @@
     color: #0277bd;
 }
 
+.equipment-badge.bands {
+    background: #fff9c4;
+    color: #9a7d0a;
+}
+
 .muscle-badge {
     display: inline-block;
     margin-left: var(--spacing-xs);

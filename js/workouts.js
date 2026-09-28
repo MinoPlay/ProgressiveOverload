@@ -1134,7 +1134,8 @@ export const Workouts = {
             kettlebell: 'dumbbell',
             machines: 'settings',
             bodyweight: 'user',
-            'bodyweight+': 'user'
+            'bodyweight+': 'user',
+            bands: 'move'
         };
 
         return equipmentIcons[exercise.equipmentType] || 'dumbbell';

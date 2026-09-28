@@ -1,0 +1,62 @@
+name: Sync GitHub data to Supabase
+
+on:
+    schedule:
+        - cron: '17 2 * * *'
+    workflow_dispatch:
+        inputs:
+            dry_run:
+                description: Validate and show the reconciliation plan without writing
+                required: false
+                default: false
+                type: boolean
+
+permissions:
+    contents: read
+
+concurrency:
+    group: github-to-supabase
+    cancel-in-progress: false
+
+jobs:
+    sync:
+        if: ${{ vars.SUPABASE_CUTOVER != 'true' }}
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
+
+            - run: npm ci --ignore-scripts
+
+            - name: Reconcile legacy data
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+                  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+                  SUPABASE_LEGACY_USER_ID: ${{ secrets.SUPABASE_LEGACY_USER_ID }}
+                  GITHUB_DATA_REPOSITORY: ${{ vars.GITHUB_DATA_REPOSITORY || 'MinoPlay/ProgressiveOverload' }}
+                  GITHUB_DATA_DIRECTORY: ${{ vars.GITHUB_DATA_DIRECTORY || 'progressive-overload' }}
+                  GITHUB_SOURCE_REF: ${{ vars.GITHUB_SOURCE_REF || 'main' }}
+              run: >-
+                  node scripts/sync-github-to-supabase.mjs
+                  ${{ inputs.dry_run && '--dry-run' || '' }}
+                  | tee sync-report.json
+
+            - name: Add reconciliation summary
+              if: ${{ always() && hashFiles('sync-report.json') != '' }}
+              run: |
+                  echo '```json' >> "$GITHUB_STEP_SUMMARY"
+                  cat sync-report.json >> "$GITHUB_STEP_SUMMARY"
+                  echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+            - name: Upload reconciliation report
+              if: ${{ always() && hashFiles('sync-report.json') != '' }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: github-to-supabase-report
+                  path: sync-report.json
+                  retention-days: 14

@@ -28,6 +28,7 @@ CRUD operations for the exercise library. Lives in the **Manage** tab. Exercises
 | `machines` | Machines | true |
 | `bodyweight` | Bodyweight | false |
 | `bodyweight+` | Bodyweight+ | true |
+| `bands` | Bands | false |
 
 ### Muscle Groups
 `chest` · `back` · `shoulders` · `legs` · `biceps` · `triceps` · `core` · `neck`

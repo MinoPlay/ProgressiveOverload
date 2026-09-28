@@ -1,0 +1,54 @@
+name: Back up Supabase data to GitHub
+
+on:
+    schedule:
+        - cron: '47 2 * * *'
+    workflow_dispatch:
+
+permissions:
+    contents: write
+
+concurrency:
+    group: supabase-to-github-backup
+    cancel-in-progress: false
+
+jobs:
+    backup:
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
+
+            - uses: actions/setup-node@v4
+              with:
+                  node-version: 22
+                  cache: npm
+
+            - run: npm ci --ignore-scripts
+
+            - name: Export legacy JSON backup
+              env:
+                  GITHUB_TOKEN: ${{ github.token }}
+                  SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+                  SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+                  SUPABASE_LEGACY_USER_ID: ${{ secrets.SUPABASE_LEGACY_USER_ID }}
+                  SUPABASE_BACKUP_BRANCH: ${{ vars.SUPABASE_BACKUP_BRANCH || 'supabase-backup' }}
+                  GITHUB_BACKUP_REPOSITORY: ${{ vars.GITHUB_BACKUP_REPOSITORY || 'MinoPlay/ProgressiveOverload' }}
+                  GITHUB_DATA_DIRECTORY: ${{ vars.GITHUB_DATA_DIRECTORY || 'progressive-overload' }}
+                  GITHUB_SOURCE_REF: ${{ vars.GITHUB_SOURCE_REF || 'main' }}
+                  ALLOW_DESTRUCTIVE_BACKUP: ${{ vars.ALLOW_DESTRUCTIVE_BACKUP || 'false' }}
+              run: node scripts/export-supabase-to-github.mjs | tee backup-report.json
+
+            - name: Add backup summary
+              if: ${{ always() && hashFiles('backup-report.json') != '' }}
+              run: |
+                  echo '```json' >> "$GITHUB_STEP_SUMMARY"
+                  cat backup-report.json >> "$GITHUB_STEP_SUMMARY"
+                  echo '```' >> "$GITHUB_STEP_SUMMARY"
+
+            - name: Upload backup report
+              if: ${{ always() && hashFiles('backup-report.json') != '' }}
+              uses: actions/upload-artifact@v4
+              with:
+                  name: supabase-to-github-backup-report
+                  path: backup-report.json
+                  retention-days: 14

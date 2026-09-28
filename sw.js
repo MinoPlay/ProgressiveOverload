@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v73j';
+const CACHE_VERSION = 'v73p';
 const STATIC_CACHE  = `po-static-${CACHE_VERSION}`;
 const CDN_CACHE     = `po-cdn-${CACHE_VERSION}`;
 
@@ -15,7 +15,12 @@ const STATIC_SHELL = [
   './js/auth.js',
   './js/config.js',
   './js/storage.js',
+  './js/storage-api.js',
   './js/github-api.js',
+  './js/supabase-api.js',
+  './js/supabase-auth.js',
+  './js/supabase-client.js',
+  './js/supabase-records.js',
   './js/exercises.js',
   './js/workouts.js',
   './js/templates.js',
@@ -72,13 +77,18 @@ self.addEventListener('fetch', event => {
     return; // fall through to browser default
   }
 
-  // 2. CDN resources — cache-first, populate on miss
+  // 2. Supabase Auth and data APIs — network only
+  if (url.hostname.endsWith('.supabase.co')) {
+    return; // fall through to browser default
+  }
+
+  // 3. CDN resources — cache-first, populate on miss
   if (CDN_ORIGINS.some(origin => url.origin === origin)) {
     event.respondWith(cacheFirst(request, CDN_CACHE));
     return;
   }
 
-  // 3. Local static assets — cache-first, populate on miss
+  // 4. Local static assets — cache-first, populate on miss
   if (url.origin === self.location.origin) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
   }

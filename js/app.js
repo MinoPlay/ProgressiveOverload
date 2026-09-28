@@ -9,7 +9,14 @@ import { Charts } from './charts.js';
 import { History } from './history.js';
 import { Rankings } from './rankings.js';
 import { Templates } from './templates.js';
-import { CONFIG, loadConfig, isGitHubConfigured } from './config.js';
+import {
+    CONFIG,
+    getStorageBackend,
+    isGitHubConfigured,
+    isSupabaseConfigured,
+    loadConfig
+} from './config.js';
+import { SupabaseAuth } from './supabase-auth.js';
 
 /**
  * Theme management
@@ -131,7 +138,25 @@ const App = {
             // even if GitHub initialization fails (e.g., expired token)
             this.initNavigation();
 
-            if (!isGitHubConfigured()) {
+            const storageBackend = getStorageBackend();
+
+            if (storageBackend === 'supabase') {
+                if (!isSupabaseConfigured()) {
+                    console.warn('Supabase public configuration is missing.');
+                    showLoading(false);
+                    this._openConfigPanel();
+                    showToast('Set the Supabase URL and publishable key in js/config.js.', 'info');
+                    return;
+                }
+
+                await SupabaseAuth.initialize();
+                if (!SupabaseAuth.isAuthenticated()) {
+                    showLoading(false);
+                    this._openConfigPanel();
+                    showToast('Sign in with your email to load Supabase data.', 'info');
+                    return;
+                }
+            } else if (!isGitHubConfigured()) {
                 // No GitHub config — open config panel so user can enter credentials
                 console.warn('⚠️ GitHub not configured — please set up your token and repository.');
                 showLoading(false);

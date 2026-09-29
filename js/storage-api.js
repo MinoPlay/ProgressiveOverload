@@ -48,5 +48,23 @@ export const StorageAPI = {
     },
     getRateLimit(...args) {
         return getAdapter().getRateLimit(...args);
+    },
+    upsertExercises(...args) {
+        return getAdapter().upsertExercises(...args);
+    },
+    deleteExercises(...args) {
+        return getAdapter().deleteExercises(...args);
+    },
+    upsertWorkouts(...args) {
+        return getAdapter().upsertWorkouts(...args);
+    },
+    deleteWorkouts(...args) {
+        return getAdapter().deleteWorkouts(...args);
+    },
+    upsertSessionTemplates(...args) {
+        return getAdapter().upsertSessionTemplates(...args);
+    },
+    deleteSessionTemplates(...args) {
+        return getAdapter().deleteSessionTemplates(...args);
     }
 };

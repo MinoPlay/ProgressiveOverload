@@ -20,6 +20,8 @@ export const Templates = {
 
         // Refresh when exercises change (exercise names in rows may need updating)
         window.addEventListener('exercisesUpdated', () => this.renderTemplateList());
+        // Refresh when templates change (including remote refreshes)
+        window.addEventListener('templatesUpdated', () => this.renderTemplateList());
     },
 
     bindEvents() {

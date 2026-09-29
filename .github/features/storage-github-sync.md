@@ -27,15 +27,24 @@ Feature modules continue to call `Storage`; they must not call a backend adapter
 | Method | Description |
 |---|---|
 | `initialize()` | Initialize the signed-in user, load exercises/current month/templates, and run sequence migration |
-| `getExercises()` | Return cached exercises |
+| `refreshFromRemote()` | Supabase only: re-fetch exercises/current month/templates; fires `*Updated` events only for changed data |
+| `getExercises()` | Return the in-memory exercise snapshot |
 | `addExercise`, `updateExercise`, `deleteExercise` | Validate and persist exercise changes |
 | `addWorkout`, `addWorkoutsBatch` | Construct and persist workout records |
 | `getWorkoutsInRange` | Return complete paginated history for a date range |
 | `updateWorkout`, `deleteWorkout` | Mutate an existing workout |
-| `getSessionTemplates` | Return cached templates |
+| `getSessionTemplates` | Return the in-memory template snapshot |
 | `addSessionTemplate`, `updateSessionTemplate`, `deleteSessionTemplate` | Persist template changes |
 
 `buildWorkoutRecord` remains the only place that constructs persisted workout records.
+
+## Supabase Freshness Rules
+Supabase is the source of truth; the browser never persists its data locally (the service worker is network-only for `*.supabase.co`).
+
+- `Storage.exercises`, `currentMonthWorkouts` and `sessionTemplates` are only a render snapshot. `App.refreshData()` re-fetches it on `visibilitychange` (visible) and on every tab switch; `IframeBridge` re-fetches before answering `po-request-*`.
+- Every public mutation is wrapped by `Storage._write()`: it re-fetches the snapshot first (validation and sequence numbers use fresh data) and blocks background refreshes until done.
+- Writes are row-level via `_persistExercises` / `_persistWorkouts` / `_persistSessionTemplates` → `upsert*` / `delete*` adapter methods. Never send a whole in-memory list to `SupabaseAPI.save*` from the app: those methods delete rows missing from the list.
+- The GitHub backend keeps whole-file saves with SHA concurrency.
 
 ## Supabase Data Model
 All tables live in the dedicated `progressive_overload` schema.

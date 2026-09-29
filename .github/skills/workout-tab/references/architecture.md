@@ -26,7 +26,7 @@ embedded app from someone opening `workout.html` directly (demo mode).
 Key constants (top of the inline script):
 - `THEME_KEY = 'theme'`
 - `SESSION_KEY = 'workout.activeSession'` — the in-progress session draft
-- `DESIGN1_LAST_WORKOUT_KEY = 'workout1.lastWorkoutByExercise'` — prev-set hints
+- Prev-set hints live only in memory (`_lastWorkoutByExercise`), rebuilt from parent data; the old `workout1.lastWorkoutByExercise` key is removed on load
 
 ## The three tabs (plus one legacy)
 
@@ -145,8 +145,7 @@ the `message` listener (≈ 1517), and the submit handler that posts
 `po-save-workouts` (≈ 2992)
 
 **History hints**
-`getLastWorkoutMap`, `saveLastWorkoutMap`, `getLastWorkoutForExercise`,
-`captureLastWorkoutFromCurrentBoard`, `showExerciseHistory`
+`getLastWorkoutForExercise`, `showExerciseHistory`
 
 **Misc**
 `applyStoredTheme`, `toggleTheme`, `pickDate`, `getEquipmentIcon`,

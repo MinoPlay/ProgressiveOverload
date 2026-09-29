@@ -169,6 +169,12 @@ const App = {
 
             // Initialize storage
             await Storage.initialize();
+            this._storageReady = true;
+
+            // Re-fetch Supabase data whenever the app comes back into view
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible') this.refreshData();
+            });
             
             // Debug: Check if exercises loaded
             console.log(`Loaded ${Storage.getExercises().length} exercises`);
@@ -215,6 +221,12 @@ const App = {
             trigger.setAttribute('aria-expanded', 'true');
             content.style.display = 'block';
         }
+    },
+
+    /** Re-fetch Supabase data once storage is ready (no-op for other backends). */
+    refreshData() {
+        if (!this._storageReady) return;
+        Storage.refreshFromRemote().catch(err => console.warn('Could not refresh data:', err));
     },
 
     /**
@@ -297,6 +309,8 @@ const App = {
 
             // Save to localStorage for persistence
             localStorage.setItem('activeSection', targetSection);
+
+            if (!skipLazyInit) this.refreshData();
         };
 
         // Nav icon clicks — switch section
@@ -446,6 +460,14 @@ const IframeBridge = {
         // Forward parent events to iframes
         window.addEventListener('exercisesUpdated', () => this.broadcastExercises());
         window.addEventListener('templatesUpdated', () => this.broadcastTemplates());
+        window.addEventListener('workoutsUpdated', () => {
+            // The file-backed stats summary is regenerated asynchronously after
+            // a change; use fresh range fetches from now on.
+            this._summaryStale = true;
+            this.broadcastWorkouts();
+            this.broadcastWeekWorkouts();
+            this.broadcastHistoryWorkouts();
+        });
 
         console.log('Iframe bridge initialized');
     },
@@ -488,14 +510,21 @@ const IframeBridge = {
      * single request for all-time data — over fetching each monthly file. The
      * promise is cached for the page session so the history and week sends share
      * one fetch instead of listing + fetching monthly files several times.
-     * Resolves to null when no summary exists yet (or after a save, until the
-     * summary is regenerated) so callers fall back to a fresh range fetch.
+     * Resolves to null when no summary exists yet (or after any workout change,
+     * since the summary is regenerated asynchronously) so callers fall back to a fresh range fetch.
+     * On Supabase only the in-flight fetch is shared; the result is never kept.
      * @returns {Promise<array|null>}
      */
     loadAllWorkouts() {
         if (this._summaryStale) return Promise.resolve(null);
         if (!this._allWorkoutsPromise) {
-            this._allWorkoutsPromise = Storage.loadStatsSummaryWorkouts().catch(() => null);
+            const promise = Storage.loadStatsSummaryWorkouts().catch(() => null);
+            this._allWorkoutsPromise = promise;
+            if (getStorageBackend() === 'supabase') {
+                promise.then(() => {
+                    if (this._allWorkoutsPromise === promise) this._allWorkoutsPromise = null;
+                });
+            }
         }
         return this._allWorkoutsPromise;
     },
@@ -576,6 +605,16 @@ const IframeBridge = {
         this.frames.forEach(f => this.sendHistoryWorkouts(f));
     },
 
+    /**
+     * Re-fetch Supabase data (no-op for other backends), then send.
+     * @param {function} send
+     */
+    _sendFresh(send) {
+        Storage.refreshFromRemote()
+            .catch(err => console.warn('IframeBridge: could not refresh data', err))
+            .then(send);
+    },
+
     /** Handle incoming postMessage from iframes */
     handleMessage(event) {
         const msg = event.data;
@@ -587,13 +626,13 @@ const IframeBridge = {
 
         switch (msg.type) {
             case 'po-request-exercises':
-                this.sendExercises(sourceFrame);
+                this._sendFresh(() => this.sendExercises(sourceFrame));
                 break;
             case 'po-request-templates':
-                this.sendTemplates(sourceFrame);
+                this._sendFresh(() => this.sendTemplates(sourceFrame));
                 break;
             case 'po-request-workouts':
-                this.sendWorkouts(sourceFrame);
+                this._sendFresh(() => this.sendWorkouts(sourceFrame));
                 break;
             case 'po-request-week-workouts':
                 this.sendWeekWorkouts(sourceFrame);
@@ -604,14 +643,7 @@ const IframeBridge = {
             case 'po-save-workouts':
                 Storage.addWorkoutsBatch(msg.workouts)
                     .then(() => {
-                        // The stats summary is regenerated asynchronously after a
-                        // save; fall back to fresh range fetches until it catches up.
-                        this._summaryStale = true;
-                        this._allWorkoutsPromise = null;
                         event.source.postMessage({ type: 'po-workouts-saved' }, '*');
-                        this.broadcastWorkouts();
-                        this.broadcastWeekWorkouts();
-                        this.broadcastHistoryWorkouts();
                         window.dispatchEvent(new CustomEvent('workoutsUpdated'));
                     })
                     .catch(err => {

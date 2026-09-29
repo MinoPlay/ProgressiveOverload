@@ -30,7 +30,8 @@ All messages use `{ type: 'po-*', ...payload }`.
 1. `IframeBridge.init()` — called from `App.initApp()` after `Storage.initialize()`
 2. After a 100 ms delay, `broadcastExercises()`, `broadcastTemplates()`, `broadcastWorkouts()` are called
 3. Each iframe's `load` event triggers `sendAllData(frame)` to handle re-loads
-4. Parent listens for `exercisesUpdated` / `templatesUpdated` window events and re-broadcasts
+4. Parent listens for `exercisesUpdated` / `templatesUpdated` / `workoutsUpdated` window events and re-broadcasts (workouts, week and history feeds on `workoutsUpdated`)
+5. On Supabase, `po-request-exercises|templates|workouts` first call `Storage.refreshFromRemote()` so the iframe always gets fresh data; `loadAllWorkouts()` shares only the in-flight fetch and never keeps the result
 
 ## Key Methods (`IframeBridge`)
 | Method | Description |

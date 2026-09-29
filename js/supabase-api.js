@@ -107,23 +107,46 @@ export const SupabaseAPI = {
         const incomingIds = new Set(exercises.map(exercise => exercise.id));
         const staleIds = existing.map(row => row.id).filter(id => !incomingIds.has(id));
 
-        if (staleIds.length > 0) {
-            const client = await getSupabaseClient();
-            const { data, error } = await client
-                .from('workouts')
-                .select('exercise_id')
-                .eq('user_id', userId)
-                .in('exercise_id', staleIds)
-                .limit(1);
-            if (error) this._throw(error);
-            if (data.length > 0) {
-                throw new Error('Cannot delete an exercise that has logged workouts.');
-            }
-        }
-
-        await this._upsertBatches('exercises', exercises.map(exercise => exerciseToRow(exercise, userId)));
+        await this._assertExercisesUnused(userId, staleIds);
+        await this.upsertExercises(exercises);
         await this._deleteIds('exercises', userId, staleIds);
         return { content: { sha: null } };
+    },
+
+    async _assertExercisesUnused(userId, ids) {
+        if (ids.length === 0) return;
+        const client = await getSupabaseClient();
+        const { data, error } = await client
+            .from('workouts')
+            .select('exercise_id')
+            .eq('user_id', userId)
+            .in('exercise_id', ids)
+            .limit(1);
+        if (error) this._throw(error);
+        if (data.length > 0) {
+            throw new Error('Cannot delete an exercise that has logged workouts.');
+        }
+    },
+
+    /**
+     * Insert or update the given exercises only.
+     * @param {array} exercises
+     * @returns {Promise<void>}
+     */
+    async upsertExercises(exercises) {
+        const userId = SupabaseAuth.getUserId();
+        await this._upsertBatches('exercises', exercises.map(exercise => exerciseToRow(exercise, userId)));
+    },
+
+    /**
+     * Delete exercises by id; refuses when any has logged workouts.
+     * @param {array} ids
+     * @returns {Promise<void>}
+     */
+    async deleteExercises(ids) {
+        const userId = SupabaseAuth.getUserId();
+        await this._assertExercisesUnused(userId, ids);
+        await this._deleteIds('exercises', userId, ids);
     },
 
     getWorkoutFilePath(date) {
@@ -164,9 +187,28 @@ export const SupabaseAPI = {
         const incomingIds = new Set(workouts.map(workout => workout.id));
         const staleIds = existing.map(row => row.id).filter(id => !incomingIds.has(id));
 
-        await this._upsertBatches('workouts', workouts.map(workout => workoutToRow(workout, userId)));
+        await this.upsertWorkouts(workouts);
         await this._deleteIds('workouts', userId, staleIds);
         return { content: { sha: null } };
+    },
+
+    /**
+     * Insert or update the given workouts only.
+     * @param {array} workouts
+     * @returns {Promise<void>}
+     */
+    async upsertWorkouts(workouts) {
+        const userId = SupabaseAuth.getUserId();
+        await this._upsertBatches('workouts', workouts.map(workout => workoutToRow(workout, userId)));
+    },
+
+    /**
+     * Delete workouts by id.
+     * @param {array} ids
+     * @returns {Promise<void>}
+     */
+    async deleteWorkouts(ids) {
+        await this._deleteIds('workouts', SupabaseAuth.getUserId(), ids);
     },
 
     async getWorkoutsInRange(startDate, endDate) {
@@ -226,9 +268,28 @@ export const SupabaseAPI = {
         const incomingIds = new Set(templates.map(template => template.id));
         const staleIds = existing.map(row => row.id).filter(id => !incomingIds.has(id));
 
-        await this._upsertBatches('session_templates', templates.map(template => templateToRow(template, userId)));
+        await this.upsertSessionTemplates(templates);
         await this._deleteIds('session_templates', userId, staleIds);
         return { content: { sha: null } };
+    },
+
+    /**
+     * Insert or update the given session templates only.
+     * @param {array} templates
+     * @returns {Promise<void>}
+     */
+    async upsertSessionTemplates(templates) {
+        const userId = SupabaseAuth.getUserId();
+        await this._upsertBatches('session_templates', templates.map(template => templateToRow(template, userId)));
+    },
+
+    /**
+     * Delete session templates by id.
+     * @param {array} ids
+     * @returns {Promise<void>}
+     */
+    async deleteSessionTemplates(ids) {
+        await this._deleteIds('session_templates', SupabaseAuth.getUserId(), ids);
     },
 
     async getStatsSummary() {

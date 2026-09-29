@@ -25,10 +25,12 @@ to persist the new snapshot.
   edits in another context can update the board.
 
 Other keys:
-- `localStorage['workout1.lastWorkoutByExercise']` (`DESIGN1_LAST_WORKOUT_KEY`) —
-  cached "previous set" hints per exercise, refreshed after a successful save.
 - `localStorage['theme']` (`THEME_KEY`) — theme, kept in sync via the `storage`
   event so the iframe matches the parent.
+
+Persisted data (workouts, exercises, templates) is **never** stored in the
+iframe's localStorage — "previous set" hints (`_lastWorkoutByExercise`), history
+and volume bars are rebuilt in memory from each parent `po-*` message.
 
 ## 3. Load reference data (parent → iframe)
 
@@ -40,17 +42,18 @@ window.parent.postMessage({ type: 'po-request-templates' }, '*');
 window.parent.postMessage({ type: 'po-request-workouts' }, '*');
 ```
 
-The parent (`IframeBridge` in `js/app.js`) responds — and also pushes
-proactively after `Storage` initializes and whenever exercises/templates change.
+The parent (`IframeBridge` in `js/app.js`) responds — re-fetching from Supabase
+first when that backend is active — and also pushes proactively after `Storage`
+initializes and whenever exercises/templates/workouts change.
 The iframe's `message` listener routes them:
 
 | Incoming `po-*` | Handler in `workout.html` | Effect |
 |---|---|---|
 | `po-exercises` | `_mergeParentExercises` | Fills `EXERCISE_META_BY_ID` + `EXERCISE_PRESETS` (name, muscle, equipment, default reps/weight from last set, bodyweight flag); then re-applies saved state. Parent data is authoritative. |
 | `po-templates` | `_mergeParentTemplates` | Builds selectable session templates (resolves exercise ids → names/sets). |
-| `po-workouts` | `_mergeParentWorkouts` | Supplies prior workouts (current month) for last-set hints and the per-exercise volume bars. |
-| `po-history-workouts` | `_mergeParentWorkouts` | Supplies a broader window of prior workouts (last 12 months) so volume bars and reps/weight preload reflect sessions from earlier months. Merged (deduped by id) with `po-workouts`. |
-| `po-workouts-saved` | (inline) | Save acknowledged: show "Saved ✓", capture last-workout snapshot, optionally clear the board, leave execute mode. |
+| `po-workouts` | `_mergeParentWorkouts('current', …)` | Supplies prior workouts (current month) for last-set hints and the per-exercise volume bars. |
+| `po-history-workouts` | `_mergeParentWorkouts('history', …)` | Supplies a broader window of prior workouts (last 12 months) so volume bars and reps/weight preload reflect sessions from earlier months. Each feed replaces its previous copy; both are combined (deduped by id). |
+| `po-workouts-saved` | (inline) | Save acknowledged: show "Saved ✓", optionally clear the board, leave execute mode. Fresh workouts follow via `po-workouts`. |
 | `po-save-error` | (inline) | Re-enable submit, alert the error. |
 
 ## 4. Save the session (iframe → parent → Storage)

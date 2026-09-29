@@ -24,6 +24,9 @@ export const Exercises = {
         this.initToggleGroups();
         this.setManageView(localStorage.getItem('activeManageTab') || 'exercises');
         this.render();
+
+        // Re-render when exercises change (including remote refreshes)
+        window.addEventListener('exercisesUpdated', () => this.render());
     },
 
     /**

@@ -34,11 +34,11 @@ jobs:
 
             - name: Reconcile legacy data
               env:
-                  GITHUB_TOKEN: ${{ github.token }}
+                  GITHUB_TOKEN: ${{ secrets.DATA_REPOSITORY_TOKEN || github.token }}
                   SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
                   SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
                   SUPABASE_LEGACY_USER_ID: ${{ secrets.SUPABASE_LEGACY_USER_ID }}
-                  GITHUB_DATA_REPOSITORY: ${{ vars.GITHUB_DATA_REPOSITORY || 'MinoPlay/ProgressiveOverload' }}
+                  GITHUB_DATA_REPOSITORY: ${{ vars.DATA_REPOSITORY || 'MinoPlay/ProgressiveOverload' }}
                   GITHUB_DATA_DIRECTORY: ${{ vars.GITHUB_DATA_DIRECTORY || 'progressive-overload' }}
                   GITHUB_SOURCE_REF: ${{ vars.GITHUB_SOURCE_REF || 'main' }}
               run: >-

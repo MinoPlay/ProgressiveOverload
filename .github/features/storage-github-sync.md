@@ -71,7 +71,7 @@ GitHub writes must always use the current file SHA. GitHub-only SHA and file-cac
 
 ## Migration Rules
 - Forward sync is one-way: GitHub → Supabase.
-- The source repository and directory come from `GITHUB_DATA_REPOSITORY` and `GITHUB_DATA_DIRECTORY`; defaults match this repository.
+- The source repository and directory come from `GITHUB_DATA_REPOSITORY` and `GITHUB_DATA_DIRECTORY`; defaults match this repository. In the sync workflow the repository is set by the Actions variable `DATA_REPOSITORY` (GitHub forbids `GITHUB_`-prefixed variable/secret names). A private source repository (e.g. `MinoPlay/DataHub`) needs a `DATA_REPOSITORY_TOKEN` secret with read access to it; otherwise the workflow's own token is used.
 - Validate the complete snapshot and all exercise references before applying writes or deletions.
 - Refuse an empty source snapshot that would erase existing target workouts.
 - Preserve legacy IDs and optional session/superset metadata.

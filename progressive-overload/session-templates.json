@@ -1,3 +1,350 @@
 {
-  "templates": []
+  "templates": [
+    {
+      "id": "1773748435710_x0w6emyh7",
+      "name": "5x Supersets",
+      "rows": [
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356917_inclinedumbflies",
+              "id": "tpl-ss-1773748448468-4v1xjd-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1769748047444_cfopuwtws",
+              "id": "tpl-ss-1773748448468-4v1xjd-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1773748448468-4v1xjd",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356908_flvdqzdhf",
+              "id": "tpl-ss-1773748450902-12tb29-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1769598356921_facepulls",
+              "id": "tpl-ss-1773748450902-12tb29-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1773748450902-12tb29",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356923_neckturns",
+              "id": "tpl-ss-1773748452354-a07s9e-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1769598356908_xjkjvzp40",
+              "id": "tpl-ss-1773748452354-a07s9e-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1773748452354-a07s9e",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1773136328230_9yg7oyg8x",
+              "id": "tpl-ss-1773748453854-6swlli-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1769598356908_audtljs1j",
+              "id": "tpl-ss-1773748453854-6swlli-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1773748453854-6swlli",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769759085099_6xqb1io2v",
+              "id": "tpl-ss-1784519506310-6he7b4-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1769598356919_lateralraise",
+              "id": "tpl-ss-1784519506310-6he7b4-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1784519506310-6he7b4",
+          "label": "Superset",
+          "type": "superset"
+        }
+      ]
+    },
+    {
+      "id": "1774013730132_h1lol8ddl",
+      "name": "Start with [Bench Press] 4xSS",
+      "rows": [
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356908_flvdqzdhf",
+              "id": "tpl-ss-1774239567721-upzsjm-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1769598356921_facepulls",
+              "id": "tpl-ss-1774239567721-upzsjm-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1774239567721-upzsjm",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356908_a2079ga75",
+              "id": "tpl-ss-1774239569996-cr0a5i-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1769598356910_assistpullup",
+              "id": "tpl-ss-1774239569996-cr0a5i-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1774239569996-cr0a5i",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356916_dumbbellflies",
+              "id": "tpl-ss-1774239570663-dxbbkc-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1770183966156_6whslwg5f",
+              "id": "tpl-ss-1774239570663-dxbbkc-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1774239570663-dxbbkc",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356923_neckturns",
+              "id": "tpl-ss-1774239573101-7usy6z-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1769598356908_xjkjvzp40",
+              "id": "tpl-ss-1774239573101-7usy6z-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1774239573101-7usy6z",
+          "label": "Superset",
+          "type": "superset"
+        }
+      ]
+    },
+    {
+      "id": "1785124161190_6boniyf8t",
+      "name": "Monday v1",
+      "rows": [
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356916_dumbbellflies",
+              "id": "tpl-ss-1786333792357-sdp6i8-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1770183966156_6whslwg5f",
+              "id": "tpl-ss-1786333792357-sdp6i8-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1786333792357-sdp6i8",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356908_63m870ao9",
+              "id": "tpl-ss-1786333794352-k8edc2-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1769598356908_audtljs1j",
+              "id": "tpl-ss-1786333794352-k8edc2-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1786333794352-k8edc2",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356908_flvdqzdhf",
+              "id": "tpl-ss-1786333795215-lklkx2-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1769598356921_facepulls",
+              "id": "tpl-ss-1786333795215-lklkx2-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1786333795215-lklkx2",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356912_bentoverrows",
+              "id": "tpl-ss-1786333797007-3qes3j-a",
+              "sets": []
+            },
+            {
+              "exerciseId": "1773760132008_mh29jezd2",
+              "id": "tpl-ss-1786333797007-3qes3j-b",
+              "sets": []
+            }
+          ],
+          "id": "tpl-ss-1786333797007-3qes3j",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exerciseId": "1769759085099_6xqb1io2v",
+          "id": "tpl-row-1785124161190-tlcjxp",
+          "sets": [],
+          "type": "single"
+        }
+      ]
+    },
+    {
+      "id": "1785582563050_md62q2gag",
+      "name": "Bodyweight+band 4x",
+      "rows": [
+        {
+          "exerciseId": "1777382149868_00q6iozkz",
+          "id": "tpl-row-1785582512239-6mfz0z",
+          "sets": [],
+          "type": "single"
+        },
+        {
+          "exerciseId": "1770010228345_o1qup7585",
+          "id": "tpl-row-1785582531671-gvhq93",
+          "sets": [],
+          "type": "single"
+        },
+        {
+          "exerciseId": "1785491573959_mwi6zrop3",
+          "id": "tpl-row-1785582543894-ugfh6b",
+          "sets": [],
+          "type": "single"
+        },
+        {
+          "exerciseId": "1785491818429_6f4mk1tv7",
+          "id": "tpl-row-1785582554006-jyzsc9",
+          "sets": [],
+          "type": "single"
+        }
+      ]
+    },
+    {
+      "id": "1790255301712_w50x8rj8q",
+      "name": "Recovery #1",
+      "rows": [
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356908_flvdqzdhf",
+              "id": "tpl-ss-1790255802978-8aojs2-a"
+            },
+            {
+              "exerciseId": "1769598356921_facepulls",
+              "id": "tpl-ss-1790255802978-8aojs2-b"
+            }
+          ],
+          "id": "tpl-ss-1790255802978-8aojs2",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1772721083799_iri25281f",
+              "id": "tpl-ss-1790255804151-vmc5ks-a"
+            },
+            {
+              "exerciseId": "1771339860879_pddgs2vi1",
+              "id": "tpl-ss-1790255804151-vmc5ks-b"
+            }
+          ],
+          "id": "tpl-ss-1790255804151-vmc5ks",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1770183066002_whlo1n7y7",
+              "id": "tpl-ss-1790255805084-pjhg72-a"
+            },
+            {
+              "exerciseId": "1790082892850_l1yefem2f",
+              "id": "tpl-ss-1790255805084-pjhg72-b"
+            }
+          ],
+          "id": "tpl-ss-1790255805084-pjhg72",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356917_inclinedumbflies",
+              "id": "tpl-ss-1790255805980-4s5016-a"
+            },
+            {
+              "exerciseId": "1769748047444_cfopuwtws",
+              "id": "tpl-ss-1790255805980-4s5016-b"
+            }
+          ],
+          "id": "tpl-ss-1790255805980-4s5016",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exerciseId": "1769759085099_6xqb1io2v",
+          "id": "tpl-row-1790255301711-xxqs67",
+          "type": "single"
+        }
+      ]
+    }
+  ]
 }

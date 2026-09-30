@@ -68,7 +68,7 @@ Detailed context for each feature lives in `.github/features/`. Reference the re
 | [`features/workout-history.md`](features/workout-history.md) | Anything in `js/history.js` — history rendering, week grouping, day modal |
 | [`features/statistics-charts.md`](features/statistics-charts.md) | Anything in `js/charts.js` or `js/chart-helpers.js` — Chart.js rendering, 1RM, PRs, aggregation |
 | [`skills/rankings-tab/SKILL.md`](skills/rankings-tab/SKILL.md) | Anything in `js/rankings.js` — the star Rankings tab, exercise/superset day-count leaderboards, trophies, muscle/time filters |
-| [`features/storage-github-sync.md`](features/storage-github-sync.md) | Anything in `js/storage.js` or `js/github-api.js` — data persistence, SHA management, dev mode |
-| [`features/auth-config.md`](features/auth-config.md) | Anything in `js/auth.js` or `js/config.js` — PAT handling, CONFIG constants, mode switching |
+| [`features/storage-github-sync.md`](features/storage-github-sync.md) | Anything in `js/storage.js` or `js/supabase-api.js` — Supabase persistence and legacy migration boundaries |
+| [`features/auth-config.md`](features/auth-config.md) | Anything in `js/supabase-auth.js`, `js/supabase-client.js`, or `js/config.js` — Supabase authentication and public configuration |
 | [`features/theme-system.md`](features/theme-system.md) | Theme toggle, Chart.js color integration, `data-theme` attribute, `themeChanged` event |
 | [`features/iframe-bridge.md`](features/iframe-bridge.md) | `postMessage` communication between `index.html` and the `workout.html` iframe |

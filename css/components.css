@@ -1947,35 +1947,6 @@
     opacity: 0.8;
 }
 
-.mode-toggle {
-    display: flex;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-lg);
-}
-
-.mode-btn {
-    flex: 1;
-    padding: var(--spacing-md);
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid transparent;
-    border-radius: var(--radius-md);
-    color: white;
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-base);
-}
-
-.mode-btn:hover {
-    background: rgba(255, 255, 255, 0.3);
-}
-
-.mode-btn.active {
-    background: white;
-    color: #667eea;
-    border-color: white;
-}
-
 .config-form {
     display: flex;
     flex-direction: column;
@@ -2012,42 +1983,6 @@
 .btn-save:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-}
-
-.local-controls {
-    display: flex;
-    gap: var(--spacing-sm);
-    margin-bottom: var(--spacing-md);
-}
-
-.btn-generate,
-.btn-clear {
-    flex: 1;
-    padding: var(--spacing-md);
-    border: 2px solid white;
-    border-radius: var(--radius-md);
-    font-size: 1rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-base);
-    background: rgba(255, 255, 255, 0.1);
-    color: white;
-}
-
-.btn-generate:hover {
-    background: rgba(255, 255, 255, 0.2);
-    transform: translateY(-2px);
-}
-
-.btn-clear {
-    border-color: #ff6b6b;
-    color: #ff6b6b;
-}
-
-.btn-clear:hover {
-    background: #ff6b6b;
-    color: white;
-    transform: translateY(-2px);
 }
 
 .btn-refresh-cache {
@@ -2091,13 +2026,6 @@
 
 /* Mobile responsiveness for config panel */
 @media (max-width: 768px) {
-    .mode-toggle {
-        flex-direction: column;
-    }
-
-    .local-controls {
-        flex-direction: column;
-    }
 }
 
 /* Last Workout Info Badge */

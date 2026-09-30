@@ -1,18 +1,12 @@
-# Feature: Storage, Supabase & GitHub Sync
+# Feature: Supabase Storage & Legacy Migration
 
 ## Purpose
-`Storage` is the stable data interface used by the application. Persistence is selected at startup:
-
-- **Supabase** — multi-user source of truth with Supabase Auth and row-level security.
-- **GitHub** — legacy JSON backend retained during migration and as a guarded rollback path.
-- **Local** — existing browser-only mode.
+`Storage` is the stable data interface used by the application. Supabase is the sole runtime source of truth, with Supabase Auth and row-level security.
 
 Before cutover, a scheduled workflow reconciles the GitHub JSON snapshot into one configured Supabase user. After cutover, forward reconciliation must be disabled and a separate workflow exports Supabase data to a dedicated GitHub backup branch.
 
 ## Key Files
 - `js/storage.js` — feature-facing `Storage` singleton and domain behavior.
-- `js/storage-api.js` — backend selector.
-- `js/github-api.js` — GitHub Contents adapter with SHA concurrency.
 - `js/supabase-api.js` — tenant-scoped Supabase adapter.
 - `js/supabase-auth.js` — email magic-link session handling.
 - `js/supabase-client.js` — configured browser client for the `progressive_overload` schema.
@@ -44,7 +38,6 @@ Supabase is the source of truth; the browser never persists its data locally (th
 - `Storage.exercises`, `currentMonthWorkouts` and `sessionTemplates` are only a render snapshot. `App.refreshData()` re-fetches it on `visibilitychange` (visible) and on every tab switch; `IframeBridge` re-fetches before answering `po-request-*`.
 - Every public mutation is wrapped by `Storage._write()`: it re-fetches the snapshot first (validation and sequence numbers use fresh data) and blocks background refreshes until done.
 - Writes are row-level via `_persistExercises` / `_persistWorkouts` / `_persistSessionTemplates` → `upsert*` / `delete*` adapter methods. Never send a whole in-memory list to `SupabaseAPI.save*` from the app: those methods delete rows missing from the list.
-- The GitHub backend keeps whole-file saves with SHA concurrency.
 
 ## Supabase Data Model
 All tables live in the dedicated `progressive_overload` schema.
@@ -59,7 +52,7 @@ All tables live in the dedicated `progressive_overload` schema.
 
 Every tenant table includes `user_id`; browser access is restricted by RLS to `auth.uid()`. The browser uses only the public Supabase publishable key. The service-role key is allowed only in local environment secrets and GitHub Actions secrets.
 
-## Legacy GitHub Layout
+## Legacy GitHub Migration Layout
 | File | Content |
 |---|---|
 | `progressive-overload/exercises.json` | `{ exercises: Exercise[] }` |
@@ -67,7 +60,7 @@ Every tenant table includes `user_id`; browser access is restricted by RLS to `a
 | `progressive-overload/session-templates.json` | `{ templates: SessionTemplate[] }` |
 | `progressive-overload/stats-summary.json` | Derived aggregate; not authoritative in Supabase |
 
-GitHub writes must always use the current file SHA. GitHub-only SHA and file-cache details must not be added to new feature callers.
+These files are used by migration and backup scripts only; the browser app does not read or write them.
 
 ## Migration Rules
 - Forward sync is one-way: GitHub → Supabase.

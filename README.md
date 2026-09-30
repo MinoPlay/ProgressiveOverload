@@ -20,11 +20,9 @@ A premium, modern web application designed to help you track your strength train
 - **Personal Records (PRs)**: Automatically tracks and highlights your best lifts.
 - **Progress Milestones**: celebrate your achievements with a built-in milestone system (Streaks, Best Lifts, Consistent Progress).
 
-### 💾 Multi-Backend Storage Persistence
-- **Local Mode**: Fast and private storage directly in your browser's `localStorage`.
-- **Supabase Mode**: Multi-user persistence with email magic-link authentication and row-level security.
-- **GitHub Mode**: Legacy JSON persistence retained for migration and rollback.
-- **Automated Migration**: Daily GitHub-to-Supabase reconciliation before cutover and deterministic Supabase-to-GitHub backups afterward.
+### 💾 Supabase Storage
+- **Multi-user Persistence**: Supabase Postgres with email magic-link authentication and row-level security.
+- **Automated Migration**: GitHub-to-Supabase reconciliation tooling for legacy data and deterministic Supabase-to-GitHub backups.
 
 ### 🍱 Premium UI/UX
 - **Modern Design**: A clean, "glassmorphism" inspired interface with a curated color palette.
@@ -39,7 +37,7 @@ A premium, modern web application designed to help you track your strength train
 - **Frontend**: Vanilla JavaScript (ES6+), HTML5, CSS3.
 - **Charts**: [Chart.js](https://www.chartjs.org/) for high-performance data visualization.
 - **Icons**: [Lucide Icons](https://lucide.dev/) for beautiful, consistent iconography.
-- **Persistence**: Supabase Postgres/Auth, GitHub REST API, and Browser LocalStorage.
+- **Persistence**: Supabase Postgres/Auth.
 - **Dev Environment**: Simple Node.js server for local development.
 
 ---
@@ -130,22 +128,13 @@ $env:GITHUB_TOKEN = '<token-with-source-repository-read-access>'
 npm run migration:cutover -- --confirm-writes-paused --confirm-supabase-verified
 ```
 
-The command performs the final GitHub-to-Supabase reconciliation and sets `SUPABASE_CUTOVER=true` only if it succeeds. Switch the app/browser backend to **Supabase**, then create the first reverse backup:
+The command performs the final GitHub-to-Supabase reconciliation and sets `SUPABASE_CUTOVER=true` only if it succeeds. Then create the first reverse backup:
 
 ```powershell
 npm run migration:backup
 ```
 
-Do not run scheduled forward synchronization after Supabase receives new writes. For rollback, export Supabase first and review the backup branch before deliberately restoring GitHub mode.
-
-### Configuring GitHub Mode (Sync)
-1. In the app, go to **Menu > Configuration**.
-2. Switch to **GitHub** mode.
-3. Enter your:
-   - **GitHub Token**: Generate a Personal Access Token (PAT) with `repo` scope.
-   - **GitHub Username**: Your username.
-   - **Repository Name**: The name of the repository to store data in.
-4. Click **Save**. The app will now sync your progress to your repository!
+Do not run scheduled forward synchronization after Supabase receives new writes. For rollback, export Supabase first and review the backup branch before restoring data outside the app.
 
 ---
 

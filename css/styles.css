@@ -717,8 +717,7 @@ html {
     background: linear-gradient(135deg, #003d1a 0%, #001a0a 100%);
 }
 
-/* Config mode / save button active color */
-[data-theme="green"] .mode-btn.active { color: #00e676; }
+/* Config save button active color */
 [data-theme="green"] .btn-save { color: #00e676; }
 
 /* Equipment badges */

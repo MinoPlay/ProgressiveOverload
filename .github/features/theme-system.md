@@ -43,4 +43,4 @@ All theme-aware styles are driven by `[data-theme="dark"]` / `[data-theme="green
 - `applyEarly()` must run **before** `DOMContentLoaded` to prevent flash of unstyled content — it is the first call in `app.js`.
 - `_applyChartDefaults` must guard against `Chart` being undefined (CDN may not have loaded yet).
 - Do not add new themes without updating the cycle order in `toggle()`, the `icons` map in `_syncIcon`, and the CSS.
-- Theme state lives in `localStorage['theme']`; do not move it to `app_config` or any other key.
+- Theme state lives in `localStorage['theme']`; do not move it into Supabase configuration or any other key.

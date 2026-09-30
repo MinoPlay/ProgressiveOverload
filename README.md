@@ -20,3 +20,5 @@ cd /Users/mino/Documents/GitHub/ProgressiveOverload-command-center
 python3 -m http.server 8003
 ```
 Then open http://localhost:8003/
+
+Sign in through the **Live backend** panel. The prototype reads the authenticated user's exercises and complete workout history from Supabase and derives the visible session list, 30-day metrics, PR count, streak, and weekly progress without writing data.

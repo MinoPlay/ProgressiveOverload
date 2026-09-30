@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v73t';
+const CACHE_VERSION = 'v73u';
 importScripts('./js/deploy-env.js');
 
 // Main: po-<kind>-<v>; branch preview: po-<slug>-<kind>-<v> (see js/deploy-env.js).
@@ -31,6 +31,7 @@ const STATIC_SHELL = [
   './js/rankings.js',
   './js/utils.js',
   './js/deploy-env.js',
+  './prototype-supabase.js',
   './progressive-overload/exercises.json',
   './assets/favicon.svg',
   './assets/icon-192.png',

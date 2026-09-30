@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Progressive Overload — Command Center</title>
+    <script src="js/deploy-env.js"></script>
     <style>
       :root {
         --bg: #0d1220;
@@ -95,7 +96,7 @@
         margin-top: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; padding: 16px;
       }
       .track { height: 10px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; margin-top: 12px; }
-      .track > span { display: block; height: 100%; width: 76%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+      .track > span { display: block; height: 100%; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
       .supabase-panel {
         margin: 22px auto 0; max-width: 1280px; padding: 18px 20px; border-radius: 20px;
         background: rgba(17, 24, 39, 0.82); border: 1px solid rgba(148, 163, 184, 0.22); color: var(--ink);
@@ -142,7 +143,7 @@
       }
     </style>
   </head>
-  <body>
+  <body data-prototype="command-center">
     <div class="app">
       <header class="topbar">
         <div class="brand"><span class="dot"></span> Command Center</div>
@@ -155,78 +156,49 @@
       <div class="layout">
         <section class="panel left">
           <div class="header-row">
-            <h1>Workout queue</h1>
-            <span class="chip">3 exercises ready</span>
+            <h1>Latest session</h1>
+            <span class="chip" id="latestSessionDate">Loading…</span>
           </div>
 
           <div class="command-bar">
-            <div class="prompt"><span style="font-weight:800; color:var(--ink);">/</span> quick-add bench press</div>
+            <div class="prompt"><span style="font-weight:800; color:var(--ink);">/</span> <span id="commandPrompt">Loading training summary…</span></div>
             <div class="cmd">⌘K</div>
           </div>
 
-          <div class="timeline">
-            <div class="task">
-              <div class="bullet" style="background: var(--accent);"></div>
-              <div>
-                <strong>Bench Press</strong>
-                <small>5 x 100kg · main lift</small>
-              </div>
-              <div class="time">08:30</div>
-            </div>
-            <div class="task">
-              <div class="bullet" style="background: var(--warning);"></div>
-              <div>
-                <strong>Incline DB Press</strong>
-                <small>3 x 10 · volume work</small>
-              </div>
-              <div class="time">09:10</div>
-            </div>
-            <div class="task">
-              <div class="bullet" style="background: var(--danger);"></div>
-              <div>
-                <strong>Rows</strong>
-                <small>3 x 8 · accessory</small>
-              </div>
-              <div class="time">09:45</div>
-            </div>
-          </div>
+          <div class="timeline" id="latestSessionList"></div>
 
-          <div class="category">
-            <div class="tag">Upper</div>
-            <div class="tag">Strength</div>
-            <div class="tag">Recovery OK</div>
-          </div>
+          <div class="category" id="commandTags"></div>
         </section>
 
         <aside class="panel right">
           <div class="header-row">
             <h2 style="margin:0; font-size:1.4rem;">Performance</h2>
-            <span class="chip" style="background: rgba(122,168,255,0.1); color: var(--accent-2);">+9%</span>
+            <span class="chip" id="performanceTrend" style="background: rgba(122,168,255,0.1); color: var(--accent-2);">—</span>
           </div>
 
           <div class="stats-grid">
             <div class="stat-box">
               <div class="stat-label">Sessions</div>
-              <div class="stat-value">18</div>
+              <div class="stat-value" id="sessions30">—</div>
             </div>
             <div class="stat-box">
               <div class="stat-label">Volume</div>
-              <div class="stat-value">14k</div>
+              <div class="stat-value" id="volume30">—</div>
             </div>
             <div class="stat-box">
               <div class="stat-label">PRs</div>
-              <div class="stat-value">4</div>
+              <div class="stat-value" id="prCount30">—</div>
             </div>
             <div class="stat-box">
               <div class="stat-label">Streak</div>
-              <div class="stat-value">19</div>
+              <div class="stat-value" id="workoutStreak">—</div>
             </div>
           </div>
 
           <div class="progress">
             <div style="font-weight:800;">Weekly target</div>
-            <div class="track"><span></span></div>
-            <div style="margin-top:10px; color: var(--muted); font-weight:700;">76% of target reached</div>
+            <div class="track"><span id="weeklyProgressBar"></span></div>
+            <div id="weeklyProgressLabel" style="margin-top:10px; color: var(--muted); font-weight:700;">Loading weekly activity…</div>
           </div>
         </aside>
       </div>

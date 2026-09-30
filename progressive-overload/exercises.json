@@ -3,27 +3,67 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356908_63m870ao9",
+      "lastDate": "2026-08-20",
+      "lastSets": [
+        {
+          "reps": 16,
+          "weight": 40
+        },
+        {
+          "reps": 13,
+          "weight": 60
+        },
+        {
+          "reps": 13,
+          "weight": 70
+        }
+      ],
       "muscle": "legs",
-      "name": "Back Squats",
-      "requiresWeight": true
-    },
-    {
-      "equipmentType": "barbell",
-      "id": "1769598356908_6t3ss20am",
-      "muscle": "back",
-      "name": "Barbell Rows",
-      "requiresWeight": true
+      "name": "Squats (back)",
+      "requiresWeight": true,
+      "updatedAt": "2026-07-23T07:46:40.105Z"
     },
     {
       "equipmentType": "barbell",
       "id": "1769598356908_a2079ga75",
-      "muscle": "legs",
+      "lastDate": "2026-09-29",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 60
+        },
+        {
+          "reps": 20,
+          "weight": 60
+        },
+        {
+          "reps": 13,
+          "weight": 60
+        }
+      ],
+      "muscle": "back",
       "name": "Deadlift",
-      "requiresWeight": true
+      "requiresWeight": true,
+      "updatedAt": "2026-02-25T13:24:43.283Z"
     },
     {
       "equipmentType": "bodyweight",
       "id": "1769598356908_audtljs1j",
+      "lastDate": "2026-09-14",
+      "lastSets": [
+        {
+          "reps": 12,
+          "weight": null
+        },
+        {
+          "reps": 10,
+          "weight": null
+        },
+        {
+          "reps": 10,
+          "weight": null
+        }
+      ],
       "muscle": "back",
       "name": "Pull-ups",
       "requiresWeight": false
@@ -31,6 +71,21 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356908_flvdqzdhf",
+      "lastDate": "2026-09-29",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 50
+        },
+        {
+          "reps": 15,
+          "weight": 60
+        },
+        {
+          "reps": 15,
+          "weight": 60
+        }
+      ],
       "muscle": "chest",
       "name": "Bench Press",
       "requiresWeight": true
@@ -38,6 +93,21 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356908_vaei2f8dr",
+      "lastDate": "2026-07-14",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 14
+        },
+        {
+          "reps": 15,
+          "weight": 16
+        },
+        {
+          "reps": 15,
+          "weight": 16
+        }
+      ],
       "muscle": "biceps",
       "name": "Bicep Curls",
       "requiresWeight": true
@@ -45,13 +115,44 @@
     {
       "equipmentType": "bodyweight",
       "id": "1769598356908_xjkjvzp40",
+      "lastDate": "2026-09-29",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 13,
+          "weight": null
+        }
+      ],
       "muscle": "triceps",
       "name": "Dips",
-      "requiresWeight": false
+      "requiresWeight": false,
+      "updatedAt": "2026-02-25T13:25:16.603Z"
     },
     {
       "equipmentType": "barbell",
       "id": "1769598356908_zy0w3s09g",
+      "lastDate": "2026-02-27",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 35
+        },
+        {
+          "reps": 12,
+          "weight": 35
+        },
+        {
+          "reps": 12,
+          "weight": 35
+        }
+      ],
       "muscle": "shoulders",
       "name": "Overhead Press",
       "requiresWeight": true
@@ -59,20 +160,67 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356909_frontsquat",
+      "lastDate": "2026-07-28",
+      "lastSets": [
+        {
+          "reps": 10,
+          "weight": 50
+        },
+        {
+          "reps": 10,
+          "weight": 50
+        },
+        {
+          "reps": 10,
+          "weight": 50
+        }
+      ],
       "muscle": "legs",
-      "name": "Front Squats",
-      "requiresWeight": true
+      "name": "Squats (front)",
+      "requiresWeight": true,
+      "updatedAt": "2026-07-23T07:50:18.293Z"
     },
     {
-      "equipmentType": "machines",
+      "equipmentType": "bodyweight",
       "id": "1769598356910_assistpullup",
+      "lastDate": "2026-09-29",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 16,
+          "weight": null
+        },
+        {
+          "reps": 13,
+          "weight": null
+        }
+      ],
       "muscle": "back",
-      "name": "Assisted Pull-ups",
-      "requiresWeight": true
+      "name": "Pull-ups (assisted)",
+      "requiresWeight": false,
+      "updatedAt": "2026-07-23T07:08:22.867Z"
     },
     {
       "equipmentType": "barbell",
       "id": "1769598356911_barbshldpress",
+      "lastDate": "2026-08-31",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 30
+        },
+        {
+          "reps": 15,
+          "weight": 32.5
+        },
+        {
+          "reps": 15,
+          "weight": 35
+        }
+      ],
       "muscle": "shoulders",
       "name": "Barbell Shoulder Press",
       "requiresWeight": true
@@ -80,13 +228,44 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356912_bentoverrows",
+      "lastDate": "2026-08-17",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 60
+        },
+        {
+          "reps": 13,
+          "weight": 70
+        },
+        {
+          "reps": 13,
+          "weight": 70
+        }
+      ],
       "muscle": "back",
-      "name": "Bent Over Rows",
-      "requiresWeight": true
+      "name": "Bent Over Row (barbell)",
+      "requiresWeight": true,
+      "updatedAt": "2026-07-23T07:49:38.245Z"
     },
     {
       "equipmentType": "dumbbell",
       "id": "1769598356913_dumbbellpress",
+      "lastDate": "2026-03-02",
+      "lastSets": [
+        {
+          "reps": 10,
+          "weight": 28
+        },
+        {
+          "reps": 10,
+          "weight": 28
+        },
+        {
+          "reps": 10,
+          "weight": 28
+        }
+      ],
       "muscle": "chest",
       "name": "Dumbbell Press",
       "requiresWeight": true
@@ -94,6 +273,21 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356914_inclinedumbpress",
+      "lastDate": "2026-08-20",
+      "lastSets": [
+        {
+          "reps": 10,
+          "weight": 24
+        },
+        {
+          "reps": 12,
+          "weight": 24
+        },
+        {
+          "reps": 12,
+          "weight": 24
+        }
+      ],
       "muscle": "chest",
       "name": "Inclined Dumbbell Press",
       "requiresWeight": true
@@ -108,6 +302,21 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356916_dumbbellflies",
+      "lastDate": "2026-09-29",
+      "lastSets": [
+        {
+          "reps": 26,
+          "weight": 16
+        },
+        {
+          "reps": 20,
+          "weight": 20
+        },
+        {
+          "reps": 22,
+          "weight": 16
+        }
+      ],
       "muscle": "chest",
       "name": "Dumbbell Flies",
       "requiresWeight": true
@@ -115,6 +324,21 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356917_inclinedumbflies",
+      "lastDate": "2026-09-22",
+      "lastSets": [
+        {
+          "reps": 25,
+          "weight": 16
+        },
+        {
+          "reps": 20,
+          "weight": 16
+        },
+        {
+          "reps": 17,
+          "weight": 16
+        }
+      ],
       "muscle": "chest",
       "name": "Inclined Dumbbell Flies",
       "requiresWeight": true
@@ -122,6 +346,21 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356918_seatedumbpress",
+      "lastDate": "2026-07-28",
+      "lastSets": [
+        {
+          "reps": 12,
+          "weight": 16
+        },
+        {
+          "reps": 14,
+          "weight": 16
+        },
+        {
+          "reps": 12,
+          "weight": 16
+        }
+      ],
       "muscle": "shoulders",
       "name": "Seated Dumbbell Press",
       "requiresWeight": true
@@ -129,6 +368,21 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356919_lateralraise",
+      "lastDate": "2026-09-29",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 12
+        },
+        {
+          "reps": 15,
+          "weight": 14
+        },
+        {
+          "reps": 12,
+          "weight": 16
+        }
+      ],
       "muscle": "shoulders",
       "name": "Lateral Raise",
       "requiresWeight": true
@@ -136,6 +390,21 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356920_hipthrust",
+      "lastDate": "2026-08-17",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 60
+        },
+        {
+          "reps": 15,
+          "weight": 80
+        },
+        {
+          "reps": 10,
+          "weight": 100
+        }
+      ],
       "muscle": "legs",
       "name": "Hip Thrust",
       "requiresWeight": true
@@ -143,6 +412,21 @@
     {
       "equipmentType": "machines",
       "id": "1769598356921_facepulls",
+      "lastDate": "2026-09-29",
+      "lastSets": [
+        {
+          "reps": 21,
+          "weight": 27.5
+        },
+        {
+          "reps": 20,
+          "weight": 30
+        },
+        {
+          "reps": 20,
+          "weight": 32.5
+        }
+      ],
       "muscle": "shoulders",
       "name": "Face Pulls",
       "requiresWeight": true
@@ -150,6 +434,21 @@
     {
       "equipmentType": "machines",
       "id": "1769598356922_pulldowns",
+      "lastDate": "2026-08-31",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 70
+        },
+        {
+          "reps": 13,
+          "weight": 80
+        },
+        {
+          "reps": 13,
+          "weight": 80
+        }
+      ],
       "muscle": "back",
       "name": "Pulldowns",
       "requiresWeight": true
@@ -157,6 +456,21 @@
     {
       "equipmentType": "bodyweight",
       "id": "1769598356923_neckturns",
+      "lastDate": "2026-09-29",
+      "lastSets": [
+        {
+          "reps": 40,
+          "weight": null
+        },
+        {
+          "reps": 40,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        }
+      ],
       "muscle": "neck",
       "name": "Neck Turns",
       "requiresWeight": false
@@ -164,6 +478,21 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769748047444_cfopuwtws",
+      "lastDate": "2026-09-22",
+      "lastSets": [
+        {
+          "reps": 12,
+          "weight": 24
+        },
+        {
+          "reps": 12,
+          "weight": 26
+        },
+        {
+          "reps": 12,
+          "weight": 26
+        }
+      ],
       "muscle": "back",
       "name": "Chest-Supported Dumbbell Rows",
       "requiresWeight": true
@@ -171,6 +500,21 @@
     {
       "equipmentType": "machines",
       "id": "1769748072765_qu8ca2o2p",
+      "lastDate": "2026-07-11",
+      "lastSets": [
+        {
+          "reps": 25,
+          "weight": 47.5
+        },
+        {
+          "reps": 20,
+          "weight": 47.5
+        },
+        {
+          "reps": 20,
+          "weight": 47.5
+        }
+      ],
       "muscle": "back",
       "name": "Seated Cable Rows",
       "requiresWeight": true
@@ -178,6 +522,21 @@
     {
       "equipmentType": "bodyweight+",
       "id": "1769759085099_6xqb1io2v",
+      "lastDate": "2026-09-29",
+      "lastSets": [
+        {
+          "reps": 40,
+          "weight": 20
+        },
+        {
+          "reps": 25,
+          "weight": 24
+        },
+        {
+          "reps": 15,
+          "weight": 24
+        }
+      ],
       "muscle": "neck",
       "name": "Neck Harness",
       "requiresWeight": true
@@ -185,13 +544,44 @@
     {
       "equipmentType": "bodyweight",
       "id": "1770010228345_o1qup7585",
+      "lastDate": "2026-09-19",
+      "lastSets": [
+        {
+          "reps": 40,
+          "weight": null
+        },
+        {
+          "reps": 35,
+          "weight": null
+        },
+        {
+          "reps": 25,
+          "weight": null
+        }
+      ],
       "muscle": "chest",
-      "name": "Pushups",
-      "requiresWeight": false
+      "name": "Push-ups",
+      "requiresWeight": false,
+      "updatedAt": "2026-07-23T07:09:22.969Z"
     },
     {
       "equipmentType": "machines",
       "id": "1770010828876_iomixwb3f",
+      "lastDate": "2026-08-18",
+      "lastSets": [
+        {
+          "reps": 19,
+          "weight": 130
+        },
+        {
+          "reps": 17,
+          "weight": 140
+        },
+        {
+          "reps": 15,
+          "weight": 150
+        }
+      ],
       "muscle": "legs",
       "name": "Leg press",
       "requiresWeight": true
@@ -199,6 +589,21 @@
     {
       "equipmentType": "dumbbell",
       "id": "1770011336623_x5imb6ehs",
+      "lastDate": "2026-05-11",
+      "lastSets": [
+        {
+          "reps": 10,
+          "weight": 16
+        },
+        {
+          "reps": 10,
+          "weight": 16
+        },
+        {
+          "reps": 10,
+          "weight": 16
+        }
+      ],
       "muscle": "shoulders",
       "name": "Rotating dumbbell shoulder press",
       "requiresWeight": true
@@ -206,27 +611,89 @@
     {
       "equipmentType": "machines",
       "id": "1770012654787_hjl6qszi3",
+      "lastDate": "2026-08-20",
+      "lastSets": [
+        {
+          "reps": 25,
+          "weight": 22.7
+        },
+        {
+          "reps": 25,
+          "weight": 22.7
+        },
+        {
+          "reps": 21,
+          "weight": 27.2
+        }
+      ],
       "muscle": "chest",
       "name": "Cable flies",
       "requiresWeight": true
     },
     {
-      "equipmentType": "kettlebell",
+      "equipmentType": "bodyweight+",
       "id": "1770128780584_yvc249ggy",
+      "lastDate": "2026-08-20",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 5
+        },
+        {
+          "reps": 15,
+          "weight": 5
+        },
+        {
+          "reps": 15,
+          "weight": 5
+        }
+      ],
       "muscle": "shoulders",
-      "name": "Around the world",
-      "requiresWeight": true
+      "name": "Shoulder rotation (plate)",
+      "requiresWeight": true,
+      "updatedAt": "2026-07-23T14:16:40.641Z"
     },
     {
       "equipmentType": "kettlebell",
       "id": "1770129543414_0ta8erxpi",
+      "lastDate": "2026-06-29",
+      "lastSets": [
+        {
+          "reps": 12,
+          "weight": 32
+        },
+        {
+          "reps": 12,
+          "weight": 32
+        },
+        {
+          "reps": 13,
+          "weight": 32
+        }
+      ],
       "muscle": "legs",
-      "name": "Goblet squats",
-      "requiresWeight": true
+      "name": "Squats (goblet)",
+      "requiresWeight": true,
+      "updatedAt": "2026-07-23T07:50:32.472Z"
     },
     {
       "equipmentType": "barbell",
       "id": "1770182681432_b4c3ijz9x",
+      "lastDate": "2026-06-30",
+      "lastSets": [
+        {
+          "reps": 10,
+          "weight": 24
+        },
+        {
+          "reps": 10,
+          "weight": 24
+        },
+        {
+          "reps": 10,
+          "weight": 24
+        }
+      ],
       "muscle": "chest",
       "name": "Inclined barbell press",
       "requiresWeight": true
@@ -234,6 +701,21 @@
     {
       "equipmentType": "machines",
       "id": "1770183066002_whlo1n7y7",
+      "lastDate": "2026-09-24",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 70
+        },
+        {
+          "reps": 15,
+          "weight": 80
+        },
+        {
+          "reps": 15,
+          "weight": 80
+        }
+      ],
       "muscle": "back",
       "name": "Low row",
       "requiresWeight": true
@@ -241,8 +723,890 @@
     {
       "equipmentType": "dumbbell",
       "id": "1770183966156_6whslwg5f",
+      "lastDate": "2026-09-29",
+      "lastSets": [
+        {
+          "reps": 16,
+          "weight": 14
+        },
+        {
+          "reps": 14,
+          "weight": 14
+        },
+        {
+          "reps": 16,
+          "weight": 14
+        }
+      ],
       "muscle": "shoulders",
-      "name": "Bent over shoulder raises",
+      "name": "Bent over dumbbell flies",
+      "requiresWeight": true,
+      "updatedAt": "2026-02-25T13:26:48.842Z"
+    },
+    {
+      "equipmentType": "dumbbell",
+      "id": "1770909432746_pwlwdnuyw",
+      "lastDate": "2026-02-12",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 16
+        },
+        {
+          "reps": 20,
+          "weight": 16
+        },
+        {
+          "reps": 20,
+          "weight": 16
+        }
+      ],
+      "muscle": "chest",
+      "name": "Narrow dumbbell press",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1770910921302_do80092qs",
+      "lastDate": "2026-08-10",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 7.5
+        },
+        {
+          "reps": 12,
+          "weight": 10
+        },
+        {
+          "reps": 12,
+          "weight": 10
+        }
+      ],
+      "muscle": "triceps",
+      "name": "Single cable tricep extensions",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1771338376091_o15xsxypb",
+      "lastDate": "2026-02-17",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 18.1
+        },
+        {
+          "reps": 15,
+          "weight": 18.1
+        },
+        {
+          "reps": 15,
+          "weight": 18.1
+        }
+      ],
+      "muscle": "shoulders",
+      "name": "Cable inverted flies",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1771339238240_r073eam1m",
+      "lastDate": "2026-06-30",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        }
+      ],
+      "muscle": "back",
+      "name": "Hyper-extensions",
+      "requiresWeight": false,
+      "updatedAt": "2026-07-23T07:09:01.649Z"
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1771339860879_pddgs2vi1",
+      "lastDate": "2026-09-24",
+      "lastSets": [
+        {
+          "reps": 17,
+          "weight": 60
+        },
+        {
+          "reps": 16,
+          "weight": 60
+        },
+        {
+          "reps": 16,
+          "weight": 60
+        }
+      ],
+      "muscle": "legs",
+      "name": "Leg curl",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight+",
+      "id": "1771340302996_812nhpkp4",
+      "lastDate": "2026-07-01",
+      "lastSets": [
+        {
+          "reps": 25,
+          "weight": 10
+        },
+        {
+          "reps": 25,
+          "weight": 10
+        },
+        {
+          "reps": 25,
+          "weight": 10
+        }
+      ],
+      "muscle": "chest",
+      "name": "Plate press",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "dumbbell",
+      "id": "1771392571053_o2wbozqmo",
+      "lastDate": "2026-08-24",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 28
+        },
+        {
+          "reps": 15,
+          "weight": 30
+        },
+        {
+          "reps": 15,
+          "weight": 30
+        }
+      ],
+      "muscle": "back",
+      "name": "Bent Over Row (dumbbell)",
+      "requiresWeight": true,
+      "updatedAt": "2026-07-23T07:49:10.747Z"
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1771944812841_m36abj8xi",
+      "lastDate": "2026-08-20",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 50
+        },
+        {
+          "reps": 15,
+          "weight": 50
+        },
+        {
+          "reps": 15,
+          "weight": 50
+        }
+      ],
+      "muscle": "back",
+      "name": "Narrow pulldown",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1772019837005_gmuqgvh9c",
+      "lastDate": "2026-09-15",
+      "lastSets": [
+        {
+          "reps": 30,
+          "weight": null
+        },
+        {
+          "reps": 30,
+          "weight": null
+        },
+        {
+          "reps": 30,
+          "weight": null
+        }
+      ],
+      "muscle": "legs",
+      "name": "Calf Raises (bodyweight)",
+      "requiresWeight": false,
+      "updatedAt": "2026-07-23T07:08:52.501Z"
+    },
+    {
+      "equipmentType": "dumbbell",
+      "id": "1772604239464_4ig18wa2z",
+      "lastDate": "2026-08-14",
+      "lastSets": [
+        {
+          "reps": 12,
+          "weight": 12
+        },
+        {
+          "reps": 12,
+          "weight": 14
+        },
+        {
+          "reps": 11,
+          "weight": 14
+        }
+      ],
+      "muscle": "shoulders",
+      "name": "Front raises",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "barbell",
+      "id": "1772719636925_i1cpyk08f",
+      "muscle": "shoulders",
+      "name": "Barbell Upright Row",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1772721083799_iri25281f",
+      "lastDate": "2026-09-28",
+      "lastSets": [
+        {
+          "reps": 17,
+          "weight": 60
+        },
+        {
+          "reps": 16,
+          "weight": 60
+        },
+        {
+          "reps": 16,
+          "weight": 60
+        }
+      ],
+      "muscle": "legs",
+      "name": "Leg extensions",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1773136328230_9yg7oyg8x",
+      "lastDate": "2026-08-13",
+      "lastSets": [
+        {
+          "reps": 12,
+          "weight": 16
+        },
+        {
+          "reps": 12,
+          "weight": 20
+        },
+        {
+          "reps": 8,
+          "weight": 20
+        }
+      ],
+      "muscle": "legs",
+      "name": "Lunges",
+      "requiresWeight": true,
+      "updatedAt": "2026-07-23T07:07:33.567Z"
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1773760132008_mh29jezd2",
+      "lastDate": "2026-08-20",
+      "lastSets": [
+        {
+          "reps": 40,
+          "weight": 80
+        },
+        {
+          "reps": 40,
+          "weight": 90
+        },
+        {
+          "reps": 40,
+          "weight": 90
+        }
+      ],
+      "muscle": "legs",
+      "name": "Calves raises (leg press)",
+      "requiresWeight": true,
+      "updatedAt": "2026-07-23T07:50:48.624Z"
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1775800125490_ipww3o30h",
+      "lastDate": "2026-04-10",
+      "lastSets": [
+        {
+          "reps": 12,
+          "weight": 32
+        },
+        {
+          "reps": 12,
+          "weight": 32
+        },
+        {
+          "reps": 12,
+          "weight": 32
+        }
+      ],
+      "muscle": "core",
+      "name": "Suitcase Deadlift",
+      "requiresWeight": true,
+      "updatedAt": "2026-04-10T05:52:34.442Z"
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1775800140250_zjjs0jyfb",
+      "lastDate": "2026-04-10",
+      "lastSets": [
+        {
+          "reps": 10,
+          "weight": 16
+        },
+        {
+          "reps": 12,
+          "weight": 16
+        },
+        {
+          "reps": 12,
+          "weight": 16
+        }
+      ],
+      "muscle": "shoulders",
+      "name": "Half-Kneeling Single-Arm Shoulder Press",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1775800164722_ljg52k1hv",
+      "lastDate": "2026-04-10",
+      "lastSets": [
+        {
+          "reps": 12,
+          "weight": 32
+        },
+        {
+          "reps": 12,
+          "weight": 32
+        },
+        {
+          "reps": 12,
+          "weight": 32
+        }
+      ],
+      "muscle": "back",
+      "name": "Bent-Over Row (kettlebell)",
+      "requiresWeight": true,
+      "updatedAt": "2026-07-23T07:49:48.957Z"
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1775800313799_uh2to6cn3",
+      "lastDate": "2026-04-10",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 32
+        },
+        {
+          "reps": 20,
+          "weight": 32
+        },
+        {
+          "reps": 20,
+          "weight": 32
+        }
+      ],
+      "muscle": "back",
+      "name": "Suitcase Carry",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1775800378730_asqttfh57",
+      "lastDate": "2026-04-10",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 24
+        },
+        {
+          "reps": 20,
+          "weight": 32
+        },
+        {
+          "reps": 20,
+          "weight": 32
+        }
+      ],
+      "muscle": "legs",
+      "name": "Kettlebell Swing",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1776176857643_xq4dc3val",
+      "lastDate": "2026-04-14",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        }
+      ],
+      "muscle": "back",
+      "name": "Obliques",
+      "requiresWeight": false
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1777382149868_00q6iozkz",
+      "lastDate": "2026-09-19",
+      "lastSets": [
+        {
+          "reps": 50,
+          "weight": null
+        },
+        {
+          "reps": 35,
+          "weight": null
+        },
+        {
+          "reps": 25,
+          "weight": null
+        }
+      ],
+      "muscle": "legs",
+      "name": "Squats (bodyweight)",
+      "requiresWeight": false,
+      "updatedAt": "2026-07-23T07:51:01.466Z"
+    },
+    {
+      "equipmentType": "barbell",
+      "id": "1778593534262_7dnlmi2wd",
+      "lastDate": "2026-05-12",
+      "lastSets": [
+        {
+          "reps": 25,
+          "weight": 60
+        },
+        {
+          "reps": 25,
+          "weight": 60
+        },
+        {
+          "reps": 25,
+          "weight": 60
+        }
+      ],
+      "muscle": "shoulders",
+      "name": "Barbell shrugs",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight+",
+      "id": "1782827948601_z14x3gy1q",
+      "lastDate": "2026-08-03",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 10
+        },
+        {
+          "reps": 20,
+          "weight": 10
+        },
+        {
+          "reps": 20,
+          "weight": 10
+        }
+      ],
+      "muscle": "neck",
+      "name": "Neck plate 4x directions",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "barbell",
+      "id": "1783055054358_x4vzrvtc8",
+      "lastDate": "2026-08-27",
+      "lastSets": [
+        {
+          "reps": 25,
+          "weight": 15
+        },
+        {
+          "reps": 20,
+          "weight": 15
+        },
+        {
+          "reps": 15,
+          "weight": 15
+        }
+      ],
+      "muscle": "legs",
+      "name": "T-Bar",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1783240729951_2fv7ruw8e",
+      "lastDate": "2026-07-11",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 50
+        },
+        {
+          "reps": 13,
+          "weight": 60
+        },
+        {
+          "reps": 10,
+          "weight": 60
+        }
+      ],
+      "muscle": "chest",
+      "name": "Chest press Machine",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "dumbbell",
+      "id": "1783242857480_ijmwijp2f",
+      "lastDate": "2026-07-05",
+      "lastSets": [
+        {
+          "reps": 30,
+          "weight": 22
+        },
+        {
+          "reps": 20,
+          "weight": 30
+        },
+        {
+          "reps": 20,
+          "weight": 30
+        }
+      ],
+      "muscle": "neck",
+      "name": "Dumbbell shrugs",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "barbell",
+      "id": "1784519774626_p3pv0oz3o",
+      "lastDate": "2026-08-14",
+      "lastSets": [
+        {
+          "reps": 10,
+          "weight": 60
+        },
+        {
+          "reps": 10,
+          "weight": 60
+        },
+        {
+          "reps": 10,
+          "weight": 60
+        }
+      ],
+      "muscle": "legs",
+      "name": "Squats (Zercher)",
+      "requiresWeight": true,
+      "updatedAt": "2026-07-23T07:51:17.292Z"
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1784641574188_tj4ddjw6f",
+      "lastDate": "2026-07-21",
+      "lastSets": [
+        {
+          "reps": 10,
+          "weight": 12
+        },
+        {
+          "reps": 10,
+          "weight": 12
+        },
+        {
+          "reps": 10,
+          "weight": 12
+        }
+      ],
+      "muscle": "legs",
+      "name": "Bulgarian split squats",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1784641652396_ar85tdool",
+      "lastDate": "2026-08-30",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        }
+      ],
+      "muscle": "legs",
+      "name": "Banded lateral walks",
+      "requiresWeight": false
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1784641682304_if2l5rruh",
+      "lastDate": "2026-07-21",
+      "lastSets": [
+        {
+          "reps": 18,
+          "weight": null
+        },
+        {
+          "reps": 15,
+          "weight": null
+        },
+        {
+          "reps": 12,
+          "weight": null
+        }
+      ],
+      "muscle": "back",
+      "name": "Pull-ups (australian)",
+      "requiresWeight": false,
+      "updatedAt": "2026-07-23T07:08:36.829Z"
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1785491573959_mwi6zrop3",
+      "lastDate": "2026-08-30",
+      "lastSets": [
+        {
+          "reps": 25,
+          "weight": null
+        },
+        {
+          "reps": 22,
+          "weight": null
+        },
+        {
+          "reps": 18,
+          "weight": null
+        }
+      ],
+      "muscle": "legs",
+      "name": "Curtsy lunges (bodyweight)",
+      "requiresWeight": false
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1785491642700_7h1pyyn4i",
+      "muscle": "core",
+      "name": "Planks",
+      "requiresWeight": false
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1785491818429_6f4mk1tv7",
+      "lastDate": "2026-09-19",
+      "lastSets": [
+        {
+          "reps": 30,
+          "weight": null
+        },
+        {
+          "reps": 30,
+          "weight": null
+        },
+        {
+          "reps": 30,
+          "weight": null
+        }
+      ],
+      "muscle": "shoulders",
+      "name": "Lateral Raise (Band)",
+      "requiresWeight": false
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1786679057838_pxax0gkj6",
+      "muscle": "triceps",
+      "name": "Rope cable extensions",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight+",
+      "id": "1787836159374_bd9zo96rq",
+      "lastDate": "2026-08-27",
+      "lastSets": [
+        {
+          "reps": 30,
+          "weight": 5
+        },
+        {
+          "reps": 30,
+          "weight": 5
+        },
+        {
+          "reps": 30,
+          "weight": 5
+        }
+      ],
+      "muscle": "forearms",
+      "name": "Wrist Roller",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1788072514895_kmaa0irvz",
+      "lastDate": "2026-08-30",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 25,
+          "weight": null
+        }
+      ],
+      "muscle": "back",
+      "name": "Bent over band rows",
+      "requiresWeight": false
+    },
+    {
+      "equipmentType": "bodyweight+",
+      "id": "1788151093243_g8wb2t9mq",
+      "lastDate": "2026-08-31",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 0
+        },
+        {
+          "reps": 12,
+          "weight": 12
+        },
+        {
+          "reps": 12,
+          "weight": 12
+        }
+      ],
+      "muscle": "triceps",
+      "name": "Dips (weighted)",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1788624555039_v7qatlqyc",
+      "lastDate": "2026-09-05",
+      "lastSets": [
+        {
+          "reps": 30,
+          "weight": null
+        },
+        {
+          "reps": 30,
+          "weight": null
+        },
+        {
+          "reps": 30,
+          "weight": null
+        }
+      ],
+      "muscle": "back",
+      "name": "Deadlift (band)",
+      "requiresWeight": false
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1790082892850_l1yefem2f",
+      "lastDate": "2026-09-24",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 35
+        },
+        {
+          "reps": 15,
+          "weight": 35
+        },
+        {
+          "reps": 15,
+          "weight": 35
+        }
+      ],
+      "muscle": "shoulders",
+      "name": "Shoulder press",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1790257694765_7dst4aq22",
+      "lastDate": "2026-09-24",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 24
+        },
+        {
+          "reps": 20,
+          "weight": 24
+        },
+        {
+          "reps": 20,
+          "weight": 24
+        }
+      ],
+      "muscle": "core",
+      "name": "Side crunches",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1790568010626_8wtmolrxz",
+      "muscle": "legs",
+      "name": "Leg curl (single)",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1790568028328_iv9c8r58r",
+      "muscle": "legs",
+      "name": "Leg extensions (single)",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1790568042080_ll1g00php",
+      "muscle": "legs",
+      "name": "Leg press (single)",
       "requiresWeight": true
     }
   ]

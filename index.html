@@ -154,9 +154,56 @@
         width: 24px; height: 24px; border-radius: 8px; background: rgba(27,156,127,0.12); color: var(--success);
         display: grid; place-items: center; font-weight: 900;
       }
+      .supabase-panel {
+        margin: 26px auto 0; max-width: 1180px; padding: 20px 22px 18px; border-radius: 24px;
+        background: rgba(15, 23, 42, 0.72); border: 1px solid rgba(148, 163, 184, 0.28);
+        color: #ebf2ff; box-shadow: 0 20px 42px rgba(15, 23, 42, 0.18);
+      }
+      .supabase-header {
+        display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 12px;
+      }
+      .supabase-kicker {
+        font-size: 0.74rem; letter-spacing: 0.12em; text-transform: uppercase; color: #a5b4cf; font-weight: 700;
+      }
+      .supabase-actions { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+      .supabase-input {
+        border: 1px solid rgba(148, 163, 184, 0.35); border-radius: 12px; background: rgba(15, 23, 42, 0.9);
+        color: #edf6ff; padding: 10px 12px; min-width: min(46vw, 260px);
+      }
+      .supabase-button {
+        border: 0; border-radius: 12px; background: linear-gradient(135deg, #60a5fa, #3b82f6); color: white;
+        font-weight: 700; padding: 10px 14px; cursor: pointer; box-shadow: 0 12px 18px rgba(59,130,246,0.24);
+      }
+      .supabase-meta {
+        display: grid; gap: 8px; color: #dfeaff; margin-top: 12px;
+      }
+      .supabase-status {
+        display: inline-flex; align-items: center; gap: 8px; color: #cfe5ff; font-weight: 600;
+      }
+      .supabase-dot { width: 9px; height: 9px; border-radius: 50%; background: #60a5fa; display: inline-block; }
+      .supabase-summary {
+        display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 10px;
+      }
+      .supabase-card {
+        background: rgba(148, 163, 184, 0.07); border: 1px solid rgba(148, 163, 184, 0.14); border-radius: 16px; padding: 12px 14px;
+      }
+      .supabase-card-label { font-size: 0.72rem; color: #a5b4cf; margin-bottom: 4px; }
+      .supabase-card-value { font-size: 1.2rem; font-weight: 800; }
       @media (max-width: 860px) {
         .hero, .grid { grid-template-columns: 1fr; }
         .topbar { align-items: flex-start; flex-direction: column; gap: 12px; }
+      }
+      @media (max-width: 600px) {
+        .app { padding: 18px 12px 50px; }
+        .nav { gap: 8px; }
+        .nav a { padding: 8px 10px; font-size: 0.76rem; }
+        .hero-main, .hero-side, .session-panel, .focus-panel { padding: 16px; }
+        .exercise-row { grid-template-columns: 1fr; }
+        .cta-row { flex-direction: column; }
+        .primary, .secondary { width: 100%; }
+        .supabase-panel { padding: 14px 14px 16px; }
+        .supabase-header, .supabase-actions { flex-direction: column; align-items: stretch; }
+        .supabase-input, .supabase-button { width: 100%; min-width: 0; }
       }
     </style>
   </head>
@@ -285,5 +332,30 @@
         </aside>
       </section>
     </div>
+
+    <aside class="supabase-panel" id="supabasePanel">
+      <div class="supabase-header">
+        <div>
+          <div class="supabase-kicker">Live backend</div>
+          <strong>Supabase workout data</strong>
+        </div>
+        <div class="supabase-actions">
+          <input id="supabaseEmail" class="supabase-input" type="email" placeholder="name@email.com" />
+          <button id="supabaseMagicLink" class="supabase-button" type="button">Send magic link</button>
+        </div>
+      </div>
+      <div class="supabase-status"><span class="supabase-dot"></span> <span id="supabaseStatus">Waiting for session…</span></div>
+      <div class="supabase-summary" id="supabaseSummary">
+        <div class="supabase-card"><div class="supabase-card-label">Exercises</div><div class="supabase-card-value" id="supabaseExerciseCount">0</div></div>
+        <div class="supabase-card"><div class="supabase-card-label">Workouts</div><div class="supabase-card-value" id="supabaseWorkoutCount">0</div></div>
+        <div class="supabase-card"><div class="supabase-card-label">Latest session</div><div class="supabase-card-value" id="supabaseLatestDate">—</div></div>
+      </div>
+      <div class="supabase-meta" id="supabaseMeta">
+        <div>Authenticated user: <strong id="supabaseUser">Not signed in</strong></div>
+        <div>Recent activity: <span id="supabaseRecent">No data loaded yet.</span></div>
+      </div>
+    </aside>
+
+    <script type="module" src="./prototype-supabase.js"></script>
   </body>
 </html>

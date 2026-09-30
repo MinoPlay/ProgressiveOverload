@@ -1,7 +1,6 @@
 // Main Application
 // Initializes and coordinates all modules
 
-import { Auth } from './auth.js';
 import { Storage } from './storage.js';
 import { Exercises } from './exercises.js';
 import { Workouts } from './workouts.js';
@@ -11,10 +10,7 @@ import { Rankings } from './rankings.js';
 import { Templates } from './templates.js';
 import {
     CONFIG,
-    getStorageBackend,
-    isGitHubConfigured,
-    isSupabaseConfigured,
-    loadConfig
+    isSupabaseConfigured
 } from './config.js';
 import { SupabaseAuth } from './supabase-auth.js';
 
@@ -108,9 +104,6 @@ const App = {
     async init() {
         console.log('Progressive Pumping!!! - Initializing...');
 
-        // Load configuration first
-        loadConfig();
-
         // Show app
         document.getElementById('app').style.display = '';
 
@@ -135,33 +128,22 @@ const App = {
             showLoading(true);
 
             // Initialize navigation early so config menu stays usable
-            // even if GitHub initialization fails (e.g., expired token)
+            // even if Supabase initialization or authentication fails
             this.initNavigation();
 
-            const storageBackend = getStorageBackend();
-
-            if (storageBackend === 'supabase') {
-                if (!isSupabaseConfigured()) {
-                    console.warn('Supabase public configuration is missing.');
-                    showLoading(false);
-                    this._openConfigPanel();
-                    showToast('Set the Supabase URL and publishable key in js/config.js.', 'info');
-                    return;
-                }
-
-                await SupabaseAuth.initialize();
-                if (!SupabaseAuth.isAuthenticated()) {
-                    showLoading(false);
-                    this._openConfigPanel();
-                    showToast('Sign in with your email to load Supabase data.', 'info');
-                    return;
-                }
-            } else if (!isGitHubConfigured()) {
-                // No GitHub config — open config panel so user can enter credentials
-                console.warn('⚠️ GitHub not configured — please set up your token and repository.');
+            if (!isSupabaseConfigured()) {
+                console.warn('Supabase public configuration is missing.');
                 showLoading(false);
                 this._openConfigPanel();
-                showToast('Please configure your GitHub token and repository to get started.', 'info');
+                showToast('Set the Supabase URL and publishable key in js/config.js.', 'info');
+                return;
+            }
+
+            await SupabaseAuth.initialize();
+            if (!SupabaseAuth.isAuthenticated()) {
+                showLoading(false);
+                this._openConfigPanel();
+                showToast('Sign in with your email to load Supabase data.', 'info');
                 return;
             }
 
@@ -213,7 +195,7 @@ const App = {
         }
     },
 
-    /** Open the config/nav dropdown so the user can enter GitHub credentials. */
+    /** Open the config/nav dropdown so the user can sign in to Supabase. */
     _openConfigPanel() {
         const trigger = document.getElementById('configNavTrigger');
         const content = document.getElementById('configNavContent');
@@ -223,7 +205,7 @@ const App = {
         }
     },
 
-    /** Re-fetch Supabase data once storage is ready (no-op for other backends). */
+    /** Re-fetch Supabase data once storage is ready. */
     refreshData() {
         if (!this._storageReady) return;
         Storage.refreshFromRemote().catch(err => console.warn('Could not refresh data:', err));
@@ -512,7 +494,7 @@ const IframeBridge = {
      * one fetch instead of listing + fetching monthly files several times.
      * Resolves to null when no summary exists yet (or after any workout change,
      * since the summary is regenerated asynchronously) so callers fall back to a fresh range fetch.
-     * On Supabase only the in-flight fetch is shared; the result is never kept.
+     * Only the in-flight fetch is shared; the result is never kept.
      * @returns {Promise<array|null>}
      */
     loadAllWorkouts() {
@@ -520,11 +502,9 @@ const IframeBridge = {
         if (!this._allWorkoutsPromise) {
             const promise = Storage.loadStatsSummaryWorkouts().catch(() => null);
             this._allWorkoutsPromise = promise;
-            if (getStorageBackend() === 'supabase') {
-                promise.then(() => {
-                    if (this._allWorkoutsPromise === promise) this._allWorkoutsPromise = null;
-                });
-            }
+            promise.then(() => {
+                if (this._allWorkoutsPromise === promise) this._allWorkoutsPromise = null;
+            });
         }
         return this._allWorkoutsPromise;
     },
@@ -606,7 +586,7 @@ const IframeBridge = {
     },
 
     /**
-     * Re-fetch Supabase data (no-op for other backends), then send.
+     * Re-fetch Supabase data, then send.
      * @param {function} send
      */
     _sendFresh(send) {

@@ -225,12 +225,6 @@ body {
     gap: var(--spacing-md);
 }
 
-.config-dropdown-body .mode-toggle {
-    display: flex;
-    gap: var(--spacing-sm);
-    margin-bottom: 0;
-}
-
 .config-toggle-btn {
     display: flex;
     align-items: center;
@@ -256,34 +250,6 @@ body {
     width: 16px;
     height: 16px;
     color: var(--text-secondary);
-}
-
-.config-dropdown-body .mode-btn {
-    flex: 1;
-    padding: var(--spacing-sm) var(--spacing-md);
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-light);
-    border-radius: var(--radius-md);
-    color: var(--text-primary);
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-base);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-xs);
-}
-
-.config-dropdown-body .mode-btn:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-}
-
-.config-dropdown-body .mode-btn.active {
-    background: var(--primary-gradient);
-    color: white;
-    border-color: transparent;
 }
 
 .config-dropdown-body .config-form {
@@ -327,49 +293,6 @@ body {
 .config-dropdown-body .btn-save:hover {
     transform: translateY(-1px);
     box-shadow: var(--shadow-md);
-}
-
-.config-dropdown-body .local-controls {
-    flex-direction: column;
-    gap: var(--spacing-sm);
-    margin-bottom: 0;
-}
-
-.config-dropdown-body .btn-generate,
-.config-dropdown-body .btn-clear {
-    padding: var(--spacing-sm) var(--spacing-md);
-    border-radius: var(--radius-md);
-    font-size: 0.9rem;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all var(--transition-base);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: var(--spacing-xs);
-    width: 100%;
-}
-
-.config-dropdown-body .btn-generate {
-    background: var(--bg-secondary);
-    border: 2px solid var(--border-light);
-    color: var(--text-primary);
-}
-
-.config-dropdown-body .btn-generate:hover {
-    border-color: var(--primary-color);
-    color: var(--primary-color);
-}
-
-.config-dropdown-body .btn-clear {
-    background: var(--bg-secondary);
-    border: 2px solid #ff6b6b;
-    color: #ff6b6b;
-}
-
-.config-dropdown-body .btn-clear:hover {
-    background: #ff6b6b;
-    color: white;
 }
 
 .config-dropdown-body .config-help {

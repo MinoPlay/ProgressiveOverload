@@ -1,20 +1,15 @@
 // Storage Module
 // Central data management layer for exercises and workouts
 
-import { StorageAPI as GitHubAPI } from './storage-api.js';
-import { Auth } from './auth.js';
-import { CONFIG, getStorageBackend } from './config.js';
-import { generateId, parseDate, formatDate } from './utils.js';
+import { SupabaseAPI } from './supabase-api.js';
+import { CONFIG } from './config.js';
+import { generateId, parseDate } from './utils.js';
 
 export const Storage = {
     // In-memory cache
     exercises: [],
-    exercisesSha: null,
     currentMonthWorkouts: [],
-    currentMonthSha: null,
-    currentMonthPath: null,
     sessionTemplates: [],
-    sessionTemplatesSha: null,
     _refreshPromise: null,
     _pendingWrites: 0,
 
@@ -23,7 +18,7 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async initialize() {
-        await GitHubAPI.initializeUser?.();
+        await SupabaseAPI.initializeUser();
         await this.loadExercises();
         await this.loadCurrentMonthWorkouts();
         await this.migrateSequenceNumbers();
@@ -31,20 +26,12 @@ export const Storage = {
     },
 
     /**
-     * Whether Supabase is the source of truth; its in-memory data is only a snapshot.
-     * @returns {boolean}
-     */
-    _isSupabase() {
-        return getStorageBackend() === 'supabase';
-    },
-
-    /**
-     * Re-fetch the in-memory snapshot from Supabase (no-op for other backends).
+     * Re-fetch the in-memory snapshot from Supabase.
      * Skipped while a write is running, since the write refreshes on its own.
      * @returns {Promise<void>}
      */
     async refreshFromRemote() {
-        if (!this._isSupabase() || this._pendingWrites > 0) return;
+        if (this._pendingWrites > 0) return;
         await this._refreshNow();
     },
 
@@ -87,7 +74,6 @@ export const Storage = {
      * @returns {Promise<*>}
      */
     async _write(mutate) {
-        if (!this._isSupabase()) return mutate();
         this._pendingWrites++;
         try {
             await this._refreshNow();
@@ -98,54 +84,36 @@ export const Storage = {
     },
 
     /**
-     * Persist exercise changes: row-level on Supabase, whole file otherwise.
+     * Persist exercise changes.
      * @param {array} changed - Exercises to insert/update
      * @param {array} removedIds - Exercise IDs to delete
      * @returns {Promise<void>}
      */
     async _persistExercises(changed = [], removedIds = []) {
-        if (this._isSupabase()) {
-            if (removedIds.length) await GitHubAPI.deleteExercises(removedIds);
-            if (changed.length) await GitHubAPI.upsertExercises(changed);
-            return;
-        }
-        const result = await GitHubAPI.saveExercises(this.exercises, this.exercisesSha);
-        this.exercisesSha = result.content.sha;
+        if (removedIds.length) await SupabaseAPI.deleteExercises(removedIds);
+        if (changed.length) await SupabaseAPI.upsertExercises(changed);
     },
 
     /**
-     * Persist workout changes for one month: row-level on Supabase, whole file otherwise.
-     * @param {Date} monthDate - Any date in the month
-     * @param {array} monthWorkouts - Full month list (file backends)
-     * @param {string|null} sha - Month file SHA (file backends)
+     * Persist workout changes.
      * @param {array} changed - Workouts to insert/update
      * @param {array} removedIds - Workout IDs to delete
-     * @returns {Promise<string|null>} New month file SHA
+     * @returns {Promise<void>}
      */
-    async _persistWorkouts(monthDate, monthWorkouts, sha, changed = [], removedIds = []) {
-        if (this._isSupabase()) {
-            if (removedIds.length) await GitHubAPI.deleteWorkouts(removedIds);
-            if (changed.length) await GitHubAPI.upsertWorkouts(changed);
-            return null;
-        }
-        const result = await GitHubAPI.saveWorkouts(monthDate, monthWorkouts, sha);
-        return result.content.sha;
+    async _persistWorkouts(changed = [], removedIds = []) {
+        if (removedIds.length) await SupabaseAPI.deleteWorkouts(removedIds);
+        if (changed.length) await SupabaseAPI.upsertWorkouts(changed);
     },
 
     /**
-     * Persist session template changes: row-level on Supabase, whole file otherwise.
+     * Persist session template changes.
      * @param {array} changed - Templates to insert/update
      * @param {array} removedIds - Template IDs to delete
      * @returns {Promise<void>}
      */
     async _persistSessionTemplates(changed = [], removedIds = []) {
-        if (this._isSupabase()) {
-            if (removedIds.length) await GitHubAPI.deleteSessionTemplates(removedIds);
-            if (changed.length) await GitHubAPI.upsertSessionTemplates(changed);
-            return;
-        }
-        const result = await GitHubAPI.saveSessionTemplates(this.sessionTemplates, this.sessionTemplatesSha);
-        this.sessionTemplatesSha = result.content.sha;
+        if (removedIds.length) await SupabaseAPI.deleteSessionTemplates(removedIds);
+        if (changed.length) await SupabaseAPI.upsertSessionTemplates(changed);
     },
 
     /**
@@ -179,20 +147,18 @@ export const Storage = {
 
         // Save if any migrations were performed
         if (migrated.length > 0) {
-            const now = new Date();
-            this.currentMonthSha = await this._persistWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha, migrated);
+            await this._persistWorkouts(migrated);
             console.log('Migrated sequence numbers for current month workouts');
         }
     },
 
     /**
-     * Load exercises from GitHub
+     * Load exercises from Supabase
      * @returns {Promise<void>}
      */
     async loadExercises() {
-        const data = await GitHubAPI.getExercises();
+        const data = await SupabaseAPI.getExercises();
         this.exercises = data.exercises;
-        this.exercisesSha = data.sha;
 
         // Initialize with default exercises if empty
         if (this.exercises.length === 0) {
@@ -223,30 +189,8 @@ export const Storage = {
      */
     async loadCurrentMonthWorkouts() {
         const now = new Date();
-        const data = await GitHubAPI.getWorkouts(now);
+        const data = await SupabaseAPI.getWorkouts(now);
         this.currentMonthWorkouts = data.workouts;
-        this.currentMonthSha = data.sha;
-        this.currentMonthPath = data.path;
-
-        // Initialize empty file if it doesn't exist (file backends only)
-        if (!this._isSupabase() && !data.sha && this.currentMonthWorkouts.length === 0) {
-            try {
-                const result = await GitHubAPI.saveWorkouts(now, this.currentMonthWorkouts, null);
-                this.currentMonthSha = result.content.sha;
-            } catch (error) {
-                console.warn('Could not initialize workout file:', error);
-                // File may already exist (created by another session) — re-fetch to get its SHA
-                try {
-                    const existing = await GitHubAPI.getWorkouts(now);
-                    if (existing.sha) {
-                        this.currentMonthWorkouts = existing.workouts;
-                        this.currentMonthSha = existing.sha;
-                    }
-                } catch (fetchErr) {
-                    console.warn('Could not fetch existing workout file:', fetchErr);
-                }
-            }
-        }
     },
 
     /**
@@ -293,7 +237,6 @@ export const Storage = {
 
         this.exercises.push(newExercise);
 
-        // Save to GitHub
         await this._persistExercises([newExercise]);
 
         return newExercise;
@@ -334,7 +277,6 @@ export const Storage = {
             updatedAt: new Date().toISOString()
         };
 
-        // Save to GitHub
         await this._persistExercises([this.exercises[index]]);
 
         return this.exercises[index];
@@ -388,12 +330,11 @@ export const Storage = {
 
             this.currentMonthWorkouts.push(newWorkout);
 
-            // Save to GitHub
-            this.currentMonthSha = await this._persistWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha, [newWorkout]);
+            await this._persistWorkouts([newWorkout]);
             this.generateAndSaveStatsSummary();
         } else {
             // Load different month, add workout, save
-            const monthData = await GitHubAPI.getWorkouts(workoutDate);
+            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
 
             // Calculate sequence number for this date
             const sameDateWorkouts = monthData.workouts.filter(w => w.date === workout.date);
@@ -402,7 +343,7 @@ export const Storage = {
             newWorkout = this.buildWorkoutRecord(workout, sequence);
 
             monthData.workouts.push(newWorkout);
-            await this._persistWorkouts(workoutDate, monthData.workouts, monthData.sha, [newWorkout]);
+            await this._persistWorkouts([newWorkout]);
             this.generateAndSaveStatsSummary();
         }
 
@@ -452,16 +393,16 @@ export const Storage = {
 
             this.currentMonthWorkouts.push(...newWorkouts);
 
-            this.currentMonthSha = await this._persistWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha, newWorkouts);
+            await this._persistWorkouts(newWorkouts);
             this.generateAndSaveStatsSummary();
         } else {
-            const monthData = await GitHubAPI.getWorkouts(workoutDate);
+            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
             const sameDateWorkouts = monthData.workouts.filter(w => w.date === targetDate);
             const startSequence = sameDateWorkouts.length + 1;
             newWorkouts = workouts.map((entry, index) => this.buildWorkoutRecord(entry, startSequence + index));
 
             monthData.workouts.push(...newWorkouts);
-            await this._persistWorkouts(workoutDate, monthData.workouts, monthData.sha, newWorkouts);
+            await this._persistWorkouts(newWorkouts);
             this.generateAndSaveStatsSummary();
         }
 
@@ -545,7 +486,7 @@ export const Storage = {
      * @returns {Promise<array>} Array of workout objects
      */
     async getWorkoutsInRange(startDate, endDate) {
-        return await GitHubAPI.getWorkoutsInRange(startDate, endDate);
+        return await SupabaseAPI.getWorkoutsInRange(startDate, endDate);
     },
 
     /**
@@ -592,87 +533,28 @@ export const Storage = {
 
     /**
      * Get workout entries for the last N distinct days a specific exercise was performed
-     * Searches backwards through months if not found in current month
+     * Searches the last 12 months.
      * @param {string} exerciseId - Exercise ID
      * @param {number} sessionCount - Number of sessions to retrieve
      * @returns {Promise<array>} Array of session objects {date, sets[]}
      */
     async getLastWorkoutSessionsForExercise(exerciseId, sessionCount = 3) {
-        let allMatches = [];
-
-        // 1. Check current month
-        const currentMonthMatches = this.currentMonthWorkouts
-            .filter(w => w.exerciseId === exerciseId);
-        allMatches.push(...currentMonthMatches);
-
-        // Helper to group, sort and format sessions
-        const getGroupedSessions = (matches) => {
-            const groups = {};
-            matches.forEach(w => {
-                if (!groups[w.date]) groups[w.date] = [];
-                groups[w.date].push(w);
-            });
-
-            // Return as array of {date, sets}, sorted by date desc
-            return Object.entries(groups)
-                .map(([date, sets]) => ({
-                    date,
-                    sets: sets.sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
-                }))
-                .sort((a, b) => new Date(b.date) - new Date(a.date));
-        };
-
-        let sessions = getGroupedSessions(allMatches);
-
-        if (sessions.length >= sessionCount) {
-            return sessions.slice(0, sessionCount);
-        }
-
-        // 2. If not enough sessions, look at other files in data directory
-        if (!Auth.isAuthenticated()) {
-            return sessions;
-        }
-        try {
-            const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/')) || 'data';
-            const files = await GitHubAPI.listFiles(dataPath);
-
-            const prefix = CONFIG.paths.workoutsPrefix.split('/').pop();
-            const workoutFiles = files
-                .filter(file => file.name.startsWith(prefix) && file.name.endsWith('.json'))
-                .map(file => file.name)
-                .sort((a, b) => b.localeCompare(a)); // Sort descending (newest first)
-
-            const currentMonthFile = GitHubAPI.getWorkoutFilePath(new Date()).split('/').pop();
-            const olderFiles = workoutFiles.filter(f => f !== currentMonthFile);
-
-            const regex = new RegExp(`${prefix}(\\d{4})-(\\d{2})\\.json`);
-
-            // Search back up to 12 months if needed
-            for (let i = 0; i < Math.min(olderFiles.length, 12); i++) {
-                const filename = olderFiles[i];
-                const match = filename.match(regex);
-
-                if (!match) continue;
-
-                const date = new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1);
-                const monthData = await GitHubAPI.getWorkouts(date);
-
-                const monthMatches = monthData.workouts.filter(w => w.exerciseId === exerciseId);
-
-                if (monthMatches.length > 0) {
-                    allMatches.push(...monthMatches);
-                    sessions = getGroupedSessions(allMatches);
-
-                    if (sessions.length >= sessionCount) {
-                        return sessions.slice(0, sessionCount);
-                    }
-                }
-            }
-        } catch (error) {
-            console.warn('Error searching for last workout sessions:', error);
-        }
-
-        return sessions;
+        const now = new Date();
+        const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+        const matches = (await SupabaseAPI.getWorkoutsInRange(start, now))
+            .filter(workout => workout.exerciseId === exerciseId);
+        const groups = {};
+        matches.forEach(workout => {
+            if (!groups[workout.date]) groups[workout.date] = [];
+            groups[workout.date].push(workout);
+        });
+        return Object.entries(groups)
+            .map(([date, sets]) => ({
+                date,
+                sets: sets.sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
+            }))
+            .sort((a, b) => new Date(b.date) - new Date(a.date))
+            .slice(0, sessionCount);
     },
     /**
      * Get workouts for a specific month
@@ -682,7 +564,7 @@ export const Storage = {
      */
     async getWorkoutsByMonth(year, month) {
         const date = new Date(year, month - 1, 1);
-        const data = await GitHubAPI.getWorkouts(date);
+        const data = await SupabaseAPI.getWorkouts(date);
         return data.workouts;
     },
 
@@ -722,40 +604,17 @@ export const Storage = {
             }
         }
 
-        // 2. If no workouts in current month, check previous months
-        if (workouts.length === 0 && Auth.isAuthenticated()) {
+        // 2. If no workouts in current month, check the previous 12 months
+        if (workouts.length === 0) {
             try {
-                const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/')) || 'data';
-                const files = await GitHubAPI.listFiles(dataPath);
-
-                const prefix = CONFIG.paths.workoutsPrefix.split('/').pop();
-                const workoutFiles = files
-                    .filter(file => file.name.startsWith(prefix) && file.name.endsWith('.json'))
-                    .map(file => file.name)
-                    .sort((a, b) => b.localeCompare(a)); // Sort descending (newest first)
-
-                const currentMonthFile = GitHubAPI.getWorkoutFilePath(new Date()).split('/').pop();
-                const olderFiles = workoutFiles.filter(f => f !== currentMonthFile);
-
-                const regex = new RegExp(`${prefix}(\\d{4})-(\\d{2})\\.json`);
-
-                for (let i = 0; i < Math.min(olderFiles.length, 12); i++) {
-                    const filename = olderFiles[i];
-                    const match = filename.match(regex);
-                    if (!match) continue;
-
-                    const date = new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1);
-                    const monthData = await GitHubAPI.getWorkouts(date);
-
-                    if (monthData.workouts.length > 0) {
-                        const dates = [...new Set(monthData.workouts.map(w => w.date))];
-                        if (dates.length > 0) {
-                            dates.sort((a, b) => new Date(b) - new Date(a));
-                            newestDate = dates[0];
-                            workouts = monthData.workouts.filter(w => w.date === newestDate);
-                            break;
-                        }
-                    }
+                const now = new Date();
+                const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
+                const recentWorkouts = await SupabaseAPI.getWorkoutsInRange(start, now);
+                const dates = [...new Set(recentWorkouts.map(workout => workout.date))];
+                if (dates.length > 0) {
+                    dates.sort((a, b) => new Date(b) - new Date(a));
+                    newestDate = dates[0];
+                    workouts = recentWorkouts.filter(workout => workout.date === newestDate);
                 }
             } catch (error) {
                 console.warn('Error fetching last workout session:', error);
@@ -815,11 +674,10 @@ export const Storage = {
                 }
             });
 
-            // Save to GitHub
-            this.currentMonthSha = await this._persistWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha, changed);
+            await this._persistWorkouts(changed);
         } else {
             // Load different month, update sequences, save
-            const monthData = await GitHubAPI.getWorkouts(workoutDate);
+            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
 
             const changed = [];
             workoutIds.forEach((id, index) => {
@@ -830,7 +688,7 @@ export const Storage = {
                 }
             });
 
-            await this._persistWorkouts(workoutDate, monthData.workouts, monthData.sha, changed);
+            await this._persistWorkouts(changed);
         }
     },
 
@@ -870,11 +728,11 @@ export const Storage = {
 
         if (isSameMonth) {
             const changed = apply(this.currentMonthWorkouts);
-            this.currentMonthSha = await this._persistWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha, changed);
+            await this._persistWorkouts(changed);
         } else {
-            const monthData = await GitHubAPI.getWorkouts(workoutDate);
+            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
             const changed = apply(monthData.workouts);
-            await this._persistWorkouts(workoutDate, monthData.workouts, monthData.sha, changed);
+            await this._persistWorkouts(changed);
         }
 
         this.generateAndSaveStatsSummary();
@@ -910,11 +768,11 @@ export const Storage = {
                 weight: updates.weight ? parseFloat(updates.weight) : null
             };
 
-            this.currentMonthSha = await this._persistWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha, [this.currentMonthWorkouts[index]]);
+            await this._persistWorkouts([this.currentMonthWorkouts[index]]);
             this.generateAndSaveStatsSummary();
             return this.currentMonthWorkouts[index];
         } else {
-            const monthData = await GitHubAPI.getWorkouts(workoutDate);
+            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
             const index = monthData.workouts.findIndex(w => w.id === id);
             if (index === -1) {
                 throw new Error('Workout not found');
@@ -927,7 +785,7 @@ export const Storage = {
                 weight: updates.weight ? parseFloat(updates.weight) : null
             };
 
-            await this._persistWorkouts(workoutDate, monthData.workouts, monthData.sha, [monthData.workouts[index]]);
+            await this._persistWorkouts([monthData.workouts[index]]);
             this.generateAndSaveStatsSummary();
             return monthData.workouts[index];
         }
@@ -966,10 +824,10 @@ export const Storage = {
                 w.sequence = i + 1;
             });
 
-            this.currentMonthSha = await this._persistWorkouts(now, this.currentMonthWorkouts, this.currentMonthSha, sameDateWorkouts, [id]);
+            await this._persistWorkouts(sameDateWorkouts, [id]);
             this.generateAndSaveStatsSummary();
         } else {
-            const monthData = await GitHubAPI.getWorkouts(workoutDate);
+            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
             const index = monthData.workouts.findIndex(w => w.id === id);
             if (index === -1) {
                 throw new Error('Workout not found');
@@ -986,7 +844,7 @@ export const Storage = {
                 w.sequence = i + 1;
             });
 
-            await this._persistWorkouts(workoutDate, monthData.workouts, monthData.sha, sameDateWorkouts, [id]);
+            await this._persistWorkouts(sameDateWorkouts, [id]);
             this.generateAndSaveStatsSummary();
         }
     },
@@ -1030,16 +888,15 @@ export const Storage = {
     },
 
     /**
-     * Load session templates from GitHub
+     * Load session templates from Supabase
      * @returns {Promise<void>}
      */
     async loadSessionTemplates() {
-        const data = await GitHubAPI.getSessionTemplates();
+        const data = await SupabaseAPI.getSessionTemplates();
         this.sessionTemplates = data.templates.map(t => ({
             ...t,
             rows: this.normalizeTemplateRows(t.rows)
         }));
-        this.sessionTemplatesSha = data.sha;
     },
 
     /**
@@ -1124,13 +981,12 @@ export const Storage = {
     // ─── Stats Summary ───────────────────────────────────────────────────────
 
     /**
-     * Load all workouts from stats-summary.json (compact format).
-     * Returns null if the summary file doesn't exist yet.
+     * Load all workouts from Supabase in compact summary format.
      * @returns {Promise<array|null>} Array of full workout objects or null
      */
     async loadStatsSummaryWorkouts() {
         try {
-            const result = await GitHubAPI.getStatsSummary();
+            const result = await SupabaseAPI.getStatsSummary();
             if (!result) return null;
             return (result.content.workouts || []).map(w => ({
                 exerciseId: w.e,
@@ -1146,54 +1002,9 @@ export const Storage = {
     },
 
     /**
-     * Regenerate and save stats-summary.json after workout data changes.
-     * Loads all monthly workout files and writes a compact summary.
-     * Fires-and-forgets (does not block the caller on errors).
+     * Supabase summaries are derived from live workout rows and need no persistence.
      */
-    async generateAndSaveStatsSummary() {
-        if (getStorageBackend() !== 'github' || !Auth.isAuthenticated()) return;
-
-        try {
-            const dataPath = CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/')) || 'data';
-            const files = await GitHubAPI.listFiles(dataPath);
-
-            const prefix = CONFIG.paths.workoutsPrefix.split('/').pop();
-            const workoutFiles = files
-                .filter(f => f.name.startsWith(prefix) && f.name.endsWith('.json'))
-                .map(f => f.name)
-                .sort();
-
-            const regex = new RegExp(`${prefix}(\\d{4})-(\\d{2})\\.json`);
-            const allWorkouts = [];
-
-            for (const filename of workoutFiles) {
-                const match = filename.match(regex);
-                if (!match) continue;
-                const date = new Date(parseInt(match[1]), parseInt(match[2]) - 1, 1);
-                const monthData = await GitHubAPI.getWorkouts(date);
-                for (const w of monthData.workouts) {
-                    const entry = {
-                        e: w.exerciseId,
-                        d: w.date,
-                        r: w.reps,
-                        w: w.weight,
-                        seq: w.sequence
-                    };
-                    if (w.supersetGroupId) entry.g = w.supersetGroupId;
-                    allWorkouts.push(entry);
-                }
-            }
-
-            const existingSummary = await GitHubAPI.getStatsSummary();
-            const summary = {
-                generated: new Date().toISOString(),
-                workouts: allWorkouts
-            };
-            await GitHubAPI.saveStatsSummary(summary, existingSummary?.sha || null);
-        } catch (err) {
-            console.warn('[Storage] Could not update stats summary:', err);
-        }
-    }
+    async generateAndSaveStatsSummary() {}
 };
 
 // On Supabase every public mutation first re-fetches the snapshot, so edits never build on stale data
@@ -1206,4 +1017,3 @@ export const Storage = {
     const mutate = Storage[name];
     Storage[name] = (...args) => Storage._write(() => mutate.apply(Storage, args));
 });
-// Note: generateId, parseDate, and formatDate are now imported from utils.js

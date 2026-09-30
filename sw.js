@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v73r';
+const CACHE_VERSION = 'v73t';
 importScripts('./js/deploy-env.js');
 
 // Main: po-<kind>-<v>; branch preview: po-<slug>-<kind>-<v> (see js/deploy-env.js).
@@ -16,11 +16,8 @@ const STATIC_SHELL = [
   './css/components.css',
   './css/styles.css',
   './js/app.js',
-  './js/auth.js',
   './js/config.js',
   './js/storage.js',
-  './js/storage-api.js',
-  './js/github-api.js',
   './js/supabase-api.js',
   './js/supabase-auth.js',
   './js/supabase-client.js',
@@ -45,9 +42,6 @@ const CDN_ORIGINS = [
   'https://unpkg.com',
   'https://cdn.jsdelivr.net',
 ];
-
-// GitHub API — never serve from cache, always network-first
-const GITHUB_API_ORIGIN = 'https://api.github.com';
 
 // ── Install: pre-cache the app shell ──────────────────────────────────────────
 self.addEventListener('install', event => {
@@ -77,23 +71,18 @@ self.addEventListener('fetch', event => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // 1. GitHub API — network only (no caching)
-  if (url.origin === GITHUB_API_ORIGIN) {
-    return; // fall through to browser default
-  }
-
-  // 2. Supabase Auth and data APIs — network only
+  // 1. Supabase Auth and data APIs — network only
   if (url.hostname.endsWith('.supabase.co')) {
     return; // fall through to browser default
   }
 
-  // 3. CDN resources — cache-first, populate on miss
+  // 2. CDN resources — cache-first, populate on miss
   if (CDN_ORIGINS.some(origin => url.origin === origin)) {
     event.respondWith(cacheFirst(request, CDN_CACHE));
     return;
   }
 
-  // 4. Local static assets — cache-first, populate on miss.
+  // 3. Local static assets — cache-first, populate on miss.
   //    Main SW scope also covers /preview/* — leave those to the preview's own SW.
   if (url.origin === self.location.origin && DeployEnv.getDeployId(url.pathname) === DEPLOY_ID) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));

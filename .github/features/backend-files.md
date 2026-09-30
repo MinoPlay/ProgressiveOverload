@@ -4,9 +4,9 @@ Reference for all non-UI, non-JS-module files: data files, dev server, service w
 
 ---
 
-## Data Files (`progressive-overload/`)
+## Legacy Migration Files (`progressive-overload/`)
 
-All data files live in the `progressive-overload/` directory of the user's GitHub repository. They are managed exclusively through `js/storage.js` (business logic) and `js/github-api.js` (HTTP layer).
+These JSON files are retained for migration and backup tooling. The browser app uses Supabase exclusively and does not read or write these files.
 
 ### File Overview
 
@@ -36,14 +36,7 @@ All data files live in the `progressive-overload/` directory of the user's GitHu
 }
 ```
 
-| Event | Action |
-|---|---|
-| First app load, file missing | Created with default seed exercises (`Storage.initializeDefaultExercises`) |
-| User adds an exercise | New entry appended; file PUT to GitHub |
-| User edits an exercise | Entry patched in-memory; file PUT to GitHub |
-| User deletes an exercise | Entry spliced out; file PUT to GitHub |
-| Workout saved | `lastSets` / `lastDate` updated on the matching exercise entry; file PUT to GitHub |
-| `backfill-last-sets.py` run | `lastSets` / `lastDate` backfilled from historic workout files and file written locally |
+Migration tooling maps these records into Supabase exercise rows. The browser initializes new accounts through the Supabase `initialize_user_data` RPC instead.
 
 ---
 
@@ -63,14 +56,7 @@ All data files live in the `progressive-overload/` directory of the user's GitHu
 }
 ```
 
-| Event | Action |
-|---|---|
-| First workout of a new month saved | File created for that month via GitHub API |
-| Any subsequent set logged in the same month | `currentMonthWorkouts` array updated in-memory; file PUT to GitHub |
-| `Storage.getWorkoutsInRange(start, end)` called | Monthly files covering the range are fetched on demand (not cached beyond session) |
-| `Storage.migrateSequenceNumbers()` on init | Adds missing `sequence` fields and re-saves if any were absent |
-
-> **Note:** Only the current calendar month is held in `currentMonthWorkouts`. Reading historic months always goes through `getWorkoutsInRange`.
+Migration tooling combines the month-sharded files and maps each set into a Supabase workout row.
 
 ---
 
@@ -78,24 +64,13 @@ All data files live in the `progressive-overload/` directory of the user's GitHu
 
 **Purpose:** Stores named session templates (ordered lists of exercises, optionally grouped as supersets).
 
-| Event | Action |
-|---|---|
-| First template saved, file missing | File created with the new template |
-| User saves a new template | Entry appended; file PUT to GitHub |
-| User edits a template | Entry patched; file PUT to GitHub |
-| User deletes a template | Entry spliced out; file PUT to GitHub |
+Migration tooling maps these records into Supabase session-template rows.
 
 ---
 
 ### `stats-summary.json`
 
-**Purpose:** Pre-computed aggregated statistics cache. Written after every workout save so the Statistics tab can render without re-processing all monthly files.
-
-| Event | Action |
-|---|---|
-| Any workout write completes | `Storage.generateAndSaveStatsSummary()` called fire-and-forget; file PUT to GitHub asynchronously |
-
-> **Note:** This write is non-blocking — it does not delay the workout save or any UI update. Stale stats are replaced on the next workout write.
+**Purpose:** Legacy pre-computed statistics cache. The Supabase app derives summaries from live workout rows and does not read or write this file.
 
 ---
 
@@ -136,7 +111,7 @@ All paths are served as static files from the project root. Unknown paths return
 
 | Cache name | Contents |
 |---|---|
-| `po-static-{CACHE_VERSION}` | App shell: HTML, CSS, JS modules, local JSON (`exercises.json`), icons |
+| `po-static-{CACHE_VERSION}` | App shell: HTML, CSS, JS modules, and icons |
 | `po-cdn-{CACHE_VERSION}` | CDN assets (Chart.js, etc.) cached on first use |
 
 Branch previews use `po-<slug>-static-…` / `po-<slug>-cdn-…` and only delete their own caches (see [`preview-deployments.md`](preview-deployments.md)).
@@ -147,7 +122,7 @@ Branch previews use `po-<slug>-static-…` / `po-<slug>-cdn-…` and only delete
 
 | Request origin | Strategy |
 |---|---|
-| `api.github.com` | Network-only — never cached; always fresh |
+| `*.supabase.co` | Network-only — never cached; always fresh |
 | CDN origins (`unpkg.com`, `cdn.jsdelivr.net`) | Cache-first; populate cache on miss |
 | Same origin (local static assets) | Cache-first; populate cache on miss; offline fallback to `index.html` for navigation requests |
 

@@ -791,6 +791,7 @@ body {
   grid-column: 1 / -1; text-align: center; color: var(--text3);
   font-size: 13px; padding: 24px 8px;
 }
+.swap-ex-btn,
 .remove-ex-btn {
   width: 28px;
   height: 28px;
@@ -803,7 +804,9 @@ body {
   justify-content: center;
   cursor: pointer;
 }
+.swap-ex-btn i,
 .remove-ex-btn i { width: 14px; height: 14px; }
+.swap-ex-btn:hover { color: var(--accent); border-color: var(--accent); }
 .remove-ex-btn:hover { color: #ef4444; border-color: #ef4444; }
 
 /* ── Bottom Tab Bar ───────────────────────────────────────────────── */
@@ -1399,7 +1402,7 @@ body {
 <div class="session-picker-overlay" id="sessionPicker" onclick="if(event.target===this) closeSessionPicker()">
   <div class="session-picker-dialog session-picker-grid-dialog">
     <div class="session-picker-header">
-      <div class="session-picker-title">Choose Exercise</div>
+      <div class="session-picker-title" id="sessionPickerTitle">Choose Exercise</div>
       <button class="sp-close" onclick="closeSessionPicker()" aria-label="Close"><i data-lucide="x"></i></button>
     </div>
     <div class="session-picker-filters">
@@ -2098,9 +2101,14 @@ ensureExerciseMetaById();
 
 /* ── Session Exercise Picker ── */
 const pickerFilters = { equipment: 'all', muscle: 'all' };
+let pickerTargetCardId = null;
 
 function getPickerAvailableMetas() {
-  return getAvailableExerciseIds()
+  const currentExerciseId = pickerTargetCardId
+    ? document.getElementById(pickerTargetCardId)?.dataset.exerciseId
+    : null;
+  return getAvailableExerciseIds(pickerTargetCardId)
+    .filter((exerciseId) => exerciseId !== currentExerciseId)
     .map((exerciseId) => getExerciseMetaById(exerciseId))
     .filter((meta) => meta && meta.id);
 }
@@ -2187,6 +2195,11 @@ function setPickerMuscleFilter(value) {
 
 function pickExercise(exerciseId) {
   if (!exerciseId) return;
+  if (pickerTargetCardId) {
+    swapExercise(pickerTargetCardId, exerciseId);
+    closeSessionPicker();
+    return;
+  }
   addExercise(exerciseId, true, { allowDuplicate: false });
   if (getAvailableExerciseIds().length) {
     refreshPicker();
@@ -2196,6 +2209,7 @@ function pickExercise(exerciseId) {
 }
 
 function openAddExercisePicker() {
+  pickerTargetCardId = null;
   const available = getAvailableExerciseIds();
   if (!available.length) {
     alert('All exercises are already in this workout.');
@@ -2203,12 +2217,44 @@ function openAddExercisePicker() {
   }
   pickerFilters.equipment = 'all';
   pickerFilters.muscle = 'all';
+  document.getElementById('sessionPickerTitle').textContent = 'Choose Exercise';
+  refreshPicker();
+  document.getElementById('sessionPicker').classList.add('open');
+}
+
+function openSessionPicker(cardId) {
+  const card = document.getElementById(cardId);
+  if (!card) return;
+  pickerTargetCardId = cardId;
+  if (!getPickerAvailableMetas().length) {
+    pickerTargetCardId = null;
+    alert('No other exercises are available to swap in.');
+    return;
+  }
+  pickerFilters.equipment = 'all';
+  pickerFilters.muscle = 'all';
+  document.getElementById('sessionPickerTitle').textContent = 'Swap Exercise';
   refreshPicker();
   document.getElementById('sessionPicker').classList.add('open');
 }
 
 function closeSessionPicker() {
   document.getElementById('sessionPicker').classList.remove('open');
+  pickerTargetCardId = null;
+}
+
+function swapExercise(cardId, exerciseId) {
+  const card = document.getElementById(cardId);
+  if (!card || !exerciseId || hasExerciseInWorkout(exerciseId, cardId)) return;
+  const ticked = card.querySelectorAll('.tick-btn.ticked').length;
+  card.querySelectorAll('.set-row').forEach((row) => {
+    row.classList.remove('completed');
+    row.querySelector('.tick-btn')?.classList.remove('ticked');
+  });
+  tickedCount = Math.max(0, tickedCount - ticked);
+  applyExercisePresetById(exerciseId, cardId);
+  checkCardDone(cardId);
+  updateSubmit();
 }
 
 function applyExercisePresetById(exerciseId, cardId) {
@@ -3224,8 +3270,9 @@ function addExercise(defaultExerciseId = null, markAsCustom = true, options = {}
   card.innerHTML = `
     <div class="card-header" onclick="toggleCard('${id}')">
       <i class="exercise-icon" data-lucide="dumbbell" aria-hidden="true"></i>
-      <div class="exercise-name" id="name-${bodyKey}">New Exercise</div>
+      <div class="exercise-name" id="name-${bodyKey}" onclick="openSessionPicker('${id}'); event.stopPropagation()">New Exercise</div>
       <button class="link-next-btn" onclick="toggleLinkWithNext('${id}', event)" title="Link with exercise below"><i data-lucide="link"></i></button>
+      <button class="swap-ex-btn" onclick="openSessionPicker('${id}'); event.stopPropagation()" title="Swap exercise"><i data-lucide="repeat-2"></i></button>
       <button class="collapse-btn open" id="btn-${bodyKey}"><i data-lucide="chevron-down"></i></button>
       <button class="remove-ex-btn" onclick="removeExercise('${id}', event)"><i data-lucide="trash-2"></i></button>
     </div>
@@ -3444,7 +3491,9 @@ function loadTemplate(name) {
         <i class='exercise-icon' aria-hidden='true'></i>
         <div class='exercise-name' id='name-${bodyKey}' onclick="openSessionPicker('${cardId}'); event.stopPropagation()">${exerciseName}</div>
         <button class='link-next-btn' onclick="toggleLinkWithNext('${cardId}', event)" title='Link with exercise below'><i data-lucide='link'></i></button>
+        <button class='swap-ex-btn' onclick="openSessionPicker('${cardId}'); event.stopPropagation()" title='Swap exercise'><i data-lucide='repeat-2'></i></button>
         <button class='collapse-btn open' id='btn-${bodyKey}'><i data-lucide='chevron-down'></i></button>
+        <button class='remove-ex-btn' onclick="removeExercise('${cardId}', event)" title='Remove exercise'><i data-lucide='trash-2'></i></button>
       </div>
       <div class='sets-body' id='body-${bodyKey}'>
         ${prevHint}

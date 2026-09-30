@@ -1,7 +1,6 @@
 // Supabase Storage Adapter
-// Implements the legacy storage operations with tenant-scoped relational rows.
+// Implements tenant-scoped relational storage operations.
 
-import { CONFIG } from './config.js';
 import { getSupabaseClient } from './supabase-client.js';
 import { SupabaseAuth } from './supabase-auth.js';
 import {
@@ -95,22 +94,7 @@ export const SupabaseAPI = {
             query => query.eq('user_id', userId),
             ['name', 'id']
         );
-        return {
-            exercises: rows.map(exerciseFromRow),
-            sha: null
-        };
-    },
-
-    async saveExercises(exercises) {
-        const userId = SupabaseAuth.getUserId();
-        const existing = await this._selectAll('exercises', 'id', query => query.eq('user_id', userId));
-        const incomingIds = new Set(exercises.map(exercise => exercise.id));
-        const staleIds = existing.map(row => row.id).filter(id => !incomingIds.has(id));
-
-        await this._assertExercisesUnused(userId, staleIds);
-        await this.upsertExercises(exercises);
-        await this._deleteIds('exercises', userId, staleIds);
-        return { content: { sha: null } };
+        return { exercises: rows.map(exerciseFromRow) };
     },
 
     async _assertExercisesUnused(userId, ids) {
@@ -149,12 +133,6 @@ export const SupabaseAPI = {
         await this._deleteIds('exercises', userId, ids);
     },
 
-    getWorkoutFilePath(date) {
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        return `${CONFIG.paths.workoutsPrefix}${year}-${month}.json`;
-    },
-
     _monthBounds(date) {
         const year = date.getFullYear();
         const month = date.getMonth();
@@ -170,26 +148,7 @@ export const SupabaseAPI = {
             new Date(`${start}T00:00:00`),
             new Date(new Date(`${end}T00:00:00`).getTime() - 86400000)
         );
-        return {
-            workouts,
-            sha: null,
-            path: this.getWorkoutFilePath(date)
-        };
-    },
-
-    async saveWorkouts(date, workouts) {
-        const userId = SupabaseAuth.getUserId();
-        const { start, end } = this._monthBounds(date);
-        const existing = await this._selectAll('workouts', 'id', query => query
-            .eq('user_id', userId)
-            .gte('workout_date', start)
-            .lt('workout_date', end));
-        const incomingIds = new Set(workouts.map(workout => workout.id));
-        const staleIds = existing.map(row => row.id).filter(id => !incomingIds.has(id));
-
-        await this.upsertWorkouts(workouts);
-        await this._deleteIds('workouts', userId, staleIds);
-        return { content: { sha: null } };
+        return { workouts };
     },
 
     /**
@@ -231,23 +190,6 @@ export const SupabaseAPI = {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
     },
 
-    async listFiles(path) {
-        const userId = SupabaseAuth.getUserId();
-        const rows = await this._selectAll(
-            'workouts',
-            'workout_date',
-            query => query.eq('user_id', userId),
-            ['workout_date']
-        );
-        const prefix = CONFIG.paths.workoutsPrefix.split('/').pop();
-        const directory = path || CONFIG.paths.workoutsPrefix.substring(0, CONFIG.paths.workoutsPrefix.lastIndexOf('/'));
-        const months = [...new Set(rows.map(row => row.workout_date.slice(0, 7)))];
-        return months.map(month => ({
-            name: `${prefix}${month}.json`,
-            path: `${directory}/${prefix}${month}.json`
-        }));
-    },
-
     async getSessionTemplates() {
         const userId = SupabaseAuth.getUserId();
         const rows = await this._selectAll(
@@ -256,21 +198,7 @@ export const SupabaseAPI = {
             query => query.eq('user_id', userId),
             ['name', 'id']
         );
-        return {
-            templates: rows.map(templateFromRow),
-            sha: null
-        };
-    },
-
-    async saveSessionTemplates(templates) {
-        const userId = SupabaseAuth.getUserId();
-        const existing = await this._selectAll('session_templates', 'id', query => query.eq('user_id', userId));
-        const incomingIds = new Set(templates.map(template => template.id));
-        const staleIds = existing.map(row => row.id).filter(id => !incomingIds.has(id));
-
-        await this.upsertSessionTemplates(templates);
-        await this._deleteIds('session_templates', userId, staleIds);
-        return { content: { sha: null } };
+        return { templates: rows.map(templateFromRow) };
     },
 
     /**
@@ -315,16 +243,7 @@ export const SupabaseAPI = {
                     if (workout.supersetGroupId) entry.g = workout.supersetGroupId;
                     return entry;
                 })
-            },
-            sha: null
+            }
         };
-    },
-
-    async saveStatsSummary() {
-        return { content: { sha: null } };
-    },
-
-    async getRateLimit() {
-        return null;
     }
 };

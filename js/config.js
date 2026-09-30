@@ -75,13 +75,17 @@ export function isSupabaseConfigured() {
  */
 window.refreshCache = async function () {
     try {
+        // Only this deploy's caches/SW — main and branch previews share the origin
+        const deployId = DeployEnv.currentDeployId();
         if ('caches' in window) {
             const keys = await caches.keys();
-            await Promise.all(keys.map(key => caches.delete(key)));
+            await Promise.all(keys.filter(key => DeployEnv.isOwnCache(key, deployId)).map(key => caches.delete(key)));
         }
         if ('serviceWorker' in navigator) {
             const registrations = await navigator.serviceWorker.getRegistrations();
-            await Promise.all(registrations.map(reg => reg.unregister()));
+            await Promise.all(registrations
+                .filter(reg => DeployEnv.getDeployId(new URL(reg.scope).pathname) === deployId)
+                .map(reg => reg.unregister()));
         }
         showStatus('Cache cleared, reloading...', 'success');
         setTimeout(() => location.reload(true), 500);

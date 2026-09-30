@@ -136,6 +136,17 @@ npm run migration:backup
 
 Do not run scheduled forward synchronization after Supabase receives new writes. For rollback, export Supabase first and review the backup branch before restoring data outside the app.
 
+### Branch previews (parallel versions on GitHub Pages)
+
+`.github/workflows/pages.yml` deploys `main` at `https://minoplay.github.io/ProgressiveOverload/` and every other
+branch at `…/ProgressiveOverload/preview/<slug>/` (slug = branch lowercased, `/` → `-`; index at `…/preview/`).
+Each preview has its own localStorage, sessionStorage and SW cache, so it never touches main's state — but it
+talks to whatever backend its Configuration points at. Details: `.github/features/preview-deployments.md`.
+
+One-time setup:
+1. `gh api -X PUT repos/MinoPlay/ProgressiveOverload/pages -f build_type=workflow` (Pages source → GitHub Actions).
+2. Repo Settings → Environments → `github-pages` → Deployment branches: allow all branches.
+
 ---
 
 ## 🏗️ Project Structure

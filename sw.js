@@ -1,6 +1,10 @@
-const CACHE_VERSION = 'v73s';
-const STATIC_CACHE  = `po-static-${CACHE_VERSION}`;
-const CDN_CACHE     = `po-cdn-${CACHE_VERSION}`;
+const CACHE_VERSION = 'v73t';
+importScripts('./js/deploy-env.js');
+
+// Main: po-<kind>-<v>; branch preview: po-<slug>-<kind>-<v> (see js/deploy-env.js).
+const DEPLOY_ID     = DeployEnv.currentDeployId();
+const STATIC_CACHE  = DeployEnv.getCacheName('static', CACHE_VERSION, DEPLOY_ID);
+const CDN_CACHE     = DeployEnv.getCacheName('cdn', CACHE_VERSION, DEPLOY_ID);
 
 // Local assets to pre-cache on install
 const STATIC_SHELL = [
@@ -26,6 +30,8 @@ const STATIC_SHELL = [
   './js/history.js',
   './js/rankings.js',
   './js/utils.js',
+  './js/deploy-env.js',
+  './progressive-overload/exercises.json',
   './assets/favicon.svg',
   './assets/icon-192.png',
   './assets/icon-512.png',
@@ -53,7 +59,7 @@ self.addEventListener('activate', event => {
     caches.keys()
       .then(keys => Promise.all(
         keys
-          .filter(key => !validCaches.includes(key))
+          .filter(key => !validCaches.includes(key) && DeployEnv.isOwnCache(key, DEPLOY_ID))
           .map(key => caches.delete(key))
       ))
       .then(() => self.clients.claim())
@@ -76,8 +82,9 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // 3. Local static assets — cache-first, populate on miss
-  if (url.origin === self.location.origin) {
+  // 3. Local static assets — cache-first, populate on miss.
+  //    Main SW scope also covers /preview/* — leave those to the preview's own SW.
+  if (url.origin === self.location.origin && DeployEnv.getDeployId(url.pathname) === DEPLOY_ID) {
     event.respondWith(cacheFirst(request, STATIC_CACHE));
   }
 });

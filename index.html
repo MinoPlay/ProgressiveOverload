@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Progressive Overload — Insight Lab</title>
+    <script src="js/deploy-env.js"></script>
     <style>
       :root {
         --bg: #07131d;
@@ -154,7 +155,7 @@
       }
     </style>
   </head>
-  <body>
+  <body data-prototype="insight-lab">
     <div class="app">
       <div class="shell">
         <aside class="sidebar">
@@ -173,8 +174,8 @@
 
           <div class="mini-panel">
             <div style="font-size:0.7rem; text-transform: uppercase; letter-spacing:0.12em; color:var(--muted);">Momentum</div>
-            <div style="font-size:1.8rem; font-weight:800; margin-top:10px;">+11.3%</div>
-            <div style="color:var(--good); margin-top:6px; font-weight:700;">vs last month</div>
+            <div id="momentumValue" style="font-size:1.8rem; font-weight:800; margin-top:10px;">—</div>
+            <div id="momentumLabel" style="color:var(--good); margin-top:6px; font-weight:700;">vs prior 30 days</div>
           </div>
         </aside>
 
@@ -182,8 +183,8 @@
           <div class="topbar">
             <h1>Insight Lab</h1>
             <div class="controls">
-              <button class="filter">Monthly</button>
-              <button class="filter">Reset</button>
+              <button class="filter" id="dataPeriod">Last 6 months</button>
+              <button class="filter" id="latestSessionDate">Loading…</button>
             </div>
           </div>
 
@@ -191,37 +192,30 @@
             <div class="panel-card">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 8px;">
                 <strong>Training volume</strong>
-                <span class="trend">+12.4%</span>
+                <span class="trend" id="volumeTrend">—</span>
               </div>
-              <div class="chart-wrap">
-                <div class="bar-group"><div class="bars"><div class="bar" style="height:44%"></div><div class="bar alt" style="height:70%"></div></div><span>Jan</span></div>
-                <div class="bar-group"><div class="bars"><div class="bar" style="height:52%"></div><div class="bar alt" style="height:88%"></div></div><span>Feb</span></div>
-                <div class="bar-group"><div class="bars"><div class="bar" style="height:58%"></div><div class="bar alt" style="height:95%"></div></div><span>Mar</span></div>
-                <div class="bar-group"><div class="bars"><div class="bar" style="height:66%"></div><div class="bar alt" style="height:100%"></div></div><span>Apr</span></div>
-                <div class="bar-group"><div class="bars"><div class="bar" style="height:72%"></div><div class="bar alt" style="height:110%"></div></div><span>May</span></div>
-                <div class="bar-group"><div class="bars"><div class="bar" style="height:80%"></div><div class="bar alt" style="height:122%"></div></div><span>Jun</span></div>
-              </div>
+              <div class="chart-wrap" id="monthlyVolumeChart"></div>
             </div>
 
             <div class="kpis">
               <div class="kpi-card">
-                <div class="kpi-label">Avg sessions</div>
-                <div class="kpi-value">3.8</div>
-                <div class="trend">+0.5/wk</div>
+                <div class="kpi-label">Sessions / 30d</div>
+                <div class="kpi-value" id="sessions30">—</div>
+                <div class="trend" id="sessionTrend">—</div>
               </div>
               <div class="kpi-card">
                 <div class="kpi-label">1RM lift</div>
-                <div class="kpi-value">104</div>
-                <div class="trend">+4kg</div>
+                <div class="kpi-value" id="top1rm">—</div>
+                <div class="trend" id="top1rmExercise">—</div>
               </div>
               <div class="kpi-card">
-                <div class="kpi-label">Recovery</div>
-                <div class="kpi-value">86</div>
-                <div class="trend">Stable</div>
+                <div class="kpi-label">Exercises</div>
+                <div class="kpi-value" id="activeExercises30">—</div>
+                <div class="trend">active in 30d</div>
               </div>
               <div class="kpi-card">
                 <div class="kpi-label">Streak</div>
-                <div class="kpi-value">19</div>
+                <div class="kpi-value" id="workoutStreak">—</div>
                 <div class="trend">days</div>
               </div>
             </div>
@@ -230,17 +224,12 @@
           <section class="two-col">
             <div class="panel-card">
               <div style="font-weight:800; margin-bottom: 8px;">Muscle balance</div>
-              <div class="segments">
-                <div class="segment"><span><span class="dot" style="background:#68d7ff"></span>Chest</span><strong>31%</strong></div>
-                <div class="segment"><span><span class="dot" style="background:#5ce2a6"></span>Back</span><strong>24%</strong></div>
-                <div class="segment"><span><span class="dot" style="background:#8d7bff"></span>Legs</span><strong>28%</strong></div>
-                <div class="segment"><span><span class="dot" style="background:#ffbf69"></span>Shoulders</span><strong>17%</strong></div>
-              </div>
+              <div class="segments" id="muscleBalance"></div>
             </div>
 
             <div class="panel-card">
               <div style="font-weight:800; margin-bottom: 8px;">Goal completion</div>
-              <div class="ring">72%</div>
+              <div class="ring" id="weeklyGoal">—</div>
             </div>
           </section>
         </main>

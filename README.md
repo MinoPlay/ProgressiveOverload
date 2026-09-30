@@ -20,3 +20,5 @@ cd /Users/mino/Documents/GitHub/ProgressiveOverload-insight-lab
 python3 -m http.server 8002
 ```
 Then open http://localhost:8002/
+
+Sign in through the **Live backend** panel. The prototype reads the authenticated user's exercises and complete workout history from Supabase and derives the visible six-month chart, 30-day trends, estimated 1RM, muscle balance, streak, and weekly progress without writing data.

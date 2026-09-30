@@ -139,6 +139,8 @@ All paths are served as static files from the project root. Unknown paths return
 | `po-static-{CACHE_VERSION}` | App shell: HTML, CSS, JS modules, local JSON (`exercises.json`), icons |
 | `po-cdn-{CACHE_VERSION}` | CDN assets (Chart.js, etc.) cached on first use |
 
+Branch previews use `po-<slug>-static-…` / `po-<slug>-cdn-…` and only delete their own caches (see [`preview-deployments.md`](preview-deployments.md)).
+
 `CACHE_VERSION` is a hardcoded string constant (e.g. `'v53'`). Increment it to force all clients to discard stale caches on next activate.
 
 ### Fetch Strategies

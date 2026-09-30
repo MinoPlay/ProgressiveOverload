@@ -72,3 +72,4 @@ Detailed context for each feature lives in `.github/features/`. Reference the re
 | [`features/auth-config.md`](features/auth-config.md) | Anything in `js/auth.js` or `js/config.js` — PAT handling, CONFIG constants, mode switching |
 | [`features/theme-system.md`](features/theme-system.md) | Theme toggle, Chart.js color integration, `data-theme` attribute, `themeChanged` event |
 | [`features/iframe-bridge.md`](features/iframe-bridge.md) | `postMessage` communication between `index.html` and the `workout.html` iframe |
+| [`features/preview-deployments.md`](features/preview-deployments.md) | `.github/workflows/pages.yml`, `js/deploy-env.js`, SW cache names — branch previews at `/preview/<slug>/` and their storage/cache isolation |

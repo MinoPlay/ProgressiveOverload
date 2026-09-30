@@ -17,6 +17,8 @@
     <link rel="stylesheet" href="css/layout.css">
     <link rel="stylesheet" href="css/components.css">
     <link rel="stylesheet" href="css/styles.css">
+    <!-- Must load before any storage access: namespaces storage in branch previews -->
+    <script src="js/deploy-env.js"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 </head>
@@ -559,7 +561,8 @@
             .then(text => {
                 const match = text.match(/CACHE_VERSION\s*=\s*['"]([^'"]+)['"]/);
                 const label = document.getElementById('cacheVersionLabel');
-                if (match && label) label.textContent = match[1];
+                const deployId = DeployEnv.currentDeployId();
+                if (match && label) label.textContent = match[1] + (deployId ? ` · preview:${deployId}` : '');
             })
             .catch(err => console.warn('Failed to read cache version:', err));
 

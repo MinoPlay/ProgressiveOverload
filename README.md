@@ -20,3 +20,5 @@ cd /Users/mino/Documents/GitHub/ProgressiveOverload-compact-coach
 python3 -m http.server 8001
 ```
 Then open http://localhost:8001/
+
+Sign in through the **Live backend** panel. The prototype reads the authenticated user's exercises and complete workout history from Supabase and derives the visible latest session, 30-day metrics, training highlights, and weekly progress without writing data.

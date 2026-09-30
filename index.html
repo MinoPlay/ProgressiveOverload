@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Progressive Overload — Compact Coach</title>
+    <script src="js/deploy-env.js"></script>
     <style>
       :root {
         --bg: #f3efe9;
@@ -144,7 +145,7 @@
         height: 12px; border-radius: 99px; background: rgba(25,35,52,0.08); overflow: hidden; margin-top: 12px;
       }
       .progress-bar > span {
-        display: block; height: 100%; width: 72%; background: linear-gradient(90deg, #3e8bff, #79b1ff); border-radius: inherit;
+        display: block; height: 100%; width: 0; background: linear-gradient(90deg, #3e8bff, #79b1ff); border-radius: inherit;
       }
       .checklist { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
       .checklist li {
@@ -207,7 +208,7 @@
       }
     </style>
   </head>
-  <body>
+  <body data-prototype="compact-coach">
     <div class="app">
       <header class="topbar">
         <div class="brand">
@@ -224,8 +225,8 @@
 
       <section class="hero">
         <div class="panel hero-main">
-          <div class="eyebrow">Today · Upper body</div>
-          <h1>Keep gains on autopilot.</h1>
+          <div class="eyebrow" id="latestSessionDate">Loading Supabase data…</div>
+          <h1 id="latestSessionHeadline">Keep gains on autopilot.</h1>
           <div class="subtext">
             Finish your plan fast, track every set, and see how your last sessions are steering your next PR.
           </div>
@@ -239,19 +240,19 @@
           <div class="stats-mini">
             <div class="mini-card">
               <div class="mini-label">Consistency</div>
-              <div class="mini-value">82%</div>
+              <div class="mini-value" id="consistency30">—</div>
             </div>
             <div class="mini-card">
               <div class="mini-label">Total volume</div>
-              <div class="mini-value">14.1k</div>
+              <div class="mini-value" id="volume30">—</div>
             </div>
             <div class="mini-card">
               <div class="mini-label">PRs</div>
-              <div class="mini-value">4</div>
+              <div class="mini-value" id="prCount30">—</div>
             </div>
             <div class="mini-card">
               <div class="mini-label">Ready</div>
-              <div class="mini-value">3/4</div>
+              <div class="mini-value" id="sessionExerciseCount">—</div>
             </div>
           </div>
         </aside>
@@ -260,75 +261,26 @@
       <section class="grid">
         <div class="panel session-panel">
           <div class="section-head">
-            <h2>Current session</h2>
-            <div class="chip">3 exercises left</div>
+            <h2>Latest session</h2>
+            <div class="chip" id="sessionSetCount">Loading…</div>
           </div>
 
-          <div class="exercise-list">
-            <div class="exercise-row">
-              <div>
-                <div class="exercise-meta">
-                  <div class="exercise-title">Bench Press</div>
-                  <div class="tag">Main lift</div>
-                </div>
-                <div class="sets">
-                  <span class="set done">5 × 100</span>
-                  <span class="set done">5 × 100</span>
-                  <span class="set">5 × 100</span>
-                </div>
-              </div>
-              <button class="primary">Log</button>
-            </div>
-
-            <div class="exercise-row">
-              <div>
-                <div class="exercise-meta">
-                  <div class="exercise-title">Incline DB Press</div>
-                  <div class="tag">Hypertrophy</div>
-                </div>
-                <div class="sets">
-                  <span class="set">10 × 32</span>
-                  <span class="set">10 × 32</span>
-                  <span class="set">10 × 32</span>
-                </div>
-              </div>
-              <button class="secondary">Add set</button>
-            </div>
-
-            <div class="exercise-row">
-              <div>
-                <div class="exercise-meta">
-                  <div class="exercise-title">Rows</div>
-                  <div class="tag">Pull</div>
-                </div>
-                <div class="sets">
-                  <span class="set">8 × 70</span>
-                  <span class="set">8 × 70</span>
-                  <span class="set">8 × 70</span>
-                </div>
-              </div>
-              <button class="secondary">Add set</button>
-            </div>
-          </div>
+          <div class="exercise-list" id="latestSessionList"></div>
         </div>
 
         <aside class="panel focus-panel">
           <div class="section-head">
             <h2>Focus</h2>
-            <div class="chip">Week 12</div>
+            <div class="chip" id="latestWeekLabel">Latest week</div>
           </div>
 
           <div class="progress-card">
             <div style="font-weight:800; font-size:1.1rem;">Strength trend</div>
-            <div class="progress-bar"><span></span></div>
-            <div style="margin-top:10px; color:var(--muted); font-weight:700;">72% of goal</div>
+            <div class="progress-bar"><span id="weeklyProgressBar"></span></div>
+            <div id="weeklyProgressLabel" style="margin-top:10px; color:var(--muted); font-weight:700;">Loading weekly activity…</div>
           </div>
 
-          <ul class="checklist">
-            <li><span class="check">✓</span> Deload window is safe</li>
-            <li><span class="check">✓</span> Bench PR is trending up 2.8%</li>
-            <li><span class="check">✓</span> Recovery score is stable</li>
-          </ul>
+          <ul class="checklist" id="trainingHighlights"></ul>
         </aside>
       </section>
     </div>

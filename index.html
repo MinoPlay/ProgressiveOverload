@@ -1,580 +1,194 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Progressive Overload Tracker</title>
-    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-    <link rel="alternate icon" type="image/png" href="assets/favicon.svg">
-    <link rel="apple-touch-icon" href="assets/icon-192.png">
-    <meta name="theme-color" content="#667eea">
-    <link rel="manifest" href="manifest.json">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="OverloadPro">
-    <link rel="stylesheet" href="css/layout.css">
-    <link rel="stylesheet" href="css/components.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <!-- Must load before any storage access: namespaces storage in branch previews -->
-    <script src="js/deploy-env.js"></script>
-    <!-- Lucide Icons -->
-    <script src="https://unpkg.com/lucide@latest"></script>
-</head>
-
-<body>
-    <!-- Main Application -->
-    <div id="app" style="display: none;">
-        <!-- Header -->
-        <header class="app-header">
-            <div class="header-content">
-                <nav class="header-nav" role="navigation" aria-label="Main navigation">
-                    <div class="nav-left">
-                        <!-- Theme Toggle -->
-                        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">
-                            <i data-lucide="moon" id="themeToggleIcon"></i>
-                        </button>
-                    </div>
-                    <div class="nav-center">
-                        <button class="nav-btn" data-section="workout" title="Workout" aria-label="Workout">
-                            <i data-lucide="plus-circle" class="nav-icon"></i>
-                        </button>
-                        <button class="nav-btn" data-section="history" title="History" aria-label="History">
-                            <i data-lucide="calendar" class="nav-icon"></i>
-                        </button>
-                        <button class="nav-btn" data-section="statistics" title="Statistics" aria-label="Statistics">
-                            <i data-lucide="line-chart" class="nav-icon"></i>
-                        </button>
-                        <button class="nav-btn" data-section="rankings" title="Rankings" aria-label="Rankings">
-                            <i data-lucide="star" class="nav-icon"></i>
-                        </button>
-                        <button class="nav-btn" data-section="exercises" title="Manage" aria-label="Manage">
-                            <i data-lucide="list" class="nav-icon"></i>
-                        </button>
-                    </div>
-                    <div class="nav-right">
-                        <span id="cacheVersionLabel" class="cache-version-label" title="Cache version"></span>
-                        <!-- PWA Install Button (hidden until installable) -->
-                        <button id="pwaInstallBtn" class="theme-toggle-btn" aria-label="Install app" title="Install app" style="display:none">
-                            <i data-lucide="download"></i>
-                        </button>
-                    <div class="nav-dropdown">
-                        <button class="nav-btn dropdown-trigger" id="configNavTrigger" title="Configuration" aria-label="Configuration" aria-haspopup="true" aria-expanded="false">
-                            <i data-lucide="settings" class="nav-icon"></i>
-                        </button>
-                        <div class="dropdown-content config-dropdown-content" id="configNavContent">
-                            <div class="config-dropdown-body">
-                                <div class="config-form" id="supabase-config">
-                                    <div id="supabase-signed-out" class="config-form">
-                                        <input type="email" id="supabase-email" name="supabase-email"
-                                            placeholder="Email address" autocomplete="email">
-                                        <button onclick="requestSupabaseMagicLink()" class="btn-save">
-                                            <i data-lucide="mail"></i> Send sign-in link
-                                        </button>
-                                    </div>
-                                    <div id="supabase-signed-in" class="config-form" style="display: none;">
-                                        <span id="supabase-user-email" class="config-help"></span>
-                                        <button onclick="signOutSupabase()" class="btn-save">
-                                            <i data-lucide="log-out"></i> Sign out
-                                        </button>
-                                    </div>
-                                </div>
-                                <p class="config-help" id="supabase-help">
-                                    Email magic-link authentication. Data is isolated per signed-in user.
-                                </p>
-                                <button onclick="refreshCache()" class="btn-refresh-cache">
-                                    <i data-lucide="refresh-cw"></i> Refresh Cache
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    </div>
-                </nav>
-
-            </div>
-        </header>
-
-
-        <!-- Loading Indicator -->
-        <div id="loadingIndicator" class="loading" style="display: none;" role="status" aria-live="polite"
-            aria-label="Loading content">
-            <div class="spinner" aria-hidden="true"></div>
-            <p>Loading...</p>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Progressive Overload — Command Center</title>
+    <style>
+      :root {
+        --bg: #0d1220;
+        --panel: #131d2d;
+        --panel-2: #181f31;
+        --panel-3: #202b3d;
+        --ink: #eef6ff;
+        --muted: #9bb0c7;
+        --accent: #7cf0c7;
+        --accent-2: #7aa8ff;
+        --warning: #f7c76c;
+        --danger: #ff7e92;
+        --shadow: 0 24px 52px rgba(0, 0, 0, 0.32);
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0; background: radial-gradient(circle at top, #1b243a, var(--bg) 38%);
+        color: var(--ink); font-family: Inter, "Segoe UI", sans-serif;
+      }
+      .app {
+        max-width: 1280px; margin: 0 auto; padding: 24px 18px 60px;
+      }
+      .topbar {
+        display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-bottom: 22px;
+      }
+      .brand {
+        display: flex; align-items: center; gap: 12px; font-weight: 800; font-size: 1.1rem;
+      }
+      .dot {
+        width: 12px; height: 12px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--accent-2));
+        box-shadow: 0 0 14px rgba(124, 240, 199, 0.7);
+      }
+      .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+      .btn {
+        border: 1px solid rgba(255,255,255,0.08); background: rgba(255,255,255,0.03); color: var(--ink);
+        border-radius: 12px; padding: 10px 14px; font-weight: 700;
+      }
+      .btn.primary { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #07151d; border: none; }
+      .layout {
+        display: grid; grid-template-columns: 1.1fr 0.9fr; gap: 20px;
+      }
+      .panel {
+        background: rgba(19, 29, 45, 0.94); border-radius: 24px; border: 1px solid rgba(255,255,255,0.06); box-shadow: var(--shadow);
+      }
+      .left {
+        padding: 18px;
+      }
+      .header-row {
+        display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px;
+      }
+      h1 { margin: 0; font-size: 2.2rem; }
+      .chip { background: rgba(124,240,199,0.12); color: var(--accent); border-radius: 999px; padding: 8px 12px; font-weight: 700; }
+      .command-bar {
+        display: flex; align-items: center; gap: 12px; background: linear-gradient(90deg, rgba(122,168,255,0.08), rgba(255,255,255,0.02));
+        border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; padding: 14px 16px; margin-bottom: 18px;
+      }
+      .prompt {
+        flex: 1; display: flex; align-items: center; gap: 8px; color: var(--muted); font-weight: 600;
+      }
+      .cmd {
+        width: 50px; height: 32px; display: grid; place-items: center; border-radius: 10px; background: rgba(255,255,255,0.05); font-weight: 800; color: var(--ink);
+      }
+      .timeline {
+        display: grid; gap: 12px;
+      }
+      .task {
+        display: grid; grid-template-columns: 18px 1fr auto; gap: 12px; align-items: center; padding: 14px 12px; border-radius: 16px; background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);
+      }
+      .task .bullet {
+        width: 12px; height: 12px; border-radius: 50%; background: var(--accent-2);
+      }
+      .task strong { display: block; }
+      .task small { color: var(--muted); }
+      .task .time { font-weight: 700; color: var(--muted); }
+      .category { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+      .tag { padding: 8px 12px; border-radius: 999px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); color: var(--muted); font-weight: 700; }
+      .right {
+        padding: 20px;
+      }
+      .stats-grid {
+        display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 14px; margin-top: 18px;
+      }
+      .stat-box {
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; padding: 18px;
+      }
+      .stat-label { color: var(--muted); font-size: 0.75rem; letter-spacing: 0.08em; text-transform: uppercase; }
+      .stat-value { font-size: 2rem; font-weight: 800; margin-top: 10px; }
+      .progress {
+        margin-top: 20px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); border-radius: 18px; padding: 16px;
+      }
+      .track { height: 10px; background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; margin-top: 12px; }
+      .track > span { display: block; height: 100%; width: 76%; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+      @media (max-width: 900px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand"><span class="dot"></span> Command Center</div>
+        <div class="actions">
+          <button class="btn">Today</button>
+          <button class="btn primary">Log session</button>
         </div>
+      </header>
 
-        <!-- Main Content -->
-        <main class="app-content">
+      <div class="layout">
+        <section class="panel left">
+          <div class="header-row">
+            <h1>Workout queue</h1>
+            <span class="chip">3 exercises ready</span>
+          </div>
 
+          <div class="command-bar">
+            <div class="prompt"><span style="font-weight:800; color:var(--ink);">/</span> quick-add bench press</div>
+            <div class="cmd">⌘K</div>
+          </div>
 
-
-            <!-- Exercises Section -->
-            <section id="exercisesSection" class="content-section" role="region" aria-label="Manage Exercises">
-                <div class="manage-header-row">
-                    <div class="manage-view-toggle" role="tablist" aria-label="Manage view">
-                        <button id="manageTabExercises" class="manage-tab-btn active" type="button" role="tab"
-                            aria-selected="true">Exercises</button>
-                        <button id="manageTabTemplates" class="manage-tab-btn" type="button" role="tab"
-                            aria-selected="false">Templates</button>
-                    </div>
-                    <button id="manageAddBtn" class="btn-icon btn-primary manage-add-btn" aria-label="Add new exercise"
-                        title="Add new exercise">
-                        <i data-lucide="plus"></i>
-                    </button>
-                </div>
-
-                <div id="manageExercisesPane" class="manage-pane active" role="tabpanel" aria-label="Exercises">
-                    <!-- Add/Edit Exercise Form -->
-                    <div id="exerciseForm" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="exerciseFormTitle">
-                        <div class="modal-content" style="max-width: 480px;">
-                            <div class="modal-header">
-                                <h2 id="exerciseFormTitle">Add New Exercise</h2>
-                            </div>
-                            <div class="modal-body">
-                                <form id="exerciseFormElement">
-                                    <input type="hidden" id="exerciseId" name="exerciseId">
-                                    <input type="hidden" id="equipmentType" name="equipmentType" required aria-required="true">
-                                    <input type="hidden" id="muscle" name="muscle" required aria-required="true">
-
-                                    <div class="form-group">
-                                        <label for="exerciseName">
-                                            Exercise Name <span class="required" aria-label="required">*</span>
-                                        </label>
-                                        <input type="text" id="exerciseName" name="exerciseName" placeholder="e.g., Bench Press" required
-                                            aria-required="true" maxlength="100">
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>
-                                            Equipment Type <span class="required" aria-label="required">*</span>
-                                        </label>
-                                        <div id="equipmentTypeToggle" class="filter-icon-row" aria-label="Select equipment type"></div>
-                                    </div>
-
-                                    <div class="form-group">
-                                        <label>
-                                            Target Muscle <span class="required" aria-label="required">*</span>
-                                        </label>
-                                        <div id="muscleToggle" class="filter-icon-row" aria-label="Select target muscle"></div>
-                                    </div>
-
-                                    <div class="form-actions">
-                                        <button type="submit" class="btn btn-primary">Save Exercise</button>
-                                        <button type="button" id="cancelExerciseBtn" class="btn btn-secondary">Cancel</button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="form-container exercise-filter-panel">
-                        <div id="exerciseFilterEquipment" class="filter-icon-row" aria-label="Filter by equipment"></div>
-                        <div class="filter-icon-divider"></div>
-                        <div id="exerciseFilterMuscle" class="filter-icon-row" aria-label="Filter by target muscle"></div>
-                    </div>
-
-                    <!-- Exercise List -->
-                    <div id="exerciseList" class="exercise-list"></div>
-                </div>
-
-                <div id="manageTemplatesPane" class="manage-pane" role="tabpanel" aria-label="Templates">
-                    <!-- Template List -->
-                    <div id="templateList" class="template-list"></div>
-
-                    <!-- Add/Edit Template Form -->
-                    <div id="templateForm" class="form-container" style="display: none;">
-                        <div class="template-form-content">
-                            <h3 id="templateFormTitle">New Template</h3>
-
-                            <div class="form-group">
-                                <label for="templateName">Template Name <span class="required">*</span></label>
-                                <input type="text" id="templateName" name="templateName" placeholder="e.g., Push Day A" maxlength="100" autocomplete="off">
-                            </div>
-
-                            <div class="planner-controls" style="margin-bottom: var(--spacing-sm);">
-                                <button type="button" id="templateAddExerciseBtn"
-                                    class="btn-icon btn-secondary btn-small planner-add-btn"
-                                    title="Add exercise" aria-label="Add exercise">
-                                    <i data-lucide="plus"></i>
-                                </button>
-                            </div>
-
-                            <div id="templateRowList" class="planned-session-list template-row-list" aria-live="polite"></div>
-                        </div>
-
-                        <div class="form-actions">
-                            <button type="button" id="saveTemplateBtn" class="btn btn-primary">
-                                <i data-lucide="save"></i> Save Template
-                            </button>
-                            <button type="button" id="cancelTemplateBtn" class="btn btn-secondary">Cancel</button>
-                        </div>
-                    </div>
-                </div>
-
-            </section>
-
-            <!-- Workout Section -->
-            <section id="workoutSection" class="content-section active" role="region" aria-label="Workout">
-
-                <div id="workoutPane" class="workout-design-section active">
-                    <iframe src="workout.html" title="Workout" class="workout-design-frame"></iframe>
-                </div>
-
-
-
-            </section>
-
-            <!-- History Section -->
-            <section id="historySection" class="content-section" role="region" aria-label="Workout History">
-                <div id="historyContent" class="history-container"></div>
-            </section>
-
-            <!-- History Day Detail Modal -->
-            <div class="history-day-overlay" id="historyDayOverlay" role="dialog" aria-modal="true" aria-labelledby="historyDayModalTitle">
-                <div class="history-day-dialog">
-                    <div class="history-day-dialog-header">
-                        <span id="historyDayModalTitle"></span>
-                        <button class="history-day-close-btn" id="historyDayCloseBtn" aria-label="Close">
-                            <i data-lucide="x"></i>
-                        </button>
-                    </div>
-                    <div class="history-day-dialog-body" id="historyDayModalBody"></div>
-                    <div class="history-day-dialog-footer">
-                        <button class="btn btn-secondary btn-small" id="historyDayModalTemplateBtn">
-                            <i data-lucide="bookmark-plus"></i> Save as Template
-                        </button>
-                        <button class="btn btn-primary btn-small" id="historyDayModalOverrideBtn">
-                            <i data-lucide="link"></i> Override data
-                        </button>
-                    </div>
-                </div>
+          <div class="timeline">
+            <div class="task">
+              <div class="bullet" style="background: var(--accent);"></div>
+              <div>
+                <strong>Bench Press</strong>
+                <small>5 x 100kg · main lift</small>
+              </div>
+              <div class="time">08:30</div>
             </div>
-
-            <!-- Statistics Section -->
-            <section id="statisticsSection" class="content-section" role="region" aria-label="Statistics & Progress">
-
-                <!-- Statistics Dashboard -->
-                <div id="statsDashboard" class="stats-dashboard">
-                    <div class="kpi-grid" id="kpiGrid">
-                        <!-- KPI Cards will be injected here -->
-                    </div>
-
-                    <!-- Period Tabs: Weekly / Monthly / Overall -->
-                    <div class="stats-period-tabs" id="statsPeriodTabs">
-                        <div class="stats-period-tab-nav">
-                            <button class="stats-period-tab-btn active" data-period="weekly">
-                                <i data-lucide="calendar-days"></i> Weekly
-                            </button>
-                            <button class="stats-period-tab-btn" data-period="monthly">
-                                <i data-lucide="calendar"></i> Monthly
-                            </button>
-                            <button class="stats-period-tab-btn" data-period="overall">
-                                <i data-lucide="trending-up"></i> Overall
-                            </button>
-                        </div>
-
-                        <!-- Weekly Panel -->
-                        <div class="stats-period-panel" id="statsPanelWeekly">
-                            <!-- Week navigation bar -->
-                            <div class="week-nav-bar" id="weekNavBar">
-                                <button class="week-nav-btn" id="weekNavPrev" title="Previous week">
-                                    <i data-lucide="chevron-left"></i>
-                                </button>
-                                <span class="week-nav-label" id="weekNavLabel">Current Week</span>
-                                <button class="week-nav-btn" id="weekNavNext" title="Next week" disabled>
-                                    <i data-lucide="chevron-right"></i>
-                                </button>
-                            </div>
-                            <div class="stats-muscle-row">
-                                <!-- Sessions Per Muscle (Week) injected by JS -->
-                                <div id="muscleSessionsWeek"></div>
-
-                                <div class="section-card stats-panel-card">
-                                    <h4 class="stats-card-title stats-card-title--compact">
-                                        <i data-lucide="radar"></i> Muscle Balance
-                                    </h4>
-                                    <div class="chart-wrapper chart-wrapper-sm">
-                                        <canvas id="muscleRadarWeekChart"></canvas>
-                                    </div>
-                                </div>
-
-                                <div class="section-card stats-panel-card">
-                                    <h4 class="stats-card-title stats-card-title--compact">
-                                        <i data-lucide="radar"></i> Muscle Exercise Balance
-                                    </h4>
-                                    <div class="chart-wrapper chart-wrapper-sm">
-                                        <canvas id="muscleRadarWeekExerciseChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Monthly Panel -->
-                        <div class="stats-period-panel inactive" id="statsPanelMonthly">
-                            <!-- Month navigation bar -->
-                            <div class="week-nav-bar" id="monthNavBar">
-                                <button class="week-nav-btn" id="monthNavPrev" title="Previous month">
-                                    <i data-lucide="chevron-left"></i>
-                                </button>
-                                <span class="week-nav-label" id="monthNavLabel">Current Month</span>
-                                <button class="week-nav-btn" id="monthNavNext" title="Next month" disabled>
-                                    <i data-lucide="chevron-right"></i>
-                                </button>
-                            </div>
-                            <div class="stats-muscle-row">
-                                <!-- Sessions Per Muscle (Month) injected by JS -->
-                                <div id="muscleSessionsMonth"></div>
-
-                                <div class="section-card stats-panel-card">
-                                    <h4 class="stats-card-title stats-card-title--compact">
-                                        <i data-lucide="radar"></i> Muscle Balance
-                                    </h4>
-                                    <div class="chart-wrapper chart-wrapper-sm">
-                                        <canvas id="muscleRadarMonthChart"></canvas>
-                                    </div>
-                                </div>
-
-                                <div class="section-card stats-panel-card">
-                                    <h4 class="stats-card-title stats-card-title--compact">
-                                        <i data-lucide="radar"></i> Muscle Exercise Balance
-                                    </h4>
-                                    <div class="chart-wrapper chart-wrapper-sm">
-                                        <canvas id="muscleRadarMonthExerciseChart"></canvas>
-                                    </div>
-                                </div>
-                            </div>
-
-
-                        </div>
-
-                        <!-- Overall Panel -->
-                        <div class="stats-period-panel inactive" id="statsPanelOverall">
-                            <div class="stats-overview-grid">
-                                <div class="section-card">
-                                    <h4 class="stats-card-title">
-                                        <i data-lucide="calendar-days"></i> Training Frequency
-                                    </h4>
-                                    <div class="chart-wrapper chart-wrapper-xs">
-                                        <canvas id="weeklyFrequencyChart"></canvas>
-                                    </div>
-                                </div>
-                                <div class="section-card">
-                                    <div class="stats-card-title-row">
-                                        <h4 class="stats-card-title">
-                                            <i data-lucide="trending-up"></i> Progressive Overload
-                                        </h4>
-                                        <div id="chartControls"></div>
-                                    </div>
-                                    <div id="categoryTabsContainer">
-                                        <div class="category-tabs" id="categoryTabs">
-                                            <!-- Tabs will be dynamically populated -->
-                                        </div>
-                                        <div class="category-tab-content" id="categoryTabContent">
-                                            <!-- Tab content will be dynamically populated -->
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="section-card stats-panel-card">
-                                <div class="stats-card-title-row">
-                                    <h4 class="stats-card-title">
-                                        <i data-lucide="bar-chart-3"></i> Weekly Muscle Activity
-                                    </h4>
-                                    <div id="weeklyMuscleActivityControls"></div>
-                                </div>
-                                <div id="weeklyMuscleActivityContainer"></div>
-                            </div>
-
-
-                        </div>
-                    </div>
-                </div>
-
-                <div id="noStatsMessage" class="empty-state">
-                    <p>No workout data available</p>
-                </div>
-            </section>
-
-            <!-- Rankings Section -->
-            <section id="rankingsSection" class="content-section" role="region" aria-label="Exercise Rankings">
-                <div class="manage-view-toggle rankings-mode-toggle" role="tablist" aria-label="Ranking mode">
-                    <button id="rankingsModeExercises" class="manage-tab-btn active" type="button" role="tab"
-                        aria-selected="true">Exercises</button>
-                    <button id="rankingsModeSupersets" class="manage-tab-btn" type="button" role="tab"
-                        aria-selected="false">Supersets</button>
-                </div>
-
-                <div class="form-container rankings-filter-panel">
-                    <div id="rankingsFilterMuscle" class="filter-icon-row" aria-label="Filter by target muscle"></div>
-                    <div class="filter-icon-divider"></div>
-                    <div id="rankingsFilterPeriod" class="rankings-period-row" aria-label="Filter by time period"></div>
-                </div>
-
-                <div id="rankingsList" class="rankings-list"></div>
-            </section>
-
-            <!-- Volume Progression Modal -->
-            <div id="rankingsVolumeModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="rankingsVolumeModalTitle">
-                <div class="modal-content" style="max-width: 480px;">
-                    <div class="modal-header rankings-volume-modal-header">
-                        <h2 id="rankingsVolumeModalTitle"></h2>
-                        <button class="history-day-close-btn" id="rankingsVolumeModalCloseBtn" aria-label="Close">
-                            <i data-lucide="x"></i>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="rankings-volume-chart-container">
-                            <canvas id="rankingsVolumeChart"></canvas>
-                        </div>
-                    </div>
-                </div>
+            <div class="task">
+              <div class="bullet" style="background: var(--warning);"></div>
+              <div>
+                <strong>Incline DB Press</strong>
+                <small>3 x 10 · volume work</small>
+              </div>
+              <div class="time">09:10</div>
             </div>
-
-        </main>
-
-        <!-- Save As Template Modal -->
-        <div id="saveAsTemplateModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="saveAsTemplateModalTitle">
-            <div class="modal-content" style="max-width: 360px;">
-                <div class="modal-header">
-                    <h2 id="saveAsTemplateModalTitle">Save as Template</h2>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="saveAsTemplateNameInput">Template Name <span class="required">*</span></label>
-                        <input type="text" id="saveAsTemplateNameInput" name="saveAsTemplateNameInput" placeholder="e.g., Push Day A"
-                            maxlength="100" autocomplete="off">
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" id="saveAsTemplateConfirmBtn" class="btn btn-primary" title="Save template" aria-label="Save template">
-                            <i data-lucide="save"></i>
-                        </button>
-                        <button type="button" id="saveAsTemplateCancelBtn" class="btn btn-secondary" title="Cancel" aria-label="Cancel">
-                            <i data-lucide="x"></i>
-                        </button>
-                    </div>
-                </div>
+            <div class="task">
+              <div class="bullet" style="background: var(--danger);"></div>
+              <div>
+                <strong>Rows</strong>
+                <small>3 x 8 · accessory</small>
+              </div>
+              <div class="time">09:45</div>
             </div>
-        </div>
+          </div>
 
-        <!-- Planner Exercise Picker Modal -->
-        <div id="plannerExercisePickerModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="plannerExercisePickerTitle">
-            <div class="modal-content" style="max-width: 360px;">
-                <div class="modal-header">
-                    <h2 id="plannerExercisePickerTitle">Select Exercise</h2>
-                </div>
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="plannerExercisePickerSelect">Exercise <span class="required">*</span></label>
-                        <select id="plannerExercisePickerSelect" name="plannerExercisePickerSelect"></select>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" id="plannerExercisePickerConfirmBtn" class="btn btn-primary" title="Apply" aria-label="Apply selection">
-                            <i data-lucide="check"></i>
-                        </button>
-                        <button type="button" id="plannerExercisePickerCancelBtn" class="btn btn-secondary" title="Cancel" aria-label="Cancel selection">
-                            <i data-lucide="x"></i>
-                        </button>
-                    </div>
-                </div>
+          <div class="category">
+            <div class="tag">Upper</div>
+            <div class="tag">Strength</div>
+            <div class="tag">Recovery OK</div>
+          </div>
+        </section>
+
+        <aside class="panel right">
+          <div class="header-row">
+            <h2 style="margin:0; font-size:1.4rem;">Performance</h2>
+            <span class="chip" style="background: rgba(122,168,255,0.1); color: var(--accent-2);">+9%</span>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-box">
+              <div class="stat-label">Sessions</div>
+              <div class="stat-value">18</div>
             </div>
-        </div>
-
-        <!-- Template Exercise Picker Modal -->
-        <div id="templateExercisePickerModal" class="modal" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="templateExercisePickerTitle">
-            <div class="modal-content template-picker-content">
-                <div class="modal-header template-picker-header">
-                    <h2 id="templateExercisePickerTitle">Choose Exercise</h2>
-                    <button type="button" id="templateExercisePickerCloseBtn" class="template-picker-close-btn" title="Close" aria-label="Close">
-                        <i data-lucide="x"></i>
-                    </button>
-                </div>
-                <div class="modal-body">
-                    <div id="templateExercisePickerEquipmentFilters" class="filter-icon-row" aria-label="Filter by equipment"></div>
-                    <div class="filter-icon-divider"></div>
-                    <div id="templateExercisePickerMuscleFilters" class="filter-icon-row" aria-label="Filter by target muscle"></div>
-                    <div id="templateExercisePickerGrid" class="template-picker-grid" aria-live="polite"></div>
-                </div>
+            <div class="stat-box">
+              <div class="stat-label">Volume</div>
+              <div class="stat-value">14k</div>
             </div>
-        </div>
+            <div class="stat-box">
+              <div class="stat-label">PRs</div>
+              <div class="stat-value">4</div>
+            </div>
+            <div class="stat-box">
+              <div class="stat-label">Streak</div>
+              <div class="stat-value">19</div>
+            </div>
+          </div>
 
-        <!-- Toast Notifications -->
-        <div id="toastContainer" class="toast-container" role="region" aria-live="polite" aria-label="Notifications">
-        </div>
+          <div class="progress">
+            <div style="font-weight:800;">Weekly target</div>
+            <div class="track"><span></span></div>
+            <div style="margin-top:10px; color: var(--muted); font-weight:700;">76% of target reached</div>
+          </div>
+        </aside>
+      </div>
     </div>
-
-    <!-- Chart.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@2.0.1/dist/chartjs-plugin-zoom.min.js"></script>
-    <script
-        src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
-
-    <!-- Application Scripts -->
-    <script type="module" src="js/app.js"></script>
-    <script>
-        // Service Worker registration
-        if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('./sw.js')
-                    .catch(err => console.warn('SW registration failed:', err));
-            });
-        }
-
-        // Display cache version from sw.js
-        fetch('./sw.js')
-            .then(res => res.text())
-            .then(text => {
-                const match = text.match(/CACHE_VERSION\s*=\s*['"]([^'"]+)['"]/);
-                const label = document.getElementById('cacheVersionLabel');
-                const deployId = DeployEnv.currentDeployId();
-                if (match && label) label.textContent = match[1] + (deployId ? ` · preview:${deployId}` : '');
-            })
-            .catch(err => console.warn('Failed to read cache version:', err));
-
-        // PWA install
-        (function () {
-            var deferredPrompt = null;
-
-            var isStandalone = window.matchMedia('(display-mode: standalone)').matches
-                || window.navigator.standalone === true;
-            if (isStandalone) return;
-
-            var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-
-            // iOS: show banner with manual instructions
-            if (isIOS) {
-                window.addEventListener('load', function () {
-                    var banner = document.createElement('div');
-                    banner.id = 'pwa-install-banner';
-                    banner.innerHTML = '<span>📲 Tap Share → "Add to Home Screen" to install</span><button id="pwa-dismiss-btn">✕</button>';
-                    document.body.appendChild(banner);
-                    document.getElementById('pwa-dismiss-btn').onclick = function () { banner.remove(); };
-                }, { once: true });
-                return;
-            }
-
-            // Android/Chrome: capture prompt, show install button in header
-            window.addEventListener('beforeinstallprompt', function (e) {
-                // Do NOT call e.preventDefault() — let Chrome show its native mini-bar too
-                deferredPrompt = e;
-                var btn = document.getElementById('pwaInstallBtn');
-                if (btn) btn.style.display = '';
-            });
-
-            window.addEventListener('appinstalled', function () {
-                deferredPrompt = null;
-                var btn = document.getElementById('pwaInstallBtn');
-                if (btn) btn.style.display = 'none';
-            });
-
-            document.addEventListener('click', function (e) {
-                if (e.target.closest('#pwaInstallBtn') && deferredPrompt) {
-                    deferredPrompt.prompt();
-                    deferredPrompt.userChoice.then(function () { deferredPrompt = null; });
-                }
-            });
-        })();
-    </script>
-</body>
-
+  </body>
 </html>

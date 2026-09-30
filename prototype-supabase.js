@@ -2,6 +2,7 @@
 
 import { SupabaseAPI } from './js/supabase-api.js';
 import { SupabaseAuth } from './js/supabase-auth.js';
+import { getSupabaseClient } from './js/supabase-client.js';
 
 const DAY_MS = 86400000;
 const TARGET_WEEKLY_SESSIONS = 4;
@@ -11,7 +12,8 @@ const elements = {
     user: document.getElementById('supabaseUser'),
     recent: document.getElementById('supabaseRecent'),
     email: document.getElementById('supabaseEmail'),
-    authButton: document.getElementById('supabaseMagicLink'),
+    password: document.getElementById('supabasePassword'),
+    authButton: document.getElementById('supabaseSignIn'),
     exerciseCount: document.getElementById('supabaseExerciseCount'),
     workoutCount: document.getElementById('supabaseWorkoutCount'),
     latestDate: document.getElementById('supabaseLatestDate')
@@ -417,14 +419,18 @@ function render(model) {
     if (prototype === 'insight-lab') renderInsightLab(model);
 }
 
-async function requestMagicLink() {
+async function signInWithPassword() {
     const email = elements.email?.value.trim();
-    if (!email) {
-        setStatus('Enter your email address first.', true);
+    const password = elements.password?.value;
+    if (!email || !password) {
+        setStatus('Enter your email and password first.', true);
         return;
     }
-    await SupabaseAuth.requestMagicLink(email);
-    setStatus('Magic link sent. Open it on this device to load your data.');
+    setStatus('Signing in…');
+    const client = await getSupabaseClient();
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+    location.reload();
 }
 
 async function handleAuthAction() {
@@ -434,7 +440,7 @@ async function handleAuthAction() {
             location.reload();
             return;
         }
-        await requestMagicLink();
+        await signInWithPassword();
     } catch (error) {
         console.error('Prototype authentication failed:', error);
         setStatus(error.message || 'Authentication failed.', true);
@@ -443,17 +449,21 @@ async function handleAuthAction() {
 
 async function init() {
     elements.authButton?.addEventListener('click', handleAuthAction);
+    elements.password?.addEventListener('keydown', event => {
+        if (event.key === 'Enter') handleAuthAction();
+    });
     try {
         setStatus('Checking Supabase session…');
         await SupabaseAuth.initialize();
         if (!SupabaseAuth.isAuthenticated()) {
             elements.user.textContent = 'Not signed in';
-            setStatus('Sign in with a magic link to load your Supabase data.');
+            setStatus('Sign in with your email and password to load your Supabase data.');
             return;
         }
 
         elements.user.textContent = SupabaseAuth.session.user.email || 'Authenticated';
         elements.email.style.display = 'none';
+        elements.password.style.display = 'none';
         elements.authButton.textContent = 'Sign out';
         setStatus('Loading complete workout history from Supabase…');
         const [{ exercises }, summary] = await Promise.all([

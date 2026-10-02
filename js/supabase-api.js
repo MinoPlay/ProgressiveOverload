@@ -133,24 +133,6 @@ export const SupabaseAPI = {
         await this._deleteIds('exercises', userId, ids);
     },
 
-    _monthBounds(date) {
-        const year = date.getFullYear();
-        const month = date.getMonth();
-        const start = `${year}-${String(month + 1).padStart(2, '0')}-01`;
-        const next = new Date(year, month + 1, 1);
-        const end = `${next.getFullYear()}-${String(next.getMonth() + 1).padStart(2, '0')}-01`;
-        return { start, end };
-    },
-
-    async getWorkouts(date) {
-        const { start, end } = this._monthBounds(date);
-        const workouts = await this.getWorkoutsInRange(
-            new Date(`${start}T00:00:00`),
-            new Date(new Date(`${end}T00:00:00`).getTime() - 86400000)
-        );
-        return { workouts };
-    },
-
     /**
      * Insert or update the given workouts only.
      * @param {array} workouts
@@ -181,6 +163,21 @@ export const SupabaseAPI = {
                 .eq('user_id', userId)
                 .gte('workout_date', start)
                 .lte('workout_date', end),
+            ['workout_date', 'sequence', 'id']
+        );
+        return rows.map(workoutFromRow);
+    },
+
+    /**
+     * Fetch every workout for the signed-in user.
+     * @returns {Promise<array>} Domain workout objects ordered by date and sequence
+     */
+    async getAllWorkouts() {
+        const userId = SupabaseAuth.getUserId();
+        const rows = await this._selectAll(
+            'workouts',
+            '*',
+            query => query.eq('user_id', userId),
             ['workout_date', 'sequence', 'id']
         );
         return rows.map(workoutFromRow);
@@ -218,32 +215,5 @@ export const SupabaseAPI = {
      */
     async deleteSessionTemplates(ids) {
         await this._deleteIds('session_templates', SupabaseAuth.getUserId(), ids);
-    },
-
-    async getStatsSummary() {
-        const userId = SupabaseAuth.getUserId();
-        const rows = await this._selectAll(
-            'workouts',
-            '*',
-            query => query.eq('user_id', userId),
-            ['workout_date', 'sequence', 'id']
-        );
-        const allWorkouts = rows.map(workoutFromRow);
-        return {
-            content: {
-                generated: new Date().toISOString(),
-                workouts: allWorkouts.map(workout => {
-                    const entry = {
-                        e: workout.exerciseId,
-                        d: workout.date,
-                        r: workout.reps,
-                        w: workout.weight,
-                        seq: workout.sequence
-                    };
-                    if (workout.supersetGroupId) entry.g = workout.supersetGroupId;
-                    return entry;
-                })
-            }
-        };
     }
 };

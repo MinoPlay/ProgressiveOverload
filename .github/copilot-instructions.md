@@ -62,7 +62,7 @@ Detailed context for each feature lives in `.github/features/`. Reference the re
 
 | File | When to reference |
 |---|---|
-| [`features/workout-logger.md`](features/workout-logger.md) | Anything in `workout.html` or `js/workouts.js` — exercise cards, set rows, planner session, iframe submit flow |
+| [`features/workout-logger.md`](features/workout-logger.md) | Anything in `workout.html` — exercise cards, set rows, planner session, iframe submit flow |
 | [`features/exercise-management.md`](features/exercise-management.md) | Anything in `js/exercises.js` — CRUD, equipment types, muscle groups, toggle-chip filters |
 | [`features/session-templates.md`](features/session-templates.md) | Anything in `js/templates.js` — template editor, loading templates into the planner |
 | [`features/workout-history.md`](features/workout-history.md) | Anything in `js/history.js` — history rendering, week grouping, day modal |

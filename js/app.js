@@ -3,7 +3,6 @@
 
 import { Storage } from './storage.js';
 import { Exercises } from './exercises.js';
-import { Workouts } from './workouts.js';
 import { Charts } from './charts.js';
 import { History } from './history.js';
 import { Rankings } from './rankings.js';
@@ -176,7 +175,6 @@ const App = {
             console.log('Initializing UI modules...');
             // Initialize always-needed modules
             Exercises.init();
-            Workouts.init();
             Templates.init();
             // Initialize whichever tab is currently active (History/Statistics are lazy)
             this.initActiveTab?.();
@@ -423,7 +421,6 @@ function escapeHtml(str) {
 const IframeBridge = {
     frames: [],
     _allWorkoutsPromise: null,
-    _summaryStale: false,
 
     init() {
         const workoutFrame = document.querySelector('#workoutPane iframe');
@@ -443,9 +440,6 @@ const IframeBridge = {
         window.addEventListener('exercisesUpdated', () => this.broadcastExercises());
         window.addEventListener('templatesUpdated', () => this.broadcastTemplates());
         window.addEventListener('workoutsUpdated', () => {
-            // The file-backed stats summary is regenerated asynchronously after
-            // a change; use fresh range fetches from now on.
-            this._summaryStale = true;
             this.broadcastWorkouts();
             this.broadcastWeekWorkouts();
             this.broadcastHistoryWorkouts();
@@ -473,12 +467,12 @@ const IframeBridge = {
     },
 
     sendTemplates(frame) {
-        const templates = Storage.sessionTemplates || [];
+        const templates = Storage.getSessionTemplates();
         frame.contentWindow?.postMessage({ type: 'po-templates', templates }, '*');
     },
 
     sendWorkouts(frame) {
-        const workouts = Storage.currentMonthWorkouts || [];
+        const workouts = Storage.getCachedWorkouts();
         frame.contentWindow?.postMessage({ type: 'po-workouts', workouts }, '*');
     },
 
@@ -488,19 +482,15 @@ const IframeBridge = {
     },
 
     /**
-     * Load every workout once, preferring the compact stats-summary.json — a
-     * single request for all-time data — over fetching each monthly file. The
-     * promise is cached for the page session so the history and week sends share
-     * one fetch instead of listing + fetching monthly files several times.
-     * Resolves to null when no summary exists yet (or after any workout change,
-     * since the summary is regenerated asynchronously) so callers fall back to a fresh range fetch.
+     * Load every workout once through Storage. The promise is cached while in flight so
+     * the history and week sends share one fetch.
+     * Resolves to null on error so callers fall back to a fresh range fetch.
      * Only the in-flight fetch is shared; the result is never kept.
      * @returns {Promise<array|null>}
      */
     loadAllWorkouts() {
-        if (this._summaryStale) return Promise.resolve(null);
         if (!this._allWorkoutsPromise) {
-            const promise = Storage.loadStatsSummaryWorkouts().catch(() => null);
+            const promise = Storage.getAllWorkouts().catch(() => null);
             this._allWorkoutsPromise = promise;
             promise.then(() => {
                 if (this._allWorkoutsPromise === promise) this._allWorkoutsPromise = null;
@@ -513,8 +503,7 @@ const IframeBridge = {
      * Send a broad window of workout history (last 12 months) to a single iframe.
      * Used by the workout tab to render the per-exercise volume bars and to
      * preload reps/weight from the most recent session even when the exercise
-     * was last performed in an earlier month. Sourced from stats-summary.json
-     * (one request) when available, falling back to a monthly range fetch.
+     * was last performed in an earlier month.
      */
     async sendHistoryWorkouts(frame) {
         try {
@@ -523,9 +512,8 @@ const IframeBridge = {
             const all = await this.loadAllWorkouts();
             let workouts;
             if (all) {
-                // The current month is delivered separately via po-workouts (with
-                // ids); summary records have no id, so excluding the current month
-                // here avoids the same sets being counted twice in the volume bars.
+                // The current month is delivered separately via po-workouts, so
+                // excluding it here avoids the same sets being counted twice in the volume bars.
                 const currentMonthStart = this._dateStr(new Date(now.getFullYear(), now.getMonth(), 1));
                 const startStr = this._dateStr(start);
                 workouts = all.filter(w => w.date >= startStr && w.date < currentMonthStart);

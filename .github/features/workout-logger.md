@@ -4,8 +4,8 @@
 The primary UI for recording workout sets. `workout.html` is embedded as a full-height `<iframe>` inside `index.html`'s `workoutSection`. It has two tabs: **Plan** (build a session) and **Log** (quick single-set form, legacy).
 
 ## Key Files
-- `workout.html` — standalone page; runs `js/workouts.js` directly
-- `js/workouts.js` — `Workouts` singleton; owns all planner logic
+- `workout.html` — standalone iframe page; owns the live planner/logger UI and posts saves to the parent
+- `js/app.js` — parent `IframeBridge`; forwards Storage data and handles `po-save-workouts`
 
 ## Data Model
 
@@ -57,22 +57,18 @@ The primary UI for recording workout sets. `workout.html` is embedded as a full-
 }
 ```
 
-## Key Methods (`Workouts`)
+## Key Methods (`workout.html`)
 | Method | Description |
 |---|---|
-| `init()` | Wire up events, populate dropdowns, restore saved session |
-| `initializePlanner()` | Restore `plannedSession` from `localStorage` or start fresh |
-| `renderPlannedSession()` | Re-render all exercise cards in `#plannedSessionList` |
-| `handlePlannedSubmit()` | Validate and call `Storage.addWorkoutsBatch`, then post `po-workouts-saved` to parent |
-| `loadTemplateIntoPlanner(id)` | Replace current session rows with a template's exercises |
-| `handleSaveAsTemplate()` | Open modal → `Templates.saveTemplate()` from current planner rows |
-| `openPlannerExercisePicker(ctx)` | Open exercise picker modal; `ctx.mode` is `'add'` or `'replace'` |
-| `normalizePlannedRow(row, index)` | Ensure a row has all required fields with defaults |
+| `serializeDesign1Cards()` | Read the card DOM into the persisted active-session shape |
+| `applySavedDesign1State()` | Restore the active session from `localStorage` |
+| `buildExerciseCard()` | Render one planned exercise card |
+| Submit handlers | Validate completed sets and post `po-save-workouts` to the parent |
 
 ## Integration Points
 - **IframeBridge** — parent sends `po-exercises`, `po-templates`, `po-workouts` on load; workout.html sends `po-save-workouts` on submit
 - **Storage** — `addWorkoutsBatch()` is the only write path from this feature
-- **Templates** — planner loads templates via `Storage.getSessionTemplates()`
+- **Templates** — parent sends templates via `po-templates`; the iframe applies selected templates inside its own DOM
 - **Events dispatched** — `workoutsUpdated` (via parent after save)
 
 ## Rules & Constraints

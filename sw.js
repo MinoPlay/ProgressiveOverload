@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v73t';
+const CACHE_VERSION = 'v73v';
 importScripts('./js/deploy-env.js');
 
 // Main: po-<kind>-<v>; branch preview: po-<slug>-<kind>-<v> (see js/deploy-env.js).
@@ -23,12 +23,12 @@ const STATIC_SHELL = [
   './js/supabase-client.js',
   './js/supabase-records.js',
   './js/exercises.js',
-  './js/workouts.js',
   './js/templates.js',
   './js/charts.js',
   './js/chart-helpers.js',
   './js/history.js',
   './js/rankings.js',
+  './js/set-metrics.js',
   './js/utils.js',
   './js/deploy-env.js',
   './progressive-overload/exercises.json',

@@ -3,6 +3,7 @@
 
 import { Storage } from './storage.js';
 import { Exercises } from './exercises.js';
+import { setVolume } from './set-metrics.js';
 
 const PERIOD_OPTIONS = [
     { value: '1m', label: '1M', months: 1 },
@@ -146,14 +147,12 @@ export const Rankings = {
             container.appendChild(loading);
 
             try {
-                let workouts = await Storage.loadStatsSummaryWorkouts();
+                let workouts = await Storage.getAllWorkouts();
                 if (!workouts) {
                     const endDate = new Date();
                     const startDate = new Date();
                     startDate.setFullYear(startDate.getFullYear() - 10);
                     workouts = await Storage.getWorkoutsInRange(startDate, endDate);
-                    // Bootstrap stats-summary.json so future opens are a single API call
-                    Storage.generateAndSaveStatsSummary();
                 }
                 this._workouts = workouts || [];
             } catch (error) {
@@ -375,7 +374,7 @@ export const Rankings = {
 
         (this._workouts || []).forEach((workout) => {
             if (workout.exerciseId !== exerciseId) return;
-            const value = isWeighted && workout.weight ? workout.reps * workout.weight : workout.reps;
+            const value = setVolume(workout, exercise);
             totalsByDate.set(workout.date, (totalsByDate.get(workout.date) || 0) + value);
         });
 
@@ -404,9 +403,7 @@ export const Rankings = {
             if (!occurrenceKeys.has(key)) return;
 
             const exercise = exerciseById.get(workout.exerciseId);
-            const value = exercise && exercise.requiresWeight && workout.weight
-                ? workout.reps * workout.weight
-                : workout.reps;
+            const value = setVolume(workout, exercise);
             totalsByDate.set(workout.date, (totalsByDate.get(workout.date) || 0) + value);
         });
 

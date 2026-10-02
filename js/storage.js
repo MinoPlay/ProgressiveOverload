@@ -1,28 +1,42 @@
 // Storage Module
-// Central data management layer for exercises and workouts
+// Central data management layer for exercises and workouts.
 
-import { SupabaseAPI } from './supabase-api.js';
 import { CONFIG } from './config.js';
 import { generateId, parseDate } from './utils.js';
 
 export const Storage = {
     // In-memory cache
     exercises: [],
-    currentMonthWorkouts: [],
+    workouts: [],
     sessionTemplates: [],
+    _adapter: null,
+    _emit: null,
     _refreshPromise: null,
     _pendingWrites: 0,
 
     /**
-     * Initialize storage by loading exercises and current month workouts
+     * Initialize storage by loading exercises, cached workouts and templates.
+     * @param {object} options
+     * @param {object} options.adapter - Persistence adapter
+     * @param {function} options.emit - Event emitter callback
      * @returns {Promise<void>}
      */
-    async initialize() {
-        await SupabaseAPI.initializeUser();
+    async initialize({ adapter, emit } = {}) {
+        this._adapter = adapter || await this._loadDefaultAdapter();
+        this._emit = emit || (eventName => window.dispatchEvent(new CustomEvent(eventName)));
+        this.exercises = [];
+        this.workouts = [];
+        this.sessionTemplates = [];
+        await this._adapter.initializeUser();
         await this.loadExercises();
-        await this.loadCurrentMonthWorkouts();
+        await this._loadCurrentWorkoutWindow();
         await this.migrateSequenceNumbers();
         await this.loadSessionTemplates();
+    },
+
+    async _loadDefaultAdapter() {
+        const { SupabaseAPI } = await import('./supabase-api.js');
+        return SupabaseAPI;
     },
 
     /**
@@ -36,7 +50,7 @@ export const Storage = {
     },
 
     /**
-     * Reload exercises, current month workouts and templates; concurrent calls share one fetch.
+     * Reload exercises, cached workouts and templates; concurrent calls share one fetch.
      * Fires the matching *Updated events only for data that actually changed.
      * @returns {Promise<void>}
      */
@@ -45,22 +59,22 @@ export const Storage = {
             this._refreshPromise = (async () => {
                 const before = {
                     exercisesUpdated: JSON.stringify(this.exercises),
-                    workoutsUpdated: JSON.stringify(this.currentMonthWorkouts),
+                    workoutsUpdated: JSON.stringify(this.workouts),
                     templatesUpdated: JSON.stringify(this.sessionTemplates)
                 };
                 await Promise.all([
                     this.loadExercises(),
-                    this.loadCurrentMonthWorkouts(),
+                    this._loadCurrentWorkoutWindow(),
                     this.loadSessionTemplates()
                 ]);
                 const after = {
                     exercisesUpdated: JSON.stringify(this.exercises),
-                    workoutsUpdated: JSON.stringify(this.currentMonthWorkouts),
+                    workoutsUpdated: JSON.stringify(this.workouts),
                     templatesUpdated: JSON.stringify(this.sessionTemplates)
                 };
                 Object.keys(before)
                     .filter(eventName => before[eventName] !== after[eventName])
-                    .forEach(eventName => window.dispatchEvent(new CustomEvent(eventName)));
+                    .forEach(eventName => this._emit(eventName));
             })().finally(() => {
                 this._refreshPromise = null;
             });
@@ -90,8 +104,8 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async _persistExercises(changed = [], removedIds = []) {
-        if (removedIds.length) await SupabaseAPI.deleteExercises(removedIds);
-        if (changed.length) await SupabaseAPI.upsertExercises(changed);
+        if (removedIds.length) await this._adapter.deleteExercises(removedIds);
+        if (changed.length) await this._adapter.upsertExercises(changed);
     },
 
     /**
@@ -101,8 +115,8 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async _persistWorkouts(changed = [], removedIds = []) {
-        if (removedIds.length) await SupabaseAPI.deleteWorkouts(removedIds);
-        if (changed.length) await SupabaseAPI.upsertWorkouts(changed);
+        if (removedIds.length) await this._adapter.deleteWorkouts(removedIds);
+        if (changed.length) await this._adapter.upsertWorkouts(changed);
     },
 
     /**
@@ -112,8 +126,8 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async _persistSessionTemplates(changed = [], removedIds = []) {
-        if (removedIds.length) await SupabaseAPI.deleteSessionTemplates(removedIds);
-        if (changed.length) await SupabaseAPI.upsertSessionTemplates(changed);
+        if (removedIds.length) await this._adapter.deleteSessionTemplates(removedIds);
+        if (changed.length) await this._adapter.upsertSessionTemplates(changed);
     },
 
     /**
@@ -125,7 +139,7 @@ export const Storage = {
 
         // Group workouts by date
         const workoutsByDate = new Map();
-        for (const workout of this.currentMonthWorkouts) {
+        for (const workout of this.workouts) {
             if (!workoutsByDate.has(workout.date)) {
                 workoutsByDate.set(workout.date, []);
             }
@@ -157,7 +171,7 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async loadExercises() {
-        const data = await SupabaseAPI.getExercises();
+        const data = await this._adapter.getExercises();
         this.exercises = data.exercises;
 
         // Initialize with default exercises if empty
@@ -184,13 +198,50 @@ export const Storage = {
     },
 
     /**
-     * Load workouts for current month
+     * Load workouts for the current cache window.
      * @returns {Promise<void>}
      */
-    async loadCurrentMonthWorkouts() {
+    async _loadCurrentWorkoutWindow() {
+        const { start, end } = this._cacheWindow();
+        this.workouts = await this._adapter.getWorkoutsInRange(start, end);
+    },
+
+    /**
+     * Date range held in the in-memory workout cache (the current month).
+     * @returns {{start: Date, end: Date}}
+     */
+    _cacheWindow() {
         const now = new Date();
-        const data = await SupabaseAPI.getWorkouts(now);
-        this.currentMonthWorkouts = data.workouts;
+        return {
+            start: new Date(now.getFullYear(), now.getMonth(), 1),
+            end: new Date(now.getFullYear(), now.getMonth() + 1, 0)
+        };
+    },
+
+    /**
+     * Whether a date falls inside the cached workout window.
+     * @param {string} date - Date (YYYY-MM-DD)
+     * @returns {boolean}
+     */
+    _isCached(date) {
+        const workoutDate = parseDate(date);
+        const { start, end } = this._cacheWindow();
+        return !!workoutDate && workoutDate >= start && workoutDate <= end;
+    },
+
+    /**
+     * Workouts logged on one date: cached objects inside the window, fetched otherwise.
+     * @param {string} date - Date (YYYY-MM-DD)
+     * @returns {Promise<array>}
+     */
+    async _workoutsOnDate(date) {
+        const workoutDate = parseDate(date);
+        if (!workoutDate) {
+            throw new Error('Invalid workout date');
+        }
+        return this._isCached(date)
+            ? this.workouts.filter(w => w.date === date)
+            : await this.getWorkoutsInRange(workoutDate, workoutDate);
     },
 
     /**
@@ -199,6 +250,14 @@ export const Storage = {
      */
     getExercises() {
         return this.exercises;
+    },
+
+    /**
+     * Get workouts currently cached in memory.
+     * @returns {array} Array of workout objects
+     */
+    getCachedWorkouts() {
+        return this.workouts;
     },
 
     /**
@@ -216,30 +275,32 @@ export const Storage = {
      * @returns {Promise<object>} Added exercise
      */
     async addExercise(exercise) {
-        // Validate name uniqueness
-        if (this.exercises.some(ex => ex.name.toLowerCase() === exercise.name.toLowerCase())) {
-            throw new Error('An exercise with this name already exists');
-        }
-        const trimmedName = exercise.name.trim();
-        if (this.exercises.some(ex => ex.name.toLowerCase() === trimmedName.toLowerCase())) {
-            throw new Error('An exercise with this name already exists');
-        }
+        return this._write(async () => {
+            // Validate name uniqueness
+            if (this.exercises.some(ex => ex.name.toLowerCase() === exercise.name.toLowerCase())) {
+                throw new Error('An exercise with this name already exists');
+            }
+            const trimmedName = exercise.name.trim();
+            if (this.exercises.some(ex => ex.name.toLowerCase() === trimmedName.toLowerCase())) {
+                throw new Error('An exercise with this name already exists');
+            }
 
-        const requiresWeight = CONFIG.equipmentTypes[exercise.equipmentType]?.requiresWeight ?? true;
+            const requiresWeight = CONFIG.equipmentTypes[exercise.equipmentType]?.requiresWeight ?? true;
 
-        const newExercise = {
-            id: generateId(),
-            name: trimmedName,
-            equipmentType: exercise.equipmentType,
-            muscle: exercise.muscle,
-            requiresWeight
-        };
+            const newExercise = {
+                id: generateId(),
+                name: trimmedName,
+                equipmentType: exercise.equipmentType,
+                muscle: exercise.muscle,
+                requiresWeight
+            };
 
-        this.exercises.push(newExercise);
+            this.exercises.push(newExercise);
 
-        await this._persistExercises([newExercise]);
+            await this._persistExercises([newExercise]);
 
-        return newExercise;
+            return newExercise;
+        });
     },
 
     /**
@@ -249,37 +310,39 @@ export const Storage = {
      * @returns {Promise<object>} Updated exercise
      */
     async updateExercise(id, updates) {
-        const index = this.exercises.findIndex(ex => ex.id === id);
-        if (index === -1) {
-            throw new Error('Exercise not found');
-        }
-
-        // Check name uniqueness if name is being updated
-        if (updates.name) {
-            const trimmedName = updates.name.trim();
-            if (trimmedName !== this.exercises[index].name) {
-                if (this.exercises.some(ex => ex.id !== id && ex.name.toLowerCase() === trimmedName.toLowerCase())) {
-                    throw new Error('An exercise with this name already exists');
-                }
+        return this._write(async () => {
+            const index = this.exercises.findIndex(ex => ex.id === id);
+            if (index === -1) {
+                throw new Error('Exercise not found');
             }
-            updates.name = trimmedName;
-        }
 
-        // Determine requiresWeight based on equipment type
-        if (updates.equipmentType) {
-            updates.requiresWeight = CONFIG.equipmentTypes[updates.equipmentType]?.requiresWeight ?? true;
-        }
+            // Check name uniqueness if name is being updated
+            if (updates.name) {
+                const trimmedName = updates.name.trim();
+                if (trimmedName !== this.exercises[index].name) {
+                    if (this.exercises.some(ex => ex.id !== id && ex.name.toLowerCase() === trimmedName.toLowerCase())) {
+                        throw new Error('An exercise with this name already exists');
+                    }
+                }
+                updates.name = trimmedName;
+            }
 
-        // Update exercise
-        this.exercises[index] = {
-            ...this.exercises[index],
-            ...updates,
-            updatedAt: new Date().toISOString()
-        };
+            // Determine requiresWeight based on equipment type
+            if (updates.equipmentType) {
+                updates.requiresWeight = CONFIG.equipmentTypes[updates.equipmentType]?.requiresWeight ?? true;
+            }
 
-        await this._persistExercises([this.exercises[index]]);
+            // Update exercise
+            this.exercises[index] = {
+                ...this.exercises[index],
+                ...updates,
+                updatedAt: new Date().toISOString()
+            };
 
-        return this.exercises[index];
+            await this._persistExercises([this.exercises[index]]);
+
+            return this.exercises[index];
+        });
     },
 
     /**
@@ -288,19 +351,21 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async deleteExercise(id) {
-        const index = this.exercises.findIndex(ex => ex.id === id);
-        if (index === -1) {
-            throw new Error('Exercise not found');
-        }
+        return this._write(async () => {
+            const index = this.exercises.findIndex(ex => ex.id === id);
+            if (index === -1) {
+                throw new Error('Exercise not found');
+            }
 
-        const [removedExercise] = this.exercises.splice(index, 1);
+            const [removedExercise] = this.exercises.splice(index, 1);
 
-        try {
-            await this._persistExercises([], [removedExercise.id]);
-        } catch (error) {
-            this.exercises.splice(index, 0, removedExercise);
-            throw error;
-        }
+            try {
+                await this._persistExercises([], [removedExercise.id]);
+            } catch (error) {
+                this.exercises.splice(index, 0, removedExercise);
+                throw error;
+            }
+        });
     },
 
     /**
@@ -309,50 +374,20 @@ export const Storage = {
      * @returns {Promise<object>} Added workout
      */
     async addWorkout(workout) {
-        const workoutDate = parseDate(workout.date);
-        if (!workoutDate) {
-            throw new Error('Invalid workout date');
-        }
+        return this._write(async () => {
+            const sameDateWorkouts = await this._workoutsOnDate(workout.date);
+            const newWorkout = this.buildWorkoutRecord(workout, sameDateWorkouts.length + 1);
 
-        const now = new Date();
-        const isSameMonth = workoutDate.getMonth() === now.getMonth() &&
-            workoutDate.getFullYear() === now.getFullYear();
-
-        let newWorkout;
-
-        // If workout is for current month, use cached data
-        if (isSameMonth) {
-            // Calculate sequence number for this date
-            const sameDateWorkouts = this.currentMonthWorkouts.filter(w => w.date === workout.date);
-            const sequence = sameDateWorkouts.length + 1;
-
-            newWorkout = this.buildWorkoutRecord(workout, sequence);
-
-            this.currentMonthWorkouts.push(newWorkout);
-
+            if (this._isCached(workout.date)) this.workouts.push(newWorkout);
             await this._persistWorkouts([newWorkout]);
-            this.generateAndSaveStatsSummary();
-        } else {
-            // Load different month, add workout, save
-            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
 
-            // Calculate sequence number for this date
-            const sameDateWorkouts = monthData.workouts.filter(w => w.date === workout.date);
-            const sequence = sameDateWorkouts.length + 1;
+            // Gather all sets for this exercise on this date to build complete lastSets
+            const allSetsForExercise = [...sameDateWorkouts, newWorkout]
+                .filter(w => w.exerciseId === newWorkout.exerciseId);
+            await this._syncExerciseLastSets(allSetsForExercise);
 
-            newWorkout = this.buildWorkoutRecord(workout, sequence);
-
-            monthData.workouts.push(newWorkout);
-            await this._persistWorkouts([newWorkout]);
-            this.generateAndSaveStatsSummary();
-        }
-
-        // Gather all sets for this exercise on this date to build complete lastSets
-        const allSetsForExercise = this.currentMonthWorkouts
-            .filter(w => w.exerciseId === newWorkout.exerciseId && w.date === newWorkout.date);
-        await this._syncExerciseLastSets(allSetsForExercise);
-
-        return newWorkout;
+            return newWorkout;
+        });
     },
 
     /**
@@ -361,53 +396,31 @@ export const Storage = {
      * @returns {Promise<array>} Added workouts
      */
     async addWorkoutsBatch(workouts) {
-        if (!Array.isArray(workouts) || workouts.length === 0) {
-            throw new Error('No workouts to save');
-        }
+        return this._write(async () => {
+            if (!Array.isArray(workouts) || workouts.length === 0) {
+                throw new Error('No workouts to save');
+            }
 
-        const targetDate = workouts[0].date;
-        if (!targetDate) {
-            throw new Error('Invalid workout date');
-        }
+            const targetDate = workouts[0].date;
+            if (!targetDate) {
+                throw new Error('Invalid workout date');
+            }
 
-        const differentDate = workouts.some(entry => entry.date !== targetDate);
-        if (differentDate) {
-            throw new Error('Batch submit requires a single date');
-        }
+            const differentDate = workouts.some(entry => entry.date !== targetDate);
+            if (differentDate) {
+                throw new Error('Batch submit requires a single date');
+            }
 
-        const workoutDate = parseDate(targetDate);
-        if (!workoutDate) {
-            throw new Error('Invalid workout date');
-        }
-
-        const now = new Date();
-        const isSameMonth = workoutDate.getMonth() === now.getMonth() &&
-            workoutDate.getFullYear() === now.getFullYear();
-
-        let newWorkouts;
-
-        if (isSameMonth) {
-            const sameDateWorkouts = this.currentMonthWorkouts.filter(w => w.date === targetDate);
+            const sameDateWorkouts = await this._workoutsOnDate(targetDate);
             const startSequence = sameDateWorkouts.length + 1;
-            newWorkouts = workouts.map((entry, index) => this.buildWorkoutRecord(entry, startSequence + index));
+            const newWorkouts = workouts.map((entry, index) => this.buildWorkoutRecord(entry, startSequence + index));
 
-            this.currentMonthWorkouts.push(...newWorkouts);
-
+            if (this._isCached(targetDate)) this.workouts.push(...newWorkouts);
             await this._persistWorkouts(newWorkouts);
-            this.generateAndSaveStatsSummary();
-        } else {
-            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
-            const sameDateWorkouts = monthData.workouts.filter(w => w.date === targetDate);
-            const startSequence = sameDateWorkouts.length + 1;
-            newWorkouts = workouts.map((entry, index) => this.buildWorkoutRecord(entry, startSequence + index));
 
-            monthData.workouts.push(...newWorkouts);
-            await this._persistWorkouts(newWorkouts);
-            this.generateAndSaveStatsSummary();
-        }
-
-        await this._syncExerciseLastSets(newWorkouts);
-        return newWorkouts;
+            await this._syncExerciseLastSets(newWorkouts);
+            return newWorkouts;
+        });
     },
 
     /**
@@ -486,164 +499,7 @@ export const Storage = {
      * @returns {Promise<array>} Array of workout objects
      */
     async getWorkoutsInRange(startDate, endDate) {
-        return await SupabaseAPI.getWorkoutsInRange(startDate, endDate);
-    },
-
-    /**
-     * Get workouts for specific exercise
-     * @param {string} exerciseId - Exercise ID
-     * @param {Date} startDate - Start date
-     * @param {Date} endDate - End date
-     * @returns {Promise<array>} Array of workout objects
-     */
-    async getWorkoutsForExercise(exerciseId, startDate, endDate) {
-        const allWorkouts = await this.getWorkoutsInRange(startDate, endDate);
-        return allWorkouts.filter(w => w.exerciseId === exerciseId)
-            .sort((a, b) => new Date(a.date) - new Date(b.date));
-    },
-
-    /**
-     * Get recent workouts (last N, deduplicated by exercise)
-     * @returns {array} Array of recent workouts (one per unique exercise)
-     */
-    getRecentWorkouts() {
-        // Create a map to store the most recent workout per exercise
-        const exerciseMap = new Map();
-
-        // Sort all workouts by date descending (newest first)
-        const sortedWorkouts = this.currentMonthWorkouts
-            .slice()
-            .sort((a, b) => {
-                const dateComparison = new Date(b.date) - new Date(a.date);
-                if (dateComparison !== 0) return dateComparison;
-                // If same date, sort by ID (which includes timestamp)
-                return b.id.localeCompare(a.id);
-            });
-
-        // Keep only the most recent workout per exercise
-        for (const workout of sortedWorkouts) {
-            if (!exerciseMap.has(workout.exerciseId)) {
-                exerciseMap.set(workout.exerciseId, workout);
-            }
-        }
-
-        // Convert map to array and return top N
-        return Array.from(exerciseMap.values()).slice(0, CONFIG.limits.recentWorkoutsCount);
-    },
-
-    /**
-     * Get workout entries for the last N distinct days a specific exercise was performed
-     * Searches the last 12 months.
-     * @param {string} exerciseId - Exercise ID
-     * @param {number} sessionCount - Number of sessions to retrieve
-     * @returns {Promise<array>} Array of session objects {date, sets[]}
-     */
-    async getLastWorkoutSessionsForExercise(exerciseId, sessionCount = 3) {
-        const now = new Date();
-        const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
-        const matches = (await SupabaseAPI.getWorkoutsInRange(start, now))
-            .filter(workout => workout.exerciseId === exerciseId);
-        const groups = {};
-        matches.forEach(workout => {
-            if (!groups[workout.date]) groups[workout.date] = [];
-            groups[workout.date].push(workout);
-        });
-        return Object.entries(groups)
-            .map(([date, sets]) => ({
-                date,
-                sets: sets.sort((a, b) => (a.sequence || 0) - (b.sequence || 0))
-            }))
-            .sort((a, b) => new Date(b.date) - new Date(a.date))
-            .slice(0, sessionCount);
-    },
-    /**
-     * Get workouts for a specific month
-     * @param {number} year - Year (e.g., 2025)
-     * @param {number} month - Month (1-12)
-     * @returns {Promise<array>} Array of workout objects
-     */
-    async getWorkoutsByMonth(year, month) {
-        const date = new Date(year, month - 1, 1);
-        const data = await SupabaseAPI.getWorkouts(date);
-        return data.workouts;
-    },
-
-    /**
-     * Get workouts across multiple months by date range
-     * @param {string} startDateStr - Start date in YYYY-MM-DD format
-     * @param {string} endDateStr - End date in YYYY-MM-DD format
-     * @returns {Promise<array>} Array of workout objects
-     */
-    async getWorkoutsByDateRange(startDateStr, endDateStr) {
-        const startDate = parseDate(startDateStr);
-        const endDate = parseDate(endDateStr);
-
-        if (!startDate || !endDate) {
-            throw new Error('Invalid date range');
-        }
-
-        return await this.getWorkoutsInRange(startDate, endDate);
-    },
-
-    /**
-     * Get the most recent full workout session (all exercises from the last day a workout was logged)
-     * @returns {Promise<object|null>} Object with {date, exercises: {name, sets: []}} or null
-     */
-    async getLastWorkoutSession() {
-        let workouts = [];
-        let newestDate = null;
-
-        // 1. Check current month first
-        if (this.currentMonthWorkouts.length > 0) {
-            // Find newest date
-            const dates = [...new Set(this.currentMonthWorkouts.map(w => w.date))];
-            if (dates.length > 0) {
-                dates.sort((a, b) => new Date(b) - new Date(a));
-                newestDate = dates[0];
-                workouts = this.currentMonthWorkouts.filter(w => w.date === newestDate);
-            }
-        }
-
-        // 2. If no workouts in current month, check the previous 12 months
-        if (workouts.length === 0) {
-            try {
-                const now = new Date();
-                const start = new Date(now.getFullYear(), now.getMonth() - 11, 1);
-                const recentWorkouts = await SupabaseAPI.getWorkoutsInRange(start, now);
-                const dates = [...new Set(recentWorkouts.map(workout => workout.date))];
-                if (dates.length > 0) {
-                    dates.sort((a, b) => new Date(b) - new Date(a));
-                    newestDate = dates[0];
-                    workouts = recentWorkouts.filter(workout => workout.date === newestDate);
-                }
-            } catch (error) {
-                console.warn('Error fetching last workout session:', error);
-            }
-        }
-
-        if (workouts.length === 0) return null;
-
-        // Group by exercise and sort by sequence
-        const grouped = {};
-        workouts.sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
-
-        workouts.forEach(w => {
-            const exercise = this.getExerciseById(w.exerciseId);
-            if (!exercise) return;
-
-            if (!grouped[w.exerciseId]) {
-                grouped[w.exerciseId] = {
-                    name: exercise.name,
-                    sets: []
-                };
-            }
-            grouped[w.exerciseId].sets.push(w);
-        });
-
-        return {
-            date: newestDate,
-            exercises: Object.values(grouped)
-        };
+        return await this._adapter.getWorkoutsInRange(startDate, endDate);
     },
 
 
@@ -654,42 +510,19 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async updateWorkoutSequences(date, workoutIds) {
-        const workoutDate = parseDate(date);
-        if (!workoutDate) {
-            throw new Error('Invalid workout date');
-        }
-
-        const now = new Date();
-        const isSameMonth = workoutDate.getMonth() === now.getMonth() &&
-            workoutDate.getFullYear() === now.getFullYear();
-
-        if (isSameMonth) {
-            // Update sequences in current month workouts
+        return this._write(async () => {
+            const sameDateWorkouts = await this._workoutsOnDate(date);
             const changed = [];
             workoutIds.forEach((id, index) => {
-                const workout = this.currentMonthWorkouts.find(w => w.id === id);
-                if (workout && workout.date === date) {
+                const workout = sameDateWorkouts.find(w => w.id === id);
+                if (workout) {
                     workout.sequence = index + 1;
                     changed.push(workout);
                 }
             });
 
             await this._persistWorkouts(changed);
-        } else {
-            // Load different month, update sequences, save
-            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
-
-            const changed = [];
-            workoutIds.forEach((id, index) => {
-                const workout = monthData.workouts.find(w => w.id === id);
-                if (workout && workout.date === date) {
-                    workout.sequence = index + 1;
-                    changed.push(workout);
-                }
-            });
-
-            await this._persistWorkouts(changed);
-        }
+        });
     },
 
     /**
@@ -700,42 +533,27 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async updateWorkoutSupersets(date, assignments) {
-        const workoutDate = parseDate(date);
-        if (!workoutDate) {
-            throw new Error('Invalid workout date');
-        }
+        return this._write(async () => {
+            const apply = (workouts) => {
+                const changed = [];
+                workouts.forEach(workout => {
+                    if (workout.date !== date) return;
+                    if (!Object.prototype.hasOwnProperty.call(assignments, workout.exerciseId)) return;
 
-        const apply = (workouts) => {
-            const changed = [];
-            workouts.forEach(workout => {
-                if (workout.date !== date) return;
-                if (!Object.prototype.hasOwnProperty.call(assignments, workout.exerciseId)) return;
+                    const groupId = assignments[workout.exerciseId];
+                    if (groupId) {
+                        workout.supersetGroupId = groupId;
+                    } else {
+                        delete workout.supersetGroupId;
+                    }
+                    changed.push(workout);
+                });
+                return changed;
+            };
 
-                const groupId = assignments[workout.exerciseId];
-                if (groupId) {
-                    workout.supersetGroupId = groupId;
-                } else {
-                    delete workout.supersetGroupId;
-                }
-                changed.push(workout);
-            });
-            return changed;
-        };
-
-        const now = new Date();
-        const isSameMonth = workoutDate.getMonth() === now.getMonth() &&
-            workoutDate.getFullYear() === now.getFullYear();
-
-        if (isSameMonth) {
-            const changed = apply(this.currentMonthWorkouts);
+            const changed = apply(await this._workoutsOnDate(date));
             await this._persistWorkouts(changed);
-        } else {
-            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
-            const changed = apply(monthData.workouts);
-            await this._persistWorkouts(changed);
-        }
-
-        this.generateAndSaveStatsSummary();
+        });
     },
 
     /**
@@ -746,49 +564,20 @@ export const Storage = {
      * @returns {Promise<object>} Updated workout entry
      */
     async updateWorkout(id, date, updates) {
-        const workoutDate = parseDate(date);
-        if (!workoutDate) {
-            throw new Error('Invalid workout date');
-        }
-
-        const now = new Date();
-        const isSameMonth = workoutDate.getMonth() === now.getMonth() &&
-            workoutDate.getFullYear() === now.getFullYear();
-
-        if (isSameMonth) {
-            const index = this.currentMonthWorkouts.findIndex(w => w.id === id);
-            if (index === -1) {
+        return this._write(async () => {
+            const workout = (await this._workoutsOnDate(date)).find(w => w.id === id);
+            if (!workout) {
                 throw new Error('Workout not found');
             }
 
-            this.currentMonthWorkouts[index] = {
-                ...this.currentMonthWorkouts[index],
-                ...updates,
+            Object.assign(workout, updates, {
                 reps: parseInt(updates.reps, 10),
                 weight: updates.weight ? parseFloat(updates.weight) : null
-            };
+            });
 
-            await this._persistWorkouts([this.currentMonthWorkouts[index]]);
-            this.generateAndSaveStatsSummary();
-            return this.currentMonthWorkouts[index];
-        } else {
-            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
-            const index = monthData.workouts.findIndex(w => w.id === id);
-            if (index === -1) {
-                throw new Error('Workout not found');
-            }
-
-            monthData.workouts[index] = {
-                ...monthData.workouts[index],
-                ...updates,
-                reps: parseInt(updates.reps, 10),
-                weight: updates.weight ? parseFloat(updates.weight) : null
-            };
-
-            await this._persistWorkouts([monthData.workouts[index]]);
-            this.generateAndSaveStatsSummary();
-            return monthData.workouts[index];
-        }
+            await this._persistWorkouts([workout]);
+            return workout;
+        });
     },
 
     /**
@@ -798,55 +587,23 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async deleteWorkout(id, date) {
-        const workoutDate = parseDate(date);
-        if (!workoutDate) {
-            throw new Error('Invalid workout date');
-        }
-
-        const now = new Date();
-        const isSameMonth = workoutDate.getMonth() === now.getMonth() &&
-            workoutDate.getFullYear() === now.getFullYear();
-
-        if (isSameMonth) {
-            const index = this.currentMonthWorkouts.findIndex(w => w.id === id);
-            if (index === -1) {
+        return this._write(async () => {
+            const sameDateWorkouts = await this._workoutsOnDate(date);
+            if (!sameDateWorkouts.some(w => w.id === id)) {
                 throw new Error('Workout not found');
             }
 
-            this.currentMonthWorkouts.splice(index, 1);
-
             // Re-sequence remaining workouts for the same date
-            const sameDateWorkouts = this.currentMonthWorkouts
-                .filter(w => w.date === date)
+            const remaining = sameDateWorkouts
+                .filter(w => w.id !== id)
                 .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
-
-            sameDateWorkouts.forEach((w, i) => {
+            remaining.forEach((w, i) => {
                 w.sequence = i + 1;
             });
 
-            await this._persistWorkouts(sameDateWorkouts, [id]);
-            this.generateAndSaveStatsSummary();
-        } else {
-            const monthData = await SupabaseAPI.getWorkouts(workoutDate);
-            const index = monthData.workouts.findIndex(w => w.id === id);
-            if (index === -1) {
-                throw new Error('Workout not found');
-            }
-
-            monthData.workouts.splice(index, 1);
-
-            // Re-sequence remaining workouts for the same date
-            const sameDateWorkouts = monthData.workouts
-                .filter(w => w.date === date)
-                .sort((a, b) => (a.sequence || 0) - (b.sequence || 0));
-
-            sameDateWorkouts.forEach((w, i) => {
-                w.sequence = i + 1;
-            });
-
-            await this._persistWorkouts(sameDateWorkouts, [id]);
-            this.generateAndSaveStatsSummary();
-        }
+            this.workouts = this.workouts.filter(w => w.id !== id);
+            await this._persistWorkouts(remaining, [id]);
+        });
     },
 
     // ─── Session Templates ───────────────────────────────────────────────────
@@ -892,7 +649,7 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async loadSessionTemplates() {
-        const data = await SupabaseAPI.getSessionTemplates();
+        const data = await this._adapter.getSessionTemplates();
         this.sessionTemplates = data.templates.map(t => ({
             ...t,
             rows: this.normalizeTemplateRows(t.rows)
@@ -922,23 +679,25 @@ export const Storage = {
      * @returns {Promise<object>}
      */
     async addSessionTemplate(template) {
-        if (!template.name || !template.name.trim()) {
-            throw new Error('Template name is required');
-        }
-        const trimmedName = template.name.trim();
-        if (this.sessionTemplates.some(t => t.name.toLowerCase() === trimmedName.toLowerCase())) {
-            throw new Error('A template with this name already exists');
-        }
+        return this._write(async () => {
+            if (!template.name || !template.name.trim()) {
+                throw new Error('Template name is required');
+            }
+            const trimmedName = template.name.trim();
+            if (this.sessionTemplates.some(t => t.name.toLowerCase() === trimmedName.toLowerCase())) {
+                throw new Error('A template with this name already exists');
+            }
 
-        const newTemplate = {
-            id: generateId(),
-            name: trimmedName,
-            rows: template.rows || []
-        };
+            const newTemplate = {
+                id: generateId(),
+                name: trimmedName,
+                rows: template.rows || []
+            };
 
-        this.sessionTemplates.push(newTemplate);
-        await this._persistSessionTemplates([newTemplate]);
-        return newTemplate;
+            this.sessionTemplates.push(newTemplate);
+            await this._persistSessionTemplates([newTemplate]);
+            return newTemplate;
+        });
     },
 
     /**
@@ -948,22 +707,24 @@ export const Storage = {
      * @returns {Promise<object>}
      */
     async updateSessionTemplate(id, template) {
-        const index = this.sessionTemplates.findIndex(t => t.id === id);
-        if (index === -1) throw new Error('Template not found');
+        return this._write(async () => {
+            const index = this.sessionTemplates.findIndex(t => t.id === id);
+            if (index === -1) throw new Error('Template not found');
 
-        const trimmedName = template.name.trim();
-        if (this.sessionTemplates.some(t => t.id !== id && t.name.toLowerCase() === trimmedName.toLowerCase())) {
-            throw new Error('A template with this name already exists');
-        }
+            const trimmedName = template.name.trim();
+            if (this.sessionTemplates.some(t => t.id !== id && t.name.toLowerCase() === trimmedName.toLowerCase())) {
+                throw new Error('A template with this name already exists');
+            }
 
-        this.sessionTemplates[index] = {
-            id: this.sessionTemplates[index].id,
-            name: trimmedName,
-            rows: template.rows
-        };
+            this.sessionTemplates[index] = {
+                id: this.sessionTemplates[index].id,
+                name: trimmedName,
+                rows: template.rows
+            };
 
-        await this._persistSessionTemplates([this.sessionTemplates[index]]);
-        return this.sessionTemplates[index];
+            await this._persistSessionTemplates([this.sessionTemplates[index]]);
+            return this.sessionTemplates[index];
+        });
     },
 
     /**
@@ -972,48 +733,23 @@ export const Storage = {
      * @returns {Promise<void>}
      */
     async deleteSessionTemplate(id) {
-        const index = this.sessionTemplates.findIndex(t => t.id === id);
-        if (index === -1) throw new Error('Template not found');
-        this.sessionTemplates.splice(index, 1);
-        await this._persistSessionTemplates([], [id]);
+        return this._write(async () => {
+            const index = this.sessionTemplates.findIndex(t => t.id === id);
+            if (index === -1) throw new Error('Template not found');
+            this.sessionTemplates.splice(index, 1);
+            await this._persistSessionTemplates([], [id]);
+        });
     },
 
-    // ─── Stats Summary ───────────────────────────────────────────────────────
-
     /**
-     * Load all workouts from Supabase in compact summary format.
-     * @returns {Promise<array|null>} Array of full workout objects or null
+     * Load all workouts from the persistence adapter.
+     * @returns {Promise<array|null>} Array of workout objects or null
      */
-    async loadStatsSummaryWorkouts() {
+    async getAllWorkouts() {
         try {
-            const result = await SupabaseAPI.getStatsSummary();
-            if (!result) return null;
-            return (result.content.workouts || []).map(w => ({
-                exerciseId: w.e,
-                date: w.d,
-                reps: w.r,
-                weight: w.w,
-                sequence: w.seq,
-                supersetGroupId: w.g || null
-            }));
+            return await this._adapter.getAllWorkouts();
         } catch {
             return null;
         }
-    },
-
-    /**
-     * Supabase summaries are derived from live workout rows and need no persistence.
-     */
-    async generateAndSaveStatsSummary() {}
+    }
 };
-
-// On Supabase every public mutation first re-fetches the snapshot, so edits never build on stale data
-[
-    'addExercise', 'updateExercise', 'deleteExercise',
-    'addWorkout', 'addWorkoutsBatch', 'updateWorkout', 'deleteWorkout',
-    'updateWorkoutSequences', 'updateWorkoutSupersets',
-    'addSessionTemplate', 'updateSessionTemplate', 'deleteSessionTemplate'
-].forEach(name => {
-    const mutate = Storage[name];
-    Storage[name] = (...args) => Storage._write(() => mutate.apply(Storage, args));
-});

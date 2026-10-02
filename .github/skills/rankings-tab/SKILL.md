@@ -28,7 +28,7 @@ Chart.js work here.
 ## The mental model
 
 - **One source of data, loaded once.** `Rankings.load()` pulls the full
-  all-time workout list (`Storage.loadStatsSummaryWorkouts()`, falling back to a
+  all-time workout list (`Storage.getAllWorkouts()`, falling back to a
   10-year `Storage.getWorkoutsInRange()`) and caches it on `Rankings._workouts`.
   Filtering and mode switching never refetch — they re-filter the cache and
   re-render. The cache is invalidated only by the `workoutsUpdated` event.
@@ -54,7 +54,7 @@ Chart.js work here.
 | `css/components.css` | `/* ─── Rankings Tab ─── */` block: `.rankings-mode-toggle`, `.rankings-period-row`, `.ranking-row`, `.ranking-rank.gold/.silver/.bronze`, `.filter-icon-row.disabled`. |
 | `js/exercises.js` | Reused for the muscle row: `Exercises.renderIconChipButtons`, `getMuscleOptions`, `getMuscleFilterIcon`. Do not duplicate that chip code. |
 | `workout.html` | Submit handler assigns a shared `ss-N` `supersetGroupId` to mutually-linked (`dataset.linkedWith`) consecutive cards. **This is the only producer of superset data.** |
-| `js/storage.js` | `buildWorkoutRecord` persists `supersetGroupId`; `generateAndSaveStatsSummary` writes it as the compact `g` key and `loadStatsSummaryWorkouts` maps `g` back. |
+| `js/storage.js` | `buildWorkoutRecord` persists `supersetGroupId`; `getAllWorkouts()` returns domain workout records directly from the adapter. |
 
 ## The mode toggle
 
@@ -157,4 +157,3 @@ These are the rules the feature exists for. Don't regress them.
   rule.
 - **4-space indent, single quotes, JSDoc on public methods** — `js/` module
   style. Note `workout.html` uses 2-space indent; match the file you're in.
-

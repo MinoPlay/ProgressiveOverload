@@ -8,8 +8,8 @@ description: >-
   exercise cards, sets, supersets, rest/execute mode, or workout data
   loading/saving behave — even if they don't say the word "skill" or name a
   file. The workout UI lives in `workout.html` (a self-contained iframe), NOT in
-  `js/workouts.js` (which is legacy). Reach for this skill before grepping, so
-  you edit the right file and respect the iframe/postMessage boundary.
+  `workout.html`. Reach for this skill before grepping, so you edit the right
+  file and respect the iframe/postMessage boundary.
 ---
 
 # Workout Tab
@@ -18,11 +18,8 @@ The Workout tab is the screen where the user plans a session, executes it set by
 set, and submits it. Getting changes right here depends on one non-obvious fact:
 **the live UI is `workout.html`, a standalone document embedded as an `<iframe>`
 inside `index.html`.** It has its own inline JavaScript and talks to the rest of
-the app only through `postMessage`. The `Workouts` singleton in `js/workouts.js`
-is **legacy** — it's still imported and `init()`-ed by `js/app.js` in the parent
-page, but the planner DOM it manipulates no longer exists in the parent, so
-editing it will not change what the user sees. If you change `js/workouts.js`
-expecting the tab to update, nothing will happen. Always edit `workout.html`.
+the app only through `postMessage`. Always edit `workout.html` for live Workout
+tab behavior.
 
 ## The mental model
 
@@ -47,7 +44,6 @@ Think of `workout.html` as a small, self-contained app:
 | `workout.html` | The entire live Workout tab: markup + inline `<script>` (≈ lines 1239–3037). This is what you edit. |
 | `js/app.js` | Parent side of the bridge: `IframeBridge` object (≈ line 396). Handles `po-save-workouts` → `Storage.addWorkoutsBatch`, pushes data to the iframe. |
 | `js/storage.js` | `Storage.addWorkoutsBatch` — the actual persistence (assigns `sequence`, ids, GitHub sync). Runs in the parent only. |
-| `js/workouts.js` | **Legacy.** Ignore for tab changes unless explicitly removing dead code. |
 
 ## The change workflow
 
@@ -90,7 +86,7 @@ These aren't bureaucracy — each one maps to how the page actually works:
 - **Match local style.** The inline script in `workout.html` uses 2-space
   indentation and single quotes — follow the file you're in, not the repo-wide
   4-space rule for `js/` modules.
-- **Don't "fix" the tab by editing `js/workouts.js`.** It won't take effect.
+- **Don't "fix" the tab by editing parent modules.** They won't drive the iframe UI.
 
 ## Reference files
 

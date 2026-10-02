@@ -105,7 +105,7 @@ The inline script is large and DOM-coupled. To reduce risk:
   full loop (render → tick → refresh-restore → submit) after each step.
 - Keep `serializeDesign1Cards` ↔ `applyCardState` symmetric — they're a pair;
   changing one without the other breaks persistence.
-- Don't migrate logic into `js/workouts.js` thinking it'll run — it won't drive
+- Don't migrate logic into parent modules thinking it'll run — it won't drive
   the tab. If you want shared code, it still has to live in (or be inlined into)
   `workout.html`, since the iframe can't import modules.
 - Preserve `EMBED_MODE` guards so standalone demo mode keeps working.
@@ -114,7 +114,7 @@ The inline script is large and DOM-coupled. To reduce risk:
 
 ## Gotchas checklist
 
-- [ ] Edited `workout.html`, not `js/workouts.js`.
+- [ ] Edited `workout.html`.
 - [ ] New state added to **both** serialize and restore.
 - [ ] New `po-*` message handled on **both** ends.
 - [ ] Bodyweight cards still send `weight: null` and show `BW`.

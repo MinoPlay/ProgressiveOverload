@@ -45,7 +45,7 @@ Saved workout blueprints that can be loaded into the Workout Planner. Templates 
 
 ## Integration Points
 - **Storage** — `getSessionTemplates()`, `addSessionTemplate()`, `updateSessionTemplate()`, `deleteSessionTemplate()`
-- **Workouts** — `Workouts.loadTemplateIntoPlanner(id)` reads from `Storage.getSessionTemplates()` and replaces the current planner session
+- **Workout iframe** — receives templates over `po-templates` and replaces the current planner session when one is selected
 - **Events dispatched** — `templatesUpdated` after any CRUD operation
 - **Exercises** — template rows store `exerciseId`; `exerciseName` is denormalized at save time
 

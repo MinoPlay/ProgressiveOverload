@@ -3,7 +3,9 @@
 
 import { Storage } from './storage.js';
 import { CONFIG } from './config.js';
-import { calculateLinearRegression, calculateProgressPercentage, estimate1RM, findPersonalRecords, aggregateByWeek } from './chart-helpers.js';
+import { calculateLinearRegression, calculateProgressPercentage, findPersonalRecords, aggregateByWeek } from './chart-helpers.js';
+import { setVolume, setTonnage } from './set-metrics.js';
+import { parseDate, getWeekStart, getWeekNumber } from './utils.js';
 
 // Register Chart.js plugins globally when available
 // Plugins are loaded via CDN and auto-register with Chart.js 4.x
@@ -90,18 +92,15 @@ export const Charts = {
             // Show loading indicator
             if (loadingIndicator) loadingIndicator.style.display = 'flex';
 
-            // Try stats-summary.json first (1 API call for all-time data)
-            // Fall back to range-based fetch if summary doesn't exist yet
+            // Try one all-time fetch first; fall back to range-based fetch on error.
             let allWorkoutsInRange;
-            const summaryWorkouts = await Storage.loadStatsSummaryWorkouts();
-            if (summaryWorkouts) {
+            const allWorkouts = await Storage.getAllWorkouts();
+            if (allWorkouts) {
                 const startStr = startDate.toISOString().slice(0, 10);
                 const endStr = endDate.toISOString().slice(0, 10);
-                allWorkoutsInRange = summaryWorkouts.filter(w => w.date >= startStr && w.date <= endStr);
+                allWorkoutsInRange = allWorkouts.filter(w => w.date >= startStr && w.date <= endStr);
             } else {
                 allWorkoutsInRange = await Storage.getWorkoutsInRange(startDate, endDate);
-                // Bootstrap stats-summary.json so future opens skip the 404
-                Storage.generateAndSaveStatsSummary();
             }
 
             // Collect data for all exercises using the already-loaded workouts
@@ -1204,11 +1203,10 @@ export const Charts = {
 
             if (this.selectedMetric === 'relative') {
                 if (baseline <= 0) return null;
-                const vol = daySets.reduce((sum, w) =>
-                    sum + (exercise.requiresWeight && w.weight ? w.reps * w.weight : w.reps), 0);
+                const vol = daySets.reduce((sum, w) => sum + setVolume(w, exercise), 0);
                 return (vol / baseline) * 100;
             } else if (this.selectedMetric === 'weight') {
-                return daySets.reduce((sum, w) => sum + (w.weight ? w.reps * w.weight : w.reps), 0);
+                return daySets.reduce((sum, w) => sum + setVolume(w, exercise), 0);
             } else {
                 return daySets.reduce((sum, w) => sum + w.reps, 0);
             }
@@ -1412,13 +1410,12 @@ export const Charts = {
 
         // Helper: get ISO week number and year from a date string
         const getISOWeekKey = (dateStr) => {
-            const d = new Date(dateStr + 'T00:00:00');
-            const dayOfWeek = d.getDay() === 0 ? 7 : d.getDay(); // Mon=1 … Sun=7
-            const thursday = new Date(d);
-            thursday.setDate(d.getDate() + (4 - dayOfWeek));
-            const yearStart = new Date(thursday.getFullYear(), 0, 1);
-            const week = Math.ceil(((thursday - yearStart) / 86400000 + 1) / 7);
-            return { year: thursday.getFullYear(), week, key: `${thursday.getFullYear()}-W${String(week).padStart(2, '0')}` };
+            const d = parseDate(dateStr);
+            const thursday = getWeekStart(d);
+            thursday.setDate(thursday.getDate() + 3);
+            const year = thursday.getFullYear();
+            const week = getWeekNumber(d);
+            return { year, week, key: `${year}-W${String(week).padStart(2, '0')}` };
         };
 
         // Collect all dates and group them into ISO weeks
@@ -1462,8 +1459,7 @@ export const Charts = {
                             const baselineCount = Math.min(3, dailyRaw.values.length);
                             const baseline = dailyRaw.values.slice(0, baselineCount).reduce((sum, v) => sum + v, 0) / baselineCount;
                             if (baseline > 0) {
-                                const weekVol = weekSets.reduce((sum, w) =>
-                                    sum + (exercise.requiresWeight && w.weight ? w.reps * w.weight : w.reps), 0);
+                                const weekVol = weekSets.reduce((sum, w) => sum + setVolume(w, exercise), 0);
                                 totalProgress += (weekVol / baseline) * 100;
                                 count++;
                             }
@@ -1471,7 +1467,10 @@ export const Charts = {
                     });
                     return count > 0 ? totalProgress / count : null;
                 } else if (this.selectedMetric === 'weight') {
-                    return weekWorkouts.reduce((sum, w) => sum + (w.weight ? w.reps * w.weight : w.reps), 0);
+                    return exercisesInMuscle.reduce((sum, { exercise, workouts }) =>
+                        sum + workouts
+                            .filter(w => weekDates.includes(w.date))
+                            .reduce((s, w) => s + setVolume(w, exercise), 0), 0);
                 } else if (this.selectedMetric === 'reps') {
                     return weekWorkouts.reduce((sum, w) => sum + w.reps, 0);
                 }
@@ -1707,10 +1706,7 @@ export const Charts = {
 
             setsMap[dateLabel].push(workout);
 
-            // Calculate volume (reps × weight) for weighted exercises, or total reps for bodyweight
-            const volumeValue = isWeighted && workout.weight
-                ? workout.reps * workout.weight
-                : workout.reps;
+            const volumeValue = setVolume(workout, { requiresWeight: isWeighted });
             dates.set(dateLabel, dates.get(dateLabel) + volumeValue);
 
             // Track max weight (PR) for the day
@@ -1774,7 +1770,7 @@ export const Charts = {
             let maxVolume = 0;
             workouts.forEach(w => {
                 if (w.weight > 0) {
-                    const volume = w.reps * w.weight;
+                    const volume = setTonnage(w);
                     if (volume > maxVolume) {
                         maxVolume = volume;
                         prReps = w.reps;

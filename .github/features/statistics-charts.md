@@ -26,12 +26,18 @@ Progress visualisation for logged workouts. Renders Chart.js charts in the **Sta
 |---|---|
 | `calculateLinearRegression(points)` | Returns `{slope, intercept, predict, getTrendLine}` |
 | `calculateMovingAverage(values, windowSize)` | Rolling average; returns `null` for insufficient data |
-| `estimate1RM(weight, reps)` | Brzycki formula: `weight * (36 / (37 - reps))` |
 | `findPersonalRecords(workouts)` | Returns PR entries tagged with `'weight'`, `'reps'`, `'volume'` |
 | `aggregateByWeek(workouts)` | Returns weekly totals with muscle group breakdown |
 | `calculateProgressPercentage(values)` | Baseline = avg of first 3 values; returns `%` array |
 | `calculateVolumeDistribution(workouts)` | `{strength, hypertrophy, endurance}` by rep range |
 | `categorizeRepRange(reps)` | `≤5` → strength, `≤12` → hypertrophy, else endurance |
+
+## Set Metrics (`js/set-metrics.js`)
+Shared by charts, rankings and `workout.html` — never inline volume math.
+| Function | Description |
+|---|---|
+| `setVolume(set, exercise)` | Per-exercise volume: `reps × weight` if `exercise.requiresWeight` and weight is set, else `reps` |
+| `setTonnage(set)` | `reps × weight`, bodyweight = 0; safe to sum across exercises |
 
 ## Key Methods (`Charts`)
 | Method | Description |

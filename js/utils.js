@@ -194,18 +194,6 @@ export function debounce(func, wait) {
 }
 
 /**
- * Estimate one-rep max using Brzycki formula
- * @param {number} weight - Weight lifted
- * @param {number} reps - Repetitions performed
- * @returns {number} Estimated 1RM
- */
-export function estimateOneRepMax(weight, reps) {
-    if (reps === 1) return weight;
-    if (reps > 36) return weight; // Formula breaks down above 36 reps
-    return weight * (36 / (37 - reps));
-}
-
-/**
  * Format equipment type for display
  * @param {string} type - Equipment type
  * @returns {string} Formatted type

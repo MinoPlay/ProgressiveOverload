@@ -1603,6 +1603,12 @@ let _rawParentWorkouts = [];
 const _parentWorkoutFeeds = { current: [], history: [] };
 // Previous-session sets per exercise, rebuilt from parent data: { exerciseId: {sets, timestamp} }
 let _lastWorkoutByExercise = {};
+// Shared set metrics module; parent data merged before it loads is replayed once it arrives
+let SetMetrics = null;
+import('./js/set-metrics.js').then(module => {
+  SetMetrics = module;
+  _mergeParentWorkouts();
+});
 
 function renderVolumeBars(card) {
   if (!card) return;
@@ -1678,6 +1684,7 @@ document.addEventListener('click', hideVolumeTooltip);
 
 function _mergeParentWorkouts(feed, workouts) {
   if (feed) _parentWorkoutFeeds[feed] = Array.isArray(workouts) ? workouts : [];
+  if (!SetMetrics) return;
   const byKey = {};
   [..._parentWorkoutFeeds.history, ..._parentWorkoutFeeds.current].forEach(w => {
     if (!w || !w.exerciseId) return;
@@ -1757,7 +1764,7 @@ function _mergeParentWorkouts(feed, workouts) {
     entries.forEach(s => {
       const reps = Number(s.reps) || 0;
       const weight = preset.bodyweight ? null : Number(s.weight) || 0;
-      const vol = preset.bodyweight ? reps : reps * weight;
+      const vol = SetMetrics.setVolume({ reps, weight }, { requiresWeight: !preset.bodyweight });
       if (!volByDate[s.date]) volByDate[s.date] = { date: s.date, volume: 0, sets: [] };
       volByDate[s.date].volume += vol;
       volByDate[s.date].sets.push({

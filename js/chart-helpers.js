@@ -3,6 +3,9 @@
  * Calculation functions for advanced chart visualizations
  */
 
+import { formatDate, getWeekStart, parseDate } from './utils.js';
+import { setTonnage } from './set-metrics.js';
+
 /**
  * Calculate linear regression for trend line
  * @param {Array<{x: number, y: number}>} dataPoints - Array of {x, y} coordinate objects
@@ -86,18 +89,7 @@ export function aggregateByWeek(workouts) {
     const weekMap = new Map();
 
     for (const workout of workouts) {
-        // Safe local parsing of YYYY-MM-DD to avoid UTC shift issues
-        const dateParts = workout.date.split('-');
-        const y = parseInt(dateParts[0], 10);
-        const m = parseInt(dateParts[1], 10) - 1;
-        const d = parseInt(dateParts[2], 10);
-        const date = new Date(y, m, d);
-
-        // Get Monday of the week in local time
-        const dayOfWeek = date.getDay();
-        const diff = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
-        const monday = new Date(y, m, d + diff);
-        const weekKey = `${monday.getFullYear()}-${String(monday.getMonth() + 1).padStart(2, '0')}-${String(monday.getDate()).padStart(2, '0')}`;
+        const weekKey = formatDate(getWeekStart(parseDate(workout.date)));
 
         if (!weekMap.has(weekKey)) {
             weekMap.set(weekKey, {
@@ -115,7 +107,7 @@ export function aggregateByWeek(workouts) {
         }
 
         const weekData = weekMap.get(weekKey);
-        const volume = (workout.weight || 0) * workout.reps;
+        const volume = setTonnage(workout);
         weekData.totalVolume += volume;
         weekData.totalReps += workout.reps;
         weekData.totalWeight += (workout.weight || 0);
@@ -212,7 +204,7 @@ export function findPersonalRecords(workouts) {
     );
 
     for (const workout of sortedWorkouts) {
-        const volume = (workout.weight || 0) * workout.reps;
+        const volume = setTonnage(workout);
         const recordTypes = [];
 
         // Check for weight PR
@@ -265,7 +257,7 @@ export function calculateVolumeDistribution(workouts) {
 
     for (const workout of workouts) {
         const category = categorizeRepRange(workout.reps);
-        const volume = (workout.weight || 0) * workout.reps;
+        const volume = setTonnage(workout);
         distribution[category] += volume;
     }
 
@@ -331,18 +323,4 @@ export function calculateProgressPercentage(values) {
 
     // Convert each value to percentage of baseline
     return values.map(v => (v / baseline) * 100);
-}
-
-/**
- * Estimate 1 Rep Max using Brzycki formula
- * @param {number} weight - Weight lifted
- * @param {number} reps - Number of repetitions
- * @returns {number} Estimated 1RM
- */
-export function estimate1RM(weight, reps) {
-    if (!weight || !reps) return 0;
-    if (reps === 1) return weight;
-    // Brzycki Formula: Weight * (36 / (37 - reps))
-    // Only valid for reps <= 10 for best accuracy, but we'll use it for all
-    return weight * (36 / (37 - Math.min(reps, 30)));
 }

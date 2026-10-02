@@ -32,9 +32,17 @@
                 <nav class="header-nav" role="navigation" aria-label="Main navigation">
                     <div class="nav-left">
                         <!-- Theme Toggle -->
-                        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle dark mode" title="Toggle dark mode">
+                        <button id="themeToggleBtn" class="theme-toggle-btn" aria-label="Toggle theme" title="Toggle theme">
                             <i data-lucide="moon" id="themeToggleIcon"></i>
                         </button>
+                        <div class="ui-skin-picker" role="group" aria-label="Color theme">
+                            <button class="ui-skin-btn active" type="button" data-ui-mode="arcade"
+                                aria-pressed="true">Arcade</button>
+                            <button class="ui-skin-btn" type="button" data-ui-mode="quest"
+                                aria-pressed="false">Quest</button>
+                            <button class="ui-skin-btn" type="button" data-ui-mode="neon"
+                                aria-pressed="false">Neon</button>
+                        </div>
                     </div>
                     <div class="nav-center">
                         <button class="nav-btn" data-section="workout" title="Workout" aria-label="Workout">

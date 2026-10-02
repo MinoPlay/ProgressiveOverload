@@ -56,8 +56,8 @@ const Theme = {
     _applyChartDefaults(theme) {
         if (typeof window.Chart === 'undefined') return;
         const isDark = theme === 'dark' || theme === 'green';
-        const textColor   = theme === 'green' ? '#00b82e' : isDark ? '#9090aa' : '#666666';
-        const gridColor   = theme === 'green' ? 'rgba(0, 255, 65, 0.1)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
+        const textColor = theme === 'green' ? '#00b82e' : isDark ? '#9090aa' : '#666666';
+        const gridColor = theme === 'green' ? 'rgba(0, 255, 65, 0.1)' : isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.08)';
         const borderColor = theme === 'green' ? 'rgba(0, 230, 118, 0.15)' : isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)';
 
         window.Chart.defaults.color = textColor;
@@ -91,6 +91,32 @@ const Theme = {
     }
 };
 
+const UiMode = {
+    STORAGE_KEY: 'uiMode',
+    ORDER: ['arcade', 'quest', 'neon'],
+
+    init() {
+        const saved = localStorage.getItem(this.STORAGE_KEY) || 'arcade';
+        this.apply(saved);
+
+        document.querySelectorAll('.ui-skin-btn').forEach(button => {
+            button.addEventListener('click', () => this.apply(button.dataset.uiMode));
+        });
+    },
+
+    apply(mode) {
+        const nextMode = this.ORDER.includes(mode) ? mode : 'arcade';
+        document.body.setAttribute('data-ui-mode', nextMode);
+        localStorage.setItem(this.STORAGE_KEY, nextMode);
+
+        document.querySelectorAll('.ui-skin-btn').forEach(button => {
+            const active = button.dataset.uiMode === nextMode;
+            button.classList.toggle('active', active);
+            button.setAttribute('aria-pressed', String(active));
+        });
+    }
+};
+
 // Apply theme immediately to avoid flash of unstyled content
 Theme.applyEarly();
 
@@ -109,6 +135,7 @@ const App = {
 
         // Initialize theme toggle
         Theme.init();
+        UiMode.init();
 
         // Initialize
         await this.initApp();

@@ -12,6 +12,7 @@
   // parent pushes real exercise/workout data, so populated values are shown from
   // the first paint instead of flashing the static demo values on refresh.
   if (window.self !== window.top) document.documentElement.classList.add('board-loading');
+  document.documentElement.setAttribute('data-ui-mode', localStorage.getItem('uiMode') || 'arcade');
 </script>
 <style>
 /* ── Reset & Base ─────────────────────────────────────────────────── */
@@ -77,6 +78,52 @@ body {
   --success-bg: #0a1f0c;
   --shadow: 0 2px 12px rgba(0,0,0,.5);
   --shadow-lg: 0 8px 28px rgba(0,0,0,.6);
+}
+
+html[data-ui-mode="arcade"] {
+  --accent: #fb5607;
+  --accent-dark: #d94801;
+  --accent-light: rgba(251,86,7,.13);
+  --game-accent: #ffb703;
+  --game-glow: rgba(251,86,7,.2);
+}
+
+html[data-ui-mode="quest"] {
+  --accent: #6a994e;
+  --accent-dark: #386641;
+  --accent-light: rgba(106,153,78,.14);
+  --game-accent: #bc9b45;
+  --game-glow: rgba(106,153,78,.2);
+}
+
+html[data-ui-mode="neon"] {
+  --accent: #b832a8;
+  --accent-dark: #762a8a;
+  --accent-light: rgba(184,50,168,.14);
+  --game-accent: #089fa3;
+  --game-glow: rgba(184,50,168,.22);
+}
+
+html[data-ui-mode] .exercise-card,
+html[data-ui-mode] .radar-card,
+html[data-ui-mode] .template-btn,
+html[data-ui-mode] .collapse-all-btn {
+  border-color: color-mix(in srgb, var(--accent) 32%, var(--border));
+}
+
+html[data-ui-mode] .exercise-card {
+  box-shadow: var(--shadow), 0 0 18px var(--game-glow);
+}
+
+html[data-ui-mode] .exercise-card::before {
+  background: linear-gradient(180deg, var(--accent), var(--game-accent));
+  border-radius: var(--radius) 0 0 var(--radius);
+  bottom: 12px;
+  content: '';
+  left: 0;
+  position: absolute;
+  top: 12px;
+  width: 3px;
 }
 
 /* ── Dark mode: unify indicator/icon colours to white ─────────────── */
@@ -1427,6 +1474,7 @@ body {
 lucide.createIcons();
 
 const THEME_KEY = 'theme';
+const UI_MODE_KEY = 'uiMode';
 const SESSION_KEY = 'workout.activeSession';
 const RADAR_COLLAPSED_KEY = 'workout.muscleRadarCollapsed';
 const EMBED_MODE = window.self !== window.top;
@@ -1455,12 +1503,19 @@ function applyStoredTheme() {
   lucide.createIcons();
 }
 
+function applyStoredUiMode() {
+  const storedMode = localStorage.getItem(UI_MODE_KEY) || 'arcade';
+  const mode = ['arcade', 'quest', 'neon'].includes(storedMode) ? storedMode : 'arcade';
+  document.documentElement.setAttribute('data-ui-mode', mode);
+}
+
 function applyEmbeddedMode() {
   if (!EMBED_MODE) return;
   document.documentElement.classList.add('embedded-mode');
 }
 
 applyStoredTheme();
+applyStoredUiMode();
 applyEmbeddedMode();
 
 function applyMuscleRadarState() {
@@ -1484,6 +1539,7 @@ window.addEventListener('storage', (event) => {
     applyStoredTheme();
     if (typeof renderWorkoutRadars === 'function') renderWorkoutRadars();
   }
+  if (event.key === UI_MODE_KEY) applyStoredUiMode();
 });
 
 /* ── Parent Bridge (receive exercises + templates from parent via postMessage) ── */

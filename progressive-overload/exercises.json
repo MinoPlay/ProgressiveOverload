@@ -302,10 +302,10 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356916_dumbbellflies",
-      "lastDate": "2026-09-29",
+      "lastDate": "2026-10-01",
       "lastSets": [
         {
-          "reps": 26,
+          "reps": 27,
           "weight": 16
         },
         {
@@ -456,7 +456,7 @@
     {
       "equipmentType": "bodyweight",
       "id": "1769598356923_neckturns",
-      "lastDate": "2026-09-29",
+      "lastDate": "2026-10-01",
       "lastSets": [
         {
           "reps": 40,
@@ -500,18 +500,18 @@
     {
       "equipmentType": "machines",
       "id": "1769748072765_qu8ca2o2p",
-      "lastDate": "2026-07-11",
+      "lastDate": "2026-10-01",
       "lastSets": [
+        {
+          "reps": 30,
+          "weight": 47.5
+        },
         {
           "reps": 25,
           "weight": 47.5
         },
         {
-          "reps": 20,
-          "weight": 47.5
-        },
-        {
-          "reps": 20,
+          "reps": 12,
           "weight": 47.5
         }
       ],
@@ -723,18 +723,18 @@
     {
       "equipmentType": "dumbbell",
       "id": "1770183966156_6whslwg5f",
-      "lastDate": "2026-09-29",
+      "lastDate": "2026-10-01",
       "lastSets": [
         {
-          "reps": 16,
+          "reps": 20,
           "weight": 14
         },
         {
-          "reps": 14,
+          "reps": 20,
           "weight": 14
         },
         {
-          "reps": 16,
+          "reps": 15,
           "weight": 14
         }
       ],
@@ -879,7 +879,7 @@
     {
       "equipmentType": "dumbbell",
       "id": "1771392571053_o2wbozqmo",
-      "lastDate": "2026-08-24",
+      "lastDate": "2026-10-01",
       "lastSets": [
         {
           "reps": 15,
@@ -902,19 +902,19 @@
     {
       "equipmentType": "machines",
       "id": "1771944812841_m36abj8xi",
-      "lastDate": "2026-08-20",
+      "lastDate": "2026-10-01",
       "lastSets": [
         {
-          "reps": 15,
+          "reps": 20,
           "weight": 50
         },
         {
           "reps": 15,
-          "weight": 50
+          "weight": 60
         },
         {
-          "reps": 15,
-          "weight": 50
+          "reps": 10,
+          "weight": 70
         }
       ],
       "muscle": "back",
@@ -1334,7 +1334,7 @@
     {
       "equipmentType": "kettlebell",
       "id": "1784641574188_tj4ddjw6f",
-      "lastDate": "2026-07-21",
+      "lastDate": "2026-10-01",
       "lastSets": [
         {
           "reps": 10,
@@ -1569,18 +1569,18 @@
     {
       "equipmentType": "kettlebell",
       "id": "1790257694765_7dst4aq22",
-      "lastDate": "2026-09-24",
+      "lastDate": "2026-10-01",
       "lastSets": [
         {
-          "reps": 15,
-          "weight": 24
-        },
-        {
           "reps": 20,
           "weight": 24
         },
         {
           "reps": 20,
+          "weight": 24
+        },
+        {
+          "reps": 16,
           "weight": 24
         }
       ],
@@ -1591,6 +1591,21 @@
     {
       "equipmentType": "machines",
       "id": "1790568010626_8wtmolrxz",
+      "lastDate": "2026-10-01",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 30
+        },
+        {
+          "reps": 20,
+          "weight": 30
+        },
+        {
+          "reps": 20,
+          "weight": 30
+        }
+      ],
       "muscle": "legs",
       "name": "Leg curl (single)",
       "requiresWeight": true
@@ -1598,6 +1613,21 @@
     {
       "equipmentType": "machines",
       "id": "1790568028328_iv9c8r58r",
+      "lastDate": "2026-10-01",
+      "lastSets": [
+        {
+          "reps": 17,
+          "weight": 30
+        },
+        {
+          "reps": 17,
+          "weight": 30
+        },
+        {
+          "reps": 13,
+          "weight": 30
+        }
+      ],
       "muscle": "legs",
       "name": "Leg extensions (single)",
       "requiresWeight": true
@@ -1607,6 +1637,50 @@
       "id": "1790568042080_ll1g00php",
       "muscle": "legs",
       "name": "Leg press (single)",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1790856772298_dic33ul39",
+      "lastDate": "2026-10-01",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 16
+        },
+        {
+          "reps": 12,
+          "weight": 24
+        },
+        {
+          "reps": 13,
+          "weight": 24
+        }
+      ],
+      "muscle": "legs",
+      "name": "Single leg deadlift",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1790861922990_sfc32fu9m",
+      "lastDate": "2026-10-01",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 18.1
+        },
+        {
+          "reps": 20,
+          "weight": 18.1
+        },
+        {
+          "reps": 17,
+          "weight": 18.1
+        }
+      ],
+      "muscle": "chest",
+      "name": "Cable upwards flies",
       "requiresWeight": true
     }
   ]

@@ -544,7 +544,7 @@
     {
       "equipmentType": "bodyweight",
       "id": "1770010228345_o1qup7585",
-      "lastDate": "2026-09-19",
+      "lastDate": "2026-10-14",
       "lastSets": [
         {
           "reps": 40,
@@ -1178,7 +1178,7 @@
     {
       "equipmentType": "bodyweight",
       "id": "1777382149868_00q6iozkz",
-      "lastDate": "2026-09-19",
+      "lastDate": "2026-10-14",
       "lastSets": [
         {
           "reps": 50,
@@ -1430,10 +1430,10 @@
     {
       "equipmentType": "bodyweight",
       "id": "1785491818429_6f4mk1tv7",
-      "lastDate": "2026-09-19",
+      "lastDate": "2026-10-14",
       "lastSets": [
         {
-          "reps": 30,
+          "reps": 40,
           "weight": null
         },
         {
@@ -1441,7 +1441,7 @@
           "weight": null
         },
         {
-          "reps": 30,
+          "reps": 22,
           "weight": null
         }
       ],
@@ -1682,6 +1682,28 @@
       "muscle": "chest",
       "name": "Cable upwards flies",
       "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1791975306595_dklrbs37l",
+      "lastDate": "2026-10-14",
+      "lastSets": [
+        {
+          "reps": 50,
+          "weight": null
+        },
+        {
+          "reps": 40,
+          "weight": null
+        },
+        {
+          "reps": 30,
+          "weight": null
+        }
+      ],
+      "muscle": "legs",
+      "name": "Hip thrust (bodyweight)",
+      "requiresWeight": false
     }
   ]
 }

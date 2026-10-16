@@ -26,19 +26,19 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356908_a2079ga75",
-      "lastDate": "2026-10-06",
+      "lastDate": "2026-10-16",
       "lastSets": [
         {
           "reps": 25,
           "weight": 60
         },
         {
-          "reps": 20,
-          "weight": 60
+          "reps": 15,
+          "weight": 80
         },
         {
-          "reps": 8,
-          "weight": 60
+          "reps": 9,
+          "weight": 80
         }
       ],
       "muscle": "back",
@@ -71,19 +71,19 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356908_flvdqzdhf",
-      "lastDate": "2026-10-06",
+      "lastDate": "2026-10-16",
       "lastSets": [
+        {
+          "reps": 30,
+          "weight": 50
+        },
         {
           "reps": 20,
           "weight": 50
         },
         {
-          "reps": 20,
-          "weight": 60
-        },
-        {
-          "reps": 10,
-          "weight": 60
+          "reps": 7,
+          "weight": 50
         }
       ],
       "muscle": "chest",
@@ -115,10 +115,10 @@
     {
       "equipmentType": "bodyweight",
       "id": "1769598356908_xjkjvzp40",
-      "lastDate": "2026-09-29",
+      "lastDate": "2026-10-16",
       "lastSets": [
         {
-          "reps": 20,
+          "reps": 23,
           "weight": null
         },
         {
@@ -126,7 +126,7 @@
           "weight": null
         },
         {
-          "reps": 13,
+          "reps": 10,
           "weight": null
         }
       ],
@@ -183,18 +183,18 @@
     {
       "equipmentType": "bodyweight",
       "id": "1769598356910_assistpullup",
-      "lastDate": "2026-09-29",
+      "lastDate": "2026-10-16",
       "lastSets": [
+        {
+          "reps": 22,
+          "weight": null
+        },
         {
           "reps": 20,
           "weight": null
         },
         {
-          "reps": 16,
-          "weight": null
-        },
-        {
-          "reps": 13,
+          "reps": 10,
           "weight": null
         }
       ],
@@ -302,7 +302,7 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356916_dumbbellflies",
-      "lastDate": "2026-10-06",
+      "lastDate": "2026-10-16",
       "lastSets": [
         {
           "reps": 30,
@@ -412,7 +412,7 @@
     {
       "equipmentType": "machines",
       "id": "1769598356921_facepulls",
-      "lastDate": "2026-10-06",
+      "lastDate": "2026-10-16",
       "lastSets": [
         {
           "reps": 21,
@@ -456,7 +456,7 @@
     {
       "equipmentType": "bodyweight",
       "id": "1769598356923_neckturns",
-      "lastDate": "2026-10-06",
+      "lastDate": "2026-10-16",
       "lastSets": [
         {
           "reps": 40,
@@ -522,7 +522,7 @@
     {
       "equipmentType": "bodyweight+",
       "id": "1769759085099_6xqb1io2v",
-      "lastDate": "2026-09-29",
+      "lastDate": "2026-10-16",
       "lastSets": [
         {
           "reps": 40,
@@ -723,7 +723,7 @@
     {
       "equipmentType": "dumbbell",
       "id": "1770183966156_6whslwg5f",
-      "lastDate": "2026-10-06",
+      "lastDate": "2026-10-16",
       "lastSets": [
         {
           "reps": 26,
@@ -1021,7 +1021,7 @@
     {
       "equipmentType": "machines",
       "id": "1773760132008_mh29jezd2",
-      "lastDate": "2026-08-20",
+      "lastDate": "2026-10-16",
       "lastSets": [
         {
           "reps": 40,

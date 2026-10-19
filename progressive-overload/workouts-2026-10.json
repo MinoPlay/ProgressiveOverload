@@ -917,6 +917,222 @@
       "sequence": 30,
       "supersetGroupId": "ss-5",
       "weight": 90
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "id": "1792386083321_2gh95knl7",
+      "reps": 26,
+      "sequence": 1,
+      "supersetGroupId": "ss-1",
+      "weight": 16
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "id": "1792386083321_7qe58ze7g",
+      "reps": 20,
+      "sequence": 2,
+      "supersetGroupId": "ss-1",
+      "weight": 16
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356917_inclinedumbflies",
+      "id": "1792386083321_3jeuienb5",
+      "reps": 16,
+      "sequence": 3,
+      "supersetGroupId": "ss-1",
+      "weight": 16
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "id": "1792386083321_bxrwhqxta",
+      "reps": 13,
+      "sequence": 4,
+      "supersetGroupId": "ss-1",
+      "weight": 24
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "id": "1792386083321_kqczrkb8b",
+      "reps": 12,
+      "sequence": 5,
+      "supersetGroupId": "ss-1",
+      "weight": 26
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769748047444_cfopuwtws",
+      "id": "1792386083321_3rpsg8x3i",
+      "reps": 12,
+      "sequence": 6,
+      "supersetGroupId": "ss-1",
+      "weight": 26
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356908_flvdqzdhf",
+      "id": "1792386083321_unetb718p",
+      "reps": 25,
+      "sequence": 7,
+      "supersetGroupId": "ss-2",
+      "weight": 50
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356908_flvdqzdhf",
+      "id": "1792386083321_540vnx6nr",
+      "reps": 20,
+      "sequence": 8,
+      "supersetGroupId": "ss-2",
+      "weight": 60
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356908_flvdqzdhf",
+      "id": "1792386083321_f6ezgim0v",
+      "reps": 6,
+      "sequence": 9,
+      "supersetGroupId": "ss-2",
+      "weight": 70
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356921_facepulls",
+      "id": "1792386083321_n6syk79t2",
+      "reps": 21,
+      "sequence": 10,
+      "supersetGroupId": "ss-2",
+      "weight": 27.5
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356921_facepulls",
+      "id": "1792386083321_iq88h6tc8",
+      "reps": 20,
+      "sequence": 11,
+      "supersetGroupId": "ss-2",
+      "weight": 30
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356921_facepulls",
+      "id": "1792386083321_e9brddlvd",
+      "reps": 20,
+      "sequence": 12,
+      "supersetGroupId": "ss-2",
+      "weight": 32.5
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356923_neckturns",
+      "id": "1792386083321_6wbrygq18",
+      "reps": 40,
+      "sequence": 13,
+      "supersetGroupId": "ss-3",
+      "weight": null
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356923_neckturns",
+      "id": "1792386083321_0wztzvt7k",
+      "reps": 40,
+      "sequence": 14,
+      "supersetGroupId": "ss-3",
+      "weight": null
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356923_neckturns",
+      "id": "1792386083321_zby672uim",
+      "reps": 21,
+      "sequence": 15,
+      "supersetGroupId": "ss-3",
+      "weight": null
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356908_xjkjvzp40",
+      "id": "1792386083321_a2ipjkhzl",
+      "reps": 23,
+      "sequence": 16,
+      "supersetGroupId": "ss-3",
+      "weight": null
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356908_xjkjvzp40",
+      "id": "1792386083321_1b8htw6j8",
+      "reps": 20,
+      "sequence": 17,
+      "supersetGroupId": "ss-3",
+      "weight": null
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356908_xjkjvzp40",
+      "id": "1792386083321_g4j9su4xk",
+      "reps": 10,
+      "sequence": 18,
+      "supersetGroupId": "ss-3",
+      "weight": null
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1773136328230_9yg7oyg8x",
+      "id": "1792386083321_gfxjoou6g",
+      "reps": 12,
+      "sequence": 19,
+      "supersetGroupId": "ss-4",
+      "weight": 16
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1773136328230_9yg7oyg8x",
+      "id": "1792386083321_tr7hjqj8b",
+      "reps": 12,
+      "sequence": 20,
+      "supersetGroupId": "ss-4",
+      "weight": 20
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1773136328230_9yg7oyg8x",
+      "id": "1792386083321_2crazxv13",
+      "reps": 12,
+      "sequence": 21,
+      "supersetGroupId": "ss-4",
+      "weight": 20
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356908_audtljs1j",
+      "id": "1792386083321_0vv2gw74n",
+      "reps": 13,
+      "sequence": 22,
+      "supersetGroupId": "ss-4",
+      "weight": null
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356908_audtljs1j",
+      "id": "1792386083321_flfoptkf7",
+      "reps": 10,
+      "sequence": 23,
+      "supersetGroupId": "ss-4",
+      "weight": null
+    },
+    {
+      "date": "2026-10-19",
+      "exerciseId": "1769598356908_audtljs1j",
+      "id": "1792386083321_t9drapofp",
+      "reps": 9,
+      "sequence": 24,
+      "supersetGroupId": "ss-4",
+      "weight": null
     }
   ]
 }

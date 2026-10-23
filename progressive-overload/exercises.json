@@ -49,7 +49,7 @@
     {
       "equipmentType": "bodyweight",
       "id": "1769598356908_audtljs1j",
-      "lastDate": "2026-10-19",
+      "lastDate": "2026-10-22",
       "lastSets": [
         {
           "reps": 13,
@@ -71,18 +71,18 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356908_flvdqzdhf",
-      "lastDate": "2026-10-19",
+      "lastDate": "2026-10-22",
       "lastSets": [
         {
-          "reps": 25,
+          "reps": 26,
           "weight": 50
         },
         {
-          "reps": 20,
+          "reps": 18,
           "weight": 60
         },
         {
-          "reps": 6,
+          "reps": 8,
           "weight": 70
         }
       ],
@@ -206,10 +206,10 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356911_barbshldpress",
-      "lastDate": "2026-08-31",
+      "lastDate": "2026-10-22",
       "lastSets": [
         {
-          "reps": 15,
+          "reps": 20,
           "weight": 30
         },
         {
@@ -217,7 +217,7 @@
           "weight": 32.5
         },
         {
-          "reps": 15,
+          "reps": 13,
           "weight": 35
         }
       ],
@@ -412,10 +412,10 @@
     {
       "equipmentType": "machines",
       "id": "1769598356921_facepulls",
-      "lastDate": "2026-10-19",
+      "lastDate": "2026-10-22",
       "lastSets": [
         {
-          "reps": 21,
+          "reps": 22,
           "weight": 27.5
         },
         {
@@ -522,7 +522,7 @@
     {
       "equipmentType": "bodyweight+",
       "id": "1769759085099_6xqb1io2v",
-      "lastDate": "2026-10-16",
+      "lastDate": "2026-10-22",
       "lastSets": [
         {
           "reps": 40,
@@ -1089,18 +1089,18 @@
     {
       "equipmentType": "kettlebell",
       "id": "1775800164722_ljg52k1hv",
-      "lastDate": "2026-04-10",
+      "lastDate": "2026-10-22",
       "lastSets": [
         {
           "reps": 12,
           "weight": 32
         },
         {
-          "reps": 12,
+          "reps": 13,
           "weight": 32
         },
         {
-          "reps": 12,
+          "reps": 14,
           "weight": 32
         }
       ],
@@ -1423,6 +1423,21 @@
     {
       "equipmentType": "bodyweight",
       "id": "1785491642700_7h1pyyn4i",
+      "lastDate": "2026-10-22",
+      "lastSets": [
+        {
+          "reps": 60,
+          "weight": null
+        },
+        {
+          "reps": 60,
+          "weight": null
+        },
+        {
+          "reps": 60,
+          "weight": null
+        }
+      ],
       "muscle": "core",
       "name": "Planks",
       "requiresWeight": false
@@ -1642,18 +1657,18 @@
     {
       "equipmentType": "kettlebell",
       "id": "1790856772298_dic33ul39",
-      "lastDate": "2026-10-01",
+      "lastDate": "2026-10-22",
       "lastSets": [
         {
           "reps": 15,
           "weight": 16
         },
         {
-          "reps": 12,
+          "reps": 13,
           "weight": 24
         },
         {
-          "reps": 13,
+          "reps": 15,
           "weight": 24
         }
       ],

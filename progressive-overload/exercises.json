@@ -544,10 +544,10 @@
     {
       "equipmentType": "bodyweight",
       "id": "1770010228345_o1qup7585",
-      "lastDate": "2026-10-14",
+      "lastDate": "2026-10-26",
       "lastSets": [
         {
-          "reps": 40,
+          "reps": 43,
           "weight": null
         },
         {
@@ -555,7 +555,7 @@
           "weight": null
         },
         {
-          "reps": 25,
+          "reps": 23,
           "weight": null
         }
       ],
@@ -1401,18 +1401,18 @@
     {
       "equipmentType": "bodyweight",
       "id": "1785491573959_mwi6zrop3",
-      "lastDate": "2026-08-30",
+      "lastDate": "2026-10-26",
       "lastSets": [
         {
           "reps": 25,
           "weight": null
         },
         {
-          "reps": 22,
+          "reps": 25,
           "weight": null
         },
         {
-          "reps": 18,
+          "reps": 15,
           "weight": null
         }
       ],
@@ -1445,10 +1445,10 @@
     {
       "equipmentType": "bodyweight",
       "id": "1785491818429_6f4mk1tv7",
-      "lastDate": "2026-10-14",
+      "lastDate": "2026-10-26",
       "lastSets": [
         {
-          "reps": 40,
+          "reps": 35,
           "weight": null
         },
         {
@@ -1456,7 +1456,7 @@
           "weight": null
         },
         {
-          "reps": 22,
+          "reps": 27,
           "weight": null
         }
       ],
@@ -1540,7 +1540,7 @@
     {
       "equipmentType": "bodyweight",
       "id": "1788624555039_v7qatlqyc",
-      "lastDate": "2026-09-05",
+      "lastDate": "2026-10-26",
       "lastSets": [
         {
           "reps": 30,

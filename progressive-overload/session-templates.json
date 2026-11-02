@@ -345,6 +345,87 @@
           "type": "single"
         }
       ]
+    },
+    {
+      "id": "1793594643045_h2awk27qh",
+      "name": "5 sets, 2 per muscle",
+      "rows": [
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356916_dumbbellflies",
+              "id": "tpl-ss-1793594490005-0ctn9p-a"
+            },
+            {
+              "exerciseId": "1771392571053_o2wbozqmo",
+              "id": "tpl-ss-1793594490005-0ctn9p-b"
+            }
+          ],
+          "id": "tpl-ss-1793594490005-0ctn9p",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356913_dumbbellpress",
+              "id": "tpl-ss-1793594490853-3twofe-a"
+            },
+            {
+              "exerciseId": "1770183966156_6whslwg5f",
+              "id": "tpl-ss-1793594490853-3twofe-b"
+            }
+          ],
+          "id": "tpl-ss-1793594490853-3twofe",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356908_a2079ga75",
+              "id": "tpl-ss-1793594562417-o6tj21-a"
+            },
+            {
+              "exerciseId": "1769598356923_neckturns",
+              "id": "tpl-ss-1793594562417-o6tj21-b"
+            }
+          ],
+          "id": "tpl-ss-1793594562417-o6tj21",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1790568010626_8wtmolrxz",
+              "id": "tpl-ss-1793594563476-kwskc5-a"
+            },
+            {
+              "exerciseId": "1790568028328_iv9c8r58r",
+              "id": "tpl-ss-1793594563476-kwskc5-b"
+            }
+          ],
+          "id": "tpl-ss-1793594563476-kwskc5",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1769598356919_lateralraise",
+              "id": "tpl-ss-1793594612715-5we6fx-a"
+            },
+            {
+              "exerciseId": "1769759085099_6xqb1io2v",
+              "id": "tpl-ss-1793594612715-5we6fx-b"
+            }
+          ],
+          "id": "tpl-ss-1793594612715-5we6fx",
+          "label": "Superset",
+          "type": "superset"
+        }
+      ]
     }
   ]
 }

@@ -17,6 +17,7 @@ All messages use `{ type: 'po-*', ...payload }`.
 | `po-workouts` | `{ workouts: WorkoutRecord[] }` | Current month workouts |
 | `po-workouts-saved` | — | Acknowledgement after successful save |
 | `po-save-error` | `{ error: string }` | Error after failed save |
+| `po-load-session` | `{ rows: TemplateRow[] }` | Replace the board with these exercises/supersets (History "Load"); queued until the exercise catalog has arrived |
 
 ### Iframe → Parent (request/action)
 | `type` | Payload | Description |
@@ -31,7 +32,8 @@ All messages use `{ type: 'po-*', ...payload }`.
 2. After a 100 ms delay, `broadcastExercises()`, `broadcastTemplates()`, `broadcastWorkouts()` are called
 3. Each iframe's `load` event triggers `sendAllData(frame)` to handle re-loads
 4. Parent listens for `exercisesUpdated` / `templatesUpdated` / `workoutsUpdated` window events and re-broadcasts (workouts, week and history feeds on `workoutsUpdated`)
-5. On Supabase, `po-request-exercises|templates|workouts` first call `Storage.refreshFromRemote()` so the iframe always gets fresh data; `loadAllWorkouts()` shares only the in-flight fetch and never keeps the result
+5. `sessionLoadRequested` (`{ detail: { rows } }`, dispatched by History "Load") makes `loadSession(rows)` switch to the Workout tab and post `po-load-session`
+6. On Supabase, `po-request-exercises|templates|workouts` first call `Storage.refreshFromRemote()` so the iframe always gets fresh data; `loadAllWorkouts()` shares only the in-flight fetch and never keeps the result
 
 ## Key Methods (`IframeBridge`)
 | Method | Description |
@@ -41,6 +43,7 @@ All messages use `{ type: 'po-*', ...payload }`.
 | `broadcastExercises()` | Send exercises to all registered frames |
 | `broadcastTemplates()` | Send templates to all registered frames |
 | `broadcastWorkouts()` | Send workouts to all registered frames |
+| `loadSession(rows)` | Switch to the Workout tab and send `po-load-session` to all registered frames |
 | `handleMessage(event)` | Route incoming `po-*` messages; only processes messages from known frames |
 
 ## Rules & Constraints

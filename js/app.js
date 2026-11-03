@@ -419,6 +419,7 @@ function escapeHtml(str) {
  * Iframe Bridge
  * Sends exercise data and templates from parent Storage to embedded iframes via postMessage.
  * Listens for iframe requests and forwards exercisesUpdated / templatesUpdated events.
+ * Also relays sessionLoadRequested (History "Load") to the Workout board as po-load-session.
  */
 const IframeBridge = {
     frames: [],
@@ -442,6 +443,7 @@ const IframeBridge = {
         // Forward parent events to iframes
         window.addEventListener('exercisesUpdated', () => this.broadcastExercises());
         window.addEventListener('templatesUpdated', () => this.broadcastTemplates());
+        window.addEventListener('sessionLoadRequested', (e) => this.loadSession(e.detail.rows));
         window.addEventListener('workoutsUpdated', () => {
             // The file-backed stats summary is regenerated asynchronously after
             // a change; use fresh range fetches from now on.
@@ -583,6 +585,15 @@ const IframeBridge = {
     /** Broadcast the last-12-months workout history to every iframe */
     broadcastHistoryWorkouts() {
         this.frames.forEach(f => this.sendHistoryWorkouts(f));
+    },
+
+    /**
+     * Open the Workout tab and replace its board with the given exercises/supersets.
+     * @param {array} rows - Template-format rows ({ type: 'single' | 'superset', ... }) in board order
+     */
+    loadSession(rows) {
+        App.switchSection('workout');
+        this.frames.forEach(f => f.contentWindow?.postMessage({ type: 'po-load-session', rows }, '*'));
     },
 
     /**

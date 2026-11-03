@@ -301,6 +301,11 @@ export const History = {
 
         this.refreshSupersetConnectors();
 
+        const loadBtn = document.getElementById('historyDayModalLoadBtn');
+        if (loadBtn) {
+            loadBtn.onclick = () => this.loadDayIntoWorkout();
+        }
+
         const templateBtn = document.getElementById('historyDayModalTemplateBtn');
         if (templateBtn) {
             templateBtn.onclick = () => this.openTemplateModal(date, sortedGroups.map(g => g.exerciseId));
@@ -441,6 +446,29 @@ export const History = {
         } finally {
             showLoading(false);
         }
+    },
+
+    /**
+     * Load the open day's exercises into the Workout tab and switch to it. Order and
+     * superset pairs follow the day modal, including links not saved yet.
+     */
+    loadDayIntoWorkout() {
+        const rows = [];
+        for (let i = 0; i < this._supersetGroups.length; i++) {
+            const { exerciseId } = this._supersetGroups[i];
+            if (this._supersetLinks.has(i)) {
+                rows.push({
+                    type: 'superset',
+                    exercises: [{ exerciseId }, { exerciseId: this._supersetGroups[i + 1].exerciseId }]
+                });
+                i++;
+            } else {
+                rows.push({ type: 'single', exerciseId });
+            }
+        }
+
+        this.closeDayModal();
+        window.dispatchEvent(new CustomEvent('sessionLoadRequested', { detail: { rows } }));
     },
 
     /**

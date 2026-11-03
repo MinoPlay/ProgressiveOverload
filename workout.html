@@ -1525,39 +1525,44 @@ function _mergeParentExercises(exercises) {
   refreshExerciseSelectOptions();
 }
 
+function _buildTemplateRows(tplRows) {
+  const rows = [];
+  (tplRows || []).forEach(row => {
+    if (row.type === 'single') {
+      const ex = _parentExerciseMap[row.exerciseId];
+      if (!ex) return;
+      const isBodyweight = ex.requiresWeight === false;
+      const sets = _resolveTemplateSets(row.sets, ex, isBodyweight);
+      rows.push({
+        exerciseId: ex.id,
+        name: ex.name,
+        muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1),
+        sets
+      });
+    } else if (row.type === 'superset') {
+      const supersetItems = [];
+      (row.exercises || []).forEach(item => {
+        const ex = _parentExerciseMap[item.exerciseId];
+        if (!ex) return;
+        const isBodyweight = ex.requiresWeight === false;
+        const sets = _resolveTemplateSets(item.sets, ex, isBodyweight);
+        supersetItems.push({ exerciseId: ex.id, name: ex.name, muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1), sets });
+      });
+      supersetItems.forEach((item, i) => {
+        if (i < supersetItems.length - 1) item._linkedToNext = true;
+        rows.push(item);
+      });
+    }
+  });
+  return rows;
+}
+
 function _mergeParentTemplates(parentTemplates) {
   if (!Array.isArray(parentTemplates) || !parentTemplates.length) return;
   let added = 0;
   parentTemplates.forEach(tpl => {
     if (!tpl.name) return; // always overwrite — parent data is authoritative
-    const rows = [];
-    (tpl.rows || []).forEach(row => {
-      if (row.type === 'single') {
-        const ex = _parentExerciseMap[row.exerciseId];
-        if (!ex) return;
-        const isBodyweight = ex.requiresWeight === false;
-        const sets = _resolveTemplateSets(row.sets, ex, isBodyweight);
-        rows.push({
-          exerciseId: ex.id,
-          name: ex.name,
-          muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1),
-          sets
-        });
-      } else if (row.type === 'superset') {
-        const supersetItems = [];
-        (row.exercises || []).forEach(item => {
-          const ex = _parentExerciseMap[item.exerciseId];
-          if (!ex) return;
-          const isBodyweight = ex.requiresWeight === false;
-          const sets = _resolveTemplateSets(item.sets, ex, isBodyweight);
-          supersetItems.push({ exerciseId: ex.id, name: ex.name, muscle: (ex.muscle || 'other').charAt(0).toUpperCase() + (ex.muscle || 'other').slice(1), sets });
-        });
-        supersetItems.forEach((item, i) => {
-          if (i < supersetItems.length - 1) item._linkedToNext = true;
-          rows.push(item);
-        });
-      }
-    });
+    const rows = _buildTemplateRows(tpl.rows);
     if (rows.length) {
       templates[tpl.name] = rows;
       added++;
@@ -1949,8 +1954,8 @@ if (EMBED_MODE) {
     if (!msg || typeof msg.type !== 'string') return;
     if (msg.type === 'po-exercises') {
       _mergeParentExercises(msg.exercises);
-      // Re-apply saved state now that exercises are available from parent
-      applySavedDesign1State();
+      // Re-apply saved state now that exercises are available from parent (a queued session load wins)
+      if (!applyPendingSessionLoad()) applySavedDesign1State();
       // Rebuild volume bars now that the exercise map is ready (workouts may have arrived first)
       if (_rawParentWorkouts.length) _mergeParentWorkouts();
       renderWorkoutRadars();
@@ -1958,6 +1963,9 @@ if (EMBED_MODE) {
       document.documentElement.classList.remove('board-loading');
     } else if (msg.type === 'po-templates') {
       _mergeParentTemplates(msg.templates);
+    } else if (msg.type === 'po-load-session') {
+      _pendingSessionRows = Array.isArray(msg.rows) ? msg.rows : null;
+      applyPendingSessionLoad();
     } else if (msg.type === 'po-workouts') {
       _mergeParentWorkouts('current', msg.workouts);
     } else if (msg.type === 'po-history-workouts') {
@@ -2739,6 +2747,21 @@ function applySavedDesign1State() {
   saveDesign1State();
 }
 
+// Session sent by the parent (History "Load"); held until the exercise catalog has arrived.
+let _pendingSessionRows = null;
+
+function applyPendingSessionLoad() {
+  if (!_pendingSessionRows || !Object.keys(_parentExerciseMap).length) return false;
+  const rows = _buildTemplateRows(_pendingSessionRows);
+  _pendingSessionRows = null;
+  if (!rows.length) return false;
+  if (executeState.active) switchTab('plan');
+  setTemplateSelection('');
+  renderTemplateExercises(rows);
+  saveDesign1State();
+  return true;
+}
+
 document.addEventListener('click', () => {
   closeTemplateMenu();
 });
@@ -3447,12 +3470,15 @@ function chooseTemplate(name) {
 }
 
 function loadTemplate(name) {
+  renderTemplateExercises(templates[name]);
+}
+
+function renderTemplateExercises(templateExercises) {
   tickedCount = 0;
   updateSubmit();
   // Remove existing cards
   const planView = document.getElementById('planView');
   planView.querySelectorAll('.exercise-card').forEach(card => card.remove());
-  const templateExercises = templates[name];
   if (!templateExercises) {
     refreshLinkButtons();
     updateLinkVisuals();

@@ -55,6 +55,7 @@ The iframe's `message` listener routes them:
 | `po-history-workouts` | `_mergeParentWorkouts('history', …)` | Supplies a broader window of prior workouts (last 12 months) so volume bars and reps/weight preload reflect sessions from earlier months. Each feed replaces its previous copy; both are combined (deduped by id). |
 | `po-workouts-saved` | (inline) | Save acknowledged: show "Saved ✓", optionally clear the board, leave execute mode. Fresh workouts follow via `po-workouts`. |
 | `po-save-error` | (inline) | Re-enable submit, alert the error. |
+| `po-load-session` | `applyPendingSessionLoad` | History "Load": replaces the board with the given `{single \| superset}` rows via `_buildTemplateRows` + `renderTemplateExercises` (sets prefilled from each exercise's last session, like a template), leaves execute mode first, then `saveDesign1State()`. Held in `_pendingSessionRows` until `po-exercises` has arrived. |
 
 ## 4. Save the session (iframe → parent → Storage)
 
@@ -93,6 +94,7 @@ write path**.
 | `po-week-workouts` | `{ workouts: WorkoutRecord[] }` | Current calendar week's workouts (Mon–Sun, may span months) — used for the top-of-tab weekly muscle balance radar |
 | `po-workouts-saved` | — | Save succeeded |
 | `po-save-error` | `{ error }` | Save failed |
+| `po-load-session` | `{ rows: TemplateRow[] }` | History "Load": replace the board with these singles/superset pairs (same row shape as session templates) |
 
 ### Iframe → parent (request / action)
 | `type` | Payload | Meaning |

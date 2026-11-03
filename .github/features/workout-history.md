@@ -30,11 +30,13 @@ Week (Mon–Sun)
 | `toggleSupersetLink(index)` | Link/unlink a consecutive pair; blocked when a neighbouring pair already exists |
 | `refreshSupersetConnectors()` | Sync connector active/disabled state and the linked-group highlight |
 | `saveSupersetLinks(date, workouts)` | Persist the pending pairs via `Storage.updateWorkoutSupersets` ("Override data" button) |
+| `loadDayIntoWorkout()` | "Load" button: build template-format rows (singles + superset pairs, modal order) from the pending links, close the modal and dispatch `sessionLoadRequested` |
 | `handleReorder(workoutId, direction, date)` | Swap `sequence` values and persist via `Storage.reorderWorkout` |
 
 ## Integration Points
 - **Storage** — `getWorkoutsInRange(startDate, endDate)` (async, loads multiple monthly files), `getExerciseById(id)` to resolve names
 - **Events listened** — `workoutsUpdated` triggers a full `renderHistory()` refresh
+- **Events dispatched** — `sessionLoadRequested` (`{ detail: { rows } }`) from the day modal's **Load** button; `IframeBridge` switches to the Workout tab and the board replaces its exercises (sets prefilled from each exercise's last session, like a template)
 - **Lazy init** — `Charts.init()` and `History.init()` are called from `App.initNavigation` only when their tab is first visited
 
 ## Rules & Constraints

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Progressive Overload Tracker</string>
+    <string name="launcher_name">OverloadPro</string>
+    <string name="launch_url" translatable="false">https://minoplay.github.io/ProgressiveOverload/</string>
+    <string name="provider_authority" translatable="false">io.github.minoplay.progressiveoverload.fileprovider</string>
+    <!-- App side of Digital Asset Links; site side: https://minoplay.github.io/.well-known/assetlinks.json -->
+    <string name="asset_statements" translatable="false">
+        [{
+            \"relation\": [\"delegate_permission/common.handle_all_urls\"],
+            \"target\": {\"namespace\": \"web\", \"site\": \"https://minoplay.github.io\"}
+        }]
+    </string>
+</resources>

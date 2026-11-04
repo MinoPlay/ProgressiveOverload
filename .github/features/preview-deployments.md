@@ -14,7 +14,7 @@ Test different versions in parallel without breaking main. Every branch is live 
 - Triggers: `push` (all branches), `delete` (branch), `workflow_dispatch`.
 - Each run rebuilds the WHOLE site from every remote branch (`git archive`) → a deleted
   branch disappears on the next run. `concurrency: pages`, cancel in progress.
-- Dev-only files stripped: `node_modules`, `test(s)`, `Doc`, `scripts`, `supabase`, `.github`,
+- Dev-only files stripped: `node_modules`, `test(s)`, `Doc`, `scripts`, `supabase`, `android`, `.github`,
   `.githooks`, `package*.json`, `server.js`, `*.ps1`, `backfill-last-sets.py`, `README.md`, etc.
 - One-time repo setup:
   - Pages source = **GitHub Actions**:

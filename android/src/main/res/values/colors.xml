@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- theme_color / background_color of the web app's manifest.json -->
+    <color name="theme">#667EEA</color>
+    <color name="background">#1A1A2E</color>
+    <color name="navigation">#000000</color>
+</resources>

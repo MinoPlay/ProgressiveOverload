@@ -53,6 +53,7 @@ js/          → Browser ES modules (app.js is the entry point)
 css/         → Stylesheets (styles.css imports layout.css and components.css)
 progressive-overload/ → Static JSON data (exercises list, dev seed data)
 assets/      → Static assets
+android/     → Android app (Trusted Web Activity wrapper, Gradle)
 server.js    → Node.js dev server (CommonJS, port 3000)
 ```
 
@@ -73,3 +74,4 @@ Detailed context for each feature lives in `.github/features/`. Reference the re
 | [`features/theme-system.md`](features/theme-system.md) | Theme toggle, Chart.js color integration, `data-theme` attribute, `themeChanged` event |
 | [`features/iframe-bridge.md`](features/iframe-bridge.md) | `postMessage` communication between `index.html` and the `workout.html` iframe |
 | [`features/preview-deployments.md`](features/preview-deployments.md) | `.github/workflows/pages.yml`, `js/deploy-env.js`, SW cache names — branch previews at `/preview/<slug>/` and their storage/cache isolation |
+| [`features/android-app.md`](features/android-app.md) | `android/`, `.github/workflows/android.yml` — the Android app (Trusted Web Activity), APK signing/releases, Digital Asset Links |

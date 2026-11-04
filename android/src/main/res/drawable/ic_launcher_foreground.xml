@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Glyph paths of assets/favicon.svg; its 512 viewBox is centred on the 72dp visible area. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="768"
+    android:viewportHeight="768">
+    <group
+        android:translateX="128"
+        android:translateY="128">
+        <path
+            android:fillAlpha="0.6"
+            android:fillColor="#FFFFFF"
+            android:pathData="M160 384c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zm192-32c0 17.7-14.3 32-32 32s-32-14.3-32-32 14.3-32 32-32 32 14.3 32 32z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M416 320c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zM96 320c-17.7 0-32-14.3-32-32s14.3-32 32-32 32 14.3 32 32-14.3 32-32 32zM128 256h256v32H128z" />
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M256 96l64 64h-48v128h-32V160h-48l64-64z" />
+    </group>
+</vector>

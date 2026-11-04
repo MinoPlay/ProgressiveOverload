@@ -33,7 +33,7 @@ jobs:
         run: |
           set -euo pipefail
           DEFAULT_BRANCH="${{ github.event.repository.default_branch }}"
-          STRIP=(node_modules test tests Doc scripts supabase .github .githooks package.json package-lock.json \
+          STRIP=(node_modules test tests Doc scripts supabase android .github .githooks package.json package-lock.json \
                  server.js dev-start.ps1 check-config.ps1 backfill-last-sets.py README.md .gitignore .gitattributes)
           slugify() { echo "$1" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9-]/-/g'; }
           extract() {

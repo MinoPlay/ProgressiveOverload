@@ -147,6 +147,14 @@ One-time setup:
 1. `gh api -X PUT repos/MinoPlay/ProgressiveOverload/pages -f build_type=workflow` (Pages source → GitHub Actions).
 2. Repo Settings → Environments → `github-pages` → Deployment branches: allow all branches.
 
+### Android app
+
+`android/` is a Trusted Web Activity: a small APK that opens the live site fullscreen in Chrome, so web
+changes never need a new APK. Pushing changes under `android/` to `main` runs `.github/workflows/android.yml`,
+which publishes a signed APK as a GitHub Release. On the phone, install it from
+https://github.com/MinoPlay/ProgressiveOverload/releases/latest/download/ProgressiveOverload.apk
+(allow "Install unknown apps"). Signing key, asset links and troubleshooting: `.github/features/android-app.md`.
+
 ---
 
 ## 🏗️ Project Structure
@@ -159,6 +167,7 @@ One-time setup:
 - `.github/workflows/`: Scheduled migration and backup automation.
 - `progressive-overload/`: Local development data and schemas.
 - `assets/`: Icons and static assets.
+- `android/`: Android app (Trusted Web Activity wrapper around the live site).
 
 ## 📄 License
 

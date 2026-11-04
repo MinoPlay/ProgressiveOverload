@@ -13,6 +13,9 @@ as a Trusted Web Activity (TWA), so web changes ship via Pages and never need a 
   `versionCode` = `GITHUB_RUN_NUMBER` (1 locally), `versionName` = `1.0.<versionCode>`.
 - `src/main/AndroidManifest.xml`: TWA meta-data (launch URL, colors, splash, portrait) and an
   `autoVerify` link filter for `https://minoplay.github.io/ProgressiveOverload*`.
+- Keep `ManageDataLauncherActivity` declared with `MANAGE_SPACE_URL` pointing to the launch URL.
+  androidbrowserhelper toggles this component on every launch, even without a site-settings shortcut;
+  omitting it crashes the app before Chrome opens.
 - `res/values/strings.xml` (names, launch URL, `asset_statements`), `res/values/colors.xml`
   (`theme_color` / `background_color` of `manifest.json`).
 - Icon: adaptive vector from `assets/favicon.svg` (`drawable/ic_launcher_*`, `mipmap-anydpi/ic_launcher.xml`).
@@ -61,6 +64,10 @@ Only for shell changes: name, icon, colors, launch URL, orientation, SDK/library
 Web code (HTML/JS/CSS, `manifest.json`, `sw.js`) ships via Pages.
 
 ## Troubleshooting
+- App immediately closes → capture `adb logcat -b crash`. A `Component class ... does not exist`
+  error from `setComponentEnabledSetting` can indicate a missing `ManageDataLauncherActivity`
+  declaration (the class name is obfuscated in release builds). Verify fixes by installing and
+  launching the signed release APK on Android, not just building or checking its signature.
 - URL bar visible → asset links not verified: check `assetlinks.json` is live and its fingerprint matches
   the APK signer (`apksigner verify --print-certs`), then relaunch.
 - Links open in the browser → `adb shell pm get-app-links io.github.minoplay.progressiveoverload`;

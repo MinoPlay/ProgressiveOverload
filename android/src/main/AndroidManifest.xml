@@ -61,6 +61,15 @@
 
         <activity android:name="com.google.androidbrowserhelper.trusted.FocusActivity" />
 
+        <!-- The launcher toggles this component on every launch, even without a settings shortcut. -->
+        <activity
+            android:name="com.google.androidbrowserhelper.trusted.ManageDataLauncherActivity"
+            android:exported="false">
+            <meta-data
+                android:name="android.support.customtabs.trusted.MANAGE_SPACE_URL"
+                android:value="@string/launch_url" />
+        </activity>
+
         <!-- Hands the splash image to Chrome. -->
         <provider
             android:name="androidx.core.content.FileProvider"

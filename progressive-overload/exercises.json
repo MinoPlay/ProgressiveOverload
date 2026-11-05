@@ -1719,6 +1719,27 @@
       "muscle": "legs",
       "name": "Hip thrust (bodyweight)",
       "requiresWeight": false
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1793871813992_bxwhkn5hg",
+      "muscle": "legs",
+      "name": "Deadlift (kettlebell)",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1793871832686_wza5kc3xs",
+      "muscle": "shoulders",
+      "name": "Kettlebell Clean & Press",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1793871873760_xo2h75xv4",
+      "muscle": "chest",
+      "name": "Push-ups (deficit)",
+      "requiresWeight": false
     }
   ]
 }

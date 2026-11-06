@@ -71,10 +71,10 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356908_flvdqzdhf",
-      "lastDate": "2026-11-03",
+      "lastDate": "2026-11-06",
       "lastSets": [
         {
-          "reps": 25,
+          "reps": 24,
           "weight": 50
         },
         {
@@ -82,7 +82,7 @@
           "weight": 60
         },
         {
-          "reps": 8,
+          "reps": 9,
           "weight": 70
         }
       ],
@@ -228,15 +228,15 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356912_bentoverrows",
-      "lastDate": "2026-11-03",
+      "lastDate": "2026-11-06",
       "lastSets": [
         {
           "reps": 15,
           "weight": 60
         },
         {
-          "reps": 13,
-          "weight": 70
+          "reps": 10,
+          "weight": 80
         },
         {
           "reps": 13,
@@ -390,7 +390,7 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356920_hipthrust",
-      "lastDate": "2026-08-17",
+      "lastDate": "2026-11-06",
       "lastSets": [
         {
           "reps": 20,
@@ -412,10 +412,10 @@
     {
       "equipmentType": "machines",
       "id": "1769598356921_facepulls",
-      "lastDate": "2026-11-03",
+      "lastDate": "2026-11-06",
       "lastSets": [
         {
-          "reps": 21,
+          "reps": 20,
           "weight": 27.5
         },
         {
@@ -423,7 +423,7 @@
           "weight": 30
         },
         {
-          "reps": 20,
+          "reps": 21,
           "weight": 32.5
         }
       ],
@@ -456,7 +456,7 @@
     {
       "equipmentType": "bodyweight",
       "id": "1769598356923_neckturns",
-      "lastDate": "2026-11-03",
+      "lastDate": "2026-11-06",
       "lastSets": [
         {
           "reps": 45,
@@ -522,7 +522,7 @@
     {
       "equipmentType": "bodyweight+",
       "id": "1769759085099_6xqb1io2v",
-      "lastDate": "2026-11-03",
+      "lastDate": "2026-11-06",
       "lastSets": [
         {
           "reps": 40,
@@ -533,8 +533,8 @@
           "weight": 24
         },
         {
-          "reps": 15,
-          "weight": 28
+          "reps": 18,
+          "weight": 24
         }
       ],
       "muscle": "neck",
@@ -656,7 +656,7 @@
     {
       "equipmentType": "kettlebell",
       "id": "1770129543414_0ta8erxpi",
-      "lastDate": "2026-10-06",
+      "lastDate": "2026-11-05",
       "lastSets": [
         {
           "reps": 14,
@@ -1089,10 +1089,10 @@
     {
       "equipmentType": "kettlebell",
       "id": "1775800164722_ljg52k1hv",
-      "lastDate": "2026-10-22",
+      "lastDate": "2026-11-05",
       "lastSets": [
         {
-          "reps": 12,
+          "reps": 15,
           "weight": 32
         },
         {
@@ -1100,7 +1100,7 @@
           "weight": 32
         },
         {
-          "reps": 14,
+          "reps": 13,
           "weight": 32
         }
       ],
@@ -1112,18 +1112,18 @@
     {
       "equipmentType": "kettlebell",
       "id": "1775800313799_uh2to6cn3",
-      "lastDate": "2026-04-10",
+      "lastDate": "2026-11-05",
       "lastSets": [
         {
-          "reps": 20,
+          "reps": 40,
           "weight": 32
         },
         {
-          "reps": 20,
+          "reps": 40,
           "weight": 32
         },
         {
-          "reps": 20,
+          "reps": 40,
           "weight": 32
         }
       ],
@@ -1467,6 +1467,21 @@
     {
       "equipmentType": "machines",
       "id": "1786679057838_pxax0gkj6",
+      "lastDate": "2026-11-06",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 20
+        },
+        {
+          "reps": 20,
+          "weight": 20
+        },
+        {
+          "reps": 20,
+          "weight": 20
+        }
+      ],
       "muscle": "triceps",
       "name": "Rope cable extensions",
       "requiresWeight": true
@@ -1723,6 +1738,21 @@
     {
       "equipmentType": "kettlebell",
       "id": "1793871813992_bxwhkn5hg",
+      "lastDate": "2026-11-05",
+      "lastSets": [
+        {
+          "reps": 15,
+          "weight": 32
+        },
+        {
+          "reps": 15,
+          "weight": 32
+        },
+        {
+          "reps": 15,
+          "weight": 32
+        }
+      ],
       "muscle": "legs",
       "name": "Deadlift (kettlebell)",
       "requiresWeight": true
@@ -1730,6 +1760,21 @@
     {
       "equipmentType": "kettlebell",
       "id": "1793871832686_wza5kc3xs",
+      "lastDate": "2026-11-05",
+      "lastSets": [
+        {
+          "reps": 10,
+          "weight": 20
+        },
+        {
+          "reps": 10,
+          "weight": 20
+        },
+        {
+          "reps": 10,
+          "weight": 20
+        }
+      ],
       "muscle": "shoulders",
       "name": "Kettlebell Clean & Press",
       "requiresWeight": true
@@ -1737,9 +1782,68 @@
     {
       "equipmentType": "bodyweight",
       "id": "1793871873760_xo2h75xv4",
+      "lastDate": "2026-11-05",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 25,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        }
+      ],
       "muscle": "chest",
       "name": "Push-ups (deficit)",
       "requiresWeight": false
+    },
+    {
+      "equipmentType": "kettlebell",
+      "id": "1793876509509_1f9shhf0m",
+      "lastDate": "2026-11-05",
+      "lastSets": [
+        {
+          "reps": 10,
+          "weight": 20
+        },
+        {
+          "reps": 15,
+          "weight": 20
+        },
+        {
+          "reps": 15,
+          "weight": 20
+        }
+      ],
+      "muscle": "biceps",
+      "name": "Hand-to-Hand Ballistic Clean",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "machines",
+      "id": "1793941910407_vh0w2xn8r",
+      "lastDate": "2026-11-06",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 20
+        },
+        {
+          "reps": 20,
+          "weight": 20
+        },
+        {
+          "reps": 15,
+          "weight": 20
+        }
+      ],
+      "muscle": "biceps",
+      "name": "Rope cable curl",
+      "requiresWeight": true
     }
   ]
 }

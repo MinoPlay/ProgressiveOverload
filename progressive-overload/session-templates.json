@@ -345,6 +345,62 @@
           "type": "single"
         }
       ]
+    },
+    {
+      "id": "1793889635010_o8fxowhi7",
+      "name": "Kettlebell tryout #1",
+      "rows": [
+        {
+          "exercises": [
+            {
+              "exerciseId": "1793871813992_bxwhkn5hg",
+              "id": "tpl-ss-1793889631792-r250c9-a"
+            },
+            {
+              "exerciseId": "1770129543414_0ta8erxpi",
+              "id": "tpl-ss-1793889631792-r250c9-b"
+            }
+          ],
+          "id": "tpl-ss-1793889631792-r250c9",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1793871832686_wza5kc3xs",
+              "id": "tpl-ss-1793889633080-pinbwn-a"
+            },
+            {
+              "exerciseId": "1775800164722_ljg52k1hv",
+              "id": "tpl-ss-1793889633080-pinbwn-b"
+            }
+          ],
+          "id": "tpl-ss-1793889633080-pinbwn",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exercises": [
+            {
+              "exerciseId": "1793871873760_xo2h75xv4",
+              "id": "tpl-ss-1793889633719-x1id86-a"
+            },
+            {
+              "exerciseId": "1793876509509_1f9shhf0m",
+              "id": "tpl-ss-1793889633719-x1id86-b"
+            }
+          ],
+          "id": "tpl-ss-1793889633719-x1id86",
+          "label": "Superset",
+          "type": "superset"
+        },
+        {
+          "exerciseId": "1775800313799_uh2to6cn3",
+          "id": "tpl-row-1793889629215-ls5uip",
+          "type": "single"
+        }
+      ]
     }
   ]
 }

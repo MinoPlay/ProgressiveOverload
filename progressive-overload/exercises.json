@@ -26,7 +26,7 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356908_a2079ga75",
-      "lastDate": "2026-11-02",
+      "lastDate": "2026-11-09",
       "lastSets": [
         {
           "reps": 26,
@@ -251,7 +251,7 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356913_dumbbellpress",
-      "lastDate": "2026-11-02",
+      "lastDate": "2026-11-09",
       "lastSets": [
         {
           "reps": 10,
@@ -302,7 +302,7 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356916_dumbbellflies",
-      "lastDate": "2026-11-02",
+      "lastDate": "2026-11-09",
       "lastSets": [
         {
           "reps": 30,
@@ -313,7 +313,7 @@
           "weight": 20
         },
         {
-          "reps": 19,
+          "reps": 20,
           "weight": 16
         }
       ],
@@ -456,18 +456,18 @@
     {
       "equipmentType": "bodyweight",
       "id": "1769598356923_neckturns",
-      "lastDate": "2026-11-06",
+      "lastDate": "2026-11-09",
       "lastSets": [
         {
-          "reps": 45,
+          "reps": 40,
           "weight": null
         },
         {
-          "reps": 35,
+          "reps": 40,
           "weight": null
         },
         {
-          "reps": 21,
+          "reps": 22,
           "weight": null
         }
       ],
@@ -723,7 +723,7 @@
     {
       "equipmentType": "dumbbell",
       "id": "1770183966156_6whslwg5f",
-      "lastDate": "2026-11-02",
+      "lastDate": "2026-11-09",
       "lastSets": [
         {
           "reps": 20,
@@ -879,7 +879,7 @@
     {
       "equipmentType": "dumbbell",
       "id": "1771392571053_o2wbozqmo",
-      "lastDate": "2026-11-02",
+      "lastDate": "2026-11-09",
       "lastSets": [
         {
           "reps": 15,
@@ -1621,7 +1621,7 @@
     {
       "equipmentType": "machines",
       "id": "1790568010626_8wtmolrxz",
-      "lastDate": "2026-11-02",
+      "lastDate": "2026-11-09",
       "lastSets": [
         {
           "reps": 20,
@@ -1643,10 +1643,10 @@
     {
       "equipmentType": "machines",
       "id": "1790568028328_iv9c8r58r",
-      "lastDate": "2026-11-02",
+      "lastDate": "2026-11-09",
       "lastSets": [
         {
-          "reps": 17,
+          "reps": 20,
           "weight": 30
         },
         {
@@ -1654,7 +1654,7 @@
           "weight": 30
         },
         {
-          "reps": 13,
+          "reps": 10,
           "weight": 30
         }
       ],

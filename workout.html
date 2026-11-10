@@ -1977,7 +1977,7 @@ if (EMBED_MODE) {
       const btn = document.getElementById('submitBtn');
       const doneBtn = document.getElementById('executeDoneSubmitBtn');
       if (btn.querySelector('span')) btn.querySelector('span').textContent = 'Saved ✓';
-      if (doneBtn) { doneBtn.textContent = 'Saved ✓'; setTimeout(() => { doneBtn.innerHTML = '<i data-lucide="send"></i> Submit Session'; lucide.createIcons(); }, 2000); }
+      if (doneBtn) { doneBtn.textContent = 'Saved ✓'; setTimeout(() => { doneBtn.disabled = false; doneBtn.innerHTML = '<i data-lucide="send"></i> Submit Session'; lucide.createIcons(); }, 2000); }
       setTimeout(() => { if (btn.querySelector('span')) btn.querySelector('span').textContent = 'Submit Session'; }, 2000);
       if (document.getElementById('clearExercisesCheck').checked) {
         setTemplateSelection('');
@@ -3580,15 +3580,17 @@ document.getElementById('submitBtn').addEventListener('click', () => {
   const workouts = [];
   const cards = document.querySelectorAll('#planView .exercise-card');
 
-  // Tag mutually-linked consecutive cards with a shared superset group id
+  // Tag mutually-linked consecutive cards with a shared superset group id.
+  // Ids are unique per submit so multiple sessions on the same date don't merge supersets.
   const supersetGroupIds = {};
   const cardList = Array.from(cards);
+  const submitStamp = Date.now();
   let supersetCount = 0;
   cardList.forEach((card, index) => {
     const next = cardList[index + 1];
     if (!next) return;
     if (card.dataset.linkedWith !== next.id || next.dataset.linkedWith !== card.id) return;
-    const groupId = supersetGroupIds[card.id] || `ss-${++supersetCount}`;
+    const groupId = supersetGroupIds[card.id] || `ss-${submitStamp}-${++supersetCount}`;
     supersetGroupIds[card.id] = groupId;
     supersetGroupIds[next.id] = groupId;
   });

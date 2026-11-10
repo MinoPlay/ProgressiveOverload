@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v73x';
+const CACHE_VERSION = 'v73z';
 importScripts('./js/deploy-env.js');
 
 // Main: po-<kind>-<v>; branch preview: po-<slug>-<kind>-<v> (see js/deploy-env.js).

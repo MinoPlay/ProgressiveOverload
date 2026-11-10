@@ -53,7 +53,7 @@ Chart.js work here.
 | `js/app.js` | Lazy-init wiring in `initNavigation` — `switchSection` on first visit and `initActiveTab` on restore both call `Rankings.init()`. |
 | `css/components.css` | `/* ─── Rankings Tab ─── */` block: `.rankings-mode-toggle`, `.rankings-period-row`, `.ranking-row`, `.ranking-rank.gold/.silver/.bronze`, `.filter-icon-row.disabled`. |
 | `js/exercises.js` | Reused for the muscle row: `Exercises.renderIconChipButtons`, `getMuscleOptions`, `getMuscleFilterIcon`. Do not duplicate that chip code. |
-| `workout.html` | Submit handler assigns a shared `ss-N` `supersetGroupId` to mutually-linked (`dataset.linkedWith`) consecutive cards. **This is the only producer of superset data.** |
+| `workout.html` | Submit handler assigns a shared `ss-<submitTimestamp>-N` `supersetGroupId` (unique per submit, so multiple sessions on one date stay distinct) to mutually-linked (`dataset.linkedWith`) consecutive cards. **This is the only producer of superset data.** |
 | `js/storage.js` | `buildWorkoutRecord` persists `supersetGroupId`; `generateAndSaveStatsSummary` writes it as the compact `g` key and `loadStatsSummaryWorkouts` maps `g` back. |
 
 ## The mode toggle

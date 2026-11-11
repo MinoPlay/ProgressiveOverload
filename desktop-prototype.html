@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<!-- PROTOTYPE (throwaway): three desktop layouts for ProgressiveOverload, switchable via ?variant=A|B|C.
+     Reads real Supabase data (same account as the main app), read-only. Not linked from the app. -->
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desktop prototype · Progressive Overload</title>
+    <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
+    <!-- Must load before any storage access: namespaces storage in branch previews -->
+    <script src="js/deploy-env.js"></script>
+    <style>
+        :root {
+            --accent: #667eea;
+            --accent-2: #764ba2;
+            --accent-soft: #eef0fd;
+            --bg: #f4f5fa;
+            --panel: #ffffff;
+            --line: #e4e6ef;
+            --text: #1f2333;
+            --muted: #6b7088;
+            --good: #1f9d63;
+            --bad: #d9534f;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font: 14px/1.45 -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--text);
+            background: var(--bg);
+            min-height: 100vh;
+        }
+
+        button, input, select { font: inherit; color: inherit; }
+        .muted { color: var(--muted); }
+        .num { font-variant-numeric: tabular-nums; }
+        .center-msg { display: grid; place-items: center; min-height: 100vh; gap: 12px; text-align: center; }
+
+        /* Sign-in */
+        .signin { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 24px; width: 320px; display: grid; gap: 10px; }
+        .signin input { padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; }
+        .signin button { padding: 8px 10px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; }
+        .signin button.secondary { background: var(--accent-soft); color: var(--accent); }
+
+        /* Floating variant switcher (prototype chrome, not part of the design) */
+        .proto-switcher {
+            position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+            display: flex; align-items: center; gap: 4px; padding: 4px;
+            background: #111; color: #fff; border-radius: 999px; box-shadow: 0 6px 24px rgba(0, 0, 0, .35); z-index: 1000;
+            font-size: 13px;
+        }
+        .proto-switcher button { background: transparent; border: 0; color: #fff; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-size: 16px; }
+        .proto-switcher button:hover { background: #333; }
+        .proto-switcher span { padding: 0 10px; min-width: 150px; text-align: center; }
+
+        /* Shared bits */
+        .panel { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+        .panel h3 { font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); font-weight: 600; margin-bottom: 10px; }
+        .chip { display: inline-block; padding: 1px 7px; border-radius: 6px; background: var(--accent-soft); color: #3d4596; font-size: 12px; margin: 1px 3px 1px 0; white-space: nowrap; }
+        .tag { display: inline-block; padding: 0 6px; border-radius: 4px; background: #f0f1f6; color: var(--muted); font-size: 11px; text-transform: capitalize; }
+        .delta-up { color: var(--good); }
+        .delta-down { color: var(--bad); }
+
+        /* ── A: Studio ─────────────────────────────────────────────── */
+        .studio { display: grid; grid-template-columns: 220px 1fr; min-height: 100vh; }
+        .studio-side { background: linear-gradient(180deg, var(--accent), var(--accent-2)); color: #fff; padding: 20px 14px; display: flex; flex-direction: column; gap: 4px; }
+        .studio-side .brand { font-weight: 700; font-size: 16px; margin: 0 8px 18px; }
+        .studio-side a { color: #fff; text-decoration: none; padding: 8px 10px; border-radius: 8px; opacity: .85; }
+        .studio-side a.active, .studio-side a:hover { background: rgba(255, 255, 255, .18); opacity: 1; }
+        .studio-side .user { margin-top: auto; font-size: 12px; opacity: .8; padding: 0 8px; word-break: break-all; }
+        .studio-main { padding: 24px 28px 80px; display: grid; gap: 18px; align-content: start; max-width: 1400px; }
+        .studio-main h1 { font-size: 22px; }
+        .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+        .kpi { padding: 14px 16px; }
+        .kpi b { display: block; font-size: 26px; }
+        .studio-grid { display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px; }
+        .studio-grid .panel { padding: 16px; }
+        .session-ex { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 8px 0; border-top: 1px solid var(--line); }
+        .session-ex:first-of-type { border-top: 0; }
+        .rank-row { display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; padding: 5px 0; align-items: center; }
+        .bar-track { height: 8px; border-radius: 4px; background: #eef0f6; overflow: hidden; }
+        .bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); }
+        .muscle-row { display: grid; grid-template-columns: 90px 1fr 40px; gap: 8px; align-items: center; padding: 3px 0; text-transform: capitalize; }
+
+        /* ── B: Ledger ─────────────────────────────────────────────── */
+        .ledger { display: flex; flex-direction: column; height: 100vh; }
+        .ledger-top { display: flex; align-items: center; gap: 16px; padding: 10px 20px; background: var(--panel); border-bottom: 1px solid var(--line); }
+        .ledger-top .brand { font-weight: 700; color: var(--accent); }
+        .ledger-tabs { display: flex; gap: 2px; }
+        .ledger-tabs button { border: 0; background: transparent; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: var(--muted); }
+        .ledger-tabs button.active { background: var(--accent-soft); color: var(--accent); font-weight: 600; }
+        .ledger-filters { margin-left: auto; display: flex; gap: 8px; }
+        .ledger-filters input, .ledger-filters select { padding: 5px 8px; border: 1px solid var(--line); border-radius: 6px; background: #fff; }
+        .ledger-body { flex: 1; display: grid; grid-template-columns: 1fr 280px; min-height: 0; }
+        .ledger-table-wrap { overflow: auto; padding-bottom: 70px; }
+        table.ledger-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        .ledger-table th { position: sticky; top: 0; background: #fafbfe; text-align: left; font-weight: 600; color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: .05em; padding: 7px 10px; border-bottom: 1px solid var(--line); z-index: 1; }
+        .ledger-table td { padding: 5px 10px; border-bottom: 1px solid #f0f1f6; vertical-align: top; }
+        .ledger-table tr.day td { background: #f7f8fc; font-weight: 600; padding-top: 9px; color: #3d4596; }
+        .ledger-table tr:not(.day):hover td { background: #fbfbff; }
+        .ledger-table td.r, .ledger-table th.r { text-align: right; }
+        .ledger-side { border-left: 1px solid var(--line); background: var(--panel); padding: 16px; overflow: auto; display: grid; gap: 18px; align-content: start; }
+        .stat-line { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed var(--line); }
+
+        /* ── C: Focus ──────────────────────────────────────────────── */
+        .focus { display: grid; grid-template-columns: 280px minmax(0, 1fr) 330px; height: 100vh; }
+        .focus-list { background: var(--panel); border-right: 1px solid var(--line); display: flex; flex-direction: column; min-height: 0; }
+        .focus-list header { padding: 14px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+        .focus-list header .brand { font-weight: 700; color: var(--accent); }
+        .focus-list input, .focus-list select { padding: 6px 9px; border: 1px solid var(--line); border-radius: 8px; width: 100%; }
+        .focus-items { overflow: auto; flex: 1; padding-bottom: 70px; }
+        .focus-item { display: grid; grid-template-columns: 1fr auto; padding: 8px 14px; cursor: pointer; border-left: 3px solid transparent; }
+        .focus-item:hover { background: #fafbff; }
+        .focus-item.active { background: var(--accent-soft); border-left-color: var(--accent); }
+        .focus-item small { color: var(--muted); font-size: 11px; }
+        .focus-main { overflow: auto; padding: 22px 26px 80px; display: grid; gap: 16px; align-content: start; }
+        .focus-main h1 { font-size: 24px; }
+        .focus-main .panel { padding: 16px; }
+        .focus-stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+        .focus-stats .panel b { display: block; font-size: 20px; }
+        table.sessions { width: 100%; border-collapse: collapse; }
+        .sessions th { text-align: left; font-size: 11px; text-transform: uppercase; color: var(--muted); padding: 6px 8px; border-bottom: 1px solid var(--line); }
+        .sessions td { padding: 6px 8px; border-bottom: 1px solid #f0f1f6; vertical-align: top; }
+        .focus-side { border-left: 1px solid var(--line); background: var(--panel); padding: 18px; overflow: auto; display: grid; gap: 20px; align-content: start; padding-bottom: 80px; }
+        .heat { display: grid; grid-template-rows: repeat(7, 9px); grid-auto-flow: column; grid-auto-columns: 9px; gap: 2px; }
+        .heat i { border-radius: 2px; background: #eceef5; }
+        .heat i.l1 { background: #c7cdf7; }
+        .heat i.l2 { background: #8f9cf0; }
+        .heat i.l3 { background: var(--accent); }
+        .heat i.sel { outline: 1.5px solid var(--accent-2); outline-offset: -1px; }
+        .pr-row { display: flex; justify-content: space-between; padding: 5px 0; border-bottom: 1px dashed var(--line); }
+    </style>
+</head>
+
+<body>
+    <div id="root" class="center-msg"><p class="muted">Loading…</p></div>
+    <script type="module" src="js/desktop-prototype.js"></script>
+</body>
+
+</html>

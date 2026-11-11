@@ -1,11 +1,11 @@
 # Feature: Authentication & Configuration
 
 ## Purpose
-Manages the public Supabase browser configuration and email magic-link session surfaced in the nav settings dropdown. Supabase is the only application data source.
+Manages the public Supabase browser configuration and email password / magic-link session surfaced in the nav settings dropdown. Supabase is the only application data source.
 
 ## Key Files
 - `js/config.js` — `CONFIG` constants, Supabase configuration check, and cache refresh action
-- `js/supabase-auth.js` — email magic-link session handling
+- `js/supabase-auth.js` — email password + magic-link sign-in, set-password for signed-in users
 - `js/supabase-client.js` — configured browser client
 - `index.html` — signed-out and signed-in settings states
 
@@ -22,7 +22,8 @@ CONFIG.defaultExercises // seed exercises for empty accounts
 ## Integration Points
 - `App.initApp()` checks `isSupabaseConfigured()`, initializes `SupabaseAuth`, and opens settings when sign-in is required.
 - `SupabaseAPI` scopes every query to `SupabaseAuth.getUserId()`.
-- The settings dropdown calls `requestSupabaseMagicLink()` and `signOutSupabase()`.
+- The settings dropdown calls `signInSupabaseWithPassword()`, `requestSupabaseMagicLink()`, `setSupabasePassword()` and `signOutSupabase()`.
+- Password sign-in uses Supabase's built-in email provider (no backend change). Magic-link accounts have no password until one is set via "Set password" while signed in.
 
 ## Rules & Constraints
 - `CONFIG` is a module-level constant; do not mutate it at runtime.

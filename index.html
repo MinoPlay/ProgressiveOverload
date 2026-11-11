@@ -68,20 +68,30 @@
                                 <div class="config-form" id="supabase-config">
                                     <div id="supabase-signed-out" class="config-form">
                                         <input type="email" id="supabase-email" name="supabase-email"
-                                            placeholder="Email address" autocomplete="email">
+                                            placeholder="Email address" autocomplete="username">
+                                        <input type="password" id="supabase-password" name="supabase-password"
+                                            placeholder="Password" autocomplete="current-password">
+                                        <button onclick="signInSupabaseWithPassword()" class="btn-save">
+                                            <i data-lucide="log-in"></i> Sign in
+                                        </button>
                                         <button onclick="requestSupabaseMagicLink()" class="btn-save">
                                             <i data-lucide="mail"></i> Send sign-in link
                                         </button>
                                     </div>
                                     <div id="supabase-signed-in" class="config-form" style="display: none;">
                                         <span id="supabase-user-email" class="config-help"></span>
+                                        <input type="password" id="supabase-new-password" name="supabase-new-password"
+                                            placeholder="New password" autocomplete="new-password">
+                                        <button onclick="setSupabasePassword()" class="btn-save">
+                                            <i data-lucide="key-round"></i> Set password
+                                        </button>
                                         <button onclick="signOutSupabase()" class="btn-save">
                                             <i data-lucide="log-out"></i> Sign out
                                         </button>
                                     </div>
                                 </div>
                                 <p class="config-help" id="supabase-help">
-                                    Email magic-link authentication. Data is isolated per signed-in user.
+                                    Email + password or magic-link authentication. Data is isolated per signed-in user.
                                 </p>
                                 <button onclick="refreshCache()" class="btn-refresh-cache">
                                     <i data-lucide="refresh-cw"></i> Refresh Cache

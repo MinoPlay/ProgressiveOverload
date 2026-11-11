@@ -1,5 +1,5 @@
 // Supabase Authentication
-// Handles email magic-link sessions without exposing credentials to iframes.
+// Handles email password and magic-link sessions without exposing credentials to iframes.
 
 import { getSupabaseClient } from './supabase-client.js';
 
@@ -49,6 +49,40 @@ export const SupabaseAuth = {
                 emailRedirectTo: redirectUrl
             }
         });
+        if (error) throw error;
+    },
+
+    /**
+     * Sign in with email and password.
+     * @param {string} email
+     * @param {string} password
+     * @returns {Promise<void>}
+     */
+    async signInWithPassword(email, password) {
+        const normalizedEmail = String(email || '').trim();
+        if (!normalizedEmail || !password) {
+            throw new Error('Email and password are required');
+        }
+
+        const client = await getSupabaseClient();
+        const { data, error } = await client.auth.signInWithPassword({ email: normalizedEmail, password });
+        if (error) throw error;
+        this.session = data.session;
+        this.updateUI();
+    },
+
+    /**
+     * Set or change the signed-in user's password.
+     * @param {string} password
+     * @returns {Promise<void>}
+     */
+    async updatePassword(password) {
+        if (!password) {
+            throw new Error('Password is required');
+        }
+
+        const client = await getSupabaseClient();
+        const { error } = await client.auth.updateUser({ password });
         if (error) throw error;
     },
 
@@ -104,6 +138,29 @@ window.requestSupabaseMagicLink = async function () {
         const input = document.getElementById('supabase-email');
         await SupabaseAuth.requestMagicLink(input?.value);
         window.showToast?.('Check your email for the Supabase sign-in link.', 'success');
+    } catch (error) {
+        window.showToast?.(error.message, 'error');
+    }
+};
+
+window.signInSupabaseWithPassword = async function () {
+    try {
+        const email = document.getElementById('supabase-email')?.value;
+        const password = document.getElementById('supabase-password')?.value;
+        await SupabaseAuth.signInWithPassword(email, password);
+        window.showToast?.('Signed in.', 'success');
+        setTimeout(() => location.reload(), 300);
+    } catch (error) {
+        window.showToast?.(error.message, 'error');
+    }
+};
+
+window.setSupabasePassword = async function () {
+    try {
+        const input = document.getElementById('supabase-new-password');
+        await SupabaseAuth.updatePassword(input?.value);
+        if (input) input.value = '';
+        window.showToast?.('Password set. You can now sign in with it.', 'success');
     } catch (error) {
         window.showToast?.(error.message, 'error');
     }

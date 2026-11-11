@@ -34,7 +34,7 @@ const server = http.createServer((req, res) => {
     }
 
     // Default to index.html
-    let filePath = '.' + req.url;
+    let filePath = '.' + req.url.split('?')[0];
     if (filePath === './') {
         filePath = './index.html';
     }

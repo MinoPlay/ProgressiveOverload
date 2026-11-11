@@ -412,7 +412,7 @@
     {
       "equipmentType": "machines",
       "id": "1769598356921_facepulls",
-      "lastDate": "2026-11-06",
+      "lastDate": "2026-11-10",
       "lastSets": [
         {
           "reps": 20,
@@ -656,18 +656,18 @@
     {
       "equipmentType": "kettlebell",
       "id": "1770129543414_0ta8erxpi",
-      "lastDate": "2026-11-05",
+      "lastDate": "2026-11-10",
       "lastSets": [
         {
-          "reps": 14,
+          "reps": 16,
           "weight": 32
         },
         {
-          "reps": 12,
+          "reps": 13,
           "weight": 32
         },
         {
-          "reps": 12,
+          "reps": 10,
           "weight": 32
         }
       ],
@@ -679,19 +679,19 @@
     {
       "equipmentType": "barbell",
       "id": "1770182681432_b4c3ijz9x",
-      "lastDate": "2026-06-30",
+      "lastDate": "2026-11-10",
       "lastSets": [
         {
-          "reps": 10,
-          "weight": 24
+          "reps": 20,
+          "weight": 40
         },
         {
-          "reps": 10,
-          "weight": 24
+          "reps": 20,
+          "weight": 40
         },
         {
-          "reps": 10,
-          "weight": 24
+          "reps": 20,
+          "weight": 40
         }
       ],
       "muscle": "chest",
@@ -1089,7 +1089,7 @@
     {
       "equipmentType": "kettlebell",
       "id": "1775800164722_ljg52k1hv",
-      "lastDate": "2026-11-05",
+      "lastDate": "2026-11-10",
       "lastSets": [
         {
           "reps": 15,
@@ -1672,14 +1672,14 @@
     {
       "equipmentType": "kettlebell",
       "id": "1790856772298_dic33ul39",
-      "lastDate": "2026-10-22",
+      "lastDate": "2026-11-10",
       "lastSets": [
         {
           "reps": 15,
           "weight": 16
         },
         {
-          "reps": 13,
+          "reps": 15,
           "weight": 24
         },
         {
@@ -1760,7 +1760,7 @@
     {
       "equipmentType": "kettlebell",
       "id": "1793871832686_wza5kc3xs",
-      "lastDate": "2026-11-05",
+      "lastDate": "2026-11-10",
       "lastSets": [
         {
           "reps": 10,
@@ -1782,14 +1782,14 @@
     {
       "equipmentType": "bodyweight",
       "id": "1793871873760_xo2h75xv4",
-      "lastDate": "2026-11-05",
+      "lastDate": "2026-11-10",
       "lastSets": [
         {
-          "reps": 20,
+          "reps": 25,
           "weight": null
         },
         {
-          "reps": 25,
+          "reps": 20,
           "weight": null
         },
         {

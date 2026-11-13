@@ -1349,6 +1349,198 @@
       "reps": 20,
       "sequence": 21,
       "weight": null
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1794490429770_p4wkt4359",
+      "id": "1794498471557_4wzkl1q97",
+      "reps": 17,
+      "sequence": 1,
+      "weight": 40
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1794490429770_p4wkt4359",
+      "id": "1794498471557_oiplzknoa",
+      "reps": 17,
+      "sequence": 2,
+      "weight": 40
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1794490429770_p4wkt4359",
+      "id": "1794498471557_xaangmc9d",
+      "reps": 17,
+      "sequence": 3,
+      "weight": 40
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769598356908_flvdqzdhf",
+      "id": "1794498471557_rhkobxrdm",
+      "reps": 24,
+      "sequence": 4,
+      "weight": 50
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769598356908_flvdqzdhf",
+      "id": "1794498471557_zbrbrfcyr",
+      "reps": 19,
+      "sequence": 5,
+      "weight": 60
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769598356908_flvdqzdhf",
+      "id": "1794498471557_1t4u0mtoa",
+      "reps": 10,
+      "sequence": 6,
+      "weight": 70
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769598356908_a2079ga75",
+      "id": "1794498471557_13z79qrdm",
+      "reps": 25,
+      "sequence": 7,
+      "weight": 60
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769598356908_a2079ga75",
+      "id": "1794498471557_26vfbor70",
+      "reps": 16,
+      "sequence": 8,
+      "weight": 80
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769598356908_a2079ga75",
+      "id": "1794498471557_8arqsyu5l",
+      "reps": 9,
+      "sequence": 9,
+      "weight": 80
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769598356911_barbshldpress",
+      "id": "1794498471557_ce82x81cv",
+      "reps": 20,
+      "sequence": 10,
+      "weight": 30
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769598356911_barbshldpress",
+      "id": "1794498471557_knbjcvcnk",
+      "reps": 15,
+      "sequence": 11,
+      "weight": 35
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769598356911_barbshldpress",
+      "id": "1794498471557_54jeiyj0x",
+      "reps": 11,
+      "sequence": 12,
+      "weight": 40
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1794490379937_3iiqumd2m",
+      "id": "1794498471557_ozjogxlwv",
+      "reps": 20,
+      "sequence": 13,
+      "weight": null
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1794490379937_3iiqumd2m",
+      "id": "1794498471557_wbnjfb71y",
+      "reps": 20,
+      "sequence": 14,
+      "weight": null
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1794490379937_3iiqumd2m",
+      "id": "1794498471557_4jeppudvb",
+      "reps": 20,
+      "sequence": 15,
+      "weight": null
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1770010228345_o1qup7585",
+      "id": "1794498471557_2uht4f9br",
+      "reps": 45,
+      "sequence": 16,
+      "weight": null
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1770010228345_o1qup7585",
+      "id": "1794498471557_r6ou524ws",
+      "reps": 30,
+      "sequence": 17,
+      "weight": null
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1770010228345_o1qup7585",
+      "id": "1794498471557_5tlh7btdi",
+      "reps": 26,
+      "sequence": 18,
+      "weight": null
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1771944812841_m36abj8xi",
+      "id": "1794498471557_3txobxtey",
+      "reps": 20,
+      "sequence": 19,
+      "weight": 50
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1771944812841_m36abj8xi",
+      "id": "1794498471557_3go3jhiet",
+      "reps": 15,
+      "sequence": 20,
+      "weight": 60
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1771944812841_m36abj8xi",
+      "id": "1794498471557_iyboueagi",
+      "reps": 10,
+      "sequence": 21,
+      "weight": 70
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769759085099_6xqb1io2v",
+      "id": "1794498471557_yvdce568l",
+      "reps": 40,
+      "sequence": 22,
+      "weight": 20
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769759085099_6xqb1io2v",
+      "id": "1794498471557_rwjjjwxy7",
+      "reps": 26,
+      "sequence": 23,
+      "weight": 24
+    },
+    {
+      "date": "2026-11-12",
+      "exerciseId": "1769759085099_6xqb1io2v",
+      "id": "1794498471557_yp0l8audz",
+      "reps": 17,
+      "sequence": 24,
+      "weight": 24
     }
   ]
 }

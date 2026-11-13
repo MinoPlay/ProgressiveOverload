@@ -26,14 +26,14 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356908_a2079ga75",
-      "lastDate": "2026-11-09",
+      "lastDate": "2026-11-12",
       "lastSets": [
         {
-          "reps": 26,
+          "reps": 25,
           "weight": 60
         },
         {
-          "reps": 15,
+          "reps": 16,
           "weight": 80
         },
         {
@@ -71,7 +71,7 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356908_flvdqzdhf",
-      "lastDate": "2026-11-06",
+      "lastDate": "2026-11-12",
       "lastSets": [
         {
           "reps": 24,
@@ -82,7 +82,7 @@
           "weight": 60
         },
         {
-          "reps": 9,
+          "reps": 10,
           "weight": 70
         }
       ],
@@ -206,7 +206,7 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356911_barbshldpress",
-      "lastDate": "2026-11-03",
+      "lastDate": "2026-11-12",
       "lastSets": [
         {
           "reps": 20,
@@ -522,18 +522,18 @@
     {
       "equipmentType": "bodyweight+",
       "id": "1769759085099_6xqb1io2v",
-      "lastDate": "2026-11-06",
+      "lastDate": "2026-11-12",
       "lastSets": [
         {
           "reps": 40,
           "weight": 20
         },
         {
-          "reps": 25,
+          "reps": 26,
           "weight": 24
         },
         {
-          "reps": 18,
+          "reps": 17,
           "weight": 24
         }
       ],
@@ -544,18 +544,18 @@
     {
       "equipmentType": "bodyweight",
       "id": "1770010228345_o1qup7585",
-      "lastDate": "2026-10-26",
+      "lastDate": "2026-11-12",
       "lastSets": [
         {
-          "reps": 43,
+          "reps": 45,
           "weight": null
         },
         {
-          "reps": 35,
+          "reps": 30,
           "weight": null
         },
         {
-          "reps": 23,
+          "reps": 26,
           "weight": null
         }
       ],
@@ -902,7 +902,7 @@
     {
       "equipmentType": "machines",
       "id": "1771944812841_m36abj8xi",
-      "lastDate": "2026-10-06",
+      "lastDate": "2026-11-12",
       "lastSets": [
         {
           "reps": 20,
@@ -1843,6 +1843,64 @@
       ],
       "muscle": "biceps",
       "name": "Rope cable curl",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1794490379937_3iiqumd2m",
+      "lastDate": "2026-11-12",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        },
+        {
+          "reps": 20,
+          "weight": null
+        }
+      ],
+      "muscle": "legs",
+      "name": "Patrick Step-Up",
+      "requiresWeight": false
+    },
+    {
+      "equipmentType": "bodyweight+",
+      "id": "1794490404879_v92d4fgen",
+      "muscle": "legs",
+      "name": "ATG Split Squat",
+      "requiresWeight": true
+    },
+    {
+      "equipmentType": "bodyweight",
+      "id": "1794490414966_c4bzjcn0d",
+      "muscle": "legs",
+      "name": "Nordic Hamstring Curl",
+      "requiresWeight": false
+    },
+    {
+      "equipmentType": "barbell",
+      "id": "1794490429770_p4wkt4359",
+      "lastDate": "2026-11-12",
+      "lastSets": [
+        {
+          "reps": 17,
+          "weight": 40
+        },
+        {
+          "reps": 17,
+          "weight": 40
+        },
+        {
+          "reps": 17,
+          "weight": 40
+        }
+      ],
+      "muscle": "legs",
+      "name": "Heels-Elevated Squat",
       "requiresWeight": true
     }
   ]

@@ -1541,6 +1541,168 @@
       "reps": 17,
       "sequence": 24,
       "weight": 24
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "id": "1794812599168_dx0f0w7p3",
+      "reps": 20,
+      "sequence": 1,
+      "supersetGroupId": "ss-1794812599047-1",
+      "weight": 40
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "id": "1794812599168_kshyr5l26",
+      "reps": 22,
+      "sequence": 2,
+      "supersetGroupId": "ss-1794812599047-1",
+      "weight": 40
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1770182681432_b4c3ijz9x",
+      "id": "1794812599168_j4b3xvhnv",
+      "reps": 18,
+      "sequence": 3,
+      "supersetGroupId": "ss-1794812599047-1",
+      "weight": 40
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1769598356921_facepulls",
+      "id": "1794812599168_6ys3u7tyg",
+      "reps": 20,
+      "sequence": 4,
+      "supersetGroupId": "ss-1794812599047-1",
+      "weight": 27.5
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1769598356921_facepulls",
+      "id": "1794812599168_ijelmtui6",
+      "reps": 21,
+      "sequence": 5,
+      "supersetGroupId": "ss-1794812599047-1",
+      "weight": 30
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1769598356921_facepulls",
+      "id": "1794812599168_wc48i6oug",
+      "reps": 21,
+      "sequence": 6,
+      "supersetGroupId": "ss-1794812599047-1",
+      "weight": 32.5
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1794490429770_p4wkt4359",
+      "id": "1794812599168_882s4598m",
+      "reps": 17,
+      "sequence": 7,
+      "supersetGroupId": "ss-1794812599047-2",
+      "weight": 40
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1794490429770_p4wkt4359",
+      "id": "1794812599168_v03zqnf3e",
+      "reps": 17,
+      "sequence": 8,
+      "supersetGroupId": "ss-1794812599047-2",
+      "weight": 40
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1794490429770_p4wkt4359",
+      "id": "1794812599168_ev3hoh7zh",
+      "reps": 17,
+      "sequence": 9,
+      "supersetGroupId": "ss-1794812599047-2",
+      "weight": 40
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1771944812841_m36abj8xi",
+      "id": "1794812599168_06psnehl7",
+      "reps": 20,
+      "sequence": 10,
+      "supersetGroupId": "ss-1794812599047-2",
+      "weight": 50
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1771944812841_m36abj8xi",
+      "id": "1794812599168_1c0yk2qj7",
+      "reps": 15,
+      "sequence": 11,
+      "supersetGroupId": "ss-1794812599047-2",
+      "weight": 60
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1771944812841_m36abj8xi",
+      "id": "1794812599168_thrtvs1lq",
+      "reps": 11,
+      "sequence": 12,
+      "supersetGroupId": "ss-1794812599047-2",
+      "weight": 70
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1769598356923_neckturns",
+      "id": "1794812599168_del68qej9",
+      "reps": 40,
+      "sequence": 13,
+      "supersetGroupId": "ss-1794812599047-3",
+      "weight": null
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1769598356923_neckturns",
+      "id": "1794812599168_i5fwxuog7",
+      "reps": 40,
+      "sequence": 14,
+      "supersetGroupId": "ss-1794812599047-3",
+      "weight": null
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1769598356923_neckturns",
+      "id": "1794812599168_yutz907uj",
+      "reps": 22,
+      "sequence": 15,
+      "supersetGroupId": "ss-1794812599047-3",
+      "weight": null
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1788151093243_g8wb2t9mq",
+      "id": "1794812599168_lj5xymi5b",
+      "reps": 20,
+      "sequence": 16,
+      "supersetGroupId": "ss-1794812599047-3",
+      "weight": 0
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1788151093243_g8wb2t9mq",
+      "id": "1794812599168_r9d5uw431",
+      "reps": 12,
+      "sequence": 17,
+      "supersetGroupId": "ss-1794812599047-3",
+      "weight": 16
+    },
+    {
+      "date": "2026-11-16",
+      "exerciseId": "1788151093243_g8wb2t9mq",
+      "id": "1794812599168_6vh5viwre",
+      "reps": 10,
+      "sequence": 18,
+      "supersetGroupId": "ss-1794812599047-3",
+      "weight": 16
     }
   ]
 }

@@ -273,18 +273,18 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356914_inclinedumbpress",
-      "lastDate": "2026-08-20",
+      "lastDate": "2026-11-24",
       "lastSets": [
         {
+          "reps": 12,
+          "weight": 24
+        },
+        {
+          "reps": 12,
+          "weight": 24
+        },
+        {
           "reps": 10,
-          "weight": 24
-        },
-        {
-          "reps": 12,
-          "weight": 24
-        },
-        {
-          "reps": 12,
           "weight": 24
         }
       ],
@@ -302,19 +302,19 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356916_dumbbellflies",
-      "lastDate": "2026-11-19",
+      "lastDate": "2026-11-24",
       "lastSets": [
         {
-          "reps": 30,
-          "weight": 16
+          "reps": 35,
+          "weight": 14
         },
         {
           "reps": 20,
           "weight": 20
         },
         {
-          "reps": 20,
-          "weight": 16
+          "reps": 22,
+          "weight": 14
         }
       ],
       "muscle": "chest",
@@ -368,18 +368,18 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769598356919_lateralraise",
-      "lastDate": "2026-11-03",
+      "lastDate": "2026-11-24",
       "lastSets": [
         {
           "reps": 20,
           "weight": 12
         },
         {
-          "reps": 17,
+          "reps": 20,
           "weight": 12
         },
         {
-          "reps": 17,
+          "reps": 14,
           "weight": 12
         }
       ],
@@ -478,18 +478,18 @@
     {
       "equipmentType": "dumbbell",
       "id": "1769748047444_cfopuwtws",
-      "lastDate": "2026-10-19",
+      "lastDate": "2026-11-24",
       "lastSets": [
         {
           "reps": 13,
           "weight": 24
         },
         {
-          "reps": 12,
+          "reps": 15,
           "weight": 26
         },
         {
-          "reps": 12,
+          "reps": 9,
           "weight": 26
         }
       ],
@@ -522,18 +522,18 @@
     {
       "equipmentType": "bodyweight+",
       "id": "1769759085099_6xqb1io2v",
-      "lastDate": "2026-11-19",
+      "lastDate": "2026-11-24",
       "lastSets": [
         {
           "reps": 40,
           "weight": 20
         },
         {
-          "reps": 26,
+          "reps": 27,
           "weight": 24
         },
         {
-          "reps": 17,
+          "reps": 16,
           "weight": 24
         }
       ],
@@ -723,7 +723,7 @@
     {
       "equipmentType": "dumbbell",
       "id": "1770183966156_6whslwg5f",
-      "lastDate": "2026-11-19",
+      "lastDate": "2026-11-24",
       "lastSets": [
         {
           "reps": 20,
@@ -1021,7 +1021,7 @@
     {
       "equipmentType": "machines",
       "id": "1773760132008_mh29jezd2",
-      "lastDate": "2026-11-19",
+      "lastDate": "2026-11-24",
       "lastSets": [
         {
           "reps": 40,
@@ -1665,6 +1665,21 @@
     {
       "equipmentType": "machines",
       "id": "1790568042080_ll1g00php",
+      "lastDate": "2026-11-24",
+      "lastSets": [
+        {
+          "reps": 12,
+          "weight": 50
+        },
+        {
+          "reps": 12,
+          "weight": 50
+        },
+        {
+          "reps": 12,
+          "weight": 50
+        }
+      ],
       "muscle": "legs",
       "name": "Leg press (single)",
       "requiresWeight": true

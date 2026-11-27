@@ -71,7 +71,7 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356908_flvdqzdhf",
-      "lastDate": "2026-11-12",
+      "lastDate": "2026-11-27",
       "lastSets": [
         {
           "reps": 24,
@@ -228,19 +228,19 @@
     {
       "equipmentType": "barbell",
       "id": "1769598356912_bentoverrows",
-      "lastDate": "2026-11-06",
+      "lastDate": "2026-11-27",
       "lastSets": [
         {
-          "reps": 15,
+          "reps": 16,
           "weight": 60
         },
         {
-          "reps": 10,
+          "reps": 11,
           "weight": 80
         },
         {
-          "reps": 13,
-          "weight": 70
+          "reps": 11,
+          "weight": 80
         }
       ],
       "muscle": "back",
@@ -456,7 +456,7 @@
     {
       "equipmentType": "bodyweight",
       "id": "1769598356923_neckturns",
-      "lastDate": "2026-11-19",
+      "lastDate": "2026-11-27",
       "lastSets": [
         {
           "reps": 45,
@@ -611,7 +611,7 @@
     {
       "equipmentType": "machines",
       "id": "1770012654787_hjl6qszi3",
-      "lastDate": "2026-08-20",
+      "lastDate": "2026-11-27",
       "lastSets": [
         {
           "reps": 25,
@@ -902,7 +902,7 @@
     {
       "equipmentType": "machines",
       "id": "1771944812841_m36abj8xi",
-      "lastDate": "2026-11-16",
+      "lastDate": "2026-11-27",
       "lastSets": [
         {
           "reps": 20,
@@ -947,7 +947,7 @@
     {
       "equipmentType": "dumbbell",
       "id": "1772604239464_4ig18wa2z",
-      "lastDate": "2026-08-14",
+      "lastDate": "2026-11-27",
       "lastSets": [
         {
           "reps": 12,
@@ -969,6 +969,21 @@
     {
       "equipmentType": "barbell",
       "id": "1772719636925_i1cpyk08f",
+      "lastDate": "2026-11-27",
+      "lastSets": [
+        {
+          "reps": 20,
+          "weight": 20
+        },
+        {
+          "reps": 15,
+          "weight": 30
+        },
+        {
+          "reps": 15,
+          "weight": 30
+        }
+      ],
       "muscle": "shoulders",
       "name": "Barbell Upright Row",
       "requiresWeight": true
@@ -1245,7 +1260,7 @@
     {
       "equipmentType": "barbell",
       "id": "1783055054358_x4vzrvtc8",
-      "lastDate": "2026-08-27",
+      "lastDate": "2026-11-27",
       "lastSets": [
         {
           "reps": 25,
@@ -1467,7 +1482,7 @@
     {
       "equipmentType": "machines",
       "id": "1786679057838_pxax0gkj6",
-      "lastDate": "2026-11-06",
+      "lastDate": "2026-11-27",
       "lastSets": [
         {
           "reps": 20,
@@ -1899,10 +1914,10 @@
     {
       "equipmentType": "barbell",
       "id": "1794490429770_p4wkt4359",
-      "lastDate": "2026-11-16",
+      "lastDate": "2026-11-27",
       "lastSets": [
         {
-          "reps": 17,
+          "reps": 20,
           "weight": 40
         },
         {
@@ -1910,7 +1925,7 @@
           "weight": 40
         },
         {
-          "reps": 17,
+          "reps": 14,
           "weight": 40
         }
       ],
